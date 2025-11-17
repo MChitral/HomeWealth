@@ -11,6 +11,7 @@ import ScenarioListPage from "@/pages/scenario-list-page";
 import ScenarioEditorPage from "@/pages/scenario-editor-page";
 import ComparisonPage from "@/pages/comparison-page";
 import CashFlowPage from "@/pages/cash-flow-page";
+import EmergencyFundPage from "@/pages/emergency-fund-page";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/scenarios/new" component={ScenarioEditorPage} />
       <Route path="/comparison" component={ComparisonPage} />
       <Route path="/cash-flow" component={CashFlowPage} />
+      <Route path="/emergency-fund" component={EmergencyFundPage} />
       <Route component={NotFound} />
     </Switch>
   );

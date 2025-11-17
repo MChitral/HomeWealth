@@ -1,4 +1,4 @@
-import { Home, FileText, GitCompare, DollarSign, Receipt } from "lucide-react";
+import { Home, FileText, GitCompare, DollarSign, Receipt, Shield } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -37,6 +37,11 @@ const items = [
     title: "Cash Flow",
     url: "/cash-flow",
     icon: DollarSign,
+  },
+  {
+    title: "Emergency Fund",
+    url: "/emergency-fund",
+    icon: Shield,
   },
 ];
 
