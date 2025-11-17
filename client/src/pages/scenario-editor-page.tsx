@@ -29,8 +29,8 @@ export default function ScenarioEditorPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [prepaymentSplit, setPrepaymentSplit] = useState([50]);
-  const [expectedReturnRate, setExpectedReturnRate] = useState("6.0");
-  const [efPriorityPercent, setEfPriorityPercent] = useState("0");
+  const [expectedReturnRate, setExpectedReturnRate] = useState(6.0);
+  const [efPriorityPercent, setEfPriorityPercent] = useState(0);
   
   // Additional UI state (not in schema yet - stubbed)
   const [useBonus, setUseBonus] = useState(false);
@@ -60,8 +60,8 @@ export default function ScenarioEditorPage() {
       setName(scenario.name);
       setDescription(scenario.description || "");
       setPrepaymentSplit([scenario.prepaymentMonthlyPercent]);
-      setExpectedReturnRate(scenario.expectedReturnRate);
-      setEfPriorityPercent(scenario.efPriorityPercent.toString());
+      setExpectedReturnRate(parseFloat(scenario.expectedReturnRate));
+      setEfPriorityPercent(scenario.efPriorityPercent);
     }
   }, [scenario, isNewScenario]);
 
@@ -71,8 +71,8 @@ export default function ScenarioEditorPage() {
       // Validate and prepare data
       const prepaymentPercent = prepaymentSplit?.[0] ?? 50;
       const investmentPercent = 100 - prepaymentPercent;
-      const returnRate = parseFloat(expectedReturnRate || "6.0").toFixed(3);
-      const efPriority = Math.max(0, Math.min(100, parseInt(efPriorityPercent || "0")));
+      const returnRate = Number(parseFloat(expectedReturnRate.toString()).toFixed(3));
+      const efPriority = Math.max(0, Math.min(100, efPriorityPercent));
 
       const data = {
         name: name.trim(),
@@ -588,7 +588,7 @@ export default function ScenarioEditorPage() {
                   type="number" 
                   step="0.1" 
                   value={expectedReturnRate}
-                  onChange={(e) => setExpectedReturnRate(e.target.value)}
+                  onChange={(e) => setExpectedReturnRate(parseFloat(e.target.value) || 0)}
                   placeholder="6.0" 
                   data-testid="input-annual-return" 
                 />

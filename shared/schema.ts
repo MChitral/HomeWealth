@@ -163,7 +163,13 @@ export const scenarios = pgTable("scenarios", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const insertScenarioSchema = createInsertSchema(scenarios).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertScenarioSchema = createInsertSchema(scenarios)
+  .omit({ id: true, createdAt: true, updatedAt: true })
+  .extend({
+    expectedReturnRate: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(3) : val
+    ),
+  });
 export type InsertScenario = z.infer<typeof insertScenarioSchema>;
 export type Scenario = typeof scenarios.$inferSelect;
 
