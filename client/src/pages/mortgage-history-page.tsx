@@ -21,12 +21,91 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Download, AlertTriangle, RefreshCw, Info } from "lucide-react";
-import { useState } from "react";
+import { Plus, Download, AlertTriangle, RefreshCw, Info, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import type { Mortgage, MortgageTerm, MortgagePayment } from "@shared/schema";
+import { useMemo } from "react";
+
+// UI-friendly types (normalized from DB schema)
+type UiTerm = {
+  id: string;
+  mortgageId: string;
+  termType: "fixed" | "variable-changing" | "variable-fixed";
+  startDate: string;
+  endDate: string;
+  termYears: number;
+  lockedSpread: number;
+  fixedRate: number | null;
+  paymentFrequency: "monthly" | "biweekly" | "accelerated-biweekly";
+  regularPaymentAmount: number;
+};
+
+type UiPayment = {
+  id: string;
+  date: string;
+  year: number;
+  paymentAmount: number;
+  primeRate?: number;
+  termSpread?: number;
+  effectiveRate: number;
+  principal: number;
+  interest: number;
+  remainingBalance: number;
+  mortgageType: string;
+  triggerHit: boolean;
+  amortizationYears: number;
+  termStartDate?: string;
+};
+
+// Normalization helpers
+function normalizeTerm(term: MortgageTerm | undefined): UiTerm | null {
+  if (!term) return null;
+  return {
+    id: term.id,
+    mortgageId: term.mortgageId,
+    termType: term.termType as "fixed" | "variable-changing" | "variable-fixed",
+    startDate: term.startDate,
+    endDate: term.endDate,
+    termYears: term.termYears,
+    lockedSpread: Number(term.lockedSpread || 0),
+    fixedRate: term.fixedRate ? Number(term.fixedRate) : null,
+    paymentFrequency: term.paymentFrequency as "monthly" | "biweekly" | "accelerated-biweekly",
+    regularPaymentAmount: Number(term.regularPaymentAmount),
+  };
+}
+
+function normalizePayments(payments: MortgagePayment[] | undefined, terms: MortgageTerm[] | undefined): UiPayment[] {
+  if (!payments) return [];
+  return payments.map(p => {
+    const paymentDate = new Date(p.paymentDate);
+    const term = terms?.find(t => t.id === p.termId);
+    
+    return {
+      id: p.id,
+      date: p.paymentDate,
+      year: paymentDate.getFullYear(),
+      paymentAmount: Number(p.paymentAmount),
+      primeRate: p.primeRate ? Number(p.primeRate) : undefined,
+      termSpread: term?.lockedSpread ? Number(term.lockedSpread) : undefined,
+      effectiveRate: Number(p.effectiveRate),
+      principal: Number(p.principalPaid),
+      interest: Number(p.interestPaid),
+      remainingBalance: Number(p.remainingBalance),
+      mortgageType: term?.termType || "Unknown",
+      triggerHit: p.triggerRateHit === 1,
+      amortizationYears: p.remainingAmortizationMonths / 12,
+      termStartDate: term?.startDate,
+    };
+  });
+}
 
 export default function MortgageHistoryPage() {
+  const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isTermRenewalOpen, setIsTermRenewalOpen] = useState(false);
   const [filterYear, setFilterYear] = useState("all");
@@ -39,109 +118,154 @@ export default function MortgageHistoryPage() {
   const [renewalPrime, setRenewalPrime] = useState("");
   const [renewalTermYears, setRenewalTermYears] = useState("5");
   const [renewalStartDate, setRenewalStartDate] = useState("");
+  
+  // Payment form state
+  const [paymentDate, setPaymentDate] = useState("");
+  const [paymentAmount, setPaymentAmount] = useState("");
 
-  // Current term information (locked for the term duration) - now as state
-  const [currentTerm, setCurrentTerm] = useState({
-    type: "variable-fixed" as "fixed" | "variable-changing" | "variable-fixed",
-    startDate: "2024-01-01",
-    endDate: "2029-01-01",
-    termYears: 5,
-    lockedSpread: -0.80,
-    fixedRate: null as number | null,
-    paymentFrequency: "monthly" as "monthly" | "biweekly" | "accelerated-biweekly",
+  // Fetch mortgages (use first one for MVP)
+  const { data: mortgages, isLoading: mortgagesLoading } = useQuery<Mortgage[]>({
+    queryKey: ["/api/mortgages"],
+  });
+
+  const mortgage = mortgages?.[0]; // Use first mortgage
+
+  // Fetch terms for this mortgage
+  const { data: terms, isLoading: termsLoading } = useQuery<MortgageTerm[]>({
+    queryKey: ["/api/mortgages", mortgage?.id, "terms"],
+    enabled: !!mortgage?.id,
+  });
+
+  // Fetch payments for this mortgage
+  const { data: payments, isLoading: paymentsLoading } = useQuery<MortgagePayment[]>({
+    queryKey: ["/api/mortgages", mortgage?.id, "payments"],
+    enabled: !!mortgage?.id,
+  });
+
+  // Normalize data to UI-friendly format
+  const uiCurrentTerm = useMemo(() => normalizeTerm(terms?.[terms.length - 1]), [terms]);
+  const paymentHistory = useMemo(() => normalizePayments(payments, terms), [payments, terms]);
+
+  // Mutation for creating a new payment
+  const createPaymentMutation = useMutation({
+    mutationFn: async (payment: {
+      paymentDate: string;
+      paymentAmount: number;
+      principalPaid: number;
+      interestPaid: number;
+      remainingBalance: number;
+      primeRate?: number;
+      effectiveRate: number;
+      triggerRateHit: number;
+      remainingAmortizationMonths: number;
+    }) => {
+      if (!mortgage?.id || !uiCurrentTerm?.id) throw new Error("No mortgage or term selected");
+      return apiRequest(`/api/mortgages/${mortgage.id}/payments`, {
+        method: "POST",
+        body: {
+          mortgageId: mortgage.id,
+          termId: uiCurrentTerm.id,
+          ...payment,
+        },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/mortgages", mortgage?.id, "payments"] });
+      toast({
+        title: "Payment logged",
+        description: "Mortgage payment has been recorded successfully",
+      });
+      setIsDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to log payment",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation for creating a new term (renewal)
+  const createTermMutation = useMutation({
+    mutationFn: async (term: {
+      termType: string;
+      startDate: string;
+      endDate: string;
+      termYears: number;
+      fixedRate?: string;
+      lockedSpread?: string;
+      paymentFrequency: string;
+      regularPaymentAmount: string;
+    }) => {
+      if (!mortgage?.id) throw new Error("No mortgage selected");
+      return apiRequest(`/api/mortgages/${mortgage.id}/terms`, {
+        method: "POST",
+        body: term,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/mortgages", mortgage?.id, "terms"] });
+      toast({
+        title: "Term renewed",
+        description: "New mortgage term has been created successfully",
+      });
+      setIsTermRenewalOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to renew term",
+        variant: "destructive",
+      });
+    },
   });
 
   const handleTermRenewal = () => {
     const termYears = Number(renewalTermYears) || 5;
-    const startDate = renewalStartDate || currentTerm.endDate;
+    const startDate = renewalStartDate || uiCurrentTerm?.endDate || new Date().toISOString().split('T')[0];
     const endDate = new Date(startDate);
     endDate.setFullYear(endDate.getFullYear() + termYears);
-
-    setCurrentTerm({
-      type: renewalTermType as "fixed" | "variable-changing" | "variable-fixed",
-      startDate: startDate,
-      endDate: endDate.toISOString().split('T')[0],
-      termYears,
-      lockedSpread: renewalTermType.startsWith('variable') ? Number(renewalSpread) || -0.80 : 0,
-      fixedRate: renewalTermType === 'fixed' ? Number(renewalRate) || null : null,
-      paymentFrequency: renewalPaymentFrequency as "monthly" | "biweekly" | "accelerated-biweekly",
-    });
 
     // Update prime rate if variable and user entered a value
     if (renewalTermType.startsWith('variable') && renewalPrime) {
       setPrimeRate(renewalPrime);
     }
 
-    setIsTermRenewalOpen(false);
+    // TODO: Calculate regularPaymentAmount using mortgage calculation engine
+    // For now, use a placeholder
+    const regularPaymentAmount = "2100.00";
+
+    createTermMutation.mutate({
+      termType: renewalTermType,
+      startDate,
+      endDate: endDate.toISOString().split('T')[0],
+      termYears,
+      fixedRate: renewalTermType === 'fixed' ? renewalRate : undefined,
+      lockedSpread: renewalTermType.startsWith('variable') ? renewalSpread : undefined,
+      paymentFrequency: renewalPaymentFrequency,
+      regularPaymentAmount,
+    });
   };
 
-  // Mock payment history data
-  const paymentHistory = [
-    {
-      id: 1,
-      date: "2024-01-01",
-      year: 2024,
-      paymentAmount: 2100,
-      primeRate: 6.45,
-      termSpread: -0.80,
-      effectiveRate: 5.65,
-      principal: 600,
-      interest: 1500,
-      remainingBalance: 399400,
-      mortgageType: "Variable-Fixed Payment",
-      triggerHit: false,
-      amortizationYears: 25.0,
-      termStartDate: "2024-01-01",
-    },
-    {
-      id: 2,
-      date: "2024-02-01",
-      year: 2024,
-      paymentAmount: 2100,
-      primeRate: 6.70, // Prime changed, but spread stays -0.80
-      termSpread: -0.80,
-      effectiveRate: 5.90,
-      principal: 580,
-      interest: 1520,
-      remainingBalance: 398820,
-      mortgageType: "Variable-Fixed Payment",
-      triggerHit: false,
-      amortizationYears: 25.3,
-      termStartDate: "2024-01-01",
-    },
-    {
-      id: 3,
-      date: "2024-03-01",
-      year: 2024,
-      paymentAmount: 2100,
-      primeRate: 6.95, // Prime changed again
-      termSpread: -0.80,
-      effectiveRate: 6.15,
-      principal: 555,
-      interest: 1545,
-      remainingBalance: 398265,
-      mortgageType: "Variable-Fixed Payment",
-      triggerHit: false,
-      amortizationYears: 25.6,
-      termStartDate: "2024-01-01",
-    },
-    {
-      id: 4,
-      date: "2024-04-01",
-      year: 2024,
-      paymentAmount: 2100,
-      primeRate: 7.20, // Prime keeps changing
-      termSpread: -0.80, // But spread stays constant
-      effectiveRate: 6.40,
-      principal: 520,
-      interest: 1580,
-      remainingBalance: 397745,
-      mortgageType: "Variable-Fixed Payment",
-      triggerHit: true,
-      amortizationYears: 26.2,
-      termStartDate: "2024-01-01",
-    },
-  ];
+  // Show loading state while data fetches
+  if (mortgagesLoading || termsLoading || paymentsLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // Show empty state if no mortgage data
+  if (!mortgage || !uiCurrentTerm) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen gap-4">
+        <h2 className="text-2xl font-semibold">No Mortgage Data</h2>
+        <p className="text-muted-foreground">Create a mortgage to start tracking payments and terms.</p>
+      </div>
+    );
+  }
 
   const summaryStats = {
     totalPayments: paymentHistory.length,
@@ -162,11 +286,11 @@ export default function MortgageHistoryPage() {
 
   const availableYears = Array.from(new Set(paymentHistory.map((p) => p.year))).sort((a, b) => b - a);
 
-  const effectiveRate = currentTerm.type === "fixed" && currentTerm.fixedRate
-    ? currentTerm.fixedRate.toFixed(2)
-    : (parseFloat(primeRate) + currentTerm.lockedSpread).toFixed(2);
+  const effectiveRate = uiCurrentTerm.termType === "fixed" && uiCurrentTerm.fixedRate
+    ? uiCurrentTerm.fixedRate.toFixed(2)
+    : (parseFloat(primeRate) + uiCurrentTerm.lockedSpread).toFixed(2);
 
-  const monthsRemainingInTerm = Math.round((new Date(currentTerm.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30));
+  const monthsRemainingInTerm = Math.round((new Date(uiCurrentTerm.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30));
 
   return (
     <div className="space-y-8">
@@ -200,15 +324,15 @@ export default function MortgageHistoryPage() {
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
                       <p className="text-muted-foreground">Term Type:</p>
-                      <p className="font-medium">{currentTerm.type === "fixed" ? "Fixed Rate" : "Variable Rate"}</p>
+                      <p className="font-medium">{uiCurrentTerm?.termType === "fixed" ? "Fixed Rate" : "Variable Rate"}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Term Duration:</p>
-                      <p className="font-medium">{currentTerm.termYears} years</p>
+                      <p className="font-medium">{uiCurrentTerm.termYears} years</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Locked Spread:</p>
-                      <p className="font-medium font-mono">Prime {currentTerm.lockedSpread >= 0 ? '+' : ''} {currentTerm.lockedSpread}%</p>
+                      <p className="font-medium font-mono">Prime {uiCurrentTerm.lockedSpread >= 0 ? '+' : ''} {uiCurrentTerm.lockedSpread}%</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Months Remaining:</p>
@@ -219,7 +343,13 @@ export default function MortgageHistoryPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="payment-date">Payment Date</Label>
-                  <Input id="payment-date" type="date" data-testid="input-payment-date" />
+                  <Input 
+                    id="payment-date" 
+                    type="date" 
+                    value={paymentDate}
+                    onChange={(e) => setPaymentDate(e.target.value)}
+                    data-testid="input-payment-date" 
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -228,16 +358,18 @@ export default function MortgageHistoryPage() {
                     id="payment-amount"
                     type="number"
                     placeholder="2100.00"
+                    value={paymentAmount}
+                    onChange={(e) => setPaymentAmount(e.target.value)}
                     data-testid="input-payment-amount"
                   />
                 </div>
 
-                {currentTerm.type === "fixed" ? (
+                {uiCurrentTerm?.termType === "fixed" ? (
                   <div className="p-3 bg-muted rounded-md">
                     <p className="text-sm font-medium mb-1">Locked Fixed Rate</p>
-                    <p className="text-2xl font-mono font-bold">{currentTerm.fixedRate}%</p>
+                    <p className="text-2xl font-mono font-bold">{uiCurrentTerm.fixedRate}%</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Rate is constant until {currentTerm.endDate}
+                      Rate is constant until {uiCurrentTerm.endDate}
                     </p>
                   </div>
                 ) : (
@@ -252,14 +384,14 @@ export default function MortgageHistoryPage() {
                       data-testid="input-prime-rate"
                     />
                     <p className="text-sm text-muted-foreground">
-                      Only Prime changes during your term. Your spread ({currentTerm.lockedSpread >= 0 ? '+' : ''}{currentTerm.lockedSpread}%) 
-                      is locked until {currentTerm.endDate}
+                      Only Prime changes during your term. Your spread ({uiCurrentTerm.lockedSpread >= 0 ? '+' : ''}{uiCurrentTerm.lockedSpread}%) 
+                      is locked until {uiCurrentTerm.endDate}
                     </p>
                     <div className="p-3 bg-muted rounded-md">
                       <p className="text-sm font-medium mb-1">Effective Rate</p>
                       <p className="text-2xl font-mono font-bold">{effectiveRate}%</p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {primeRate}% (Prime) {currentTerm.lockedSpread >= 0 ? '+' : ''} {currentTerm.lockedSpread}% = {effectiveRate}%
+                        {primeRate}% (Prime) {uiCurrentTerm.lockedSpread >= 0 ? '+' : ''} {uiCurrentTerm.lockedSpread}% = {effectiveRate}%
                       </p>
                     </div>
                   </div>
@@ -281,7 +413,7 @@ export default function MortgageHistoryPage() {
                     <p className="text-muted-foreground">New Balance:</p>
                     <p className="font-mono font-medium">$399,400.00</p>
                   </div>
-                  {currentTerm.type.includes("variable-fixed") && (
+                  {uiCurrentTerm?.termType.includes("variable-fixed") && (
                     <div className="text-sm">
                       <p className="text-muted-foreground">New Amortization:</p>
                       <p className="font-mono font-medium">25.2 years</p>
@@ -289,7 +421,7 @@ export default function MortgageHistoryPage() {
                   )}
                 </div>
 
-                {currentTerm.type.includes("variable-fixed") && parseFloat(effectiveRate) > 6.0 && (
+                {uiCurrentTerm?.termType.includes("variable-fixed") && parseFloat(effectiveRate) > 6.0 && (
                   <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription>
@@ -305,11 +437,30 @@ export default function MortgageHistoryPage() {
                 </Button>
                 <Button
                   onClick={() => {
-                    console.log("Payment logged");
-                    setIsDialogOpen(false);
+                    // TODO: Use calculation engine to compute principal/interest split
+                    // For now, stub with 70/30 split as placeholder
+                    const amount = parseFloat(paymentAmount) || 2100;
+                    const principal = Math.round(amount * 0.3 * 100) / 100;
+                    const interest = Math.round(amount * 0.7 * 100) / 100;
+                    const lastBalance = paymentHistory[paymentHistory.length - 1]?.remainingBalance || Number(mortgage?.currentBalance || 400000);
+                    const newBalance = lastBalance - principal;
+                    
+                    createPaymentMutation.mutate({
+                      paymentDate: paymentDate || new Date().toISOString().split('T')[0],
+                      paymentAmount: amount,
+                      principalPaid: principal,
+                      interestPaid: interest,
+                      remainingBalance: newBalance,
+                      primeRate: parseFloat(primeRate),
+                      effectiveRate: parseFloat(effectiveRate),
+                      triggerRateHit: 0,
+                      remainingAmortizationMonths: Math.round((paymentHistory[paymentHistory.length - 1]?.amortizationYears || 25) * 12),
+                    });
                   }}
+                  disabled={!paymentDate || !paymentAmount || createPaymentMutation.isPending}
                   data-testid="button-save-payment"
                 >
+                  {createPaymentMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Save Payment
                 </Button>
               </DialogFooter>
@@ -343,7 +494,7 @@ export default function MortgageHistoryPage() {
                   <Alert>
                     <Info className="h-4 w-4" />
                     <AlertDescription>
-                      Your current term ends on {currentTerm.endDate}. Use this dialog to negotiate a new term with your lender.
+                      Your current term ends on {uiCurrentTerm.endDate}. Use this dialog to negotiate a new term with your lender.
                     </AlertDescription>
                   </Alert>
 
@@ -352,7 +503,7 @@ export default function MortgageHistoryPage() {
                     <Input 
                       id="new-term-start" 
                       type="date" 
-                      value={renewalStartDate || currentTerm.endDate}
+                      value={renewalStartDate || uiCurrentTerm.endDate}
                       onChange={(e) => setRenewalStartDate(e.target.value)}
                       data-testid="input-term-start-date"
                     />
@@ -496,50 +647,50 @@ export default function MortgageHistoryPage() {
             <div>
               <p className="text-sm text-muted-foreground mb-1">Term Type</p>
               <p className="text-base font-medium">
-                {currentTerm.type === "fixed" ? "Fixed Rate" : 
-                 currentTerm.type === "variable-changing" ? "Variable (Changing Payment)" :
+                {uiCurrentTerm?.termType === "fixed" ? "Fixed Rate" : 
+                 uiCurrentTerm?.termType === "variable-changing" ? "Variable (Changing Payment)" :
                  "Variable (Fixed Payment)"}
               </p>
               <Badge variant="outline" className="mt-2">
-                {currentTerm.type === "fixed" && "Fixed"}
-                {currentTerm.type === "variable-changing" && "VRM - Changing"}
-                {currentTerm.type === "variable-fixed" && "VRM - Fixed"}
+                {uiCurrentTerm?.termType === "fixed" && "Fixed"}
+                {uiCurrentTerm?.termType === "variable-changing" && "VRM - Changing"}
+                {uiCurrentTerm?.termType === "variable-fixed" && "VRM - Fixed"}
               </Badge>
             </div>
             <div>
               <p className="text-sm text-muted-foreground mb-1">Payment Frequency</p>
               <p className="text-base font-medium">
-                {currentTerm.paymentFrequency === "monthly" && "Monthly"}
-                {currentTerm.paymentFrequency === "biweekly" && "Bi-weekly"}
-                {currentTerm.paymentFrequency === "accelerated-biweekly" && "Accelerated Bi-weekly"}
+                {uiCurrentTerm.paymentFrequency === "monthly" && "Monthly"}
+                {uiCurrentTerm.paymentFrequency === "biweekly" && "Bi-weekly"}
+                {uiCurrentTerm.paymentFrequency === "accelerated-biweekly" && "Accelerated Bi-weekly"}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                {currentTerm.paymentFrequency === "monthly" && "12 payments/year"}
-                {currentTerm.paymentFrequency === "biweekly" && "26 payments/year"}
-                {currentTerm.paymentFrequency === "accelerated-biweekly" && "26 payments/year + extra"}
+                {uiCurrentTerm.paymentFrequency === "monthly" && "12 payments/year"}
+                {uiCurrentTerm.paymentFrequency === "biweekly" && "26 payments/year"}
+                {uiCurrentTerm.paymentFrequency === "accelerated-biweekly" && "26 payments/year + extra"}
               </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground mb-1">Term Duration</p>
-              <p className="text-base font-medium">{currentTerm.termYears} years</p>
+              <p className="text-base font-medium">{uiCurrentTerm.termYears} years</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Ends {currentTerm.endDate}
+                Ends {uiCurrentTerm.endDate}
               </p>
               <p className="text-xs text-muted-foreground">{monthsRemainingInTerm} months left</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground mb-1">
-                {currentTerm.type === "fixed" ? "Locked Rate" : "Locked Spread"}
+                {uiCurrentTerm?.termType === "fixed" ? "Locked Rate" : "Locked Spread"}
               </p>
               <p className="text-base font-medium font-mono">
-                {currentTerm.type === "fixed" 
-                  ? `${currentTerm.fixedRate}%`
-                  : `Prime ${currentTerm.lockedSpread >= 0 ? '+' : ''}${currentTerm.lockedSpread}%`
+                {uiCurrentTerm?.termType === "fixed" 
+                  ? `${uiCurrentTerm.fixedRate}%`
+                  : `Prime ${uiCurrentTerm.lockedSpread >= 0 ? '+' : ''}${uiCurrentTerm.lockedSpread}%`
                 }
               </p>
             </div>
           </div>
-          {currentTerm.type !== "fixed" && (
+          {uiCurrentTerm?.termType !== "fixed" && (
             <>
               <Separator className="my-4" />
               <div className="flex items-center justify-between">

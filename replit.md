@@ -6,31 +6,38 @@ A full-stack web application helping Canadians compare financial strategies for 
 
 **Tech Stack**: Express.js (backend) + React + TypeScript (frontend), PostgreSQL database, Shadcn UI components
 
-## Current Status: Frontend Complete, Backend Implementation Next
+## Current Status: Backend + API Integration In Progress
 
-### ✅ Completed (Frontend)
-- Mortgage History page with term tracking (Fixed/VRM-Changing/VRM-Fixed Payment)
-- Cash Flow page (fully reactive, 11 inputs controlled, accurate calculations)
-- Comparison page (4 scenarios with charts and winner callout)
-- Emergency Fund page
-- Scenario Editor page (stub)
-- Design system aligned with design_guidelines.md
-- All critical design deficiencies from PRD analysis fixed
-- Variable rate mortgage support (spread tracking, payment frequency, trigger rates)
+### ✅ Completed
+**Backend Infrastructure:**
+- ✅ Database schema (8 entities: users, cash flow, EF, mortgages, terms, payments, scenarios, prepayment events)
+- ✅ In-memory storage layer (IStorage) with full CRUD operations
+- ✅ 30+ secure RESTful API routes with Zod validation
+- ✅ Canadian mortgage calculation engine (semi-annual compounding implemented)
+- ✅ Net worth projection engine (10-30 year forecasts)
+- ✅ Dev auth middleware (temp mock, Replit Auth identified for later)
 
-### 🚧 Current Sprint: Backend + Calculation Engine
-Following analysis of Canadian Government calculator and Calculator.net, implementing:
+**Frontend-Backend Integration:**
+- ✅ **Cash Flow page wired** (Task 9 complete):
+  - useQuery fetches data from GET /api/cash-flow
+  - useMutation saves via POST/PATCH with cache invalidation
+  - Zero-value bug fixed (uses `!= null` checks instead of truthiness)
+  - E2E tested with Playwright ✅
+- 🚧 **Mortgage History page integration** (Task 10 - 80% complete):
+  - ✅ useQuery hooks for mortgages, terms, payments
+  - ✅ Normalization layer (UiTerm/UiPayment types) converts DB decimals to numbers
+  - ✅ useMutation for creating payments and terms
+  - ✅ Data flows from backend to UI
+  - ⏳ UI polish incomplete (22 null guards needed, loading states)
+  - ⏳ Payment calculations stubbed (principal/interest split needs engine hookup)
 
-**Priority 1 Features:**
-1. Prepayment modeling engine (lump sums, annual bonuses, one-time payments)
-2. Amortization schedule generation (month-by-month breakdown)
-3. Savings metrics & comparison (interest saved, time saved, percentage metrics)
-
-**Backend Implementation:**
-- Database schema (mortgages, terms, cash flow, scenarios)
-- API routes for CRUD operations
-- Canadian mortgage calculation engine (semi-annual compounding, payment frequency)
-- Net worth projection engine
+### 🚧 Next Tasks (Tasks 11-16)
+- Task 11: Wire Emergency Fund page to API
+- Task 12: Wire Scenario Editor page to API
+- Task 13: Add savings metrics calculation
+- Task 14: Enhance Comparison page with savings metrics
+- Task 15: Add amortization schedule display
+- Task 16: Test calculation accuracy vs government calculator
 
 ## Key Product Differentiators
 
