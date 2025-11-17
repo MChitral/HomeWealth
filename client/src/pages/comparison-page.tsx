@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Trophy, TrendingUp, Home, DollarSign, PiggyBank, Calendar, AlertTriangle, CheckCircle2, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Trophy, TrendingUp, Home, DollarSign, PiggyBank, Calendar, AlertTriangle, CheckCircle2, ArrowUpRight, ArrowDownRight, X } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -11,13 +11,46 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { ComparisonNetWorthChart } from "@/components/comparison-net-worth-chart";
 import { ComparisonLineChart } from "@/components/comparison-line-chart";
 
 export default function ComparisonPage() {
-  const [selectedScenarios, setSelectedScenarios] = useState(["balanced", "aggressive", "invest"]);
+  const [location] = useLocation();
+  const [selectedScenarios, setSelectedScenarios] = useState<string[]>([]);
   const [timeHorizon, setTimeHorizon] = useState("10");
+
+  // Read URL params on mount to pre-select scenarios
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const scenariosParam = params.get('scenarios');
+    if (scenariosParam) {
+      // If coming from scenario card, add that scenario to selection
+      const newScenarios = [...selectedScenarios];
+      if (!newScenarios.includes(scenariosParam)) {
+        newScenarios.push(scenariosParam);
+      }
+      setSelectedScenarios(newScenarios.slice(0, 3)); // Max 3 scenarios
+    } else if (selectedScenarios.length === 0) {
+      // Default: show all 3 scenarios
+      setSelectedScenarios(["balanced", "aggressive", "invest"]);
+    }
+  }, [location]);
+
+  const toggleScenario = (scenarioId: string) => {
+    if (selectedScenarios.includes(scenarioId)) {
+      // Remove if already selected (but keep at least 1)
+      if (selectedScenarios.length > 1) {
+        setSelectedScenarios(selectedScenarios.filter(id => id !== scenarioId));
+      }
+    } else {
+      // Add if not selected (max 3)
+      if (selectedScenarios.length < 3) {
+        setSelectedScenarios([...selectedScenarios, scenarioId]);
+      }
+    }
+  };
 
   // Mock scenario data - TODO: fetch from backend
   const scenarios = {
@@ -74,10 +107,22 @@ export default function ComparisonPage() {
     },
   };
 
-  const selectedScenarioData = selectedScenarios.map(id => scenarios[id as keyof typeof scenarios]);
-  const winner = selectedScenarioData.reduce((prev, current) => 
-    current.metrics.netWorth10yr > prev.metrics.netWorth10yr ? current : prev
-  );
+  // All available scenarios for selection
+  const allScenarios = [
+    { id: "balanced", name: "Balanced Strategy" },
+    { id: "aggressive", name: "Aggressive Prepayment" },
+    { id: "invest", name: "Investment Focus" },
+  ];
+
+  const selectedScenarioData = selectedScenarios
+    .map(id => scenarios[id as keyof typeof scenarios])
+    .filter(Boolean);
+  
+  const winner = selectedScenarioData.length > 0 
+    ? selectedScenarioData.reduce((prev, current) => 
+        current.metrics.netWorth10yr > prev.metrics.netWorth10yr ? current : prev
+      )
+    : null;
 
   // Chart data
   const netWorthData = [
@@ -131,35 +176,86 @@ export default function ComparisonPage() {
         </div>
       </div>
 
-      {/* Winner Card */}
-      <Card className="border-primary bg-primary/5">
+      {/* Scenario Selector */}
+      <Card>
         <CardHeader>
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-md">
-                <Trophy className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <CardTitle className="text-xl">Highest Net Worth: {winner.name}</CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  ${winner.metrics.netWorth10yr.toLocaleString()} at {timeHorizon} years
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Badge variant="outline" className="gap-1">
-                <TrendingUp className="h-3 w-3" />
-                Best Overall
-              </Badge>
-            </div>
-          </div>
+          <CardTitle>Select Scenarios to Compare</CardTitle>
+          <CardDescription>Choose 1-3 scenarios to compare (click to toggle)</CardDescription>
         </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-3">
+            {allScenarios.map((scenario) => {
+              const isSelected = selectedScenarios.includes(scenario.id);
+              const canDeselect = selectedScenarios.length > 1;
+              const canSelect = selectedScenarios.length < 3;
+              
+              return (
+                <Button
+                  key={scenario.id}
+                  variant={isSelected ? "default" : "outline"}
+                  onClick={() => toggleScenario(scenario.id)}
+                  disabled={isSelected && !canDeselect || !isSelected && !canSelect}
+                  data-testid={`button-select-${scenario.id}`}
+                  className="gap-2"
+                >
+                  {scenario.name}
+                  {isSelected && canDeselect && <X className="h-3 w-3" />}
+                </Button>
+              );
+            })}
+          </div>
+          {selectedScenarios.length === 3 && (
+            <p className="text-sm text-muted-foreground mt-3">
+              Maximum of 3 scenarios reached. Remove one to add another.
+            </p>
+          )}
+          {selectedScenarios.length === 1 && (
+            <p className="text-sm text-muted-foreground mt-3">
+              At least 1 scenario must be selected. Add more to compare.
+            </p>
+          )}
+        </CardContent>
       </Card>
+
+      {/* Winner Card */}
+      {winner && selectedScenarioData.length > 1 && (
+        <Card className="border-primary bg-primary/5">
+          <CardHeader>
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-md">
+                  <Trophy className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">Highest Net Worth: {winner.name}</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    ${winner.metrics.netWorth10yr.toLocaleString()} at {timeHorizon} years
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Badge variant="outline" className="gap-1">
+                  <TrendingUp className="h-3 w-3" />
+                  Best Overall
+                </Badge>
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+      )}
+
+      {selectedScenarioData.length === 0 && (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <p className="text-muted-foreground">Select at least one scenario above to see comparison</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Key Metrics Comparison */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {selectedScenarioData.map((scenario) => {
-          const isWinner = scenario.id === winner.id;
+          const isWinner = winner && scenario.id === winner.id;
           return (
             <Card key={scenario.id} className={isWinner ? "border-primary" : ""}>
               <CardHeader className="space-y-1 pb-4">

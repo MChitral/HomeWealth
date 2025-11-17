@@ -8,7 +8,7 @@ export default function ScenarioListPage() {
 
   const scenarios = [
     {
-      id: "1",
+      id: "aggressive",
       name: "Aggressive Prepayment",
       description: "Focus on paying down mortgage as quickly as possible",
       lastModified: "2 days ago",
@@ -16,7 +16,7 @@ export default function ScenarioListPage() {
       mortgageBalance: "$125,000",
     },
     {
-      id: "2",
+      id: "balanced",
       name: "Balanced Strategy",
       description: "50/50 split between mortgage prepayment and investments",
       lastModified: "1 week ago",
@@ -24,7 +24,7 @@ export default function ScenarioListPage() {
       mortgageBalance: "$150,000",
     },
     {
-      id: "3",
+      id: "invest",
       name: "Investment Focus",
       description: "Maximize investment contributions, minimum mortgage payments",
       lastModified: "2 weeks ago",
