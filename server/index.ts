@@ -9,6 +9,15 @@ declare module 'http' {
     rawBody: unknown
   }
 }
+
+declare global {
+  namespace Express {
+    interface User {
+      id: string;
+      username: string;
+    }
+  }
+}
 app.use(express.json({
   verify: (req, _res, buf) => {
     req.rawBody = buf;
