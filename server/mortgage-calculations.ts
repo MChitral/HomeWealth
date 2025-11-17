@@ -289,3 +289,302 @@ export function monthsToYearsAndMonths(months: number): { years: number; months:
   const remainingMonths = months % 12;
   return { years, months: remainingMonths };
 }
+
+/**
+ * Payment schedule entry for amortization table
+ */
+export interface AmortizationPayment {
+  paymentNumber: number;
+  paymentDate: Date;
+  paymentAmount: number;
+  principalPayment: number;
+  interestPayment: number;
+  extraPrepayment: number;
+  totalPrincipalPayment: number; // principal + prepayment
+  remainingBalance: number;
+  remainingAmortizationMonths: number;
+  cumulativePrincipal: number;
+  cumulativeInterest: number;
+  cumulativePrepayments: number;
+  triggerRateHit: boolean; // VRM-Fixed Payment only
+  effectiveRate: number; // Current rate (may change for VRM)
+}
+
+/**
+ * Amortization schedule summary
+ */
+export interface AmortizationSchedule {
+  payments: AmortizationPayment[];
+  summary: {
+    totalPayments: number;
+    totalPrincipal: number;
+    totalInterest: number;
+    totalPrepayments: number;
+    totalCost: number;
+    payoffDate: Date | null;
+    payoffPaymentNumber: number | null;
+    averageAmortizationMonths: number;
+  };
+}
+
+/**
+ * Prepayment event definition for schedule generation
+ */
+export interface PrepaymentEvent {
+  type: 'annual' | 'one-time' | 'monthly-percent';
+  amount: number;
+  startPaymentNumber: number;
+  recurrenceMonth?: number; // 1-12 for annual events
+  monthlyPercent?: number; // For monthly-percent type
+}
+
+/**
+ * Term renewal definition for variable rate mortgages
+ */
+export interface TermRenewal {
+  startPaymentNumber: number;
+  newRate: number;
+  newPaymentAmount?: number; // For VRM-Fixed, this stays same; for VRM-Changing, recalculated
+}
+
+/**
+ * Generate complete amortization schedule with prepayments
+ * 
+ * @param principal - Initial loan amount
+ * @param annualRate - Annual nominal interest rate
+ * @param amortizationMonths - Total amortization period in months
+ * @param frequency - Payment frequency
+ * @param startDate - Mortgage start date
+ * @param prepayments - Array of prepayment events
+ * @param termRenewals - Array of term renewals (for VRM rate changes)
+ * @param maxPayments - Maximum number of payments to generate (default 600 = 50 years monthly)
+ * @returns Complete amortization schedule
+ */
+export function generateAmortizationSchedule(
+  principal: number,
+  annualRate: number,
+  amortizationMonths: number,
+  frequency: PaymentFrequency,
+  startDate: Date,
+  prepayments: PrepaymentEvent[] = [],
+  termRenewals: TermRenewal[] = [],
+  maxPayments: number = 600
+): AmortizationSchedule {
+  const payments: AmortizationPayment[] = [];
+  const paymentsPerYear = getPaymentsPerYear(frequency);
+  
+  let remainingBalance = principal;
+  let currentRate = annualRate;
+  let basePaymentAmount = calculatePayment(principal, annualRate, amortizationMonths, frequency);
+  let currentPaymentAmount = basePaymentAmount;
+  
+  let cumulativePrincipal = 0;
+  let cumulativeInterest = 0;
+  let cumulativePrepayments = 0;
+  
+  let paymentNumber = 1;
+  let currentDate = new Date(startDate);
+  let totalRemainingAmortizationMonths = 0;
+  let triggerRatePaymentCount = 0;
+  
+  // Advance payment date using calendar-aware math
+  const advancePaymentDate = (date: Date): Date => {
+    const newDate = new Date(date);
+    switch (frequency) {
+      case 'monthly': {
+        // Add 1 month, clamping to last valid day of target month
+        const originalDay = newDate.getDate();
+        const originalMonth = newDate.getMonth();
+        const originalYear = newDate.getFullYear();
+        
+        // Calculate target month/year (handle year rollover)
+        const targetMonth = (originalMonth + 1) % 12;
+        const targetYear = originalMonth === 11 ? originalYear + 1 : originalYear;
+        
+        // Get last day of target month BEFORE creating new date
+        const lastDayOfTargetMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+        
+        // Clamp original day to valid range
+        const clampedDay = Math.min(originalDay, lastDayOfTargetMonth);
+        
+        // Create new date with target month/year and clamped day
+        return new Date(targetYear, targetMonth, clampedDay);
+      }
+      case 'semi-monthly':
+        // Add 15 days (2 payments per month)
+        newDate.setDate(newDate.getDate() + 15);
+        return newDate;
+      case 'biweekly':
+      case 'accelerated-biweekly':
+        // Add 14 days (every 2 weeks)
+        newDate.setDate(newDate.getDate() + 14);
+        return newDate;
+      case 'weekly':
+      case 'accelerated-weekly':
+        // Add 7 days (every week)
+        newDate.setDate(newDate.getDate() + 7);
+        return newDate;
+    }
+  };
+  
+  while (remainingBalance > 0.01 && paymentNumber <= maxPayments) {
+    // Check for term renewal (rate change)
+    const renewal = termRenewals.find(r => r.startPaymentNumber === paymentNumber);
+    if (renewal) {
+      currentRate = renewal.newRate;
+      if (renewal.newPaymentAmount !== undefined) {
+        // VRM-Fixed Payment: payment stays same
+        currentPaymentAmount = renewal.newPaymentAmount;
+      } else {
+        // VRM-Changing Payment or Fixed renewal: recalculate payment
+        const remainingAmortMonths = calculateRemainingAmortization(
+          remainingBalance,
+          basePaymentAmount,
+          currentRate,
+          frequency
+        );
+        if (remainingAmortMonths > 0) {
+          currentPaymentAmount = calculatePayment(
+            remainingBalance,
+            currentRate,
+            remainingAmortMonths,
+            frequency
+          );
+          basePaymentAmount = currentPaymentAmount;
+        }
+      }
+    }
+    
+    // Calculate interest for this payment
+    const interestPayment = calculateInterestPayment(remainingBalance, currentRate, frequency);
+    
+    // Check if trigger rate hit (for VRM-Fixed Payment)
+    const triggerRateHit = currentPaymentAmount <= interestPayment;
+    
+    // Calculate principal payment
+    const principalPayment = Math.min(
+      calculatePrincipalPayment(currentPaymentAmount, interestPayment),
+      remainingBalance
+    );
+    
+    // Calculate prepayments for this payment
+    let extraPrepayment = 0;
+    
+    // Process monthly-percent prepayments
+    const monthlyPercentPrepayments = prepayments.filter(
+      p => p.type === 'monthly-percent' && paymentNumber >= p.startPaymentNumber
+    );
+    for (const prep of monthlyPercentPrepayments) {
+      if (prep.monthlyPercent) {
+        // Apply percentage of regular payment as extra prepayment
+        extraPrepayment += (currentPaymentAmount * prep.monthlyPercent) / 100;
+      }
+    }
+    
+    // Process one-time prepayments
+    const oneTimePrepayments = prepayments.filter(
+      p => p.type === 'one-time' && p.startPaymentNumber === paymentNumber
+    );
+    for (const prep of oneTimePrepayments) {
+      extraPrepayment += prep.amount;
+    }
+    
+    // Process annual prepayments (check if this payment matches the recurrence month)
+    const currentMonth = currentDate.getMonth() + 1; // 1-12
+    const annualPrepayments = prepayments.filter(
+      p => p.type === 'annual' && 
+          paymentNumber >= p.startPaymentNumber && 
+          p.recurrenceMonth === currentMonth
+    );
+    for (const prep of annualPrepayments) {
+      // Check if this is the first occurrence this year
+      const yearsSinceStart = Math.floor((paymentNumber - prep.startPaymentNumber) / paymentsPerYear);
+      const expectedPaymentForThisYear = prep.startPaymentNumber + (yearsSinceStart * paymentsPerYear);
+      
+      // Apply only if this is roughly the right payment for this year
+      if (Math.abs(paymentNumber - expectedPaymentForThisYear) < paymentsPerYear / 12) {
+        extraPrepayment += prep.amount;
+      }
+    }
+    
+    // Cap prepayment to remaining balance
+    extraPrepayment = Math.min(extraPrepayment, remainingBalance - principalPayment);
+    
+    const totalPrincipalPayment = principalPayment + extraPrepayment;
+    
+    // Update balance
+    remainingBalance = calculateRemainingBalance(remainingBalance, principalPayment, extraPrepayment);
+    
+    // Update cumulative totals (include prepayments in principal total)
+    cumulativePrincipal += totalPrincipalPayment; // Includes both scheduled + extra
+    cumulativeInterest += interestPayment;
+    cumulativePrepayments += extraPrepayment;
+    
+    // Calculate remaining amortization
+    let remainingAmortMonths = 0;
+    if (remainingBalance > 0.01) {
+      remainingAmortMonths = calculateRemainingAmortization(
+        remainingBalance,
+        currentPaymentAmount,
+        currentRate,
+        frequency
+      );
+      if (remainingAmortMonths < 0) {
+        // Trigger rate hit, amortization undefined
+        triggerRatePaymentCount++;
+        remainingAmortMonths = -1; // Keep as sentinel, don't include in average
+      } else {
+        totalRemainingAmortizationMonths += remainingAmortMonths;
+      }
+    }
+    
+    // Create payment entry
+    payments.push({
+      paymentNumber,
+      paymentDate: new Date(currentDate),
+      paymentAmount: currentPaymentAmount,
+      principalPayment,
+      interestPayment,
+      extraPrepayment,
+      totalPrincipalPayment,
+      remainingBalance: Math.max(0, remainingBalance),
+      remainingAmortizationMonths: remainingAmortMonths,
+      cumulativePrincipal,
+      cumulativeInterest,
+      cumulativePrepayments,
+      triggerRateHit,
+      effectiveRate: currentRate,
+    });
+    
+    // Move to next payment date
+    currentDate = advancePaymentDate(currentDate);
+    paymentNumber++;
+  }
+  
+  // Calculate summary
+  const lastPayment = payments[payments.length - 1];
+  const payoffDate = lastPayment && lastPayment.remainingBalance < 0.01 
+    ? lastPayment.paymentDate 
+    : null;
+  const payoffPaymentNumber = payoffDate ? lastPayment.paymentNumber : null;
+  
+  // Average amortization excluding trigger-rate payments
+  const validPaymentCount = payments.length - triggerRatePaymentCount;
+  const averageAmortizationMonths = validPaymentCount > 0 
+    ? totalRemainingAmortizationMonths / validPaymentCount
+    : 0;
+  
+  return {
+    payments,
+    summary: {
+      totalPayments: payments.length,
+      totalPrincipal: cumulativePrincipal,
+      totalInterest: cumulativeInterest,
+      totalPrepayments: cumulativePrepayments,
+      totalCost: cumulativePrincipal + cumulativeInterest,
+      payoffDate,
+      payoffPaymentNumber,
+      averageAmortizationMonths,
+    },
+  };
+}
