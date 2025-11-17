@@ -137,6 +137,12 @@ export default function MortgageHistoryPage() {
   const [createAmortization, setCreateAmortization] = useState("25");
   const [createFrequency, setCreateFrequency] = useState("monthly");
   
+  // Edit mortgage form state
+  const [isEditMortgageOpen, setIsEditMortgageOpen] = useState(false);
+  const [editPropertyPrice, setEditPropertyPrice] = useState("");
+  const [editCurrentBalance, setEditCurrentBalance] = useState("");
+  const [editPaymentFrequency, setEditPaymentFrequency] = useState("");
+  
   // Validation for create mortgage form
   const propertyPrice = parseFloat(createPropertyPrice);
   const downPayment = parseFloat(createDownPayment);
@@ -285,6 +291,42 @@ export default function MortgageHistoryPage() {
       });
     },
   });
+
+  // Mutation for editing mortgage
+  const editMortgageMutation = useMutation({
+    mutationFn: async (updates: {
+      propertyPrice?: string;
+      currentBalance?: string;
+      paymentFrequency?: string;
+    }) => {
+      if (!mortgage?.id) throw new Error("No mortgage selected");
+      return apiRequest("PATCH", `/api/mortgages/${mortgage.id}`, updates);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/mortgages"] });
+      toast({
+        title: "Mortgage updated",
+        description: "Your mortgage details have been updated successfully",
+      });
+      setIsEditMortgageOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update mortgage",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Initialize edit form when dialog opens
+  useEffect(() => {
+    if (isEditMortgageOpen && mortgage) {
+      setEditPropertyPrice(mortgage.propertyPrice || "");
+      setEditCurrentBalance(mortgage.currentBalance || "");
+      setEditPaymentFrequency(mortgage.paymentFrequency || "");
+    }
+  }, [isEditMortgageOpen, mortgage]);
 
   const handleTermRenewal = () => {
     const termYears = Number(renewalTermYears) || 5;
@@ -551,6 +593,80 @@ export default function MortgageHistoryPage() {
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
+          <Dialog open={isEditMortgageOpen} onOpenChange={setIsEditMortgageOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" data-testid="button-edit-mortgage">
+                Edit Details
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Edit Mortgage Details</DialogTitle>
+                <DialogDescription>
+                  Update your property value, current balance, and payment settings
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-property-price">Property Value ($)</Label>
+                  <Input
+                    id="edit-property-price"
+                    type="number"
+                    placeholder="650000"
+                    value={editPropertyPrice}
+                    onChange={(e) => setEditPropertyPrice(e.target.value)}
+                    data-testid="input-edit-property-price"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-current-balance">Current Balance ($)</Label>
+                  <Input
+                    id="edit-current-balance"
+                    type="number"
+                    placeholder="550000"
+                    value={editCurrentBalance}
+                    onChange={(e) => setEditCurrentBalance(e.target.value)}
+                    data-testid="input-edit-current-balance"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-payment-frequency">Payment Frequency</Label>
+                  <Select value={editPaymentFrequency} onValueChange={setEditPaymentFrequency}>
+                    <SelectTrigger data-testid="select-edit-payment-frequency">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                      <SelectItem value="biweekly">Biweekly</SelectItem>
+                      <SelectItem value="accelerated-biweekly">Accelerated Biweekly</SelectItem>
+                      <SelectItem value="weekly">Weekly</SelectItem>
+                      <SelectItem value="accelerated-weekly">Accelerated Weekly</SelectItem>
+                      <SelectItem value="semi-monthly">Semi-monthly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsEditMortgageOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    editMortgageMutation.mutate({
+                      propertyPrice: editPropertyPrice,
+                      currentBalance: editCurrentBalance,
+                      paymentFrequency: editPaymentFrequency,
+                    });
+                  }}
+                  disabled={editMortgageMutation.isPending || !editPropertyPrice || !editCurrentBalance}
+                  data-testid="button-save-edit-mortgage"
+                >
+                  {editMortgageMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Save Changes
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button data-testid="button-add-payment">
