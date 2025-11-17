@@ -10,6 +10,7 @@ import {
   insertScenarioSchema,
   insertPrepaymentEventSchema,
 } from "@shared/schema";
+import { devAuth } from "./devAuth";
 
 declare global {
   namespace Express {
@@ -21,6 +22,8 @@ declare global {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // TEMPORARY: Development auth middleware (replace with Replit Auth)
+  app.use("/api", devAuth);
   // Cash Flow Routes
   app.get("/api/cash-flow", async (req, res) => {
     if (!req.user) {

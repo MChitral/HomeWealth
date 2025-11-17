@@ -3,10 +3,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Save, DollarSign, TrendingDown, CreditCard, Briefcase } from "lucide-react";
-import { useState } from "react";
+import { Save, DollarSign, TrendingDown, CreditCard, Briefcase, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import type { CashFlow } from "@shared/schema";
 
 export default function CashFlowPage() {
+  const { toast } = useToast();
+
+  // Fetch cash flow data
+  const { data: cashFlowData, isLoading } = useQuery<CashFlow | null>({
+    queryKey: ["/api/cash-flow"],
+  });
+
   // Income state
   const [monthlyIncome, setMonthlyIncome] = useState(8000);
   const [extraPaycheques, setExtraPaycheques] = useState(2);
@@ -28,6 +39,72 @@ export default function CashFlowPage() {
   const [carLoan, setCarLoan] = useState(0);
   const [studentLoan, setStudentLoan] = useState(0);
   const [creditCard, setCreditCard] = useState(0);
+
+  // Pre-populate form with fetched data
+  useEffect(() => {
+    if (cashFlowData) {
+      setMonthlyIncome(cashFlowData.monthlyIncome != null ? Number(cashFlowData.monthlyIncome) : 8000);
+      setExtraPaycheques(cashFlowData.extraPaycheques ?? 2);
+      setAnnualBonus(cashFlowData.annualBonus != null ? Number(cashFlowData.annualBonus) : 0);
+      setPropertyTax(cashFlowData.propertyTax != null ? Number(cashFlowData.propertyTax) : 0);
+      setInsurance(cashFlowData.homeInsurance != null ? Number(cashFlowData.homeInsurance) : 0);
+      setCondoFees(cashFlowData.condoFees != null ? Number(cashFlowData.condoFees) : 0);
+      setUtilities(cashFlowData.utilities != null ? Number(cashFlowData.utilities) : 0);
+      setGroceries(cashFlowData.groceries != null ? Number(cashFlowData.groceries) : 0);
+      setDining(cashFlowData.dining != null ? Number(cashFlowData.dining) : 0);
+      setTransportation(cashFlowData.transportation != null ? Number(cashFlowData.transportation) : 0);
+      setEntertainment(cashFlowData.entertainment != null ? Number(cashFlowData.entertainment) : 0);
+      setCarLoan(cashFlowData.carLoan != null ? Number(cashFlowData.carLoan) : 0);
+      setStudentLoan(cashFlowData.studentLoan != null ? Number(cashFlowData.studentLoan) : 0);
+      setCreditCard(cashFlowData.creditCard != null ? Number(cashFlowData.creditCard) : 0);
+    }
+  }, [cashFlowData]);
+
+  // Save mutation
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const data = {
+        monthlyIncome: monthlyIncome.toString(),
+        extraPaycheques,
+        annualBonus: annualBonus.toString(),
+        propertyTax: propertyTax.toString(),
+        homeInsurance: insurance.toString(),
+        condoFees: condoFees.toString(),
+        utilities: utilities.toString(),
+        groceries: groceries.toString(),
+        dining: dining.toString(),
+        transportation: transportation.toString(),
+        entertainment: entertainment.toString(),
+        carLoan: carLoan.toString(),
+        studentLoan: studentLoan.toString(),
+        creditCard: creditCard.toString(),
+      };
+
+      if (cashFlowData?.id) {
+        return apiRequest("PATCH", `/api/cash-flow/${cashFlowData.id}`, data);
+      } else {
+        return apiRequest("POST", "/api/cash-flow", data);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cash-flow"] });
+      toast({
+        title: "Cash flow saved",
+        description: "Your income and expenses have been updated successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Save failed",
+        description: error.message || "Failed to save cash flow data",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSave = () => {
+    saveMutation.mutate();
+  };
 
   // Calculated values
   const extraPaychequesMonthly = (monthlyIncome * extraPaycheques) / 12; // Annualized extra paycheques
@@ -51,9 +128,22 @@ export default function CashFlowPage() {
           <h1 className="text-3xl font-semibold">Cash Flow Settings</h1>
           <p className="text-muted-foreground">Configure your income and expenses (applies to all scenarios)</p>
         </div>
-        <Button data-testid="button-save">
-          <Save className="h-4 w-4 mr-2" />
-          Save Changes
+        <Button 
+          data-testid="button-save" 
+          onClick={handleSave} 
+          disabled={saveMutation.isPending || isLoading}
+        >
+          {saveMutation.isPending ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4 mr-2" />
+              Save Changes
+            </>
+          )}
         </Button>
       </div>
 
