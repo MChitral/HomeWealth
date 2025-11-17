@@ -11,6 +11,7 @@ import {
   insertPrepaymentEventSchema,
 } from "@shared/schema";
 import { devAuth } from "./devAuth";
+import { seedDemoData } from "./seed";
 
 declare global {
   namespace Express {
@@ -24,6 +25,30 @@ declare global {
 export async function registerRoutes(app: Express): Promise<Server> {
   // TEMPORARY: Development auth middleware (replace with Replit Auth)
   app.use("/api", devAuth);
+
+  // Seed Demo Data Endpoint
+  app.post("/api/seed-demo", async (req, res) => {
+    try {
+      const result = await seedDemoData(storage);
+      res.json({
+        success: true,
+        message: "Demo data seeded successfully",
+        data: {
+          mortgageId: result.mortgage.id,
+          scenarioIds: result.scenarios.map(s => s.id),
+          termId: result.term.id,
+        },
+      });
+    } catch (error) {
+      console.error("Seed error:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to seed demo data",
+        details: error instanceof Error ? error.message : String(error),
+      });
+    }
+  });
+
   // Cash Flow Routes
   app.get("/api/cash-flow", async (req, res) => {
     if (!req.user) {
