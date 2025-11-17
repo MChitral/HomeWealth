@@ -12,6 +12,7 @@ import {
 } from "@shared/schema";
 import { devAuth } from "./devAuth";
 import { seedDemoData } from "./seed";
+import { calculateScenarioMetrics, generateProjections } from "./calculations/projections";
 
 declare global {
   namespace Express {
@@ -305,6 +306,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     const scenarios = await storage.getScenariosByUser(req.user.id);
     res.json(scenarios);
+  });
+
+  // Get scenarios with calculated projections
+  app.get("/api/scenarios/with-projections", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    
+    try {
+      // Get user's scenarios
+      const scenarios = await storage.getScenariosByUser(req.user.id);
+      
+      // Get user's mortgage (assume first one for MVP)
+      const mortgages = await storage.getMortgagesByUser(req.user.id);
+      if (mortgages.length === 0) {
+        return res.json(scenarios.map(s => ({ ...s, metrics: null })));
+      }
+      const mortgage = mortgages[0];
+      
+      // Get cash flow and emergency fund
+      const cashFlow = await storage.getCashFlow(req.user.id);
+      const emergencyFund = await storage.getEmergencyFund(req.user.id);
+      
+      // Get current mortgage rate from most recent term
+      const terms = await storage.getMortgageTermsByMortgage(mortgage.id);
+      const currentTerm = terms.sort((a, b) => 
+        new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+      )[0];
+      
+      // Use term's fixed rate or default to 5.49%
+      const currentRate = currentTerm?.fixedRate 
+        ? parseFloat(currentTerm.fixedRate) / 100 // Convert from percentage to decimal
+        : 0.0549;
+      
+      // Calculate metrics and projections for each scenario
+      const scenariosWithMetrics = scenarios.map(scenario => {
+        const metrics = calculateScenarioMetrics({
+          scenario,
+          mortgage,
+          cashFlow,
+          emergencyFund
+        }, currentRate);
+        
+        const projections = generateProjections({
+          scenario,
+          mortgage,
+          cashFlow,
+          emergencyFund
+        }, 30, currentRate);
+        
+        return {
+          ...scenario,
+          metrics,
+          projections
+        };
+      });
+      
+      res.json(scenariosWithMetrics);
+    } catch (error) {
+      console.error("Error calculating projections:", error);
+      res.status(500).json({ error: "Failed to calculate projections" });
+    }
   });
 
   app.get("/api/scenarios/:id", async (req, res) => {

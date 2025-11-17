@@ -20,9 +20,9 @@ export default function ScenarioListPage() {
     document.title = "Scenarios | Mortgage Strategy";
   }, []);
 
-  // Fetch scenarios from backend
-  const { data: scenarios = [], isLoading } = useQuery<Scenario[]>({
-    queryKey: ["/api/scenarios"],
+  // Fetch scenarios with calculated projections
+  const { data: scenarios = [], isLoading } = useQuery<any[]>({
+    queryKey: ["/api/scenarios/with-projections"],
   });
 
   // Delete scenario mutation
@@ -31,6 +31,7 @@ export default function ScenarioListPage() {
       return apiRequest("DELETE", `/api/scenarios/${scenarioId}`);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/scenarios/with-projections"] });
       queryClient.invalidateQueries({ queryKey: ["/api/scenarios"] });
       toast({
         title: "Scenario deleted",
@@ -155,20 +156,30 @@ export default function ScenarioListPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {scenarios.map((scenario) => (
-          <ScenarioCard
-            key={scenario.id}
-            id={scenario.id}
-            name={scenario.name}
-            description={scenario.description || undefined}
-            lastModified={formatDistanceToNow(new Date(scenario.updatedAt), { addSuffix: true })}
-            netWorth="TBD"
-            mortgageBalance="TBD"
-            onEdit={() => setLocation(`/scenarios/${scenario.id}`)}
-            onCompare={() => setLocation(`/comparison?scenarios=${scenario.id}`)}
-            onDelete={() => handleDelete(scenario.id)}
-          />
-        ))}
+        {scenarios.map((scenario) => {
+          const metrics = scenario.metrics || {};
+          const netWorth = metrics.netWorth10yr 
+            ? `$${(metrics.netWorth10yr / 1000).toFixed(0)}k`
+            : "Calculating...";
+          const mortgageBalance = metrics.mortgageBalance10yr !== undefined
+            ? `$${(metrics.mortgageBalance10yr / 1000).toFixed(0)}k`
+            : "Calculating...";
+          
+          return (
+            <ScenarioCard
+              key={scenario.id}
+              id={scenario.id}
+              name={scenario.name}
+              description={scenario.description || undefined}
+              lastModified={formatDistanceToNow(new Date(scenario.updatedAt), { addSuffix: true })}
+              netWorth={netWorth}
+              mortgageBalance={mortgageBalance}
+              onEdit={() => setLocation(`/scenarios/${scenario.id}`)}
+              onCompare={() => setLocation(`/comparison?scenarios=${scenario.id}`)}
+              onDelete={() => handleDelete(scenario.id)}
+            />
+          );
+        })}
       </div>
     </div>
   );

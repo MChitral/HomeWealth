@@ -14,30 +14,40 @@ import {
 } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { ComparisonNetWorthChart } from "@/components/comparison-net-worth-chart";
 import { ComparisonLineChart } from "@/components/comparison-line-chart";
+
+// Chart colors for scenarios
+const SCENARIO_COLORS = [
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-2))",
+  "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))",
+];
 
 export default function ComparisonPage() {
   const [location] = useLocation();
   const [selectedScenarios, setSelectedScenarios] = useState<string[]>([]);
   const [timeHorizon, setTimeHorizon] = useState("10");
-  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch scenarios with calculated projections
+  const { data: scenariosWithMetrics, isLoading } = useQuery<any[]>({
+    queryKey: ['/api/scenarios/with-projections']
+  });
 
   // Set page title
   useEffect(() => {
     document.title = "Scenario Comparison | Mortgage Strategy";
   }, []);
 
-  // Simulate loading (remove when backend is connected)
+  // Read URL params on mount and select scenarios
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 700);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Read URL params on mount to pre-select scenarios
-  useEffect(() => {
+    if (!scenariosWithMetrics || scenariosWithMetrics.length === 0) return;
+    
     const params = new URLSearchParams(window.location.search);
     const scenariosParam = params.get('scenarios');
+    
     if (scenariosParam) {
       // If coming from scenario card, add that scenario to selection
       const newScenarios = [...selectedScenarios];
@@ -45,11 +55,12 @@ export default function ComparisonPage() {
         newScenarios.push(scenariosParam);
       }
       setSelectedScenarios(newScenarios.slice(0, 4)); // Max 4 scenarios
-    } else if (selectedScenarios.length === 0) {
-      // Default: show all 4 scenarios
-      setSelectedScenarios(["balanced", "aggressive", "invest", "conservative"]);
+    } else if (selectedScenarios.length === 0 && scenariosWithMetrics.length > 0) {
+      // Default: select first 2-4 scenarios (up to 4)
+      const defaultIds = scenariosWithMetrics.slice(0, 4).map(s => s.id);
+      setSelectedScenarios(defaultIds);
     }
-  }, [location]);
+  }, [location, scenariosWithMetrics]);
 
   const toggleScenario = (scenarioId: string) => {
     if (selectedScenarios.includes(scenarioId)) {
@@ -65,123 +76,65 @@ export default function ComparisonPage() {
     }
   };
 
-  // Mock scenario data - TODO: fetch from backend
-  const scenarios = {
-    balanced: {
-      id: "balanced",
-      name: "Balanced Strategy",
-      description: "50% prepay, 50% invest surplus",
-      color: "hsl(var(--chart-1))",
-      metrics: {
-        netWorth10yr: 625000,
-        netWorth20yr: 1245000,
-        mortgageBalance10yr: 195000,
-        mortgagePayoffYear: 18.5,
-        totalInterestPaid: 92500,
-        investments10yr: 185000,
-        investmentReturns10yr: 35000,
-        emergencyFundYears: 2.1,
-        avgCashFlow: 1200,
-      },
-    },
-    aggressive: {
-      id: "aggressive",
-      name: "Aggressive Prepayment",
-      description: "80% prepay, 20% invest surplus",
-      color: "hsl(var(--chart-3))",
-      metrics: {
-        netWorth10yr: 587000,
-        netWorth20yr: 1180000,
-        mortgageBalance10yr: 125000,
-        mortgagePayoffYear: 14.2,
-        totalInterestPaid: 68000,
-        investments10yr: 95000,
-        investmentReturns10yr: 18000,
-        emergencyFundYears: 2.1,
-        avgCashFlow: 850,
-      },
-    },
-    invest: {
-      id: "invest",
-      name: "Investment Focus",
-      description: "20% prepay, 80% invest surplus",
-      color: "hsl(var(--chart-2))",
-      metrics: {
-        netWorth10yr: 680000,
-        netWorth20yr: 1425000,
-        mortgageBalance10yr: 245000,
-        mortgagePayoffYear: 22.8,
-        totalInterestPaid: 118000,
-        investments10yr: 285000,
-        investmentReturns10yr: 55000,
-        emergencyFundYears: 2.1,
-        avgCashFlow: 1550,
-      },
-    },
-    conservative: {
-      id: "conservative",
-      name: "Conservative (EF First)",
-      description: "Build emergency fund fast, then 40% prepay / 60% invest",
-      color: "hsl(var(--chart-4))",
-      metrics: {
-        netWorth10yr: 610000,
-        netWorth20yr: 1280000,
-        mortgageBalance10yr: 210000,
-        mortgagePayoffYear: 20.5,
-        totalInterestPaid: 98000,
-        investments10yr: 195000,
-        investmentReturns10yr: 38000,
-        emergencyFundYears: 1.5,
-        avgCashFlow: 1350,
-      },
-    },
-  };
+  // Map scenarios with colors and format data
+  const scenarios = (scenariosWithMetrics || []).reduce((acc: any, scenario, index) => {
+    acc[scenario.id] = {
+      ...scenario,
+      color: SCENARIO_COLORS[index % SCENARIO_COLORS.length],
+      metrics: scenario.metrics || {}
+    };
+    return acc;
+  }, {});
 
   // All available scenarios for selection
-  const allScenarios = [
-    { id: "balanced", name: "Balanced Strategy" },
-    { id: "aggressive", name: "Aggressive Prepayment" },
-    { id: "invest", name: "Investment Focus" },
-    { id: "conservative", name: "Conservative (EF First)" },
-  ];
+  const allScenarios = (scenariosWithMetrics || []).map(s => ({
+    id: s.id,
+    name: s.name
+  }));
 
   const selectedScenarioData = selectedScenarios
-    .map(id => scenarios[id as keyof typeof scenarios])
+    .map(id => scenarios[id])
     .filter(Boolean);
   
+  // Helper to get horizon-specific metrics
+  const getMetricForHorizon = (metrics: any, metricName: 'netWorth' | 'mortgageBalance' | 'investments' | 'investmentReturns') => {
+    const suffix = timeHorizon === "10" ? "10yr" : timeHorizon === "20" ? "20yr" : "30yr";
+    return metrics?.[`${metricName}${suffix}`] || 0;
+  };
+
   const winner = selectedScenarioData.length > 0 
     ? selectedScenarioData.reduce((prev, current) => 
-        current.metrics.netWorth10yr > prev.metrics.netWorth10yr ? current : prev
+        getMetricForHorizon(current.metrics, 'netWorth') > getMetricForHorizon(prev.metrics, 'netWorth') ? current : prev
       )
     : null;
 
-  // Chart data
-  const netWorthData = [
-    { year: 0, balanced: 105000, aggressive: 105000, invest: 105000, conservative: 105000 },
-    { year: 2, balanced: 185000, aggressive: 180000, invest: 190000, conservative: 182000 },
-    { year: 4, balanced: 280000, aggressive: 270000, invest: 295000, conservative: 275000 },
-    { year: 6, balanced: 385000, aggressive: 365000, invest: 415000, conservative: 380000 },
-    { year: 8, balanced: 500000, aggressive: 470000, invest: 550000, conservative: 495000 },
-    { year: 10, balanced: 625000, aggressive: 587000, invest: 680000, conservative: 610000 },
-  ];
+  // Generate chart data from real projections
+  const generateChartData = (dataKey: 'netWorth' | 'mortgageBalance' | 'investmentValue') => {
+    if (!selectedScenarioData.length || !selectedScenarioData[0].projections) return [];
+    
+    const maxYears = parseInt(timeHorizon);
+    const data: any[] = [];
+    
+    // Sample every 2 years for chart readability (year 0, 2, 4, ... maxYears)
+    for (let displayYear = 0; displayYear <= maxYears; displayYear += 2) {
+      const dataPoint: any = { year: displayYear };
+      
+      selectedScenarioData.forEach(scenario => {
+        if (scenario.projections && scenario.projections[displayYear]) {
+          // projections array now includes year 0, indexed 0-30 for years 0-30
+          dataPoint[scenario.id] = scenario.projections[displayYear][dataKey];
+        }
+      });
+      
+      data.push(dataPoint);
+    }
+    
+    return data;
+  };
 
-  const mortgageData = [
-    { year: 0, balanced: 397745, aggressive: 397745, invest: 397745, conservative: 397745 },
-    { year: 2, balanced: 355000, aggressive: 340000, invest: 365000, conservative: 360000 },
-    { year: 4, balanced: 310000, aggressive: 275000, invest: 330000, conservative: 318000 },
-    { year: 6, balanced: 260000, aggressive: 205000, invest: 295000, conservative: 272000 },
-    { year: 8, balanced: 205000, aggressive: 130000, invest: 255000, conservative: 220000 },
-    { year: 10, balanced: 145000, aggressive: 50000, invest: 210000, conservative: 165000 },
-  ];
-
-  const investmentData = [
-    { year: 0, balanced: 5000, aggressive: 5000, invest: 5000, conservative: 5000 },
-    { year: 2, balanced: 45000, aggressive: 28000, invest: 62000, conservative: 38000 },
-    { year: 4, balanced: 95000, aggressive: 58000, invest: 135000, conservative: 82000 },
-    { year: 6, balanced: 155000, aggressive: 95000, invest: 225000, conservative: 135000 },
-    { year: 8, balanced: 225000, aggressive: 138000, invest: 330000, conservative: 195000 },
-    { year: 10, balanced: 305000, aggressive: 188000, invest: 450000, conservative: 265000 },
-  ];
+  const netWorthData = generateChartData('netWorth');
+  const mortgageData = generateChartData('mortgageBalance');
+  const investmentData = generateChartData('investmentValue');
 
   // Show loading skeleton
   if (isLoading) {
@@ -347,7 +300,7 @@ export default function ComparisonPage() {
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Net Worth</p>
                     <p className="font-mono font-semibold text-xl text-primary">
-                      ${winner.metrics.netWorth10yr.toLocaleString()}
+                      ${getMetricForHorizon(winner.metrics, 'netWorth').toLocaleString()}
                     </p>
                   </div>
                   <div>
@@ -365,7 +318,7 @@ export default function ComparisonPage() {
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Investment Value</p>
                     <p className="font-mono font-semibold text-xl text-green-600">
-                      ${winner.metrics.investments10yr.toLocaleString()}
+                      ${getMetricForHorizon(winner.metrics, 'investments').toLocaleString()}
                     </p>
                   </div>
                 </div>
@@ -416,7 +369,7 @@ export default function ComparisonPage() {
               <CardContent className="space-y-4">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Net Worth ({timeHorizon}yr)</p>
-                  <p className="text-3xl font-bold font-mono">${scenario.metrics.netWorth10yr.toLocaleString()}</p>
+                  <p className="text-3xl font-bold font-mono">${getMetricForHorizon(scenario.metrics, 'netWorth').toLocaleString()}</p>
                 </div>
                 <Separator />
                 <div className="space-y-3">
@@ -443,14 +396,14 @@ export default function ComparisonPage() {
                         <TrendingUp className="h-3 w-3" />
                         Investments ({timeHorizon}yr)
                       </span>
-                      <span className="text-sm font-mono font-medium">${scenario.metrics.investments10yr.toLocaleString()}</span>
+                      <span className="text-sm font-mono font-medium">${getMetricForHorizon(scenario.metrics, 'investments').toLocaleString()}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground flex items-center gap-1">
                         <PiggyBank className="h-3 w-3" />
                         Investment Returns
                       </span>
-                      <span className="text-sm font-mono font-medium text-green-600">+${scenario.metrics.investmentReturns10yr.toLocaleString()}</span>
+                      <span className="text-sm font-mono font-medium text-green-600">+${getMetricForHorizon(scenario.metrics, 'investmentReturns').toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
@@ -462,11 +415,9 @@ export default function ComparisonPage() {
 
       {/* Detailed Analysis Tabs */}
       <Tabs defaultValue="charts" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="charts" data-testid="tab-charts">Charts</TabsTrigger>
           <TabsTrigger value="metrics" data-testid="tab-metrics">All Metrics</TabsTrigger>
-          <TabsTrigger value="tradeoffs" data-testid="tab-tradeoffs">Trade-offs</TabsTrigger>
-          <TabsTrigger value="sensitivity" data-testid="tab-sensitivity">Sensitivity</TabsTrigger>
         </TabsList>
 
         <TabsContent value="charts" className="space-y-6">
@@ -538,7 +489,7 @@ export default function ComparisonPage() {
                       <td className="py-3 px-4 text-sm font-medium">Net Worth ({timeHorizon} years)</td>
                       {selectedScenarioData.map((scenario) => (
                         <td key={scenario.id} className="text-right py-3 px-4 font-mono text-sm">
-                          ${scenario.metrics.netWorth10yr.toLocaleString()}
+                          ${getMetricForHorizon(scenario.metrics, 'netWorth').toLocaleString()}
                         </td>
                       ))}
                     </tr>
@@ -546,7 +497,7 @@ export default function ComparisonPage() {
                       <td className="py-3 px-4 text-sm font-medium">Mortgage Balance ({timeHorizon} years)</td>
                       {selectedScenarioData.map((scenario) => (
                         <td key={scenario.id} className="text-right py-3 px-4 font-mono text-sm">
-                          ${scenario.metrics.mortgageBalance10yr.toLocaleString()}
+                          ${getMetricForHorizon(scenario.metrics, 'mortgageBalance').toLocaleString()}
                         </td>
                       ))}
                     </tr>
@@ -570,7 +521,7 @@ export default function ComparisonPage() {
                       <td className="py-3 px-4 text-sm font-medium">Investment Portfolio ({timeHorizon} years)</td>
                       {selectedScenarioData.map((scenario) => (
                         <td key={scenario.id} className="text-right py-3 px-4 font-mono text-sm">
-                          ${scenario.metrics.investments10yr.toLocaleString()}
+                          ${getMetricForHorizon(scenario.metrics, 'investments').toLocaleString()}
                         </td>
                       ))}
                     </tr>
@@ -578,7 +529,7 @@ export default function ComparisonPage() {
                       <td className="py-3 px-4 text-sm font-medium">Investment Returns Earned</td>
                       {selectedScenarioData.map((scenario) => (
                         <td key={scenario.id} className="text-right py-3 px-4 font-mono text-sm text-green-600">
-                          +${scenario.metrics.investmentReturns10yr.toLocaleString()}
+                          +${getMetricForHorizon(scenario.metrics, 'investmentReturns').toLocaleString()}
                         </td>
                       ))}
                     </tr>
@@ -591,10 +542,10 @@ export default function ComparisonPage() {
                       ))}
                     </tr>
                     <tr className="hover-elevate">
-                      <td className="py-3 px-4 text-sm font-medium">Average Monthly Cash Flow</td>
+                      <td className="py-3 px-4 text-sm font-medium">Average Monthly Surplus</td>
                       {selectedScenarioData.map((scenario) => (
                         <td key={scenario.id} className="text-right py-3 px-4 font-mono text-sm">
-                          ${scenario.metrics.avgCashFlow.toLocaleString()}
+                          ${scenario.metrics.avgMonthlySurplus.toLocaleString()}
                         </td>
                       ))}
                     </tr>
@@ -604,238 +555,10 @@ export default function ComparisonPage() {
             </CardContent>
           </Card>
         </TabsContent>
-
-        <TabsContent value="tradeoffs" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-green-600" />
-                  Advantages
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <p className="font-medium mb-2 text-sm">{scenarios.aggressive.name}</p>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li className="flex items-start gap-2">
-                      <ArrowUpRight className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                      <span>Mortgage freedom 4.3 years faster (14.2 vs 18.5 years)</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <ArrowUpRight className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                      <span>Save $24,500 in interest vs balanced strategy</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <ArrowUpRight className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                      <span>Guaranteed return equal to mortgage rate (6.40%)</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <ArrowUpRight className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                      <span>Lower financial stress with reduced debt</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <p className="font-medium mb-2 text-sm">{scenarios.invest.name}</p>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li className="flex items-start gap-2">
-                      <ArrowUpRight className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                      <span>Highest net worth: $55,000 more than aggressive prepay</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <ArrowUpRight className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                      <span>Larger investment returns: $55,000 vs $18,000</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <ArrowUpRight className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                      <span>Better liquidity and financial flexibility</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <ArrowUpRight className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                      <span>Higher monthly cash flow ($1,550 vs $850)</span>
-                    </li>
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-orange-600" />
-                  Disadvantages
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <p className="font-medium mb-2 text-sm">{scenarios.aggressive.name}</p>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li className="flex items-start gap-2">
-                      <ArrowDownRight className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                      <span>Lowest net worth: $93,000 less than invest-focused</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <ArrowDownRight className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                      <span>Missed investment growth opportunity ($37,000 less returns)</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <ArrowDownRight className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                      <span>Lower liquidity - funds locked in home equity</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <ArrowDownRight className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                      <span>Reduced monthly cash flow ($850 vs $1,550)</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <p className="font-medium mb-2 text-sm">{scenarios.invest.name}</p>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li className="flex items-start gap-2">
-                      <ArrowDownRight className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                      <span>Mortgage freedom delayed by 8.6 years (22.8 vs 14.2)</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <ArrowDownRight className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                      <span>Pay $50,000 more in total interest</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <ArrowDownRight className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                      <span>Higher risk - returns not guaranteed like mortgage savings</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <ArrowDownRight className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                      <span>Market volatility exposure</span>
-                    </li>
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Key Decision Factors</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="p-4 bg-muted/50 rounded-md">
-                <p className="font-medium mb-2">Choose Aggressive Prepayment If:</p>
-                <ul className="text-sm text-muted-foreground space-y-1 ml-4">
-                  <li>• You value debt-free living and peace of mind</li>
-                  <li>• You're risk-averse and want guaranteed returns</li>
-                  <li>• You're approaching retirement and want to eliminate housing costs</li>
-                  <li>• You expect interest rates to stay high or rise</li>
-                </ul>
-              </div>
-              <div className="p-4 bg-muted/50 rounded-md">
-                <p className="font-medium mb-2">Choose Investment Focus If:</p>
-                <ul className="text-sm text-muted-foreground space-y-1 ml-4">
-                  <li>• You want to maximize long-term wealth accumulation</li>
-                  <li>• You have a long time horizon (10+ years)</li>
-                  <li>• You're comfortable with market volatility</li>
-                  <li>• You value liquidity and financial flexibility</li>
-                </ul>
-              </div>
-              <div className="p-4 bg-primary/10 rounded-md">
-                <p className="font-medium mb-2">Choose Balanced Strategy If:</p>
-                <ul className="text-sm text-muted-foreground space-y-1 ml-4">
-                  <li>• You want a middle-ground approach</li>
-                  <li>• You want to reduce debt while building investments</li>
-                  <li>• You're unsure about future rate and return scenarios</li>
-                  <li>• You value diversification and flexibility</li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="sensitivity" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Sensitivity Analysis</CardTitle>
-              <CardDescription>How do different market conditions affect each strategy?</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <h3 className="font-medium mb-3">If Investment Returns Drop to 4% (from 6%)</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 bg-muted/50 rounded-md">
-                    <p className="text-sm text-muted-foreground mb-1">Aggressive Prepay</p>
-                    <p className="text-lg font-mono font-semibold">No change</p>
-                    <p className="text-xs text-muted-foreground mt-1">Not dependent on returns</p>
-                  </div>
-                  <div className="p-4 bg-muted/50 rounded-md">
-                    <p className="text-sm text-muted-foreground mb-1">Balanced</p>
-                    <p className="text-lg font-mono font-semibold text-orange-600">-$22,000</p>
-                    <p className="text-xs text-muted-foreground mt-1">Still beats aggressive</p>
-                  </div>
-                  <div className="p-4 bg-muted/50 rounded-md">
-                    <p className="text-sm text-muted-foreground mb-1">Investment Focus</p>
-                    <p className="text-lg font-mono font-semibold text-orange-600">-$48,000</p>
-                    <p className="text-xs text-muted-foreground mt-1">Still wins overall</p>
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div>
-                <h3 className="font-medium mb-3">If Mortgage Rate Drops to 4.5% (from 6.4%)</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 bg-muted/50 rounded-md">
-                    <p className="text-sm text-muted-foreground mb-1">Aggressive Prepay</p>
-                    <p className="text-lg font-mono font-semibold text-green-600">+$15,000</p>
-                    <p className="text-xs text-muted-foreground mt-1">Lower interest cost</p>
-                  </div>
-                  <div className="p-4 bg-muted/50 rounded-md">
-                    <p className="text-sm text-muted-foreground mb-1">Balanced</p>
-                    <p className="text-lg font-mono font-semibold text-green-600">+$12,000</p>
-                    <p className="text-xs text-muted-foreground mt-1">Moderate benefit</p>
-                  </div>
-                  <div className="p-4 bg-muted/50 rounded-md">
-                    <p className="text-sm text-muted-foreground mb-1">Investment Focus</p>
-                    <p className="text-lg font-mono font-semibold text-green-600">+$8,000</p>
-                    <p className="text-xs text-muted-foreground mt-1">Least benefit (still best)</p>
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div>
-                <h3 className="font-medium mb-3">Breakeven Point: When Does Invest Beat Prepay?</h3>
-                <div className="p-4 bg-primary/10 rounded-md">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <p className="text-sm font-medium mb-2">Investment Returns Needed</p>
-                      <p className="text-2xl font-mono font-bold">5.1%</p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        At current mortgage rate of 6.4%, investments need to return at least 5.1% annually 
-                        (after accounting for semi-annual mortgage compounding) for invest-focus to beat prepay
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium mb-2">Time Horizon Required</p>
-                      <p className="text-2xl font-mono font-bold">8+ years</p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Investment-focused strategy needs at least 8 years to overcome the guaranteed 
-                        mortgage interest savings from prepayment
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
     </div>
   );
 }
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
