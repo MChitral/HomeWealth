@@ -1,4 +1,4 @@
-import { Home, FileText, GitCompare, Settings } from "lucide-react";
+import { Home, FileText, GitCompare, Settings, Receipt } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -17,6 +17,11 @@ const items = [
     title: "Dashboard",
     url: "/",
     icon: Home,
+  },
+  {
+    title: "Mortgage History",
+    url: "/mortgage-history",
+    icon: Receipt,
   },
   {
     title: "Scenarios",
