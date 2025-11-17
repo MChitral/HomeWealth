@@ -6,38 +6,44 @@ A full-stack web application helping Canadians compare financial strategies for 
 
 **Tech Stack**: Express.js (backend) + React + TypeScript (frontend), PostgreSQL database, Shadcn UI components
 
-## Current Status: Backend + API Integration In Progress
+## Current Status: 3 Core Pages Wired to Backend ✅
 
-### ✅ Completed
+### ✅ Completed (Dec 2024)
 **Backend Infrastructure:**
 - ✅ Database schema (8 entities: users, cash flow, EF, mortgages, terms, payments, scenarios, prepayment events)
 - ✅ In-memory storage layer (IStorage) with full CRUD operations
 - ✅ 30+ secure RESTful API routes with Zod validation
 - ✅ Canadian mortgage calculation engine (semi-annual compounding implemented)
-- ✅ Net worth projection engine (10-30 year forecasts)
+- ✅ Net worth projection engine (10-30 year forecasts - stub)
 - ✅ Dev auth middleware (temp mock, Replit Auth identified for later)
 
-**Frontend-Backend Integration:**
-- ✅ **Cash Flow page wired** (Task 9 complete):
-  - useQuery fetches data from GET /api/cash-flow
-  - useMutation saves via POST/PATCH with cache invalidation
-  - Zero-value bug fixed (uses `!= null` checks instead of truthiness)
-  - E2E tested with Playwright ✅
-- 🚧 **Mortgage History page integration** (Task 10 - 80% complete):
-  - ✅ useQuery hooks for mortgages, terms, payments
-  - ✅ Normalization layer (UiTerm/UiPayment types) converts DB decimals to numbers
-  - ✅ useMutation for creating payments and terms
-  - ✅ Data flows from backend to UI
-  - ⏳ UI polish incomplete (22 null guards needed, loading states)
-  - ⏳ Payment calculations stubbed (principal/interest split needs engine hookup)
+**Frontend-Backend Integration (3/8 pages wired):**
 
-### 🚧 Next Tasks (Tasks 11-16)
-- Task 11: Wire Emergency Fund page to API
-- Task 12: Wire Scenario Editor page to API
-- Task 13: Add savings metrics calculation
-- Task 14: Enhance Comparison page with savings metrics
-- Task 15: Add amortization schedule display
-- Task 16: Test calculation accuracy vs government calculator
+1. ✅ **Emergency Fund Page** (wire-1):
+   - GET/POST /api/emergency-fund with zero-safe calculations
+   - Controlled inputs, cache invalidation, loading states
+   - Helpful empty state when cash flow data missing
+   - E2E tested ✅
+
+2. ✅ **Scenario Editor Page** (wire-2):
+   - GET/POST/PATCH /api/scenarios with UUID routing
+   - Number type handling: expectedReturnRate sent as number (6.5), transformed to decimal string ("6.500") by backend
+   - Cache invalidation for list + detail queries
+   - Create → edit → update flow E2E tested ✅
+   - **Critical fix**: Backend Zod schema now accepts both numbers and strings with `.transform()` normalization
+
+3. ✅ **Scenario List Page** (wire-3):
+   - GET /api/scenarios + DELETE /api/scenarios/:id
+   - UUID-based edit links (prevents 404 errors from name slugs)
+   - Delete functionality with cache invalidation
+   - Empty state, loading skeleton, timestamp formatting
+   - E2E tested ✅
+   - **Note**: Net worth/mortgage metrics show "TBD" until projection engine connected
+
+### 🚧 Next Tasks (2 pages + enhancements)
+- wire-4: Wire Comparison page to backend with real scenario calculations
+- wire-5: Wire Dashboard to aggregate real data from all sources
+- Minor enhancements: Replace window.confirm with AlertDialog for deletes, connect projection engine for calculated metrics
 
 ## Key Product Differentiators
 
