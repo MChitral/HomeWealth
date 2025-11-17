@@ -122,6 +122,14 @@ export default function MortgageHistoryPage() {
   // Payment form state
   const [paymentDate, setPaymentDate] = useState("");
   const [paymentAmount, setPaymentAmount] = useState("");
+  
+  // Create mortgage form state
+  const [isCreateMortgageOpen, setIsCreateMortgageOpen] = useState(false);
+  const [createPropertyPrice, setCreatePropertyPrice] = useState("");
+  const [createDownPayment, setCreateDownPayment] = useState("");
+  const [createStartDate, setCreateStartDate] = useState("");
+  const [createAmortization, setCreateAmortization] = useState("25");
+  const [createFrequency, setCreateFrequency] = useState("monthly");
 
   // Fetch mortgages (use first one for MVP)
   const { data: mortgages, isLoading: mortgagesLoading } = useQuery<Mortgage[]>({
@@ -181,6 +189,41 @@ export default function MortgageHistoryPage() {
       toast({
         title: "Error",
         description: error.message || "Failed to log payment",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation for creating a new mortgage
+  const createMortgageMutation = useMutation({
+    mutationFn: async (mortgageData: {
+      propertyPrice: string;
+      downPayment: string;
+      originalAmount: string;
+      currentBalance: string;
+      startDate: string;
+      amortizationYears: number;
+      amortizationMonths: number;
+      paymentFrequency: string;
+      annualPrepaymentLimitPercent: number;
+    }) => {
+      return apiRequest(`/api/mortgages`, {
+        method: "POST",
+        body: mortgageData,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/mortgages"] });
+      toast({
+        title: "Mortgage created",
+        description: "Your mortgage has been created successfully",
+      });
+      setIsCreateMortgageOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create mortgage",
         variant: "destructive",
       });
     },
@@ -258,11 +301,127 @@ export default function MortgageHistoryPage() {
   }
 
   // Show empty state if no mortgage data
-  if (!mortgage || !uiCurrentTerm) {
+  if (!mortgage) {
     return (
       <div className="flex flex-col items-center justify-center h-screen gap-4">
         <h2 className="text-2xl font-semibold">No Mortgage Data</h2>
         <p className="text-muted-foreground">Create a mortgage to start tracking payments and terms.</p>
+        <Dialog open={isCreateMortgageOpen} onOpenChange={setIsCreateMortgageOpen}>
+          <DialogTrigger asChild>
+            <Button data-testid="button-create-mortgage">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Mortgage
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Create Mortgage</DialogTitle>
+              <DialogDescription>
+                Enter your mortgage details to start tracking payments
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="property-price">Property Price ($)</Label>
+                  <Input
+                    id="property-price"
+                    type="number"
+                    placeholder="500000"
+                    value={createPropertyPrice}
+                    onChange={(e) => setCreatePropertyPrice(e.target.value)}
+                    data-testid="input-property-price"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="down-payment">Down Payment ($)</Label>
+                  <Input
+                    id="down-payment"
+                    type="number"
+                    placeholder="100000"
+                    value={createDownPayment}
+                    onChange={(e) => setCreateDownPayment(e.target.value)}
+                    data-testid="input-down-payment"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="start-date">Start Date</Label>
+                <Input
+                  id="start-date"
+                  type="date"
+                  value={createStartDate}
+                  onChange={(e) => setCreateStartDate(e.target.value)}
+                  data-testid="input-start-date"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="amortization-years">Amortization (years)</Label>
+                <Input
+                  id="amortization-years"
+                  type="number"
+                  placeholder="25"
+                  value={createAmortization}
+                  onChange={(e) => setCreateAmortization(e.target.value)}
+                  data-testid="input-amortization"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="payment-frequency">Payment Frequency</Label>
+                <select
+                  id="payment-frequency"
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors"
+                  value={createFrequency}
+                  onChange={(e) => setCreateFrequency(e.target.value)}
+                  data-testid="select-frequency"
+                >
+                  <option value="monthly">Monthly</option>
+                  <option value="biweekly">Biweekly</option>
+                  <option value="accelerated-biweekly">Accelerated Biweekly</option>
+                </select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsCreateMortgageOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  const propertyPrice = parseFloat(createPropertyPrice);
+                  const downPayment = parseFloat(createDownPayment);
+                  const originalAmount = propertyPrice - downPayment;
+                  
+                  createMortgageMutation.mutate({
+                    propertyPrice: propertyPrice.toString(),
+                    downPayment: downPayment.toString(),
+                    originalAmount: originalAmount.toString(),
+                    currentBalance: originalAmount.toString(),
+                    startDate: createStartDate,
+                    amortizationYears: parseInt(createAmortization),
+                    amortizationMonths: 0,
+                    paymentFrequency: createFrequency,
+                    annualPrepaymentLimitPercent: 20,
+                  });
+                }}
+                disabled={!createPropertyPrice || !createDownPayment || !createStartDate || !createAmortization || createMortgageMutation.isPending}
+                data-testid="button-save-mortgage"
+              >
+                {createMortgageMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Create Mortgage
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }
+  
+  // Show message if no term exists
+  if (!uiCurrentTerm) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen gap-4">
+        <h2 className="text-2xl font-semibold">No Term Data</h2>
+        <p className="text-muted-foreground">Create a mortgage term to start tracking payments.</p>
       </div>
     );
   }
@@ -296,7 +455,7 @@ export default function MortgageHistoryPage() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-semibold">Mortgage History</h1>
+          <h1 className="text-3xl font-semibold">Mortgage</h1>
           <p className="text-muted-foreground">Track your actual mortgage payments (Canadian term-based mortgages)</p>
         </div>
         <div className="flex gap-2">

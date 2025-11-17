@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import DashboardPage from "@/pages/dashboard-page";
-import MortgageHistoryPage from "@/pages/mortgage-history-page";
+import MortgagePage from "@/pages/mortgage-page";
 import ScenarioListPage from "@/pages/scenario-list-page";
 import ScenarioEditorPage from "@/pages/scenario-editor-page";
 import ComparisonPage from "@/pages/comparison-page";
@@ -18,7 +18,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={DashboardPage} />
-      <Route path="/mortgage-history" component={MortgageHistoryPage} />
+      <Route path="/mortgage" component={MortgagePage} />
       <Route path="/scenarios" component={ScenarioListPage} />
       <Route path="/scenarios/:id" component={ScenarioEditorPage} />
       <Route path="/scenarios/new" component={ScenarioEditorPage} />

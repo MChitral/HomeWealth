@@ -19,8 +19,8 @@ const items = [
     icon: Home,
   },
   {
-    title: "Mortgage History",
-    url: "/mortgage-history",
+    title: "Mortgage",
+    url: "/mortgage",
     icon: Receipt,
   },
   {
