@@ -109,10 +109,21 @@ export default function ScenarioEditorPage() {
         </div>
       </div>
 
+      <Card className="bg-muted/50">
+        <CardContent className="p-4">
+          <p className="text-sm">
+            <span className="font-medium">Note:</span> Income and expenses are configured in the{" "}
+            <Link href="/cash-flow" className="text-primary hover:underline">
+              Cash Flow page
+            </Link>{" "}
+            and apply to all scenarios. Here you only configure what differs between strategies.
+          </p>
+        </CardContent>
+      </Card>
+
       <Tabs defaultValue="mortgage" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="mortgage" data-testid="tab-mortgage">Mortgage & Prepayment</TabsTrigger>
-          <TabsTrigger value="cashflow" data-testid="tab-cashflow">Cash Flow</TabsTrigger>
           <TabsTrigger value="ef" data-testid="tab-ef">Emergency Fund</TabsTrigger>
           <TabsTrigger value="investments" data-testid="tab-investments">Investments</TabsTrigger>
         </TabsList>
@@ -347,55 +358,6 @@ export default function ScenarioEditorPage() {
               <p className="text-sm text-muted-foreground italic">
                 Adjust prepayment settings above to see how they affect your mortgage payoff timeline
               </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="cashflow" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Cash Flow Configuration</CardTitle>
-              <CardDescription>Configure your income and expenses</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="monthly-income">Monthly Income (base)</Label>
-                  <Input id="monthly-income" type="number" placeholder="8000" data-testid="input-monthly-income" />
-                  <p className="text-sm text-muted-foreground">Regular bi-weekly paycheques (2 per month)</p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="extra-paycheques">Extra Paycheques/Year</Label>
-                  <Input id="extra-paycheques" type="number" placeholder="2" data-testid="input-extra-paycheques" />
-                  <p className="text-sm text-muted-foreground">Typical for bi-weekly pay (26 weeks = 2 extra)</p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="annual-bonus">Annual Bonus</Label>
-                <Input id="annual-bonus" type="number" placeholder="10000" data-testid="input-annual-bonus" />
-              </div>
-
-              <Separator />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fixed-expenses">Fixed Expenses (monthly)</Label>
-                  <Input id="fixed-expenses" type="number" placeholder="2000" data-testid="input-fixed-expenses" />
-                  <p className="text-sm text-muted-foreground">Property tax, insurance, condo fees, utilities</p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="variable-expenses">Variable Expenses (monthly)</Label>
-                  <Input id="variable-expenses" type="number" placeholder="1500" data-testid="input-variable-expenses" />
-                  <p className="text-sm text-muted-foreground">Groceries, gas, entertainment, dining</p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="other-debt">Other Debt Payments (monthly)</Label>
-                <Input id="other-debt" type="number" placeholder="500" data-testid="input-other-debt" />
-                <p className="text-sm text-muted-foreground">Car loans, credit cards, student loans</p>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
