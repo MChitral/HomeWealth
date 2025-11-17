@@ -53,7 +53,7 @@ export default function MortgageHistoryPage() {
 
   const handleTermRenewal = () => {
     const termYears = Number(renewalTermYears) || 5;
-    const startDate = renewalStartDate || new Date().toISOString().split('T')[0];
+    const startDate = renewalStartDate || currentTerm.endDate;
     const endDate = new Date(startDate);
     endDate.setFullYear(endDate.getFullYear() + termYears);
 
@@ -66,6 +66,11 @@ export default function MortgageHistoryPage() {
       fixedRate: renewalTermType === 'fixed' ? Number(renewalRate) || null : null,
       paymentFrequency: renewalPaymentFrequency as "monthly" | "biweekly" | "accelerated-biweekly",
     });
+
+    // Update prime rate if variable and user entered a value
+    if (renewalTermType.startsWith('variable') && renewalPrime) {
+      setPrimeRate(renewalPrime);
+    }
 
     setIsTermRenewalOpen(false);
   };
