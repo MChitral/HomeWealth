@@ -7,23 +7,124 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Save, ArrowLeft, Info } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useParams, useLocation } from "wouter";
 import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { MortgageBalanceChart } from "@/components/mortgage-balance-chart";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import type { Scenario } from "@shared/schema";
 
 export default function ScenarioEditorPage() {
-  const [prepaymentSplit, setPrepaymentSplit] = useState([50]);
+  const { toast } = useToast();
+  const params = useParams<{ id?: string }>();
+  const [, navigate] = useLocation();
+  const isNewScenario = params.id === "new" || !params.id;
+  const scenarioId = isNewScenario ? null : params.id;
 
-  // Set page title
-  useEffect(() => {
-    document.title = "Edit Scenario | Mortgage Strategy";
-  }, []);
+  // Form state
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [prepaymentSplit, setPrepaymentSplit] = useState([50]);
+  const [expectedReturnRate, setExpectedReturnRate] = useState("6.0");
+  const [efPriorityPercent, setEfPriorityPercent] = useState("0");
+  
+  // Additional UI state (not in schema yet - stubbed)
   const [useBonus, setUseBonus] = useState(false);
   const [useExtraPay, setUseExtraPay] = useState(false);
   const [monthlyExtra, setMonthlyExtra] = useState("200");
   const [annualLump, setAnnualLump] = useState("5000");
+
+  // Set page title
+  useEffect(() => {
+    document.title = isNewScenario ? "New Scenario | Mortgage Strategy" : "Edit Scenario | Mortgage Strategy";
+  }, [isNewScenario]);
+
+  // Fetch existing scenario if editing
+  const { data: scenario, isLoading } = useQuery<Scenario>({
+    queryKey: ["/api/scenarios", scenarioId],
+    queryFn: async () => {
+      const response = await fetch(`/api/scenarios/${scenarioId}`);
+      if (!response.ok) throw new Error("Failed to fetch scenario");
+      return response.json();
+    },
+    enabled: !isNewScenario && !!scenarioId,
+  });
+
+  // Initialize form when editing existing scenario
+  useEffect(() => {
+    if (scenario && !isNewScenario) {
+      setName(scenario.name);
+      setDescription(scenario.description || "");
+      setPrepaymentSplit([scenario.prepaymentMonthlyPercent]);
+      setExpectedReturnRate(scenario.expectedReturnRate);
+      setEfPriorityPercent(scenario.efPriorityPercent.toString());
+    }
+  }, [scenario, isNewScenario]);
+
+  // Save mutation
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      // Validate and prepare data
+      const prepaymentPercent = prepaymentSplit?.[0] ?? 50;
+      const investmentPercent = 100 - prepaymentPercent;
+      const returnRate = parseFloat(expectedReturnRate || "6.0").toFixed(3);
+      const efPriority = Math.max(0, Math.min(100, parseInt(efPriorityPercent || "0")));
+
+      const data = {
+        name: name.trim(),
+        description: description.trim() || null,
+        prepaymentMonthlyPercent: prepaymentPercent,
+        investmentMonthlyPercent: investmentPercent,
+        expectedReturnRate: returnRate,
+        efPriorityPercent: efPriority,
+      };
+
+      if (isNewScenario) {
+        return apiRequest("POST", "/api/scenarios", data);
+      } else {
+        return apiRequest("PATCH", `/api/scenarios/${scenarioId}`, data);
+      }
+    },
+    onSuccess: (savedScenario: Scenario) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/scenarios"] });
+      if (savedScenario?.id) {
+        queryClient.invalidateQueries({ queryKey: ["/api/scenarios", savedScenario.id] });
+      }
+      if (!isNewScenario && scenarioId) {
+        queryClient.invalidateQueries({ queryKey: ["/api/scenarios", scenarioId] });
+      }
+      toast({
+        title: isNewScenario ? "Scenario created" : "Scenario saved",
+        description: isNewScenario ? "Your new scenario has been created." : "Your scenario has been updated.",
+      });
+      
+      // Navigate to scenarios list after saving
+      navigate("/scenarios");
+    },
+    onError: () => {
+      toast({
+        title: "Error saving scenario",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSave = () => {
+    if (!name.trim()) {
+      toast({
+        title: "Name required",
+        description: "Please enter a scenario name.",
+        variant: "destructive",
+      });
+      return;
+    }
+    saveMutation.mutate();
+  };
 
   // Current mortgage data from Mortgage History (pre-populated)
   const currentMortgageData = {
@@ -54,21 +155,43 @@ export default function ScenarioEditorPage() {
   const projectedPayoff = 18.2; // years from today
   const totalInterest = 86000; // dollars from today forward
 
+  // Show loading skeleton when editing existing scenario
+  if (isLoading && !isNewScenario) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-10 w-10" />
+          <div className="flex-1">
+            <Skeleton className="h-10 w-60 mb-2" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <Skeleton className="h-96 w-full" />
+        <Skeleton className="h-80 w-full" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 sticky top-0 bg-background z-10 py-4 -mt-4">
         <Link href="/scenarios">
           <Button variant="ghost" size="icon" data-testid="button-back">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
         <div className="flex-1">
-          <h1 className="text-3xl font-semibold">Edit Scenario</h1>
+          <h1 className="text-3xl font-semibold">{isNewScenario ? "New Scenario" : "Edit Scenario"}</h1>
           <p className="text-muted-foreground">Build a strategy from your current mortgage position</p>
         </div>
-        <Button data-testid="button-save">
+        <Button 
+          onClick={handleSave} 
+          disabled={saveMutation.isPending}
+          data-testid="button-save"
+        >
           <Save className="h-4 w-4 mr-2" />
-          Save Scenario
+          {saveMutation.isPending ? "Saving..." : "Save Scenario"}
         </Button>
       </div>
 
@@ -85,7 +208,8 @@ export default function ScenarioEditorPage() {
           <Input
             id="scenario-name"
             placeholder="e.g., Balanced Strategy"
-            defaultValue="Balanced Strategy"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             data-testid="input-scenario-name"
           />
         </div>
@@ -94,6 +218,8 @@ export default function ScenarioEditorPage() {
           <Input
             id="scenario-description"
             placeholder="Brief description of this strategy"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             data-testid="input-scenario-description"
           />
         </div>
@@ -457,7 +583,15 @@ export default function ScenarioEditorPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="annual-return">Expected Annual Return (%)</Label>
-                <Input id="annual-return" type="number" step="0.1" placeholder="6.0" data-testid="input-annual-return" />
+                <Input 
+                  id="annual-return" 
+                  type="number" 
+                  step="0.1" 
+                  value={expectedReturnRate}
+                  onChange={(e) => setExpectedReturnRate(e.target.value)}
+                  placeholder="6.0" 
+                  data-testid="input-annual-return" 
+                />
                 <p className="text-sm text-muted-foreground">Historical average: 6-8% for balanced portfolio</p>
               </div>
 

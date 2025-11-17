@@ -4,49 +4,53 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, FileText, Info } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { Scenario } from "@shared/schema";
+import { formatDistanceToNow } from "date-fns";
 
 export default function ScenarioListPage() {
   const [, setLocation] = useLocation();
-  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   // Set page title
   useEffect(() => {
     document.title = "Scenarios | Mortgage Strategy";
   }, []);
 
-  // Simulate loading (remove when backend is connected)
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 600);
-    return () => clearTimeout(timer);
-  }, []);
+  // Fetch scenarios from backend
+  const { data: scenarios = [], isLoading } = useQuery<Scenario[]>({
+    queryKey: ["/api/scenarios"],
+  });
 
-  const scenarios = [
-    {
-      id: "aggressive",
-      name: "Aggressive Prepayment",
-      description: "Focus on paying down mortgage as quickly as possible",
-      lastModified: "2 days ago",
-      netWorth: "$587,000",
-      mortgageBalance: "$125,000",
+  // Delete scenario mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (scenarioId: string) => {
+      return apiRequest("DELETE", `/api/scenarios/${scenarioId}`);
     },
-    {
-      id: "balanced",
-      name: "Balanced Strategy",
-      description: "50/50 split between mortgage prepayment and investments",
-      lastModified: "1 week ago",
-      netWorth: "$625,000",
-      mortgageBalance: "$150,000",
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/scenarios"] });
+      toast({
+        title: "Scenario deleted",
+        description: "The scenario has been removed.",
+      });
     },
-    {
-      id: "invest",
-      name: "Investment Focus",
-      description: "Maximize investment contributions, minimum mortgage payments",
-      lastModified: "2 weeks ago",
-      netWorth: "$680,000",
-      mortgageBalance: "$185,000",
+    onError: () => {
+      toast({
+        title: "Error deleting scenario",
+        description: "Please try again.",
+        variant: "destructive",
+      });
     },
-  ];
+  });
+
+  const handleDelete = (scenarioId: string) => {
+    if (confirm("Are you sure you want to delete this scenario? This cannot be undone.")) {
+      deleteMutation.mutate(scenarioId);
+    }
+  };
 
   // Show loading skeleton
   if (isLoading) {
@@ -154,15 +158,15 @@ export default function ScenarioListPage() {
         {scenarios.map((scenario) => (
           <ScenarioCard
             key={scenario.id}
-            {...scenario}
-            onEdit={() => {
-              console.log(`Edit scenario ${scenario.id}`);
-              setLocation(`/scenarios/${scenario.id}`);
-            }}
-            onCompare={() => {
-              console.log(`Compare scenario ${scenario.id}`);
-              setLocation(`/comparison?scenarios=${scenario.id}`);
-            }}
+            id={scenario.id}
+            name={scenario.name}
+            description={scenario.description || undefined}
+            lastModified={formatDistanceToNow(new Date(scenario.updatedAt), { addSuffix: true })}
+            netWorth="TBD"
+            mortgageBalance="TBD"
+            onEdit={() => setLocation(`/scenarios/${scenario.id}`)}
+            onCompare={() => setLocation(`/comparison?scenarios=${scenario.id}`)}
+            onDelete={() => handleDelete(scenario.id)}
           />
         ))}
       </div>

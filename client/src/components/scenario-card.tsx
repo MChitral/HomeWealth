@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, GitCompare } from "lucide-react";
+import { Edit, GitCompare, Trash2 } from "lucide-react";
 
 interface ScenarioCardProps {
   id: string;
@@ -11,6 +11,7 @@ interface ScenarioCardProps {
   mortgageBalance: string;
   onEdit: () => void;
   onCompare: () => void;
+  onDelete?: () => void;
 }
 
 export function ScenarioCard({
@@ -22,6 +23,7 @@ export function ScenarioCard({
   mortgageBalance,
   onEdit,
   onCompare,
+  onDelete,
 }: ScenarioCardProps) {
   return (
     <Card className="hover-elevate" data-testid={`card-scenario-${id}`}>
@@ -42,7 +44,7 @@ export function ScenarioCard({
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex gap-2">
+      <CardFooter className="flex gap-2 flex-wrap">
         <Button variant="default" size="sm" onClick={onEdit} data-testid={`button-edit-${id}`}>
           <Edit className="h-4 w-4 mr-1" />
           Edit
@@ -51,6 +53,12 @@ export function ScenarioCard({
           <GitCompare className="h-4 w-4 mr-1" />
           Compare
         </Button>
+        {onDelete && (
+          <Button variant="outline" size="sm" onClick={onDelete} data-testid={`button-delete-${id}`}>
+            <Trash2 className="h-4 w-4 mr-1" />
+            Delete
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );
