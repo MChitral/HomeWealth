@@ -19,6 +19,16 @@ export default function DashboardPage() {
     { id: "invest", name: "Investment Focus" },
   ];
 
+  // Current mortgage status (real data - what's already happened)
+  const currentMortgageStatus = {
+    initialAmount: 400000,
+    yearsIntoMortgage: 0, // Just started
+    principalPaid: 0,
+    interestPaid: 0,
+    currentBalance: 400000,
+    monthlyPayment: 2100,
+  };
+
   // Scenario-specific projection data
   const scenarioData = {
     balanced: {
@@ -49,6 +59,12 @@ export default function DashboardPage() {
       projected10YearNetWorth: "$625,000",
       projected10YearMortgage: "$150,000",
       projected10YearInvestments: "$195,000",
+      mortgageDetails: {
+        payoffYear: 18.5,
+        totalInterest: "$92,500",
+        avgMonthlyPayment: "$2,350",
+        totalPrepayments: "$60,000",
+      },
     },
     aggressive: {
       netWorthData: [
@@ -78,6 +94,12 @@ export default function DashboardPage() {
       projected10YearNetWorth: "$587,000",
       projected10YearMortgage: "$50,000",
       projected10YearInvestments: "$115,000",
+      mortgageDetails: {
+        payoffYear: 12.3,
+        totalInterest: "$67,800",
+        avgMonthlyPayment: "$2,950",
+        totalPrepayments: "$145,000",
+      },
     },
     invest: {
       netWorthData: [
@@ -107,6 +129,12 @@ export default function DashboardPage() {
       projected10YearNetWorth: "$680,000",
       projected10YearMortgage: "$225,000",
       projected10YearInvestments: "$265,000",
+      mortgageDetails: {
+        payoffYear: 24.8,
+        totalInterest: "$118,200",
+        avgMonthlyPayment: "$2,100",
+        totalPrepayments: "$5,000",
+      },
     },
   };
 
@@ -132,15 +160,11 @@ export default function DashboardPage() {
           <CardTitle className="text-lg font-semibold">Current Financial Status</CardTitle>
           <p className="text-sm text-muted-foreground">As of today</p>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div>
               <p className="text-sm text-muted-foreground uppercase tracking-wide mb-2">Net Worth</p>
               <p className="text-2xl font-bold font-mono">$100,000</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground uppercase tracking-wide mb-2">Mortgage Balance</p>
-              <p className="text-2xl font-bold font-mono">$400,000</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground uppercase tracking-wide mb-2">Emergency Fund</p>
@@ -150,6 +174,42 @@ export default function DashboardPage() {
             <div>
               <p className="text-sm text-muted-foreground uppercase tracking-wide mb-2">Investments</p>
               <p className="text-2xl font-bold font-mono">$15,000</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground uppercase tracking-wide mb-2">Home Value</p>
+              <p className="text-2xl font-bold font-mono">$500,000</p>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div>
+            <h3 className="text-base font-semibold mb-4">Current Mortgage Status</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Initial Amount</p>
+                <p className="text-base font-mono font-medium">${currentMortgageStatus.initialAmount.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Current Balance</p>
+                <p className="text-base font-mono font-medium">${currentMortgageStatus.currentBalance.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Principal Paid</p>
+                <p className="text-base font-mono font-medium">${currentMortgageStatus.principalPaid.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Interest Paid</p>
+                <p className="text-base font-mono font-medium">${currentMortgageStatus.interestPaid.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Monthly Payment</p>
+                <p className="text-base font-mono font-medium">${currentMortgageStatus.monthlyPayment.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Years Into Mortgage</p>
+                <p className="text-base font-mono font-medium">{currentMortgageStatus.yearsIntoMortgage}</p>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -203,6 +263,39 @@ export default function DashboardPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle className="text-xl font-semibold">Mortgage Details - {scenarios.find(s => s.id === selectedScenario)?.name}</CardTitle>
+          <p className="text-sm text-muted-foreground">Projected mortgage journey</p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Projected Payoff</p>
+              <p className="text-xl font-bold font-mono">{currentData.mortgageDetails.payoffYear} years</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Total Interest</p>
+              <p className="text-xl font-bold font-mono">{currentData.mortgageDetails.totalInterest}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Avg Monthly Payment</p>
+              <p className="text-xl font-bold font-mono">{currentData.mortgageDetails.avgMonthlyPayment}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Total Prepayments</p>
+              <p className="text-xl font-bold font-mono">{currentData.mortgageDetails.totalPrepayments}</p>
+            </div>
+          </div>
+          <div className="relative">
+            <MortgageBalanceChart data={currentData.mortgageData} />
+            <div className="absolute top-4 left-4 bg-card/90 border border-border rounded-md px-3 py-2">
+              <p className="text-xs text-muted-foreground">← You are here (Year 0)</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle className="text-xl font-semibold">Net Worth Projection</CardTitle>
           <p className="text-sm text-muted-foreground">
             Based on <span className="font-medium">{scenarios.find(s => s.id === selectedScenario)?.name}</span>
@@ -216,22 +309,42 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl font-semibold">Mortgage Paydown</CardTitle>
-            <p className="text-sm text-muted-foreground">Principal vs interest over time</p>
+            <CardTitle className="text-xl font-semibold">Investment Growth</CardTitle>
+            <p className="text-sm text-muted-foreground">Total portfolio value projection</p>
           </CardHeader>
           <CardContent>
-            <MortgageBalanceChart data={currentData.mortgageData} />
+            <div className="h-[300px]">
+              <NetWorthChart data={currentData.investmentData} />
+            </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl font-semibold">Investment Growth</CardTitle>
-            <p className="text-sm text-muted-foreground">Total portfolio value</p>
+            <CardTitle className="text-xl font-semibold">Strategy Summary</CardTitle>
+            <p className="text-sm text-muted-foreground">{scenarios.find(s => s.id === selectedScenario)?.name}</p>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px]">
-              <NetWorthChart data={currentData.investmentData} />
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Net Worth Growth</span>
+                <span className="text-lg font-mono font-semibold text-green-600">+$525,000</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Mortgage Reduction</span>
+                <span className="text-lg font-mono font-semibold">$250,000</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Investment Growth</span>
+                <span className="text-lg font-mono font-semibold text-blue-600">+$180,000</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Home Equity Gained</span>
+                <span className="text-lg font-mono font-semibold">$270,000</span>
+              </div>
             </div>
           </CardContent>
         </Card>
