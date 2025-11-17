@@ -7,10 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Save, ArrowLeft } from "lucide-react";
+import { Save, ArrowLeft, Info } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
 import { MortgageBalanceChart } from "@/components/mortgage-balance-chart";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function ScenarioEditorPage() {
   const [prepaymentSplit, setPrepaymentSplit] = useState([50]);
@@ -19,18 +20,34 @@ export default function ScenarioEditorPage() {
   const [monthlyExtra, setMonthlyExtra] = useState("200");
   const [annualLump, setAnnualLump] = useState("5000");
 
+  // Current mortgage data from Mortgage History (pre-populated)
+  const currentMortgageData = {
+    homeValue: 500000,
+    originalPrincipal: 400000,
+    currentBalance: 397745,
+    principalPaid: 2255,
+    interestPaid: 6145,
+    yearsIntoMortgage: 0.33, // 4 months
+    currentRate: 6.40,
+    currentAmortization: 26.2,
+    monthlyPayment: 2100,
+    termType: "Variable-Fixed Payment",
+    lockedSpread: -0.80,
+  };
+
   // Mock mortgage projection based on current prepayment settings
+  // TODO: This would be calculated by backend based on prepayment strategy
   const mortgageProjection = [
-    { year: 0, balance: 400000, principal: 0, interest: 0 },
-    { year: 2, balance: 360000, principal: 30000, interest: 10000 },
-    { year: 4, balance: 315000, principal: 65000, interest: 20000 },
-    { year: 6, balance: 265000, principal: 105000, interest: 30000 },
-    { year: 8, balance: 210000, principal: 150000, interest: 40000 },
-    { year: 10, balance: 150000, principal: 200000, interest: 50000 },
+    { year: 0, balance: 397745, principal: 0, interest: 0 },
+    { year: 2, balance: 355000, principal: 42745, interest: 12000 },
+    { year: 4, balance: 310000, principal: 87745, interest: 24000 },
+    { year: 6, balance: 260000, principal: 137745, interest: 36000 },
+    { year: 8, balance: 205000, principal: 192745, interest: 48000 },
+    { year: 10, balance: 145000, principal: 252745, interest: 60000 },
   ];
 
-  const projectedPayoff = 18.5; // years
-  const totalInterest = 92500; // dollars
+  const projectedPayoff = 18.2; // years from today
+  const totalInterest = 86000; // dollars from today forward
 
   return (
     <div className="space-y-6">
@@ -42,13 +59,20 @@ export default function ScenarioEditorPage() {
         </Link>
         <div className="flex-1">
           <h1 className="text-3xl font-semibold">Edit Scenario</h1>
-          <p className="text-muted-foreground">Configure your financial strategy</p>
+          <p className="text-muted-foreground">Build a strategy from your current mortgage position</p>
         </div>
         <Button data-testid="button-save">
           <Save className="h-4 w-4 mr-2" />
           Save Scenario
         </Button>
       </div>
+
+      <Alert>
+        <Info className="h-4 w-4" />
+        <AlertDescription>
+          Your current mortgage data is pre-loaded from Mortgage History. Projections start from today's position.
+        </AlertDescription>
+      </Alert>
 
       <div className="space-y-4">
         <div>
@@ -94,74 +118,106 @@ export default function ScenarioEditorPage() {
         </TabsList>
 
         <TabsContent value="mortgage" className="space-y-6">
+          <Card className="bg-accent/50">
+            <CardHeader>
+              <CardTitle>Current Mortgage Position</CardTitle>
+              <CardDescription>Loaded from your Mortgage History (as of latest payment)</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Home Value</p>
+                  <p className="text-lg font-mono font-semibold">${currentMortgageData.homeValue.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Current Balance</p>
+                  <p className="text-lg font-mono font-semibold">${currentMortgageData.currentBalance.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Years Into Mortgage</p>
+                  <p className="text-lg font-mono font-semibold">{currentMortgageData.yearsIntoMortgage} years</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Current Rate</p>
+                  <p className="text-lg font-mono font-semibold">{currentMortgageData.currentRate}%</p>
+                </div>
+              </div>
+              <Separator className="my-4" />
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Principal Paid So Far</p>
+                  <p className="text-base font-mono text-green-600">${currentMortgageData.principalPaid.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Interest Paid So Far</p>
+                  <p className="text-base font-mono text-orange-600">${currentMortgageData.interestPaid.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Current Amortization</p>
+                  <p className="text-base font-mono">{currentMortgageData.currentAmortization} years</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Monthly Payment</p>
+                  <p className="text-base font-mono">${currentMortgageData.monthlyPayment.toLocaleString()}</p>
+                </div>
+              </div>
+              <Separator className="my-4" />
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Current Term Type</p>
+                  <p className="text-base font-medium">{currentMortgageData.termType}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-muted-foreground mb-1">Locked Spread</p>
+                  <p className="text-base font-mono">Prime {currentMortgageData.lockedSpread >= 0 ? '+' : ''}{currentMortgageData.lockedSpread}%</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
-              <CardTitle>Mortgage Configuration</CardTitle>
-              <CardDescription>Set up your mortgage details</CardDescription>
+              <CardTitle>Future Rate Assumptions</CardTitle>
+              <CardDescription>Model how rates might change over the projection period</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="home-price">Home Price</Label>
-                  <Input id="home-price" type="number" placeholder="500000" data-testid="input-home-price" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="down-payment">Down Payment</Label>
-                  <Input id="down-payment" type="number" placeholder="100000" data-testid="input-down-payment" />
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="amortization">Amortization (years)</Label>
-                  <Input id="amortization" type="number" placeholder="25" data-testid="input-amortization" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="term">Initial Term (years)</Label>
-                  <Input id="term" type="number" placeholder="5" data-testid="input-term" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="payment-frequency">Payment Frequency</Label>
-                  <Select defaultValue="monthly">
-                    <SelectTrigger id="payment-frequency" data-testid="select-payment-frequency">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                      <SelectItem value="biweekly">Bi-Weekly</SelectItem>
-                      <SelectItem value="accelerated">Accelerated Bi-Weekly</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="mortgage-type">Mortgage Type</Label>
-                  <Select defaultValue="variable-fixed">
-                    <SelectTrigger id="mortgage-type" data-testid="select-mortgage-type">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="fixed">Fixed Rate</SelectItem>
-                      <SelectItem value="variable-changing">Variable (Changing Payment)</SelectItem>
-                      <SelectItem value="variable-fixed">Variable (Fixed Payment)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="rate-scenario">Rate Change Scenario</Label>
+                <Select defaultValue="current">
+                  <SelectTrigger id="rate-scenario" data-testid="select-rate-scenario">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="current">Current rate stays constant</SelectItem>
+                    <SelectItem value="decrease-slow">Slow decrease (0.25% per year)</SelectItem>
+                    <SelectItem value="decrease-fast">Fast decrease (0.50% per year)</SelectItem>
+                    <SelectItem value="increase-slow">Slow increase (0.25% per year)</SelectItem>
+                    <SelectItem value="increase-fast">Fast increase (0.50% per year)</SelectItem>
+                    <SelectItem value="custom">Custom rate schedule</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground">
+                  For variable mortgages, this affects Prime rate changes. Your spread ({currentMortgageData.lockedSpread}%) stays locked until term renewal.
+                </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="initial-rate">Initial Interest Rate or Spread (%)</Label>
-                <Input id="initial-rate" type="number" step="0.01" placeholder="Prime - 0.80" data-testid="input-initial-rate" />
-                <p className="text-sm text-muted-foreground">For variable: enter as spread (e.g., -0.80 for Prime - 0.80%)</p>
+                <Label htmlFor="term-renewal">At Next Term Renewal (future)</Label>
+                <Select defaultValue="same">
+                  <SelectTrigger id="term-renewal">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="same">Keep same spread</SelectItem>
+                    <SelectItem value="better">Negotiate better spread (-0.10%)</SelectItem>
+                    <SelectItem value="worse">Worse spread (+0.10%)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="appreciation-rate">Property Appreciation Rate (% annual)</Label>
-                <Input id="appreciation-rate" type="number" step="0.1" placeholder="2.0" data-testid="input-appreciation-rate" />
+                <Input id="appreciation-rate" type="number" step="0.1" defaultValue="2.0" data-testid="input-appreciation-rate" />
               </div>
             </CardContent>
           </Card>
@@ -169,7 +225,7 @@ export default function ScenarioEditorPage() {
           <Card>
             <CardHeader>
               <CardTitle>Prepayment Strategy</CardTitle>
-              <CardDescription>Configure how aggressively you'll pay down your mortgage</CardDescription>
+              <CardDescription>Configure how aggressively you'll pay down your mortgage going forward</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -183,7 +239,7 @@ export default function ScenarioEditorPage() {
                     onChange={(e) => setAnnualLump(e.target.value)}
                     data-testid="input-annual-lump" 
                   />
-                  <p className="text-sm text-muted-foreground">Apply once per year (typically up to 15-20% of original principal)</p>
+                  <p className="text-sm text-muted-foreground">Typically up to 15-20% of original principal per year</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="monthly-extra">Monthly Extra Payment</Label>
@@ -195,7 +251,7 @@ export default function ScenarioEditorPage() {
                     onChange={(e) => setMonthlyExtra(e.target.value)}
                     data-testid="input-monthly-extra" 
                   />
-                  <p className="text-sm text-muted-foreground">Additional principal payment each month</p>
+                  <p className="text-sm text-muted-foreground">Additional principal on top of regular payment</p>
                 </div>
               </div>
 
@@ -254,7 +310,7 @@ export default function ScenarioEditorPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-primary">
             <CardHeader>
               <CardTitle>Projected Mortgage Outcome</CardTitle>
               <CardDescription>
@@ -266,22 +322,28 @@ export default function ScenarioEditorPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-muted/50 rounded-md">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-primary/10 rounded-md">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Projected Payoff</p>
                   <p className="text-2xl font-bold font-mono">{projectedPayoff} years</p>
+                  <p className="text-xs text-muted-foreground">from today</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Total Interest</p>
+                  <p className="text-sm text-muted-foreground mb-1">Total Interest (future)</p>
                   <p className="text-2xl font-bold font-mono">${totalInterest.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">from today forward</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Interest Saved</p>
-                  <p className="text-2xl font-bold font-mono text-green-600">$25,000</p>
+                  <p className="text-2xl font-bold font-mono text-green-600">$32,000</p>
                   <p className="text-xs text-muted-foreground">vs minimum payments</p>
                 </div>
               </div>
-              <MortgageBalanceChart data={mortgageProjection} />
+              <Separator />
+              <div>
+                <p className="text-sm font-medium mb-3">Mortgage Balance Projection (from today)</p>
+                <MortgageBalanceChart data={mortgageProjection} />
+              </div>
               <p className="text-sm text-muted-foreground italic">
                 Adjust prepayment settings above to see how they affect your mortgage payoff timeline
               </p>
