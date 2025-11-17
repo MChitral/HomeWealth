@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Trophy, TrendingUp, Home, DollarSign, PiggyBank, Calendar, AlertTriangle, CheckCircle2, ArrowUpRight, ArrowDownRight, X } from "lucide-react";
+import { Trophy, TrendingUp, Home, DollarSign, PiggyBank, Calendar, AlertTriangle, CheckCircle2, ArrowUpRight, ArrowDownRight, X, GitCompare, Info } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -20,6 +21,18 @@ export default function ComparisonPage() {
   const [location] = useLocation();
   const [selectedScenarios, setSelectedScenarios] = useState<string[]>([]);
   const [timeHorizon, setTimeHorizon] = useState("10");
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Set page title
+  useEffect(() => {
+    document.title = "Scenario Comparison | Mortgage Strategy";
+  }, []);
+
+  // Simulate loading (remove when backend is connected)
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 700);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Read URL params on mount to pre-select scenarios
   useEffect(() => {
@@ -169,6 +182,86 @@ export default function ComparisonPage() {
     { year: 8, balanced: 225000, aggressive: 138000, invest: 330000, conservative: 195000 },
     { year: 10, balanced: 305000, aggressive: 188000, invest: 450000, conservative: 265000 },
   ];
+
+  // Show loading skeleton
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex-1">
+            <Skeleton className="h-10 w-64 mb-2" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+        </div>
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-96 w-full" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-64 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state if no scenarios selected
+  if (selectedScenarios.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex-1">
+            <h1 className="text-3xl font-semibold">Scenario Comparison</h1>
+            <p className="text-muted-foreground">Compare different financial strategies side-by-side</p>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 p-8">
+          <div className="flex items-center justify-center w-20 h-20 rounded-full bg-primary/10" data-testid="icon-empty-comparison">
+            <GitCompare className="h-10 w-10 text-primary" />
+          </div>
+          <div className="text-center max-w-md space-y-2">
+            <h2 className="text-2xl font-semibold" data-testid="heading-empty-comparison">No Scenarios Selected</h2>
+            <p className="text-muted-foreground">
+              Select up to 4 scenarios from the list below to compare their financial projections side-by-side.
+              See which strategy performs best over time.
+            </p>
+          </div>
+          <Card className="max-w-2xl w-full">
+            <CardHeader>
+              <CardTitle className="text-lg">Available Scenarios:</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {allScenarios.map((scenario) => (
+                  <Button
+                    key={scenario.id}
+                    variant="outline"
+                    className="justify-start"
+                    onClick={() => toggleScenario(scenario.id)}
+                    data-testid={`button-empty-select-${scenario.id}`}
+                  >
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                      <span className="text-xs font-semibold text-primary">
+                        {scenario.name.charAt(0)}
+                      </span>
+                    </div>
+                    <span className="font-medium">{scenario.name}</span>
+                  </Button>
+                ))}
+              </div>
+              <div className="mt-4 p-3 bg-muted/50 rounded-md">
+                <p className="text-sm text-muted-foreground">
+                  <Info className="h-4 w-4 inline mr-1" />
+                  Select at least 2 scenarios to see a meaningful comparison
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

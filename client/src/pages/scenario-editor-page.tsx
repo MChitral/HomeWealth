@@ -9,12 +9,17 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Save, ArrowLeft, Info } from "lucide-react";
 import { Link } from "wouter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MortgageBalanceChart } from "@/components/mortgage-balance-chart";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function ScenarioEditorPage() {
   const [prepaymentSplit, setPrepaymentSplit] = useState([50]);
+
+  // Set page title
+  useEffect(() => {
+    document.title = "Edit Scenario | Mortgage Strategy";
+  }, []);
   const [useBonus, setUseBonus] = useState(false);
   const [useExtraPay, setUseExtraPay] = useState(false);
   const [monthlyExtra, setMonthlyExtra] = useState("200");

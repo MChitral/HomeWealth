@@ -4,10 +4,15 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Save, Shield, Calculator } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function EmergencyFundPage() {
   const [monthsOfExpenses, setMonthsOfExpenses] = useState("6");
+
+  // Set page title
+  useEffect(() => {
+    document.title = "Emergency Fund | Mortgage Strategy";
+  }, []);
   
   // Mock data - would come from Cash Flow page
   const monthlyExpenses = 2250; // fixed + variable expenses
