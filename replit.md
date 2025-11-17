@@ -6,16 +6,20 @@ A full-stack web application helping Canadians compare financial strategies for 
 
 **Tech Stack**: Express.js (backend) + React + TypeScript (frontend), PostgreSQL database, Shadcn UI components
 
-## Current Status: 3 Core Pages Wired to Backend ✅
+## Current Status: Core MVP Functional with Horizon-Aware Projections ✅
 
-### ✅ Completed (Dec 2024)
+### ✅ Completed (Nov 2024)
 **Backend Infrastructure:**
 - ✅ Database schema (8 entities: users, cash flow, EF, mortgages, terms, payments, scenarios, prepayment events)
 - ✅ In-memory storage layer (IStorage) with full CRUD operations
 - ✅ 30+ secure RESTful API routes with Zod validation
 - ✅ Canadian mortgage calculation engine (semi-annual compounding implemented)
-- ✅ Net worth projection engine (10-30 year forecasts - stub)
+- ✅ Net worth projection engine (10-30 year forecasts with horizon-specific metrics)
 - ✅ Dev auth middleware (temp mock, Replit Auth identified for later)
+- ✅ **Horizon-aware metrics system**: All 10/20/30-year projections working across comparison UI
+- ✅ **Projection array indexing**: Correctly indexed [0-30] for years 0-30 with baseline at index 0
+- ✅ **Backend ES module fixes**: Resolved require() → import for calculate-mortgage-payment.js
+- ✅ **30-year metric fields**: Added mortgageBalance30yr, investments30yr, investmentReturns30yr
 
 **Frontend-Backend Integration (3/8 pages wired):**
 
@@ -38,12 +42,19 @@ A full-stack web application helping Canadians compare financial strategies for 
    - Delete functionality with cache invalidation
    - Empty state, loading skeleton, timestamp formatting
    - E2E tested ✅
-   - **Note**: Net worth/mortgage metrics show "TBD" until projection engine connected
 
-### 🚧 Next Tasks (2 pages + enhancements)
-- wire-4: Wire Comparison page to backend with real scenario calculations
+4. ✅ **Comparison Page** (wire-4):
+   - GET /api/scenarios with horizon-specific projection metrics
+   - Scenario selection (up to 4 simultaneous comparisons)
+   - Horizon selector (10/20/30 year toggles) with getMetricForHorizon helper
+   - All metrics table with horizon-aware values (net worth, mortgage balance, investments, etc.)
+   - E2E tested ✅
+   - Demo data seeded with 2 scenarios ("Aggressive Prepayment", "Balanced Builder")
+
+### 🚧 Next Tasks (1 page + enhancements)
 - wire-5: Wire Dashboard to aggregate real data from all sources
-- Minor enhancements: Replace window.confirm with AlertDialog for deletes, connect projection engine for calculated metrics
+- Minor enhancements: Replace window.confirm with AlertDialog for deletes
+- Known issues: TypeScript req.user type errors (54 non-blocking errors in routes.ts)
 
 ## Key Product Differentiators
 
