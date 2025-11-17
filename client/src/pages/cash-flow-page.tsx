@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Save, DollarSign, TrendingDown, CreditCard, Briefcase, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -12,6 +13,11 @@ import type { CashFlow } from "@shared/schema";
 
 export default function CashFlowPage() {
   const { toast } = useToast();
+
+  // Set page title
+  useEffect(() => {
+    document.title = "Cash Flow Settings | Mortgage Strategy";
+  }, []);
 
   // Fetch cash flow data
   const { data: cashFlowData, isLoading } = useQuery<CashFlow | null>({
@@ -121,6 +127,41 @@ export default function CashFlowPage() {
   const totalMonthlyExpenses = fixedHousingCosts + variableExpenses + otherDebtPayments + mortgagePayment;
   const monthlySurplus = totalMonthlyIncome - totalMonthlyExpenses;
 
+  // Show loading skeleton while fetching
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex-1">
+            <Skeleton className="h-10 w-64 mb-2" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+          <Skeleton className="h-10 w-32" />
+        </div>
+        {[...Array(4)].map((_, i) => (
+          <Card key={i}>
+            <CardHeader>
+              <Skeleton className="h-6 w-48 mb-2" />
+              <Skeleton className="h-4 w-64" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -132,6 +173,7 @@ export default function CashFlowPage() {
           data-testid="button-save" 
           onClick={handleSave} 
           disabled={saveMutation.isPending || isLoading}
+          className="sticky top-4 z-10"
         >
           {saveMutation.isPending ? (
             <>

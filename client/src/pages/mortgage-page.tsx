@@ -106,6 +106,12 @@ function normalizePayments(payments: MortgagePayment[] | undefined, terms: Mortg
 
 export default function MortgageHistoryPage() {
   const { toast } = useToast();
+  
+  // Set page title
+  useEffect(() => {
+    document.title = "Mortgage Tracking | Mortgage Strategy";
+  }, []);
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isTermRenewalOpen, setIsTermRenewalOpen] = useState(false);
   const [filterYear, setFilterYear] = useState("all");
@@ -130,6 +136,31 @@ export default function MortgageHistoryPage() {
   const [createStartDate, setCreateStartDate] = useState("");
   const [createAmortization, setCreateAmortization] = useState("25");
   const [createFrequency, setCreateFrequency] = useState("monthly");
+  
+  // Validation for create mortgage form
+  const propertyPrice = parseFloat(createPropertyPrice);
+  const downPayment = parseFloat(createDownPayment);
+  
+  // Comprehensive validation using Number.isFinite to catch NaN
+  const propertyPriceError = !Number.isFinite(propertyPrice) || propertyPrice <= 0
+    ? "Property price must be a valid number greater than zero" 
+    : "";
+  
+  const downPaymentError = !propertyPriceError && (!Number.isFinite(downPayment) || downPayment < 0)
+    ? "Down payment must be a valid number (zero or more)"
+    : !propertyPriceError && Number.isFinite(downPayment) && downPayment > propertyPrice
+    ? "Down payment cannot exceed property price" 
+    : "";
+  
+  const loanAmount = propertyPrice - downPayment;
+  const loanAmountError = !propertyPriceError && !downPaymentError && (!Number.isFinite(loanAmount) || loanAmount <= 0)
+    ? "Loan amount must be greater than zero" 
+    : "";
+  
+  // Form is valid only if all fields filled, all values are finite numbers, and no errors
+  const isFormValid = createPropertyPrice && createDownPayment && createStartDate && createAmortization 
+    && Number.isFinite(propertyPrice) && Number.isFinite(downPayment) && Number.isFinite(loanAmount)
+    && !propertyPriceError && !downPaymentError && !loanAmountError;
 
   // Fetch mortgages (use first one for MVP)
   const { data: mortgages, isLoading: mortgagesLoading } = useQuery<Mortgage[]>({
@@ -168,13 +199,10 @@ export default function MortgageHistoryPage() {
       remainingAmortizationMonths: number;
     }) => {
       if (!mortgage?.id || !uiCurrentTerm?.id) throw new Error("No mortgage or term selected");
-      return apiRequest(`/api/mortgages/${mortgage.id}/payments`, {
-        method: "POST",
-        body: {
-          mortgageId: mortgage.id,
-          termId: uiCurrentTerm.id,
-          ...payment,
-        },
+      return apiRequest("POST", `/api/mortgages/${mortgage.id}/payments`, {
+        mortgageId: mortgage.id,
+        termId: uiCurrentTerm.id,
+        ...payment,
       });
     },
     onSuccess: () => {
@@ -207,10 +235,7 @@ export default function MortgageHistoryPage() {
       paymentFrequency: string;
       annualPrepaymentLimitPercent: number;
     }) => {
-      return apiRequest(`/api/mortgages`, {
-        method: "POST",
-        body: mortgageData,
-      });
+      return apiRequest("POST", `/api/mortgages`, mortgageData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/mortgages"] });
@@ -242,10 +267,7 @@ export default function MortgageHistoryPage() {
       regularPaymentAmount: string;
     }) => {
       if (!mortgage?.id) throw new Error("No mortgage selected");
-      return apiRequest(`/api/mortgages/${mortgage.id}/terms`, {
-        method: "POST",
-        body: term,
-      });
+      return apiRequest("POST", `/api/mortgages/${mortgage.id}/terms`, term);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/mortgages", mortgage?.id, "terms"] });
@@ -303,14 +325,56 @@ export default function MortgageHistoryPage() {
   // Show empty state if no mortgage data
   if (!mortgage) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen gap-4">
-        <h2 className="text-2xl font-semibold">No Mortgage Data</h2>
-        <p className="text-muted-foreground">Create a mortgage to start tracking payments and terms.</p>
+      <div className="flex flex-col items-center justify-center min-h-[80vh] gap-6 p-8">
+        <div className="flex items-center justify-center w-20 h-20 rounded-full bg-primary/10">
+          <Info className="h-10 w-10 text-primary" />
+        </div>
+        <div className="text-center max-w-md space-y-2">
+          <h2 className="text-2xl font-semibold">Welcome to Mortgage Tracking</h2>
+          <p className="text-muted-foreground">
+            Track your Canadian mortgage with term-by-term history, payment breakdowns (principal vs interest), 
+            and renewal management. Get started by creating your first mortgage.
+          </p>
+        </div>
+        <Card className="max-w-md w-full">
+          <CardHeader>
+            <CardTitle className="text-lg">What you'll track:</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex gap-3">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="text-xs font-semibold text-primary">1</span>
+              </div>
+              <div>
+                <p className="font-medium text-sm">Payment History</p>
+                <p className="text-xs text-muted-foreground">Principal, interest, and remaining balance per payment</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="text-xs font-semibold text-primary">2</span>
+              </div>
+              <div>
+                <p className="font-medium text-sm">Term Management</p>
+                <p className="text-xs text-muted-foreground">Track fixed vs variable terms with Canadian semi-annual compounding</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="text-xs font-semibold text-primary">3</span>
+              </div>
+              <div>
+                <p className="font-medium text-sm">Renewal Tracking</p>
+                <p className="text-xs text-muted-foreground">Simulate term renewals with new rates and payment schedules</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         <Dialog open={isCreateMortgageOpen} onOpenChange={setIsCreateMortgageOpen}>
           <DialogTrigger asChild>
-            <Button data-testid="button-create-mortgage">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Mortgage
+            <Button size="lg" data-testid="button-create-mortgage">
+              <Plus className="h-5 w-5 mr-2" />
+              Create Your First Mortgage
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
@@ -330,8 +394,12 @@ export default function MortgageHistoryPage() {
                     placeholder="500000"
                     value={createPropertyPrice}
                     onChange={(e) => setCreatePropertyPrice(e.target.value)}
+                    className={propertyPriceError ? "border-destructive" : ""}
                     data-testid="input-property-price"
                   />
+                  {propertyPriceError && (
+                    <p className="text-sm text-destructive" data-testid="error-property-price">{propertyPriceError}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="down-payment">Down Payment ($)</Label>
@@ -341,8 +409,20 @@ export default function MortgageHistoryPage() {
                     placeholder="100000"
                     value={createDownPayment}
                     onChange={(e) => setCreateDownPayment(e.target.value)}
+                    className={downPaymentError || loanAmountError ? "border-destructive" : ""}
                     data-testid="input-down-payment"
                   />
+                  {downPaymentError && (
+                    <p className="text-sm text-destructive" data-testid="error-down-payment">{downPaymentError}</p>
+                  )}
+                  {loanAmountError && !downPaymentError && (
+                    <p className="text-sm text-destructive" data-testid="error-loan-amount">{loanAmountError}</p>
+                  )}
+                  {!downPaymentError && !loanAmountError && propertyPrice > 0 && downPayment > 0 && (
+                    <p className="text-sm text-muted-foreground font-medium" data-testid="text-loan-amount">
+                      ✓ Loan amount: ${loanAmount.toLocaleString()}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="space-y-2">
@@ -387,9 +467,17 @@ export default function MortgageHistoryPage() {
               </Button>
               <Button
                 onClick={() => {
-                  const propertyPrice = parseFloat(createPropertyPrice);
-                  const downPayment = parseFloat(createDownPayment);
-                  const originalAmount = propertyPrice - downPayment;
+                  // Prevent submission if validation fails
+                  if (!isFormValid) {
+                    toast({
+                      title: "Validation Error",
+                      description: propertyPriceError || downPaymentError || loanAmountError || "Please fill in all required fields",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  
+                  const originalAmount = loanAmount;
                   
                   createMortgageMutation.mutate({
                     propertyPrice: propertyPrice.toString(),
@@ -403,7 +491,7 @@ export default function MortgageHistoryPage() {
                     annualPrepaymentLimitPercent: 20,
                   });
                 }}
-                disabled={!createPropertyPrice || !createDownPayment || !createStartDate || !createAmortization || createMortgageMutation.isPending}
+                disabled={!isFormValid || createMortgageMutation.isPending}
                 data-testid="button-save-mortgage"
               >
                 {createMortgageMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
