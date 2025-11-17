@@ -1,0 +1,613 @@
+🧭 PRODUCT VISION & REQUIREMENTS DOCUMENT (PRD v1.0)
+Mortgage Strategy, Cash-Flow Planning & Wealth Forecasting Platform
+With Full Canadian Mortgage Support (Fixed, Variable, Trigger Rate)
+1. PRODUCT VISION
+
+Build the smartest mortgage + wealth optimization platform for homeowners—especially Canadians—who want a clear, actionable financial strategy for the next 10–30 years.
+
+The app enables users to:
+
+Understand and optimize their mortgage payments
+
+Simulate fixed and variable rates, including Canadian trigger rates
+
+Model rate resets, refinance events, and Prime ± spread scenarios
+
+Allocate surplus income toward prepayments, investments, and an emergency fund
+
+Forecast cash flow, home equity, and investment growth
+
+Compare multiple strategies side-by-side
+
+Answer the big questions:
+
+“Should I prepay or invest?”
+
+“When will I hit my EF goal?”
+
+“What happens when Prime changes?”
+
+“Which strategy gives me the highest net worth?”
+
+Ultimately:
+
+This is the personal financial strategist every homeowner needs — a 10-30 year strategy engine built on accurate Canadian mortgage math.
+
+2. USER PERSONAS
+Primary Persona — The Financial Planner Homeowner (Canadian)
+
+First-time or early mortgage holder
+
+Wants to avoid long-term interest
+
+Wants to grow net worth
+
+Wants realistic projections
+
+Wants full clarity on “prepay vs invest”
+
+Key needs:
+
+Predict mortgage payments under variable rates
+
+How EF, investments, and mortgage interact
+
+Find the optimal monthly strategy
+
+Secondary Persona — The Analytical Investor
+
+Deeply curious about financial scenarios
+
+Wants to test:
+
+Different return rates
+
+Different prepayment patterns
+
+Rate-reset conditions
+
+Wants clean scenario comparison
+
+Future Persona — Financial Advisors
+
+Wants a client-friendly projection tool
+
+Needs clean PDF reports
+
+Needs scenario comparison dashboards
+
+3. CORE USER PROBLEMS
+
+The app solves real questions homeowners ask (many directly from your chat history):
+
+Mortgage Strategy Problems
+
+“How will my mortgage payment change when my rate resets?”
+
+“What if Prime rises or falls?”
+
+“What if I get a variable rate—what’s the worst case?”
+
+“Will I hit my trigger rate?”
+
+“How much interest can I save with prepayments?”
+
+Cash Flow Problems
+
+“Can I afford to prepay AND invest?”
+
+“What if my mortgage payment jumps?”
+
+“What’s my monthly surplus after all expenses?”
+
+Wealth Forecasting Problems
+
+“What will my net worth be in 10 or 25 years?”
+
+“How much should I invest every month?”
+
+“Should I put my bonus toward EF or investment or mortgage?”
+
+Behavioral / Strategy Problems
+
+“What’s the best use of my extra money?”
+
+“How do I structure the next 10 years?”
+
+“Which scenario gives me the most wealth?”
+
+4. PRODUCT PILLARS
+
+The platform is built around eight core engines:
+
+Mortgage Engine (Fixed + Variable + Trigger Rate + Rate Resets)
+
+Cash Flow Engine
+
+Emergency Fund Engine
+
+Investment Growth Engine
+
+Prepayment Strategy Engine
+
+Net Worth Engine
+
+Scenario Builder + Comparison Suite
+
+AI Strategy Advisor (post-MVP)
+
+These modules interact to produce a complete financial timeline.
+
+5. FUNCTIONAL REQUIREMENTS (FRs)
+🔹 FR1 — MORTGAGE ENGINE (Canada-Focused)
+Supported Mortgage Types
+
+Fixed Rate
+
+Variable Rate (VRM) – changing payment
+
+Variable Rate – fixed payment + trigger rate logic
+
+Hybrid fixed/variable (future)
+
+Canadian Rate Logic
+
+Semi-annual compounding (Canadian standard)
+
+Prime ± spread modeling
+
+Custom Prime rate schedules
+
+Rate reset logic
+
+Refinance blocks (future)
+
+Payment frequency:
+
+Monthly
+
+Bi-weekly (26 payments)
+
+Accelerated bi-weekly
+
+Variable Rate Behavior
+Changing Payment VRM
+
+Payment recalculated whenever Prime changes
+
+Amortization remains constant
+
+Fixed Payment Variable
+
+Payment stays the same even if rate changes
+
+Interest increases / principal decreases
+
+Detect trigger rate:
+
+If interest ≥ payment → trigger event
+
+On trigger:
+
+Payment recalculated OR negative amortization simulated
+
+Outputs
+
+Full amortization schedule (monthly & yearly)
+
+Payment timeline showing jumps
+
+Interest component / principal component
+
+Trigger rate warnings
+
+Rate vs time graph
+
+Balance vs time graph
+
+🔹 FR2 — CASH FLOW ENGINE
+Inputs
+
+Income
+
+2 monthly paycheques
+
+Extra paycheques (2/year)
+
+Annual bonus
+
+Expenses
+
+Fixed (condo fees, utilities, insurance)
+
+Variable (food, gas, entertainment)
+
+Debt payments
+
+Mortgage payments (auto from FR1)
+
+Outputs
+
+Monthly surplus / deficit
+
+Income vs expenses chart
+
+Negative cash flow warnings
+
+Surplus before allocation
+
+Surplus after allocation
+
+Cash-flow stress-test:
+
+“At X% Prime, your payment becomes $Y, leaving $Z surplus.”
+
+🔹 FR3 — EMERGENCY FUND ENGINE
+Inputs
+
+EF target (e.g., $30k)
+
+Monthly EF contribution
+
+Behavior
+
+EF grows monthly until target reached
+
+Contributions automatically stop
+
+Surplus is automatically redirected to:
+
+Investments, OR
+
+Prepayments, OR
+
+Custom split
+
+Outputs
+
+EF timeline
+
+Month EF is complete
+
+Surplus redirected error-free
+
+🔹 FR4 — INVESTMENT ENGINE
+Inputs
+
+Monthly contribution
+
+Lump-sum investment events
+
+Growth rate (0–12%)
+
+Monthly or annual compounding
+
+Re-routed surplus contributions
+
+Outputs
+
+Monthly portfolio value
+
+Contributions vs returns breakdown
+
+Growth curve chart
+
+🔹 FR5 — PREPAYMENT STRATEGY ENGINE
+Supported Prepayment Types
+
+Annual lump-sum
+
+Monthly extra
+
+Double-up (increase payment by fixed amount)
+
+Bonus → prepayments
+
+Extra paycheques → prepayments
+
+Split strategies (e.g., 60% invest, 40% prepay)
+
+Outputs
+
+Interest saved
+
+Payoff date
+
+Total principal reduction
+
+Amortization shortened by X years
+
+Trigger-rate avoided / delayed
+
+🔹 FR6 — NET WORTH ENGINE
+Aggregates:
+
+Home equity
+
+Mortgage balance
+
+Investment portfolio
+
+Emergency fund
+
+Other debt
+
+Outputs
+
+10-year net worth projection (core)
+
+Optional: 20-year / 30-year
+
+Assets vs liabilities graph
+
+Net worth under different scenarios
+
+🔹 FR7 — SCENARIO BUILDER & COMPARISON
+Scenario Structure
+
+Each scenario contains:
+
+MortgageConfig
+
+CashFlowConfig
+
+PrepaymentConfig
+
+EFConfig
+
+InvestmentConfig
+
+Scenario Features
+
+Create / clone / edit / archive
+
+Tags: “Aggressive Prepay”, “Balanced”, etc.
+
+Unlimited scenarios
+
+Comparison Mode
+
+Compare up to 4 scenarios
+
+Metrics:
+
+Payoff date
+
+Total interest
+
+Net worth at 10/20/30 years
+
+Trigger risk
+
+Monthly payment stability
+
+🔹 FR8 — AI STRATEGY ADVISOR (Post-MVP)
+Capabilities
+
+“What’s the best strategy with my income?”
+
+“Should I go fixed or variable?”
+
+“How do I reach $500k net worth fastest?”
+
+“Explain my mortgage reset.”
+
+Generate full strategy plans
+
+Behavior
+
+Reads scenario data
+
+Runs multi-scenario analyses
+
+Generates plain-language insights
+
+🔹 FR9 — PDF REPORT GENERATOR (Post-MVP)
+Reports
+
+10-year wealth plan
+
+Mortgage prepayment plan
+
+Scenario comparison report
+
+Annual strategy report
+
+🔹 FR10 — MULTI-PROPERTY & RENTAL MODULE (Phase 3)
+Supports:
+
+Multiple properties
+
+Rental income modeling
+
+Vacancy rates
+
+Maintenance & management fees
+
+Rental cash-flow modeling
+
+Portfolio net worth
+
+6. NON-FUNCTIONAL REQUIREMENTS
+Performance
+
+Simulation for 30-year horizon < 300 ms
+
+Comparison of 4 scenarios < 1 second
+
+Accuracy
+
+Mortgage math must match Canadian lender standards
+
+Semi-annual compounding
+
+Correct VRM behavior
+
+Correct trigger-rate logic
+
+Reliability
+
+Autosave scenarios
+
+Local + cloud persistence (future)
+
+Security
+
+JWT authentication
+
+Encrypted storage for sensitive data
+
+UX
+
+Modern UI
+
+Mobile-friendly
+
+Graph-heavy
+
+Help text & info icons everywhere
+
+7. MVP SCOPE (Phase 1)
+
+Your MVP includes both Phase 1 + original Phase 2 because they are necessary for real strategic value.
+
+Included in MVP:
+📌 Mortgage Engine (full)
+
+Fixed
+
+Variable (changing payment)
+
+Variable (fixed payment) + trigger detection
+
+Rate reset
+
+Prime ± spread
+
+Stress-test slider
+
+📌 Cash Flow Engine
+
+Income, expenses, debts
+
+Extra paycheques & bonuses
+
+Surplus calculation
+
+📌 Emergency Fund
+
+Target
+
+Auto-stop
+
+Surplus rerouting
+
+📌 Investment Engine
+
+Monthly contributions
+
+Growth rates
+
+Surplus routing
+
+📌 Prepayment Engine
+
+Lump-sum
+
+Monthly extras
+
+Double-up
+
+Bonus routing
+
+Extra paycheque routing
+
+📌 Net Worth
+
+10–30 year projection
+
+Equity, investments, EF
+
+📌 Scenario Comparison
+
+Up to 4 scenarios
+
+Highlight best strategy
+
+Prepay vs invest optimizer
+
+This MVP solves 100% of your real questions.
+
+8. FUTURE ROADMAP
+Phase 2 — AI + Reports
+
+AI Advisor
+
+PDF exports
+
+Smart recommendations
+
+Natural-language “what if?” engine
+
+Phase 3 — Investor Mode
+
+Multi-property support
+
+Rental income
+
+HELOC modeling
+
+Smith Manoeuvre
+
+Phase 4 — Advisor Platform
+
+Client accounts
+
+Portfolio dashboards
+
+Advisor-branded reports
+
+9. SUCCESS METRICS
+Product Success
+
+70% of users complete a scenario
+
+60% monthly return rate
+
+Average 3+ scenarios/user
+
+High engagement with comparison tool
+
+Financial Insight Metrics
+
+Interest saved (modeled)
+
+EF completion projections
+
+Net worth improvement across strategies
+
+AI Metrics (Phase 2+)
+
+Percentage of sessions with AI interactions
+
+AI-generated strategies saved as scenarios
+
+10. FINAL SUMMARY
+
+This is a top-to-bottom, complete PRD for your app, integrating:
+
+Full Canadian mortgage modeling
+
+Variable rate logic with trigger-rate behavior
+
+Cash-flow, EF, and investment engines
+
+Scenario simulation
+
+Net worth forecasting
+
+Prepay vs invest optimization
+
+UX and system-level constraints
+
+MVP + extended roadmap
