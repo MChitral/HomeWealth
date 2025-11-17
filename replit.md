@@ -21,7 +21,7 @@ A full-stack web application helping Canadians compare financial strategies for 
 - ✅ **Backend ES module fixes**: Resolved require() → import for calculate-mortgage-payment.js
 - ✅ **30-year metric fields**: Added mortgageBalance30yr, investments30yr, investmentReturns30yr
 
-**Frontend-Backend Integration (3/8 pages wired):**
+**Frontend-Backend Integration (5/8 pages wired):**
 
 1. ✅ **Emergency Fund Page** (wire-1):
    - GET/POST /api/emergency-fund with zero-safe calculations
@@ -39,22 +39,34 @@ A full-stack web application helping Canadians compare financial strategies for 
 3. ✅ **Scenario List Page** (wire-3):
    - GET /api/scenarios + DELETE /api/scenarios/:id
    - UUID-based edit links (prevents 404 errors from name slugs)
-   - Delete functionality with cache invalidation
+   - Delete functionality with AlertDialog confirmation (replaced window.confirm)
    - Empty state, loading skeleton, timestamp formatting
    - E2E tested ✅
 
 4. ✅ **Comparison Page** (wire-4):
-   - GET /api/scenarios with horizon-specific projection metrics
+   - GET /api/scenarios/with-projections with horizon-specific projection metrics
    - Scenario selection (up to 4 simultaneous comparisons)
    - Horizon selector (10/20/30 year toggles) with getMetricForHorizon helper
    - All metrics table with horizon-aware values (net worth, mortgage balance, investments, etc.)
    - E2E tested ✅
    - Demo data seeded with 2 scenarios ("Aggressive Prepayment", "Balanced Builder")
 
-### 🚧 Next Tasks (1 page + enhancements)
-- wire-5: Wire Dashboard to aggregate real data from all sources
-- Minor enhancements: Replace window.confirm with AlertDialog for deletes
-- Known issues: TypeScript req.user type errors (54 non-blocking errors in routes.ts)
+5. ✅ **Dashboard Page** (wire-5):
+   - GET /api/mortgages (array handling), /api/scenarios/with-projections, /api/emergency-fund, /api/cash-flow
+   - Current financial snapshot: home equity, mortgage balance, emergency fund
+   - Horizon selector (10/20/30 years) affecting all projection sections
+   - Metric cards: Net Worth, Mortgage Balance, Investments (all horizon-aware)
+   - Strategy Summary panel with dynamic horizon values
+   - Charts: Net Worth projection, Mortgage balance, Investment growth
+   - Scenario selector to compare different strategies
+   - **Critical fixes**: NaN prevention with comprehensive guards, correct API contracts, proper mortgage reduction calculation (current → projected)
+   - E2E tested ✅
+
+### 🚧 Next Tasks (3 pages remaining)
+- wire-6: Wire Mortgage History Page
+- wire-7: Wire Cash Flow Page  
+- wire-8: Wire final remaining page
+- Known issues: TypeScript req.user type errors (59 non-blocking errors in routes.ts)
 
 ## Key Product Differentiators
 

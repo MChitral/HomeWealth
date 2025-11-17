@@ -2,9 +2,19 @@ import { ScenarioCard } from "@/components/scenario-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Plus, FileText, Info } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -14,6 +24,8 @@ import { formatDistanceToNow } from "date-fns";
 export default function ScenarioListPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [scenarioToDelete, setScenarioToDelete] = useState<string | null>(null);
 
   // Set page title
   useEffect(() => {
@@ -48,9 +60,16 @@ export default function ScenarioListPage() {
   });
 
   const handleDelete = (scenarioId: string) => {
-    if (confirm("Are you sure you want to delete this scenario? This cannot be undone.")) {
-      deleteMutation.mutate(scenarioId);
+    setScenarioToDelete(scenarioId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (scenarioToDelete) {
+      deleteMutation.mutate(scenarioToDelete);
     }
+    setDeleteDialogOpen(false);
+    setScenarioToDelete(null);
   };
 
   // Show loading skeleton
@@ -181,6 +200,28 @@ export default function ScenarioListPage() {
           );
         })}
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Scenario</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this scenario? This action cannot be undone.
+              All projection data for this scenario will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              data-testid="button-confirm-delete"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

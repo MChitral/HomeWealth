@@ -6,152 +6,122 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Home, TrendingUp, Wallet, PiggyBank, Plus } from "lucide-react";
+import { Home, TrendingUp, Wallet, AlertCircle, Plus } from "lucide-react";
 import { Link } from "wouter";
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import type { Scenario, EmergencyFund, Mortgage, CashFlow } from "@shared/schema";
+
+type ScenarioWithMetrics = Scenario & {
+  metrics: {
+    netWorth10yr: number;
+    netWorth20yr: number;
+    netWorth30yr: number;
+    mortgageBalance10yr: number;
+    mortgageBalance20yr: number;
+    mortgageBalance30yr: number;
+    investments10yr: number;
+    investments20yr: number;
+    investments30yr: number;
+    investmentReturns10yr: number;
+    investmentReturns20yr: number;
+    investmentReturns30yr: number;
+    mortgagePayoffYear: number;
+    totalInterestPaid: number;
+    emergencyFundYears: number;
+    avgMonthlySurplus: number;
+    netWorthProjections: number[];
+    mortgageBalanceProjections: number[];
+    investmentProjections: number[];
+  };
+};
 
 export default function DashboardPage() {
-  const [selectedScenario, setSelectedScenario] = useState("balanced");
-  const [isLoading, setIsLoading] = useState(true);
+  const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null);
+  const [selectedHorizon, setSelectedHorizon] = useState<10 | 20 | 30>(10);
 
   // Set page title
   useEffect(() => {
     document.title = "Dashboard | Mortgage Strategy";
   }, []);
 
-  // Simulate loading (remove when backend is connected)
+  // Fetch all data from backend
+  const { data: scenarios, isLoading: scenariosLoading } = useQuery<ScenarioWithMetrics[]>({
+    queryKey: ['/api/scenarios/with-projections'],
+  });
+
+  const { data: emergencyFund, isLoading: efLoading } = useQuery<EmergencyFund | null>({
+    queryKey: ['/api/emergency-fund'],
+  });
+
+  const { data: mortgages, isLoading: mortgageLoading } = useQuery<Mortgage[]>({
+    queryKey: ['/api/mortgages'],
+  });
+
+  const { data: cashFlow, isLoading: cashFlowLoading } = useQuery<CashFlow | null>({
+    queryKey: ['/api/cash-flow'],
+  });
+
+  // Get first mortgage (MVP assumes single mortgage)
+  const mortgage = mortgages && mortgages.length > 0 ? mortgages[0] : null;
+
+  // Set default selected scenario to first one
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
-  }, []);
+    if (scenarios && scenarios.length > 0 && !selectedScenarioId) {
+      setSelectedScenarioId(scenarios[0].id);
+    }
+  }, [scenarios, selectedScenarioId]);
 
-  // Mock scenarios for the selector
-  const scenarios = [
-    { id: "balanced", name: "Balanced Strategy" },
-    { id: "aggressive", name: "Aggressive Prepayment" },
-    { id: "invest", name: "Investment Focus" },
-  ];
-
-  // Current mortgage status (real data - what's already happened)
-  const currentMortgageStatus = {
-    initialAmount: 400000,
-    yearsIntoMortgage: 0, // Just started
-    principalPaid: 0,
-    interestPaid: 0,
-    currentBalance: 400000,
-    monthlyPayment: 2100,
+  // Helper to get metric value based on selected horizon
+  const getMetricForHorizon = (metricName: 'netWorth' | 'mortgageBalance' | 'investments' | 'investmentReturns'): number => {
+    if (!selectedScenario?.metrics) return 0;
+    const key = `${metricName}${selectedHorizon}yr` as keyof typeof selectedScenario.metrics;
+    return Number(selectedScenario.metrics[key] || 0);
   };
 
-  // Scenario-specific projection data
-  const scenarioData = {
-    balanced: {
-      netWorthData: [
-        { year: 0, netWorth: 100000 },
-        { year: 2, netWorth: 185000 },
-        { year: 4, netWorth: 280000 },
-        { year: 6, netWorth: 385000 },
-        { year: 8, netWorth: 500000 },
-        { year: 10, netWorth: 625000 },
-      ],
-      mortgageData: [
-        { year: 0, balance: 400000, principal: 0, interest: 0 },
-        { year: 2, balance: 360000, principal: 30000, interest: 10000 },
-        { year: 4, balance: 315000, principal: 65000, interest: 20000 },
-        { year: 6, balance: 265000, principal: 105000, interest: 30000 },
-        { year: 8, balance: 210000, principal: 150000, interest: 40000 },
-        { year: 10, balance: 150000, principal: 200000, interest: 50000 },
-      ],
-      investmentData: [
-        { year: 0, netWorth: 15000 },
-        { year: 2, netWorth: 35000 },
-        { year: 4, netWorth: 65000 },
-        { year: 6, netWorth: 105000 },
-        { year: 8, netWorth: 155000 },
-        { year: 10, netWorth: 195000 },
-      ],
-      projected10YearNetWorth: "$625,000",
-      projected10YearMortgage: "$150,000",
-      projected10YearInvestments: "$195,000",
-      mortgageDetails: {
-        payoffYear: 18.5,
-        totalInterest: "$92,500",
-        avgMonthlyPayment: "$2,350",
-        totalPrepayments: "$60,000",
-      },
-    },
-    aggressive: {
-      netWorthData: [
-        { year: 0, netWorth: 100000 },
-        { year: 2, netWorth: 180000 },
-        { year: 4, netWorth: 270000 },
-        { year: 6, netWorth: 365000 },
-        { year: 8, netWorth: 470000 },
-        { year: 10, netWorth: 587000 },
-      ],
-      mortgageData: [
-        { year: 0, balance: 400000, principal: 0, interest: 0 },
-        { year: 2, balance: 340000, principal: 45000, interest: 15000 },
-        { year: 4, balance: 275000, principal: 95000, interest: 30000 },
-        { year: 6, balance: 205000, principal: 150000, interest: 45000 },
-        { year: 8, balance: 130000, principal: 210000, interest: 60000 },
-        { year: 10, balance: 50000, principal: 275000, interest: 75000 },
-      ],
-      investmentData: [
-        { year: 0, netWorth: 15000 },
-        { year: 2, netWorth: 25000 },
-        { year: 4, netWorth: 40000 },
-        { year: 6, netWorth: 60000 },
-        { year: 8, netWorth: 85000 },
-        { year: 10, netWorth: 115000 },
-      ],
-      projected10YearNetWorth: "$587,000",
-      projected10YearMortgage: "$50,000",
-      projected10YearInvestments: "$115,000",
-      mortgageDetails: {
-        payoffYear: 12.3,
-        totalInterest: "$67,800",
-        avgMonthlyPayment: "$2,950",
-        totalPrepayments: "$145,000",
-      },
-    },
-    invest: {
-      netWorthData: [
-        { year: 0, netWorth: 100000 },
-        { year: 2, netWorth: 190000 },
-        { year: 4, netWorth: 295000 },
-        { year: 6, netWorth: 415000 },
-        { year: 8, netWorth: 550000 },
-        { year: 10, netWorth: 680000 },
-      ],
-      mortgageData: [
-        { year: 0, balance: 400000, principal: 0, interest: 0 },
-        { year: 2, balance: 375000, principal: 20000, interest: 5000 },
-        { year: 4, balance: 345000, principal: 45000, interest: 10000 },
-        { year: 6, balance: 310000, principal: 75000, interest: 15000 },
-        { year: 8, balance: 270000, principal: 110000, interest: 20000 },
-        { year: 10, balance: 225000, principal: 150000, interest: 25000 },
-      ],
-      investmentData: [
-        { year: 0, netWorth: 15000 },
-        { year: 2, netWorth: 45000 },
-        { year: 4, netWorth: 85000 },
-        { year: 6, netWorth: 135000 },
-        { year: 8, netWorth: 195000 },
-        { year: 10, netWorth: 265000 },
-      ],
-      projected10YearNetWorth: "$680,000",
-      projected10YearMortgage: "$225,000",
-      projected10YearInvestments: "$265,000",
-      mortgageDetails: {
-        payoffYear: 24.8,
-        totalInterest: "$118,200",
-        avgMonthlyPayment: "$2,100",
-        totalPrepayments: "$5,000",
-      },
-    },
+  const isLoading = scenariosLoading || efLoading || mortgageLoading || cashFlowLoading;
+
+  // Get selected scenario data
+  const selectedScenario = scenarios?.find(s => s.id === selectedScenarioId);
+
+  // Calculate current financial status with guards to prevent NaN
+  const homeValue = mortgage && mortgage.propertyPrice ? Number(mortgage.propertyPrice) : 0;
+  const mortgageBalance = mortgage && mortgage.currentBalance ? Number(mortgage.currentBalance) : 0;
+  const originalMortgageBalance = mortgage && mortgage.originalAmount ? Number(mortgage.originalAmount) : 0;
+  const efBalance = emergencyFund && emergencyFund.currentBalance ? Number(emergencyFund.currentBalance) : 0;
+  
+  const currentNetWorth = (homeValue - mortgageBalance) + efBalance;
+  
+  // Calculate emergency fund target from months
+  const monthlyExpenses = cashFlow ? 
+    (Number(cashFlow.propertyTax || 0) + Number(cashFlow.homeInsurance || 0) + 
+     Number(cashFlow.condoFees || 0) + Number(cashFlow.utilities || 0) + 
+     Number(cashFlow.groceries || 0) + Number(cashFlow.dining || 0) + 
+     Number(cashFlow.transportation || 0) + Number(cashFlow.entertainment || 0)) : 0;
+  
+  const efTargetAmount = emergencyFund && emergencyFund.targetMonths && monthlyExpenses > 0 ? 
+    Number(emergencyFund.targetMonths) * monthlyExpenses : 0;
+
+  // Helper to convert projection arrays to chart data (every 2 years for readability)
+  const getChartData = (projections: number[] | undefined) => {
+    if (!projections || projections.length === 0) return [];
+    return projections
+      .map((value, index) => ({ year: index, netWorth: value }))
+      .filter((_, index) => index % 2 === 0 || index === projections.length - 1);
   };
 
-  const currentData = scenarioData[selectedScenario as keyof typeof scenarioData];
+  const getMortgageChartData = (balanceProjections: number[] | undefined) => {
+    if (!balanceProjections || balanceProjections.length === 0) return [];
+    const initial = mortgage ? Number(mortgage.currentBalance) : 0;
+    return balanceProjections
+      .map((balance, year) => ({
+        year,
+        balance,
+        principal: initial - balance,
+        interest: 0,
+      }))
+      .filter((_, index) => index % 2 === 0 || index === balanceProjections.length - 1);
+  };
 
   // Show loading skeleton
   if (isLoading) {
@@ -172,9 +142,47 @@ export default function DashboardPage() {
         </div>
         <Skeleton className="h-96 w-full" />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Skeleton className="h-96 w-full" />
-          <Skeleton className="h-96 w-full" />
+          <Skeleton key="chart1" className="h-96 w-full" />
+          <Skeleton key="chart2" className="h-96 w-full" />
         </div>
+      </div>
+    );
+  }
+
+  // Show empty state if no scenarios
+  if (!scenarios || scenarios.length === 0) {
+    return (
+      <div className="space-y-8">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold">Dashboard</h1>
+            <p className="text-muted-foreground">Your financial overview and projections</p>
+          </div>
+          <Link href="/scenarios/new">
+            <Button data-testid="button-new-scenario">
+              <Plus className="h-4 w-4 mr-2" />
+              New Scenario
+            </Button>
+          </Link>
+        </div>
+
+        <Card className="bg-accent/10 border-dashed">
+          <CardContent className="py-16 text-center space-y-4">
+            <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground" />
+            <div>
+              <h3 className="text-lg font-semibold mb-2">No Scenarios Created</h3>
+              <p className="text-muted-foreground mb-4">
+                Create your first scenario to see projections and compare strategies
+              </p>
+              <Link href="/scenarios/new">
+                <Button data-testid="button-create-first-scenario">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Your First Scenario
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -183,7 +191,7 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-semibold">Dashboard</h1>
+          <h1 className="text-3xl font-semibold" data-testid="text-dashboard-title">Dashboard</h1>
           <p className="text-muted-foreground">Your financial overview and projections</p>
         </div>
         <Link href="/scenarios/new">
@@ -202,55 +210,58 @@ export default function DashboardPage() {
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div>
-              <p className="text-sm text-muted-foreground uppercase tracking-wide mb-2">Net Worth</p>
-              <p className="text-2xl font-bold font-mono">$100,000</p>
+              <p className="text-sm text-muted-foreground uppercase tracking-wide mb-2">Home Equity</p>
+              <p className="text-2xl font-bold font-mono" data-testid="text-current-equity">
+                ${(homeValue - mortgageBalance).toLocaleString()}
+              </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground uppercase tracking-wide mb-2">Emergency Fund</p>
-              <p className="text-2xl font-bold font-mono">$5,000</p>
-              <p className="text-sm text-muted-foreground mt-1">Target: $30,000</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground uppercase tracking-wide mb-2">Investments</p>
-              <p className="text-2xl font-bold font-mono">$15,000</p>
+              <p className="text-2xl font-bold font-mono" data-testid="text-current-ef">
+                ${efBalance.toLocaleString()}
+              </p>
+              {efTargetAmount > 0 && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Target: ${efTargetAmount.toLocaleString()}
+                </p>
+              )}
             </div>
             <div>
               <p className="text-sm text-muted-foreground uppercase tracking-wide mb-2">Home Value</p>
-              <p className="text-2xl font-bold font-mono">$500,000</p>
+              <p className="text-2xl font-bold font-mono" data-testid="text-home-value">
+                ${homeValue.toLocaleString()}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground uppercase tracking-wide mb-2">Mortgage Balance</p>
+              <p className="text-2xl font-bold font-mono" data-testid="text-mortgage-balance">
+                ${mortgageBalance.toLocaleString()}
+              </p>
             </div>
           </div>
 
-          <Separator />
-
-          <div>
-            <h3 className="text-base font-semibold mb-4">Current Mortgage Status</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {mortgage && (
+            <>
+              <Separator />
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Initial Amount</p>
-                <p className="text-base font-mono font-medium">${currentMortgageStatus.initialAmount.toLocaleString()}</p>
+                <h3 className="text-base font-semibold mb-4">Current Mortgage Details</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Original Amount</p>
+                    <p className="text-base font-mono font-medium">${Number(mortgage.originalAmount).toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Down Payment</p>
+                    <p className="text-base font-mono font-medium">${Number(mortgage.downPayment).toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Payment Frequency</p>
+                    <p className="text-base font-mono font-medium capitalize">{mortgage.paymentFrequency}</p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Current Balance</p>
-                <p className="text-base font-mono font-medium">${currentMortgageStatus.currentBalance.toLocaleString()}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Principal Paid</p>
-                <p className="text-base font-mono font-medium">${currentMortgageStatus.principalPaid.toLocaleString()}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Interest Paid</p>
-                <p className="text-base font-mono font-medium">${currentMortgageStatus.interestPaid.toLocaleString()}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Monthly Payment</p>
-                <p className="text-base font-mono font-medium">${currentMortgageStatus.monthlyPayment.toLocaleString()}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Years Into Mortgage</p>
-                <p className="text-base font-mono font-medium">{currentMortgageStatus.yearsIntoMortgage}</p>
-              </div>
-            </div>
-          </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
@@ -259,11 +270,27 @@ export default function DashboardPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-semibold">Projections</h2>
-          <p className="text-sm text-muted-foreground">10-year forecast based on selected scenario</p>
+          <p className="text-sm text-muted-foreground">{selectedHorizon}-year forecast based on selected scenario</p>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">Viewing Scenario:</span>
-          <Select value={selectedScenario} onValueChange={setSelectedScenario}>
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-sm text-muted-foreground">Time Horizon:</span>
+          <div className="flex gap-1 border rounded-md p-1" data-testid="horizon-selector">
+            {([10, 20, 30] as const).map((horizon) => (
+              <Button
+                key={horizon}
+                variant={selectedHorizon === horizon ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setSelectedHorizon(horizon)}
+                data-testid={`button-horizon-${horizon}`}
+                className="min-w-[60px]"
+              >
+                {horizon} Years
+              </Button>
+            ))}
+          </div>
+          <Separator orientation="vertical" className="h-8" />
+          <span className="text-sm text-muted-foreground">Scenario:</span>
+          <Select value={selectedScenarioId || undefined} onValueChange={setSelectedScenarioId}>
             <SelectTrigger className="w-[240px]" data-testid="select-scenario">
               <SelectValue />
             </SelectTrigger>
@@ -278,116 +305,132 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <MetricCard
-          title="Net Worth (10yr)"
-          value={currentData.projected10YearNetWorth}
-          subtitle="Projected total"
-          icon={TrendingUp}
-          trend={{ value: "+525% from current", direction: "up" }}
-        />
-        <MetricCard
-          title="Mortgage (10yr)"
-          value={currentData.projected10YearMortgage}
-          subtitle="Remaining balance"
-          icon={Home}
-        />
-        <MetricCard
-          title="Investments (10yr)"
-          value={currentData.projected10YearInvestments}
-          subtitle="Portfolio value"
-          icon={Wallet}
-        />
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold">Mortgage Details - {scenarios.find(s => s.id === selectedScenario)?.name}</CardTitle>
-          <p className="text-sm text-muted-foreground">Projected mortgage journey</p>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Projected Payoff</p>
-              <p className="text-xl font-bold font-mono">{currentData.mortgageDetails.payoffYear} years</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Total Interest</p>
-              <p className="text-xl font-bold font-mono">{currentData.mortgageDetails.totalInterest}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Avg Monthly Payment</p>
-              <p className="text-xl font-bold font-mono">{currentData.mortgageDetails.avgMonthlyPayment}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Total Prepayments</p>
-              <p className="text-xl font-bold font-mono">{currentData.mortgageDetails.totalPrepayments}</p>
-            </div>
+      {selectedScenario && selectedScenario.metrics && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <MetricCard
+              title={`Net Worth (${selectedHorizon}yr)`}
+              value={`$${getMetricForHorizon('netWorth').toLocaleString()}`}
+              subtitle="Projected total"
+              icon={TrendingUp}
+              data-testid={`card-networth-${selectedHorizon}yr`}
+            />
+            <MetricCard
+              title={`Mortgage (${selectedHorizon}yr)`}
+              value={`$${getMetricForHorizon('mortgageBalance').toLocaleString()}`}
+              subtitle="Remaining balance"
+              icon={Home}
+              data-testid={`card-mortgage-${selectedHorizon}yr`}
+            />
+            <MetricCard
+              title={`Investments (${selectedHorizon}yr)`}
+              value={`$${getMetricForHorizon('investments').toLocaleString()}`}
+              subtitle="Portfolio value"
+              icon={Wallet}
+              data-testid={`card-investments-${selectedHorizon}yr`}
+            />
           </div>
-          <div className="relative">
-            <MortgageBalanceChart data={currentData.mortgageData} />
-            <div className="absolute top-4 left-4 bg-card/90 border border-border rounded-md px-3 py-2">
-              <p className="text-xs text-muted-foreground">← You are here (Year 0)</p>
-            </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold">Mortgage Details - {selectedScenario.name}</CardTitle>
+              <p className="text-sm text-muted-foreground">Projected mortgage journey</p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-6">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Projected Payoff</p>
+                  <p className="text-xl font-bold font-mono" data-testid="text-payoff-year">
+                    {selectedScenario.metrics.mortgagePayoffYear.toFixed(1)} years
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Total Interest</p>
+                  <p className="text-xl font-bold font-mono" data-testid="text-total-interest">
+                    ${selectedScenario.metrics.totalInterestPaid.toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Avg Monthly Surplus</p>
+                  <p className="text-xl font-bold font-mono" data-testid="text-avg-surplus">
+                    ${selectedScenario.metrics.avgMonthlySurplus.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              <div className="relative">
+                <MortgageBalanceChart data={getMortgageChartData(selectedScenario.metrics.mortgageBalanceProjections)} />
+                <div className="absolute top-4 left-4 bg-card/90 border border-border rounded-md px-3 py-2">
+                  <p className="text-xs text-muted-foreground">← You are here (Year 0)</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold">Net Worth Projection</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Based on <span className="font-medium">{selectedScenario.name}</span>
+              </p>
+            </CardHeader>
+            <CardContent>
+              <NetWorthChart data={getChartData(selectedScenario.metrics.netWorthProjections)} />
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold">Investment Growth</CardTitle>
+                <p className="text-sm text-muted-foreground">Total portfolio value projection</p>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px]">
+                  <NetWorthChart data={getChartData(selectedScenario.metrics.investmentProjections)} />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold">Strategy Summary</CardTitle>
+                <p className="text-sm text-muted-foreground">{selectedScenario.name}</p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">{selectedHorizon}-Year Net Worth</span>
+                    <span className="text-lg font-mono font-semibold text-green-600" data-testid={`text-value-net-worth-(${selectedHorizon}yr)`}>
+                      ${getMetricForHorizon('netWorth').toLocaleString()}
+                    </span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Mortgage Reduction ({selectedHorizon}yr)</span>
+                    <span className="text-lg font-mono font-semibold" data-testid={`text-value-mortgage-reduction-(${selectedHorizon}yr)`}>
+                      ${(mortgageBalance - getMetricForHorizon('mortgageBalance')).toLocaleString()}
+                    </span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Investment Returns</span>
+                    <span className="text-lg font-mono font-semibold text-blue-600" data-testid={`text-value-investment-returns-(${selectedHorizon}yr)`}>
+                      +${getMetricForHorizon('investmentReturns').toLocaleString()}
+                    </span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Emergency Fund Filled By</span>
+                    <span className="text-lg font-mono font-semibold" data-testid="text-value-ef-years">
+                      Year {selectedScenario.metrics.emergencyFundYears}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold">Net Worth Projection</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Based on <span className="font-medium">{scenarios.find(s => s.id === selectedScenario)?.name}</span>
-          </p>
-        </CardHeader>
-        <CardContent>
-          <NetWorthChart data={currentData.netWorthData} />
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold">Investment Growth</CardTitle>
-            <p className="text-sm text-muted-foreground">Total portfolio value projection</p>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <NetWorthChart data={currentData.investmentData} />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold">Strategy Summary</CardTitle>
-            <p className="text-sm text-muted-foreground">{scenarios.find(s => s.id === selectedScenario)?.name}</p>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Net Worth Growth</span>
-                <span className="text-lg font-mono font-semibold text-green-600">+$525,000</span>
-              </div>
-              <Separator />
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Mortgage Reduction</span>
-                <span className="text-lg font-mono font-semibold">$250,000</span>
-              </div>
-              <Separator />
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Investment Growth</span>
-                <span className="text-lg font-mono font-semibold text-blue-600">+$180,000</span>
-              </div>
-              <Separator />
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Home Equity Gained</span>
-                <span className="text-lg font-mono font-semibold">$270,000</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        </>
+      )}
     </div>
   );
 }
