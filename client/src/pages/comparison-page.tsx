@@ -31,10 +31,10 @@ export default function ComparisonPage() {
       if (!newScenarios.includes(scenariosParam)) {
         newScenarios.push(scenariosParam);
       }
-      setSelectedScenarios(newScenarios.slice(0, 3)); // Max 3 scenarios
+      setSelectedScenarios(newScenarios.slice(0, 4)); // Max 4 scenarios
     } else if (selectedScenarios.length === 0) {
-      // Default: show all 3 scenarios
-      setSelectedScenarios(["balanced", "aggressive", "invest"]);
+      // Default: show all 4 scenarios
+      setSelectedScenarios(["balanced", "aggressive", "invest", "conservative"]);
     }
   }, [location]);
 
@@ -45,8 +45,8 @@ export default function ComparisonPage() {
         setSelectedScenarios(selectedScenarios.filter(id => id !== scenarioId));
       }
     } else {
-      // Add if not selected (max 3)
-      if (selectedScenarios.length < 3) {
+      // Add if not selected (max 4)
+      if (selectedScenarios.length < 4) {
         setSelectedScenarios([...selectedScenarios, scenarioId]);
       }
     }
@@ -105,6 +105,23 @@ export default function ComparisonPage() {
         avgCashFlow: 1550,
       },
     },
+    conservative: {
+      id: "conservative",
+      name: "Conservative (EF First)",
+      description: "Build emergency fund fast, then 40% prepay / 60% invest",
+      color: "hsl(var(--chart-4))",
+      metrics: {
+        netWorth10yr: 610000,
+        netWorth20yr: 1280000,
+        mortgageBalance10yr: 210000,
+        mortgagePayoffYear: 20.5,
+        totalInterestPaid: 98000,
+        investments10yr: 195000,
+        investmentReturns10yr: 38000,
+        emergencyFundYears: 1.5,
+        avgCashFlow: 1350,
+      },
+    },
   };
 
   // All available scenarios for selection
@@ -112,6 +129,7 @@ export default function ComparisonPage() {
     { id: "balanced", name: "Balanced Strategy" },
     { id: "aggressive", name: "Aggressive Prepayment" },
     { id: "invest", name: "Investment Focus" },
+    { id: "conservative", name: "Conservative (EF First)" },
   ];
 
   const selectedScenarioData = selectedScenarios
@@ -126,30 +144,30 @@ export default function ComparisonPage() {
 
   // Chart data
   const netWorthData = [
-    { year: 0, balanced: 105000, aggressive: 105000, invest: 105000 },
-    { year: 2, balanced: 185000, aggressive: 180000, invest: 190000 },
-    { year: 4, balanced: 280000, aggressive: 270000, invest: 295000 },
-    { year: 6, balanced: 385000, aggressive: 365000, invest: 415000 },
-    { year: 8, balanced: 500000, aggressive: 470000, invest: 550000 },
-    { year: 10, balanced: 625000, aggressive: 587000, invest: 680000 },
+    { year: 0, balanced: 105000, aggressive: 105000, invest: 105000, conservative: 105000 },
+    { year: 2, balanced: 185000, aggressive: 180000, invest: 190000, conservative: 182000 },
+    { year: 4, balanced: 280000, aggressive: 270000, invest: 295000, conservative: 275000 },
+    { year: 6, balanced: 385000, aggressive: 365000, invest: 415000, conservative: 380000 },
+    { year: 8, balanced: 500000, aggressive: 470000, invest: 550000, conservative: 495000 },
+    { year: 10, balanced: 625000, aggressive: 587000, invest: 680000, conservative: 610000 },
   ];
 
   const mortgageData = [
-    { year: 0, balanced: 397745, aggressive: 397745, invest: 397745 },
-    { year: 2, balanced: 355000, aggressive: 340000, invest: 365000 },
-    { year: 4, balanced: 310000, aggressive: 275000, invest: 330000 },
-    { year: 6, balanced: 260000, aggressive: 205000, invest: 295000 },
-    { year: 8, balanced: 205000, aggressive: 130000, invest: 255000 },
-    { year: 10, balanced: 145000, aggressive: 50000, invest: 210000 },
+    { year: 0, balanced: 397745, aggressive: 397745, invest: 397745, conservative: 397745 },
+    { year: 2, balanced: 355000, aggressive: 340000, invest: 365000, conservative: 360000 },
+    { year: 4, balanced: 310000, aggressive: 275000, invest: 330000, conservative: 318000 },
+    { year: 6, balanced: 260000, aggressive: 205000, invest: 295000, conservative: 272000 },
+    { year: 8, balanced: 205000, aggressive: 130000, invest: 255000, conservative: 220000 },
+    { year: 10, balanced: 145000, aggressive: 50000, invest: 210000, conservative: 165000 },
   ];
 
   const investmentData = [
-    { year: 0, balanced: 5000, aggressive: 5000, invest: 5000 },
-    { year: 2, balanced: 45000, aggressive: 28000, invest: 62000 },
-    { year: 4, balanced: 95000, aggressive: 58000, invest: 135000 },
-    { year: 6, balanced: 155000, aggressive: 95000, invest: 225000 },
-    { year: 8, balanced: 225000, aggressive: 138000, invest: 330000 },
-    { year: 10, balanced: 305000, aggressive: 188000, invest: 450000 },
+    { year: 0, balanced: 5000, aggressive: 5000, invest: 5000, conservative: 5000 },
+    { year: 2, balanced: 45000, aggressive: 28000, invest: 62000, conservative: 38000 },
+    { year: 4, balanced: 95000, aggressive: 58000, invest: 135000, conservative: 82000 },
+    { year: 6, balanced: 155000, aggressive: 95000, invest: 225000, conservative: 135000 },
+    { year: 8, balanced: 225000, aggressive: 138000, invest: 330000, conservative: 195000 },
+    { year: 10, balanced: 305000, aggressive: 188000, invest: 450000, conservative: 265000 },
   ];
 
   return (
@@ -180,14 +198,14 @@ export default function ComparisonPage() {
       <Card>
         <CardHeader>
           <CardTitle>Select Scenarios to Compare</CardTitle>
-          <CardDescription>Choose 1-3 scenarios to compare (click to toggle)</CardDescription>
+          <CardDescription>Choose 1-4 scenarios to compare (click to toggle)</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3">
             {allScenarios.map((scenario) => {
               const isSelected = selectedScenarios.includes(scenario.id);
               const canDeselect = selectedScenarios.length > 1;
-              const canSelect = selectedScenarios.length < 3;
+              const canSelect = selectedScenarios.length < 4;
               
               return (
                 <Button
@@ -204,9 +222,9 @@ export default function ComparisonPage() {
               );
             })}
           </div>
-          {selectedScenarios.length === 3 && (
+          {selectedScenarios.length === 4 && (
             <p className="text-sm text-muted-foreground mt-3">
-              Maximum of 3 scenarios reached. Remove one to add another.
+              Maximum of 4 scenarios reached. Remove one to add another.
             </p>
           )}
           {selectedScenarios.length === 1 && (
@@ -220,27 +238,57 @@ export default function ComparisonPage() {
       {/* Winner Card */}
       {winner && selectedScenarioData.length > 1 && (
         <Card className="border-primary bg-primary/5">
-          <CardHeader>
-            <div className="flex items-start justify-between gap-4 flex-wrap">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-md">
-                  <Trophy className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl">Highest Net Worth: {winner.name}</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    ${winner.metrics.netWorth10yr.toLocaleString()} at {timeHorizon} years
-                  </p>
-                </div>
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-primary/10 rounded-md">
+                <Trophy className="h-8 w-8 text-primary" />
               </div>
-              <div className="flex gap-2">
-                <Badge variant="outline" className="gap-1">
-                  <TrendingUp className="h-3 w-3" />
-                  Best Overall
-                </Badge>
+              <div className="flex-1">
+                <h3 className="text-2xl font-semibold mb-2">
+                  Best Strategy: {winner.name}
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Highest net worth at {timeHorizon} years with optimal balance of growth and risk
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Net Worth</p>
+                    <p className="font-mono font-semibold text-xl text-primary">
+                      ${winner.metrics.netWorth10yr.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Mortgage Payoff</p>
+                    <p className="font-mono font-semibold text-xl">
+                      {winner.metrics.mortgagePayoffYear} years
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Total Interest</p>
+                    <p className="font-mono font-semibold text-xl">
+                      ${winner.metrics.totalInterestPaid.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Investment Value</p>
+                    <p className="font-mono font-semibold text-xl text-green-600">
+                      ${winner.metrics.investments10yr.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 flex gap-2">
+                  <Badge variant="outline" className="gap-1">
+                    <TrendingUp className="h-3 w-3" />
+                    Best Overall
+                  </Badge>
+                  <Badge variant="outline" className="gap-1">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Recommended
+                  </Badge>
+                </div>
               </div>
             </div>
-          </CardHeader>
+          </CardContent>
         </Card>
       )}
 

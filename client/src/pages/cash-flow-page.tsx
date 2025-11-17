@@ -4,8 +4,46 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Save, DollarSign, TrendingDown, CreditCard, Briefcase } from "lucide-react";
+import { useState } from "react";
 
 export default function CashFlowPage() {
+  // Income state
+  const [monthlyIncome, setMonthlyIncome] = useState(8000);
+  const [extraPaycheques, setExtraPaycheques] = useState(2);
+  const [annualBonus, setAnnualBonus] = useState(10000);
+
+  // Fixed expenses state
+  const [propertyTax, setPropertyTax] = useState(400);
+  const [insurance, setInsurance] = useState(150);
+  const [condoFees, setCondoFees] = useState(0);
+  const [utilities, setUtilities] = useState(200);
+
+  // Variable expenses state
+  const [groceries, setGroceries] = useState(600);
+  const [dining, setDining] = useState(300);
+  const [transportation, setTransportation] = useState(200);
+  const [entertainment, setEntertainment] = useState(400);
+
+  // Other debt state
+  const [carLoan, setCarLoan] = useState(0);
+  const [studentLoan, setStudentLoan] = useState(0);
+  const [creditCard, setCreditCard] = useState(0);
+
+  // Calculated values
+  const extraPaychequesMonthly = (monthlyIncome * extraPaycheques) / 12; // Annualized extra paycheques
+  const annualBonusMonthly = annualBonus / 12;
+  const totalMonthlyIncome = monthlyIncome + extraPaychequesMonthly + annualBonusMonthly;
+
+  const fixedHousingCosts = propertyTax + insurance + condoFees + utilities;
+  const variableExpenses = groceries + dining + transportation + entertainment;
+  const otherDebtPayments = carLoan + studentLoan + creditCard;
+
+  // Mock mortgage payment from history - TODO: fetch from backend
+  const mortgagePayment = 2100;
+
+  const totalMonthlyExpenses = fixedHousingCosts + variableExpenses + otherDebtPayments + mortgagePayment;
+  const monthlySurplus = totalMonthlyIncome - totalMonthlyExpenses;
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -35,7 +73,8 @@ export default function CashFlowPage() {
                 id="monthly-income" 
                 type="number" 
                 placeholder="8000" 
-                defaultValue="8000"
+                value={monthlyIncome}
+                onChange={(e) => setMonthlyIncome(Number(e.target.value) || 0)}
                 data-testid="input-monthly-income" 
               />
               <p className="text-sm text-muted-foreground">Regular bi-weekly paycheques (2 per month)</p>
@@ -46,7 +85,8 @@ export default function CashFlowPage() {
                 id="extra-paycheques" 
                 type="number" 
                 placeholder="2" 
-                defaultValue="2"
+                value={extraPaycheques}
+                onChange={(e) => setExtraPaycheques(Number(e.target.value) || 0)}
                 data-testid="input-extra-paycheques" 
               />
               <p className="text-sm text-muted-foreground">Typical for bi-weekly pay (26 weeks = 2 extra)</p>
@@ -59,7 +99,8 @@ export default function CashFlowPage() {
               id="annual-bonus" 
               type="number" 
               placeholder="10000" 
-              defaultValue="10000"
+              value={annualBonus}
+              onChange={(e) => setAnnualBonus(Number(e.target.value) || 0)}
               data-testid="input-annual-bonus" 
             />
             <p className="text-sm text-muted-foreground">Pre-tax annual bonus amount</p>
@@ -83,7 +124,8 @@ export default function CashFlowPage() {
                 id="property-tax" 
                 type="number" 
                 placeholder="400" 
-                defaultValue="400"
+                value={propertyTax}
+                onChange={(e) => setPropertyTax(Number(e.target.value) || 0)}
                 data-testid="input-property-tax" 
               />
             </div>
@@ -93,7 +135,8 @@ export default function CashFlowPage() {
                 id="insurance" 
                 type="number" 
                 placeholder="150" 
-                defaultValue="150"
+                value={insurance}
+                onChange={(e) => setInsurance(Number(e.target.value) || 0)}
                 data-testid="input-insurance" 
               />
             </div>
@@ -106,7 +149,8 @@ export default function CashFlowPage() {
                 id="condo-fees" 
                 type="number" 
                 placeholder="300" 
-                defaultValue="0"
+                value={condoFees}
+                onChange={(e) => setCondoFees(Number(e.target.value) || 0)}
                 data-testid="input-condo-fees" 
               />
               <p className="text-sm text-muted-foreground">Leave blank if N/A</p>
@@ -117,7 +161,8 @@ export default function CashFlowPage() {
                 id="utilities" 
                 type="number" 
                 placeholder="200" 
-                defaultValue="200"
+                value={utilities}
+                onChange={(e) => setUtilities(Number(e.target.value) || 0)}
                 data-testid="input-utilities" 
               />
               <p className="text-sm text-muted-foreground">Gas, electric, water, internet</p>
@@ -129,7 +174,7 @@ export default function CashFlowPage() {
           <div className="space-y-2">
             <Label htmlFor="total-fixed">Total Fixed Housing Costs</Label>
             <div className="p-4 bg-muted/50 rounded-md">
-              <p className="text-2xl font-mono font-bold">$750/month</p>
+              <p className="text-2xl font-mono font-bold">${fixedHousingCosts.toLocaleString()}/month</p>
               <p className="text-sm text-muted-foreground mt-1">Excluding mortgage payment</p>
             </div>
           </div>
@@ -152,7 +197,8 @@ export default function CashFlowPage() {
                 id="groceries" 
                 type="number" 
                 placeholder="600" 
-                defaultValue="600"
+                value={groceries}
+                onChange={(e) => setGroceries(Number(e.target.value) || 0)}
                 data-testid="input-groceries" 
               />
             </div>
@@ -162,7 +208,8 @@ export default function CashFlowPage() {
                 id="dining" 
                 type="number" 
                 placeholder="300" 
-                defaultValue="300"
+                value={dining}
+                onChange={(e) => setDining(Number(e.target.value) || 0)}
                 data-testid="input-dining" 
               />
             </div>
@@ -175,7 +222,8 @@ export default function CashFlowPage() {
                 id="transportation" 
                 type="number" 
                 placeholder="200" 
-                defaultValue="200"
+                value={transportation}
+                onChange={(e) => setTransportation(Number(e.target.value) || 0)}
                 data-testid="input-transportation" 
               />
               <p className="text-sm text-muted-foreground">Gas, transit, parking</p>
@@ -186,7 +234,8 @@ export default function CashFlowPage() {
                 id="entertainment" 
                 type="number" 
                 placeholder="400" 
-                defaultValue="400"
+                value={entertainment}
+                onChange={(e) => setEntertainment(Number(e.target.value) || 0)}
                 data-testid="input-entertainment" 
               />
             </div>
@@ -197,7 +246,7 @@ export default function CashFlowPage() {
           <div className="space-y-2">
             <Label htmlFor="total-variable">Total Variable Expenses</Label>
             <div className="p-4 bg-muted/50 rounded-md">
-              <p className="text-2xl font-mono font-bold">$1,500/month</p>
+              <p className="text-2xl font-mono font-bold">${variableExpenses.toLocaleString()}/month</p>
             </div>
           </div>
         </CardContent>
@@ -219,7 +268,8 @@ export default function CashFlowPage() {
                 id="car-loan" 
                 type="number" 
                 placeholder="0" 
-                defaultValue="0"
+                value={carLoan}
+                onChange={(e) => setCarLoan(Number(e.target.value) || 0)}
                 data-testid="input-car-loan" 
               />
             </div>
@@ -229,7 +279,8 @@ export default function CashFlowPage() {
                 id="student-loan" 
                 type="number" 
                 placeholder="0" 
-                defaultValue="0"
+                value={studentLoan}
+                onChange={(e) => setStudentLoan(Number(e.target.value) || 0)}
                 data-testid="input-student-loan" 
               />
             </div>
@@ -241,7 +292,8 @@ export default function CashFlowPage() {
               id="credit-card" 
               type="number" 
               placeholder="0" 
-              defaultValue="0"
+              value={creditCard}
+              onChange={(e) => setCreditCard(Number(e.target.value) || 0)}
               data-testid="input-credit-card" 
             />
             <p className="text-sm text-muted-foreground">If carrying a balance</p>
@@ -252,7 +304,7 @@ export default function CashFlowPage() {
           <div className="space-y-2">
             <Label htmlFor="total-debt">Total Other Debt Payments</Label>
             <div className="p-4 bg-muted/50 rounded-md">
-              <p className="text-2xl font-mono font-bold">$0/month</p>
+              <p className="text-2xl font-mono font-bold">${otherDebtPayments.toLocaleString()}/month</p>
             </div>
           </div>
         </CardContent>
@@ -260,29 +312,88 @@ export default function CashFlowPage() {
 
       <Card className="border-primary">
         <CardHeader>
-          <CardTitle>Cash Flow Summary</CardTitle>
+          <CardTitle>Monthly Cash Flow Summary</CardTitle>
+          <CardDescription>Your monthly surplus available for financial goals</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Monthly Income</p>
-              <p className="text-2xl font-mono font-bold text-green-600">$8,000</p>
+        <CardContent className="space-y-4">
+          <div>
+            <p className="text-sm font-medium mb-3">Income Breakdown</p>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Monthly Income (base)</span>
+                <span className="font-mono">${monthlyIncome.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Extra Paycheques (annualized)</span>
+                <span className="font-mono text-green-600">+${extraPaychequesMonthly.toFixed(0)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Annual Bonus (annualized)</span>
+                <span className="font-mono text-green-600">+${annualBonusMonthly.toFixed(0)}</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between font-semibold">
+                <span>Total Monthly Income</span>
+                <span className="font-mono text-lg text-green-600">${totalMonthlyIncome.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Total Expenses</p>
-              <p className="text-2xl font-mono font-bold text-orange-600">$2,250</p>
-              <p className="text-xs text-muted-foreground mt-1">Excluding mortgage</p>
+          </div>
+
+          <Separator className="my-4" />
+
+          <div>
+            <p className="text-sm font-medium mb-3">Expenses Breakdown</p>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Fixed Housing Costs</span>
+                <span className="font-mono">-${fixedHousingCosts.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Variable Expenses</span>
+                <span className="font-mono">-${variableExpenses.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Other Debt Payments</span>
+                <span className="font-mono">-${otherDebtPayments.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Mortgage Payment (from history)</span>
+                <span className="font-mono">-${mortgagePayment.toLocaleString()}</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between font-semibold">
+                <span>Total Monthly Expenses</span>
+                <span className="font-mono text-lg text-orange-600">-${totalMonthlyExpenses.toLocaleString()}</span>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Mortgage Payment</p>
-              <p className="text-2xl font-mono font-bold">$2,100</p>
-              <p className="text-xs text-muted-foreground mt-1">From mortgage history</p>
+          </div>
+
+          <Separator className="my-4" />
+
+          <div className={`p-4 rounded-md ${monthlySurplus >= 0 ? 'bg-primary/10' : 'bg-destructive/10'}`}>
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Monthly Surplus</p>
+                <p className="text-xs text-muted-foreground">Available for emergency fund, investments, and mortgage prepayment</p>
+              </div>
+              <div className="text-right">
+                <p className={`text-4xl font-mono font-bold ${monthlySurplus >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                  ${monthlySurplus.toLocaleString(undefined, {maximumFractionDigits: 0})}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Monthly Surplus</p>
-              <p className="text-2xl font-mono font-bold text-primary">$3,650</p>
-              <p className="text-xs text-muted-foreground mt-1">Available for EF/invest/prepay</p>
-            </div>
+            {monthlySurplus < 0 && (
+              <p className="text-sm text-destructive font-medium mt-2">
+                ⚠️ Warning: Negative cash flow! You're spending more than you earn.
+              </p>
+            )}
+          </div>
+
+          <div className="p-3 bg-muted/50 rounded-md">
+            <p className="text-sm">
+              <span className="font-medium">Note:</span> This surplus is split across your scenarios based on
+              their emergency fund contribution, investment contribution, and prepayment settings.
+            </p>
           </div>
         </CardContent>
       </Card>

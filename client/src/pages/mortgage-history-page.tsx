@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Download, AlertTriangle, RefreshCw } from "lucide-react";
+import { Plus, Download, AlertTriangle, RefreshCw, Info } from "lucide-react";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
@@ -32,15 +32,42 @@ export default function MortgageHistoryPage() {
   const [filterYear, setFilterYear] = useState("all");
   const [mortgageType, setMortgageType] = useState("variable-fixed");
   const [primeRate, setPrimeRate] = useState("6.45");
+  const [renewalTermType, setRenewalTermType] = useState("variable-fixed");
+  const [renewalPaymentFrequency, setRenewalPaymentFrequency] = useState("monthly");
+  const [renewalRate, setRenewalRate] = useState("");
+  const [renewalSpread, setRenewalSpread] = useState("");
+  const [renewalPrime, setRenewalPrime] = useState("");
+  const [renewalTermYears, setRenewalTermYears] = useState("5");
+  const [renewalStartDate, setRenewalStartDate] = useState("");
 
-  // Current term information (locked for the term duration)
-  const currentTerm = {
+  // Current term information (locked for the term duration) - now as state
+  const [currentTerm, setCurrentTerm] = useState({
     type: "variable-fixed" as "fixed" | "variable-changing" | "variable-fixed",
     startDate: "2024-01-01",
     endDate: "2029-01-01",
     termYears: 5,
-    lockedSpread: -0.80, // This is locked for the full 5-year term
-    fixedRate: null as number | null, // Only for fixed-rate terms
+    lockedSpread: -0.80,
+    fixedRate: null as number | null,
+    paymentFrequency: "monthly" as "monthly" | "biweekly" | "accelerated-biweekly",
+  });
+
+  const handleTermRenewal = () => {
+    const termYears = Number(renewalTermYears) || 5;
+    const startDate = renewalStartDate || new Date().toISOString().split('T')[0];
+    const endDate = new Date(startDate);
+    endDate.setFullYear(endDate.getFullYear() + termYears);
+
+    setCurrentTerm({
+      type: renewalTermType as "fixed" | "variable-changing" | "variable-fixed",
+      startDate: startDate,
+      endDate: endDate.toISOString().split('T')[0],
+      termYears,
+      lockedSpread: renewalTermType.startsWith('variable') ? Number(renewalSpread) || -0.80 : 0,
+      fixedRate: renewalTermType === 'fixed' ? Number(renewalRate) || null : null,
+      paymentFrequency: renewalPaymentFrequency as "monthly" | "biweekly" | "accelerated-biweekly",
+    });
+
+    setIsTermRenewalOpen(false);
   };
 
   // Mock payment history data
@@ -300,7 +327,7 @@ export default function MortgageHistoryPage() {
                   Renew Term
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Renew Mortgage Term</DialogTitle>
                   <DialogDescription>
@@ -308,23 +335,73 @@ export default function MortgageHistoryPage() {
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertDescription>
+                      Your current term ends on {currentTerm.endDate}. Use this dialog to negotiate a new term with your lender.
+                    </AlertDescription>
+                  </Alert>
+
                   <div className="space-y-2">
-                    <Label htmlFor="new-term-type">New Term Type</Label>
-                    <Select defaultValue="variable-fixed">
-                      <SelectTrigger id="new-term-type">
+                    <Label htmlFor="new-term-start">New Term Start Date</Label>
+                    <Input 
+                      id="new-term-start" 
+                      type="date" 
+                      value={renewalStartDate || currentTerm.endDate}
+                      onChange={(e) => setRenewalStartDate(e.target.value)}
+                      data-testid="input-term-start-date"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Usually the day after your current term ends
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="new-term-type">Mortgage Type</Label>
+                    <Select 
+                      value={renewalTermType} 
+                      onValueChange={setRenewalTermType}
+                    >
+                      <SelectTrigger id="new-term-type" data-testid="select-term-type">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="fixed">Fixed Rate</SelectItem>
-                        <SelectItem value="variable-changing">Variable - Changing Payment</SelectItem>
-                        <SelectItem value="variable-fixed">Variable - Fixed Payment</SelectItem>
+                        <SelectItem value="variable-changing">Variable Rate (Changing Payment)</SelectItem>
+                        <SelectItem value="variable-fixed">Variable Rate (Fixed Payment)</SelectItem>
                       </SelectContent>
                     </Select>
+                    <p className="text-sm text-muted-foreground">
+                      {renewalTermType === "fixed" && "Rate stays constant for the term"}
+                      {renewalTermType === "variable-changing" && "Payment recalculates when Prime changes"}
+                      {renewalTermType === "variable-fixed" && "Payment stays same, amortization extends if Prime rises"}
+                    </p>
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="payment-frequency">Payment Frequency</Label>
+                    <Select 
+                      value={renewalPaymentFrequency} 
+                      onValueChange={setRenewalPaymentFrequency}
+                    >
+                      <SelectTrigger id="payment-frequency" data-testid="select-payment-frequency">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="monthly">Monthly (12 payments/year)</SelectItem>
+                        <SelectItem value="biweekly">Bi-weekly (26 payments/year)</SelectItem>
+                        <SelectItem value="accelerated-biweekly">Accelerated Bi-weekly (pays off faster)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-sm text-muted-foreground">
+                      Accelerated bi-weekly pays your mortgage off faster by making the equivalent of one extra monthly payment per year
+                    </p>
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="term-length">Term Length</Label>
-                    <Select defaultValue="5">
-                      <SelectTrigger id="term-length">
+                    <Select value={renewalTermYears} onValueChange={setRenewalTermYears}>
+                      <SelectTrigger id="term-length" data-testid="select-term-length">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -336,20 +413,72 @@ export default function MortgageHistoryPage() {
                         <SelectItem value="10">10 Years</SelectItem>
                       </SelectContent>
                     </Select>
+                    <p className="text-sm text-muted-foreground">
+                      Most Canadian mortgages are 3 or 5 year terms
+                    </p>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="new-spread">New Spread (for variable) or Rate (for fixed)</Label>
-                    <Input id="new-spread" type="number" step="0.01" placeholder="-0.65" />
-                  </div>
+
+                  <Separator />
+
+                  {renewalTermType === "fixed" ? (
+                    <div className="space-y-2">
+                      <Label htmlFor="new-fixed-rate">Fixed Rate (%)</Label>
+                      <Input 
+                        id="new-fixed-rate" 
+                        type="number" 
+                        step="0.01" 
+                        placeholder="5.49" 
+                        value={renewalRate}
+                        onChange={(e) => setRenewalRate(e.target.value)}
+                        data-testid="input-fixed-rate"
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        This rate will be locked for the entire {renewalTermYears}-year term
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="new-spread">Negotiated Spread (Prime ± %)</Label>
+                        <Input 
+                          id="new-spread" 
+                          type="number" 
+                          step="0.01" 
+                          placeholder="-0.65" 
+                          value={renewalSpread}
+                          onChange={(e) => setRenewalSpread(e.target.value)}
+                          data-testid="input-spread"
+                        />
+                        <p className="text-sm text-muted-foreground">
+                          Your lender offers Prime minus 0.65% (or Prime plus X%). This spread is locked for your term.
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="current-prime">Current Prime Rate (%)</Label>
+                        <Input 
+                          id="current-prime" 
+                          type="number" 
+                          step="0.01" 
+                          placeholder="6.45" 
+                          value={renewalPrime}
+                          onChange={(e) => setRenewalPrime(e.target.value)}
+                          data-testid="input-current-prime"
+                        />
+                        <p className="text-sm text-muted-foreground">
+                          Current Bank of Canada Prime rate. This will change during your term, but your spread won't.
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsTermRenewalOpen(false)}>
+                  <Button variant="outline" onClick={() => setIsTermRenewalOpen(false)} data-testid="button-cancel-renewal">
                     Cancel
                   </Button>
-                  <Button onClick={() => {
-                    console.log("Term renewed");
-                    setIsTermRenewalOpen(false);
-                  }}>
+                  <Button 
+                    onClick={handleTermRenewal}
+                    data-testid="button-save-renewal"
+                  >
                     Start New Term
                   </Button>
                 </DialogFooter>
@@ -366,15 +495,32 @@ export default function MortgageHistoryPage() {
                  currentTerm.type === "variable-changing" ? "Variable (Changing Payment)" :
                  "Variable (Fixed Payment)"}
               </p>
+              <Badge variant="outline" className="mt-2">
+                {currentTerm.type === "fixed" && "Fixed"}
+                {currentTerm.type === "variable-changing" && "VRM - Changing"}
+                {currentTerm.type === "variable-fixed" && "VRM - Fixed"}
+              </Badge>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Payment Frequency</p>
+              <p className="text-base font-medium">
+                {currentTerm.paymentFrequency === "monthly" && "Monthly"}
+                {currentTerm.paymentFrequency === "biweekly" && "Bi-weekly"}
+                {currentTerm.paymentFrequency === "accelerated-biweekly" && "Accelerated Bi-weekly"}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {currentTerm.paymentFrequency === "monthly" && "12 payments/year"}
+                {currentTerm.paymentFrequency === "biweekly" && "26 payments/year"}
+                {currentTerm.paymentFrequency === "accelerated-biweekly" && "26 payments/year + extra"}
+              </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground mb-1">Term Duration</p>
               <p className="text-base font-medium">{currentTerm.termYears} years</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Locked Until</p>
-              <p className="text-base font-medium">{currentTerm.endDate}</p>
-              <p className="text-sm text-muted-foreground">{monthsRemainingInTerm} months left</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Ends {currentTerm.endDate}
+              </p>
+              <p className="text-xs text-muted-foreground">{monthsRemainingInTerm} months left</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground mb-1">
