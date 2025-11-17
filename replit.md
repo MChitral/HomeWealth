@@ -62,8 +62,15 @@ A full-stack web application helping Canadians compare financial strategies for 
    - **Critical fixes**: NaN prevention with comprehensive guards, correct API contracts, proper mortgage reduction calculation (current → projected)
    - E2E tested ✅
 
+6. ✅ **Mortgage Page - Edit Details** (wire-6-partial):
+   - PATCH /api/mortgages/:id for updating mortgage details
+   - Edit Details dialog with form pre-population
+   - Editable fields: Property Value, Current Balance, Payment Frequency
+   - Form validation, cache invalidation, toast notifications
+   - E2E tested ✅
+
 ### 🚧 Next Tasks (3 pages remaining)
-- wire-6: Wire Mortgage History Page
+- wire-6: Complete Mortgage History Page (term tracking, payment history)
 - wire-7: Wire Cash Flow Page  
 - wire-8: Wire final remaining page
 - Known issues: TypeScript req.user type errors (59 non-blocking errors in routes.ts)
