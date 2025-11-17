@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -21,19 +21,29 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Download, AlertTriangle } from "lucide-react";
+import { Plus, Download, AlertTriangle, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
 
 export default function MortgageHistoryPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isTermRenewalOpen, setIsTermRenewalOpen] = useState(false);
   const [filterYear, setFilterYear] = useState("all");
-  const [mortgageType, setMortgageType] = useState("fixed");
-  const [rateType, setRateType] = useState("fixed-rate");
+  const [mortgageType, setMortgageType] = useState("variable-fixed");
   const [primeRate, setPrimeRate] = useState("6.45");
-  const [spread, setSpread] = useState("-0.80");
 
-  // Mock payment history data with Canadian mortgage features
+  // Current term information (locked for the term duration)
+  const currentTerm = {
+    type: "variable-fixed" as "fixed" | "variable-changing" | "variable-fixed",
+    startDate: "2024-01-01",
+    endDate: "2029-01-01",
+    termYears: 5,
+    lockedSpread: -0.80, // This is locked for the full 5-year term
+    fixedRate: null as number | null, // Only for fixed-rate terms
+  };
+
+  // Mock payment history data
   const paymentHistory = [
     {
       id: 1,
@@ -41,7 +51,7 @@ export default function MortgageHistoryPage() {
       year: 2024,
       paymentAmount: 2100,
       primeRate: 6.45,
-      spread: -0.80,
+      termSpread: -0.80,
       effectiveRate: 5.65,
       principal: 600,
       interest: 1500,
@@ -49,14 +59,15 @@ export default function MortgageHistoryPage() {
       mortgageType: "Variable-Fixed Payment",
       triggerHit: false,
       amortizationYears: 25.0,
+      termStartDate: "2024-01-01",
     },
     {
       id: 2,
       date: "2024-02-01",
       year: 2024,
       paymentAmount: 2100,
-      primeRate: 6.70,
-      spread: -0.80,
+      primeRate: 6.70, // Prime changed, but spread stays -0.80
+      termSpread: -0.80,
       effectiveRate: 5.90,
       principal: 580,
       interest: 1520,
@@ -64,14 +75,15 @@ export default function MortgageHistoryPage() {
       mortgageType: "Variable-Fixed Payment",
       triggerHit: false,
       amortizationYears: 25.3,
+      termStartDate: "2024-01-01",
     },
     {
       id: 3,
       date: "2024-03-01",
       year: 2024,
       paymentAmount: 2100,
-      primeRate: 6.95,
-      spread: -0.80,
+      primeRate: 6.95, // Prime changed again
+      termSpread: -0.80,
       effectiveRate: 6.15,
       principal: 555,
       interest: 1545,
@@ -79,14 +91,15 @@ export default function MortgageHistoryPage() {
       mortgageType: "Variable-Fixed Payment",
       triggerHit: false,
       amortizationYears: 25.6,
+      termStartDate: "2024-01-01",
     },
     {
       id: 4,
       date: "2024-04-01",
       year: 2024,
       paymentAmount: 2100,
-      primeRate: 7.20,
-      spread: -0.80,
+      primeRate: 7.20, // Prime keeps changing
+      termSpread: -0.80, // But spread stays constant
       effectiveRate: 6.40,
       principal: 520,
       interest: 1580,
@@ -94,6 +107,7 @@ export default function MortgageHistoryPage() {
       mortgageType: "Variable-Fixed Payment",
       triggerHit: true,
       amortizationYears: 26.2,
+      termStartDate: "2024-01-01",
     },
   ];
 
@@ -105,7 +119,6 @@ export default function MortgageHistoryPage() {
     currentBalance: paymentHistory[paymentHistory.length - 1]?.remainingBalance || 400000,
     currentRate: paymentHistory[paymentHistory.length - 1]?.effectiveRate || 5.65,
     currentPrimeRate: paymentHistory[paymentHistory.length - 1]?.primeRate || 6.45,
-    currentSpread: paymentHistory[paymentHistory.length - 1]?.spread || -0.80,
     amortizationYears: paymentHistory[paymentHistory.length - 1]?.amortizationYears || 25.0,
     triggerHitCount: paymentHistory.filter(p => p.triggerHit).length,
   };
@@ -117,16 +130,18 @@ export default function MortgageHistoryPage() {
 
   const availableYears = Array.from(new Set(paymentHistory.map((p) => p.year))).sort((a, b) => b - a);
 
-  const effectiveRate = rateType === "prime-plus" 
-    ? (parseFloat(primeRate) + parseFloat(spread)).toFixed(2)
-    : "4.50";
+  const effectiveRate = currentTerm.type === "fixed" && currentTerm.fixedRate
+    ? currentTerm.fixedRate.toFixed(2)
+    : (parseFloat(primeRate) + currentTerm.lockedSpread).toFixed(2);
+
+  const monthsRemainingInTerm = Math.round((new Date(currentTerm.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30));
 
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold">Mortgage History</h1>
-          <p className="text-muted-foreground">Track your actual mortgage payments and rates (Canadian mortgages)</p>
+          <p className="text-muted-foreground">Track your actual mortgage payments (Canadian term-based mortgages)</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" data-testid="button-export">
@@ -144,32 +159,35 @@ export default function MortgageHistoryPage() {
               <DialogHeader>
                 <DialogTitle>Log Mortgage Payment</DialogTitle>
                 <DialogDescription>
-                  Record a mortgage payment with Canadian mortgage specifics
+                  Record a mortgage payment (using your current term's locked rate/spread)
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="payment-date">Payment Date</Label>
-                  <Input id="payment-date" type="date" data-testid="input-payment-date" />
+                <div className="p-4 bg-accent/50 rounded-md space-y-2">
+                  <p className="text-sm font-semibold">Current Term (Locked)</p>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Term Type:</p>
+                      <p className="font-medium">{currentTerm.type === "fixed" ? "Fixed Rate" : "Variable Rate"}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Term Duration:</p>
+                      <p className="font-medium">{currentTerm.termYears} years</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Locked Spread:</p>
+                      <p className="font-medium font-mono">Prime {currentTerm.lockedSpread >= 0 ? '+' : ''} {currentTerm.lockedSpread}%</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Months Remaining:</p>
+                      <p className="font-medium">{monthsRemainingInTerm} months</p>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="mortgage-type">Mortgage Type</Label>
-                  <Select value={mortgageType} onValueChange={setMortgageType}>
-                    <SelectTrigger id="mortgage-type" data-testid="select-mortgage-type">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="fixed">Fixed Rate</SelectItem>
-                      <SelectItem value="variable-changing">Variable - Changing Payment (VRM)</SelectItem>
-                      <SelectItem value="variable-fixed">Variable - Fixed Payment (Static)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-muted-foreground">
-                    {mortgageType === "fixed" && "Payment and rate stay constant during term"}
-                    {mortgageType === "variable-changing" && "Rate changes → payment recalculated to maintain amortization"}
-                    {mortgageType === "variable-fixed" && "Rate changes → payment stays same, amortization adjusts (trigger rate risk)"}
-                  </p>
+                  <Label htmlFor="payment-date">Payment Date</Label>
+                  <Input id="payment-date" type="date" data-testid="input-payment-date" />
                 </div>
 
                 <div className="space-y-2">
@@ -180,74 +198,38 @@ export default function MortgageHistoryPage() {
                     placeholder="2100.00"
                     data-testid="input-payment-amount"
                   />
-                  {mortgageType === "variable-changing" && (
-                    <p className="text-sm text-muted-foreground">
-                      Payment will change if rate changed since last payment
+                </div>
+
+                {currentTerm.type === "fixed" ? (
+                  <div className="p-3 bg-muted rounded-md">
+                    <p className="text-sm font-medium mb-1">Locked Fixed Rate</p>
+                    <p className="text-2xl font-mono font-bold">{currentTerm.fixedRate}%</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Rate is constant until {currentTerm.endDate}
                     </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="rate-type">Rate Type</Label>
-                  <Select value={rateType} onValueChange={setRateType}>
-                    <SelectTrigger id="rate-type" data-testid="select-rate-type">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="fixed-rate">Fixed Rate (%)</SelectItem>
-                      <SelectItem value="prime-plus">Prime ± Spread (Variable)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {rateType === "fixed-rate" ? (
-                  <div className="space-y-2">
-                    <Label htmlFor="interest-rate">Interest Rate (%)</Label>
-                    <Input
-                      id="interest-rate"
-                      type="number"
-                      step="0.01"
-                      placeholder="4.50"
-                      data-testid="input-interest-rate"
-                    />
-                    <p className="text-sm text-muted-foreground">Annual rate with semi-annual compounding</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="prime-rate">Prime Rate (%)</Label>
-                      <Input
-                        id="prime-rate"
-                        type="number"
-                        step="0.01"
-                        value={primeRate}
-                        onChange={(e) => setPrimeRate(e.target.value)}
-                        data-testid="input-prime-rate"
-                      />
-                      <p className="text-sm text-muted-foreground">Current Bank of Canada prime</p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="spread">Your Spread (%)</Label>
-                      <Input
-                        id="spread"
-                        type="number"
-                        step="0.01"
-                        value={spread}
-                        onChange={(e) => setSpread(e.target.value)}
-                        data-testid="input-spread"
-                      />
-                      <p className="text-sm text-muted-foreground">e.g., -0.80 for Prime - 0.80%</p>
-                    </div>
-                  </div>
-                )}
-
-                {rateType === "prime-plus" && (
-                  <div className="p-3 bg-muted rounded-md">
-                    <p className="text-sm font-medium mb-1">Effective Rate</p>
-                    <p className="text-2xl font-mono font-bold">{effectiveRate}%</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {primeRate}% (Prime) {parseFloat(spread) >= 0 ? '+' : ''} {spread}% = {effectiveRate}%
+                  <div className="space-y-2">
+                    <Label htmlFor="prime-rate">Current Prime Rate (%)</Label>
+                    <Input
+                      id="prime-rate"
+                      type="number"
+                      step="0.01"
+                      value={primeRate}
+                      onChange={(e) => setPrimeRate(e.target.value)}
+                      data-testid="input-prime-rate"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Only Prime changes during your term. Your spread ({currentTerm.lockedSpread >= 0 ? '+' : ''}{currentTerm.lockedSpread}%) 
+                      is locked until {currentTerm.endDate}
                     </p>
+                    <div className="p-3 bg-muted rounded-md">
+                      <p className="text-sm font-medium mb-1">Effective Rate</p>
+                      <p className="text-2xl font-mono font-bold">{effectiveRate}%</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {primeRate}% (Prime) {currentTerm.lockedSpread >= 0 ? '+' : ''} {currentTerm.lockedSpread}% = {effectiveRate}%
+                      </p>
+                    </div>
                   </div>
                 )}
 
@@ -267,7 +249,7 @@ export default function MortgageHistoryPage() {
                     <p className="text-muted-foreground">New Balance:</p>
                     <p className="font-mono font-medium">$399,400.00</p>
                   </div>
-                  {mortgageType === "variable-fixed" && (
+                  {currentTerm.type.includes("variable-fixed") && (
                     <div className="text-sm">
                       <p className="text-muted-foreground">New Amortization:</p>
                       <p className="font-mono font-medium">25.2 years</p>
@@ -275,7 +257,7 @@ export default function MortgageHistoryPage() {
                   )}
                 </div>
 
-                {mortgageType === "variable-fixed" && parseFloat(effectiveRate) > 6.0 && (
+                {currentTerm.type.includes("variable-fixed") && parseFloat(effectiveRate) > 6.0 && (
                   <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription>
@@ -304,6 +286,126 @@ export default function MortgageHistoryPage() {
         </div>
       </div>
 
+      <Card className="border-primary">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-xl font-semibold">Current Mortgage Term</CardTitle>
+              <CardDescription>Your locked rate/spread for this term period</CardDescription>
+            </div>
+            <Dialog open={isTermRenewalOpen} onOpenChange={setIsTermRenewalOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" data-testid="button-renew-term">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Renew Term
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Renew Mortgage Term</DialogTitle>
+                  <DialogDescription>
+                    Start a new term with a new rate or spread (typically every 3-5 years)
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-term-type">New Term Type</Label>
+                    <Select defaultValue="variable-fixed">
+                      <SelectTrigger id="new-term-type">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="fixed">Fixed Rate</SelectItem>
+                        <SelectItem value="variable-changing">Variable - Changing Payment</SelectItem>
+                        <SelectItem value="variable-fixed">Variable - Fixed Payment</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="term-length">Term Length</Label>
+                    <Select defaultValue="5">
+                      <SelectTrigger id="term-length">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 Year</SelectItem>
+                        <SelectItem value="2">2 Years</SelectItem>
+                        <SelectItem value="3">3 Years</SelectItem>
+                        <SelectItem value="5">5 Years</SelectItem>
+                        <SelectItem value="7">7 Years</SelectItem>
+                        <SelectItem value="10">10 Years</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new-spread">New Spread (for variable) or Rate (for fixed)</Label>
+                    <Input id="new-spread" type="number" step="0.01" placeholder="-0.65" />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsTermRenewalOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={() => {
+                    console.log("Term renewed");
+                    setIsTermRenewalOpen(false);
+                  }}>
+                    Start New Term
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Term Type</p>
+              <p className="text-base font-medium">
+                {currentTerm.type === "fixed" ? "Fixed Rate" : 
+                 currentTerm.type === "variable-changing" ? "Variable (Changing Payment)" :
+                 "Variable (Fixed Payment)"}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Term Duration</p>
+              <p className="text-base font-medium">{currentTerm.termYears} years</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Locked Until</p>
+              <p className="text-base font-medium">{currentTerm.endDate}</p>
+              <p className="text-sm text-muted-foreground">{monthsRemainingInTerm} months left</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">
+                {currentTerm.type === "fixed" ? "Locked Rate" : "Locked Spread"}
+              </p>
+              <p className="text-base font-medium font-mono">
+                {currentTerm.type === "fixed" 
+                  ? `${currentTerm.fixedRate}%`
+                  : `Prime ${currentTerm.lockedSpread >= 0 ? '+' : ''}${currentTerm.lockedSpread}%`
+                }
+              </p>
+            </div>
+          </div>
+          {currentTerm.type !== "fixed" && (
+            <>
+              <Separator className="my-4" />
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Current Prime Rate</p>
+                  <p className="text-2xl font-mono font-bold">{summaryStats.currentPrimeRate}%</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-muted-foreground">Current Effective Rate</p>
+                  <p className="text-2xl font-mono font-bold">{summaryStats.currentRate}%</p>
+                </div>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
       {summaryStats.triggerHitCount > 0 && (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
@@ -318,13 +420,13 @@ export default function MortgageHistoryPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-              Total Payments Made
+              Total Payments
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold font-mono">{summaryStats.totalPayments}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Total paid: ${summaryStats.totalPaid.toLocaleString()}
+              Total: ${summaryStats.totalPaid.toLocaleString()}
             </p>
           </CardContent>
         </Card>
@@ -332,31 +434,33 @@ export default function MortgageHistoryPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-              Principal vs Interest
+              Principal Paid
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Principal:</span>
-                <span className="text-sm font-mono font-medium text-green-600">
-                  ${summaryStats.totalPrincipal.toLocaleString()}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Interest:</span>
-                <span className="text-sm font-mono font-medium text-orange-600">
-                  ${summaryStats.totalInterest.toLocaleString()}
-                </span>
-              </div>
-            </div>
+            <p className="text-3xl font-bold font-mono text-green-600">
+              ${summaryStats.totalPrincipal.toLocaleString()}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-              Current Balance
+              Interest Paid
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold font-mono text-orange-600">
+              ${summaryStats.totalInterest.toLocaleString()}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+              Balance Remaining
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -364,21 +468,7 @@ export default function MortgageHistoryPage() {
               ${summaryStats.currentBalance.toLocaleString()}
             </p>
             <p className="text-sm text-muted-foreground mt-1">
-              Amortization: {summaryStats.amortizationYears} years
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-              Current Rate
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold font-mono">{summaryStats.currentRate}%</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Prime {summaryStats.currentSpread >= 0 ? '+' : ''} {summaryStats.currentSpread}%
+              {summaryStats.amortizationYears} years amort.
             </p>
           </CardContent>
         </Card>
@@ -414,10 +504,9 @@ export default function MortgageHistoryPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
-                  <TableHead>Type</TableHead>
                   <TableHead className="text-right">Prime</TableHead>
-                  <TableHead className="text-right">Spread</TableHead>
-                  <TableHead className="text-right">Rate</TableHead>
+                  <TableHead className="text-right">Term Spread</TableHead>
+                  <TableHead className="text-right">Effective Rate</TableHead>
                   <TableHead className="text-right">Payment</TableHead>
                   <TableHead className="text-right">Principal</TableHead>
                   <TableHead className="text-right">Interest</TableHead>
@@ -428,7 +517,7 @@ export default function MortgageHistoryPage() {
               <TableBody>
                 {filteredPayments.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                       No payments recorded yet. Click "Log Payment" to add your first payment.
                     </TableCell>
                   </TableRow>
@@ -438,17 +527,14 @@ export default function MortgageHistoryPage() {
                       <TableCell className="font-medium">
                         {payment.date}
                         {payment.triggerHit && (
-                          <Badge variant="destructive" className="ml-2">Trigger</Badge>
+                          <Badge variant="destructive" className="ml-2 text-xs">Trigger</Badge>
                         )}
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm text-muted-foreground">{payment.mortgageType}</span>
                       </TableCell>
                       <TableCell className="text-right font-mono text-sm">
                         {payment.primeRate ? `${payment.primeRate}%` : "-"}
                       </TableCell>
                       <TableCell className="text-right font-mono text-sm">
-                        {payment.spread !== undefined ? `${payment.spread >= 0 ? '+' : ''}${payment.spread}%` : "-"}
+                        {payment.termSpread !== undefined ? `${payment.termSpread >= 0 ? '+' : ''}${payment.termSpread}%` : "-"}
                       </TableCell>
                       <TableCell className="text-right font-mono font-medium">{payment.effectiveRate}%</TableCell>
                       <TableCell className="text-right font-mono">
@@ -477,35 +563,35 @@ export default function MortgageHistoryPage() {
 
       <Card className="bg-muted/50">
         <CardHeader>
-          <CardTitle className="text-lg font-semibold">Canadian Mortgage Features</CardTitle>
+          <CardTitle className="text-lg font-semibold">How Canadian Mortgage Terms Work</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex gap-3">
             <div className="w-2 bg-primary rounded" />
             <p className="text-sm">
-              <span className="font-medium">Semi-Annual Compounding:</span> Interest calculated using Canadian 
-              standard semi-annual compounding, not in advance.
+              <span className="font-medium">Term Lock (3-5 years typical):</span> You lock in either a fixed rate 
+              OR a variable spread (e.g., Prime - 0.80%) for the term duration.
             </p>
           </div>
           <div className="flex gap-3">
             <div className="w-2 bg-chart-1 rounded" />
             <p className="text-sm">
-              <span className="font-medium">Prime ± Spread:</span> Variable rates track Bank of Canada prime 
-              rate ± your negotiated spread (e.g., Prime - 0.80%).
+              <span className="font-medium">Fixed Rate Terms:</span> Your rate stays constant for the entire term. 
+              After term ends, you renew at a new rate.
             </p>
           </div>
           <div className="flex gap-3">
             <div className="w-2 bg-chart-2 rounded" />
             <p className="text-sm">
-              <span className="font-medium">Trigger Rate (Fixed Payment):</span> When interest portion ≥ payment amount,
-              lender may require payment increase or lump-sum.
+              <span className="font-medium">Variable Rate Terms:</span> Your spread is locked (e.g., Prime - 0.80%), 
+              but Prime rate itself changes monthly as Bank of Canada adjusts it.
             </p>
           </div>
           <div className="flex gap-3">
             <div className="w-2 bg-chart-3 rounded" />
             <p className="text-sm">
-              <span className="font-medium">Amortization Tracking:</span> For fixed-payment variable mortgages,
-              amortization adjusts as rates change.
+              <span className="font-medium">Term Renewal:</span> When your term expires, you negotiate a new 
+              rate/spread for the next term (same or different lender).
             </p>
           </div>
         </CardContent>
