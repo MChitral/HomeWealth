@@ -21,7 +21,7 @@ A full-stack web application helping Canadians compare financial strategies for 
 - ✅ **Backend ES module fixes**: Resolved require() → import for calculate-mortgage-payment.js
 - ✅ **30-year metric fields**: Added mortgageBalance30yr, investments30yr, investmentReturns30yr
 
-**Frontend-Backend Integration (5/8 pages wired):**
+**Frontend-Backend Integration (6/8 pages wired):**
 
 1. ✅ **Emergency Fund Page** (wire-1):
    - GET/POST /api/emergency-fund with zero-safe calculations
@@ -62,15 +62,22 @@ A full-stack web application helping Canadians compare financial strategies for 
    - **Critical fixes**: NaN prevention with comprehensive guards, correct API contracts, proper mortgage reduction calculation (current → projected)
    - E2E tested ✅
 
-6. ✅ **Mortgage Page - Edit Details** (wire-6-partial):
-   - PATCH /api/mortgages/:id for updating mortgage details
-   - Edit Details dialog with form pre-population
-   - Editable fields: Property Value, Current Balance, Payment Frequency
-   - Form validation, cache invalidation, toast notifications
-   - E2E tested ✅
+6. ✅ **Mortgage History Page** (wire-6):
+   - GET /api/mortgages/:id/terms - Fetch mortgage terms
+   - POST /api/mortgages/:id/terms - Create new term (renewal)
+   - GET /api/mortgages/:id/payments - Fetch payment history
+   - POST /api/mortgages/:id/payments - Log new payment
+   - PATCH /api/mortgages/:id - Update mortgage details
+   - **Payment Logging**: Log payments with auto-calculated principal/interest split (70/30 stub)
+   - **Term Renewal**: Complete term renewal workflow with conditional form (fixed rate vs variable spread)
+   - **Payment History Table**: Sortable table with year filtering
+   - **Current Term Card**: Display term type, rate/spread, frequency, duration
+   - **Edit Details Dialog**: Update property value, balance, payment frequency
+   - **Schema fixes**: insertMortgagePaymentSchema and insertMortgageTermSchema accept numbers→string transformations
+   - **Form validation**: Submit button disabled until all required fields filled
+   - E2E tested ✅ (payment logging, term renewal, year filtering, data persistence)
 
-### 🚧 Next Tasks (3 pages remaining)
-- wire-6: Complete Mortgage History Page (term tracking, payment history)
+### 🚧 Next Tasks (2 pages remaining)
 - wire-7: Wire Cash Flow Page  
 - wire-8: Wire final remaining page
 - Known issues: TypeScript req.user type errors (59 non-blocking errors in routes.ts)
