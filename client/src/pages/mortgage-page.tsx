@@ -207,6 +207,9 @@ export default function MortgageHistoryPage() {
   const createPaymentMutation = useMutation({
     mutationFn: async (payment: {
       paymentDate: string;
+      paymentPeriodLabel?: string | null;
+      regularPaymentAmount: number;
+      prepaymentAmount: number;
       paymentAmount: number;
       principalPaid: number;
       interestPaid: number;
