@@ -90,11 +90,20 @@ A full-stack web application helping Canadians compare financial strategies for 
    - **Loading states**: Skeleton loading while fetching data
    - E2E tested ✅ (create, update, persistence, calculated totals, toast notifications)
 
-### 🚧 Next Tasks (1 page remaining)
-- wire-8: Wire final remaining page
+**✅ Complete PATCH Validation Coverage (Nov 18, 2024):**
+- ✅ Created update schemas: updateEmergencyFundSchema, updateMortgageSchema, updateMortgageTermSchema
+- ✅ All PATCH endpoints now validate: /api/emergency-fund/:id, /api/mortgages/:id, /api/mortgage-terms/:id
+- ✅ **Critical bug fix**: Mortgage balance display now pulls from mortgage object (not stale payment history)
+- ✅ Schema pattern: `.omit()` for immutable fields + `.partial()` for optional updates + preserved number→string transformations
+- ✅ E2E tested ✅ (all PATCH operations with validation, UI updates, persistence)
+- ✅ Architect reviewed ✅ (validation design, type safety, API consistency confirmed)
+
+### 🎯 Status: All 7 Core Pages Complete
+- All pages fully functional with comprehensive E2E testing
+- Complete validation coverage for all POST and PATCH endpoints
 - Known issues: 
   - TypeScript req.user type errors (59 non-blocking errors in routes.ts)
-  - Other PATCH endpoints (emergency fund, mortgages, mortgage terms) still bypass schema validation (non-blocking, works but should be improved)
+  - Future improvements: Add unit tests for PATCH validation paths, extend frontend validation to use shared schemas
 
 ## Key Product Differentiators
 
