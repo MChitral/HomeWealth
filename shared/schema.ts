@@ -108,8 +108,22 @@ export const emergencyFund = pgTable("emergency_fund", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const insertEmergencyFundSchema = createInsertSchema(emergencyFund).omit({ id: true, updatedAt: true });
+export const insertEmergencyFundSchema = createInsertSchema(emergencyFund)
+  .omit({ id: true, updatedAt: true })
+  .extend({
+    currentBalance: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+    monthlyContribution: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+  });
+
+// Update schema - omits userId since we don't allow changing it
+export const updateEmergencyFundSchema = insertEmergencyFundSchema.omit({ userId: true }).partial();
+
 export type InsertEmergencyFund = z.infer<typeof insertEmergencyFundSchema>;
+export type UpdateEmergencyFund = z.infer<typeof updateEmergencyFundSchema>;
 export type EmergencyFund = typeof emergencyFund.$inferSelect;
 
 // Mortgages - Main mortgage details
@@ -132,8 +146,28 @@ export const mortgages = pgTable("mortgages", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const insertMortgageSchema = createInsertSchema(mortgages).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertMortgageSchema = createInsertSchema(mortgages)
+  .omit({ id: true, createdAt: true, updatedAt: true })
+  .extend({
+    propertyPrice: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+    downPayment: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+    originalAmount: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+    currentBalance: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+  });
+
+// Update schema - omits userId and immutable fields
+export const updateMortgageSchema = insertMortgageSchema.omit({ userId: true }).partial();
+
 export type InsertMortgage = z.infer<typeof insertMortgageSchema>;
+export type UpdateMortgage = z.infer<typeof updateMortgageSchema>;
 export type Mortgage = typeof mortgages.$inferSelect;
 
 // Mortgage Terms - 3-5 year term periods with locked rates
@@ -170,7 +204,12 @@ export const insertMortgageTermSchema = createInsertSchema(mortgageTerms)
       typeof val === 'number' ? val.toFixed(2) : val
     ),
   });
+
+// Update schema - omits mortgageId since we don't allow changing it
+export const updateMortgageTermSchema = insertMortgageTermSchema.omit({ mortgageId: true }).partial();
+
 export type InsertMortgageTerm = z.infer<typeof insertMortgageTermSchema>;
+export type UpdateMortgageTerm = z.infer<typeof updateMortgageTermSchema>;
 export type MortgageTerm = typeof mortgageTerms.$inferSelect;
 
 // Mortgage Payments - Historical payment records
