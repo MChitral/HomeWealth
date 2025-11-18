@@ -558,10 +558,10 @@ export default function MortgageHistoryPage() {
     totalPaid: paymentHistory.reduce((sum, p) => sum + p.paymentAmount, 0),
     totalPrincipal: paymentHistory.reduce((sum, p) => sum + p.principal, 0),
     totalInterest: paymentHistory.reduce((sum, p) => sum + p.interest, 0),
-    currentBalance: paymentHistory[paymentHistory.length - 1]?.remainingBalance || 400000,
+    currentBalance: mortgage ? Number(mortgage.currentBalance) : (paymentHistory[paymentHistory.length - 1]?.remainingBalance || 400000),
     currentRate: paymentHistory[paymentHistory.length - 1]?.effectiveRate || 5.65,
     currentPrimeRate: paymentHistory[paymentHistory.length - 1]?.primeRate || 6.45,
-    amortizationYears: paymentHistory[paymentHistory.length - 1]?.amortizationYears || 25.0,
+    amortizationYears: mortgage ? mortgage.amortizationYears : (paymentHistory[paymentHistory.length - 1]?.amortizationYears || 25.0),
     triggerHitCount: paymentHistory.filter(p => p.triggerHit).length,
   };
 
