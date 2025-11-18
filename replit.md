@@ -98,6 +98,20 @@ A full-stack web application helping Canadians compare financial strategies for 
 - ✅ E2E tested ✅ (all PATCH operations with validation, UI updates, persistence)
 - ✅ Architect reviewed ✅ (validation design, type safety, API consistency confirmed)
 
+**✅ Enhanced Payment Tracking (Nov 18, 2024):**
+- ✅ Added payment period label, regular payment amount, prepayment amount tracking
+- ✅ Updated schema: mortgagePayments now includes paymentPeriodLabel, regularPaymentAmount, prepaymentAmount
+- ✅ Updated UI: Payment logging form with auto-calculated totals (regular + prepayment)
+- ✅ Expanded payment history table from 9 to 12 columns showing detailed payment breakdown
+- ✅ E2E tested ✅ (payment logging, data persistence, table display)
+- ✅ Architect reviewed ✅ (schema design, UI clarity confirmed)
+
+**✅ Project Cleanup (Nov 18, 2024):**
+- ✅ Removed example components directory (duplicate/old code)
+- ✅ Removed Docker files (not needed on Replit)
+- ✅ Removed planning/audit documentation (kept active docs: replit.md, design_guidelines.md, README.md)
+- ✅ Removed attached assets (initial requirement files)
+
 ### 🎯 Status: All 7 Core Pages Complete
 - All pages fully functional with comprehensive E2E testing
 - Complete validation coverage for all POST and PATCH endpoints
@@ -267,6 +281,5 @@ shared/
 
 - [Government of Canada Mortgage Calculator](https://itools-ioutils.fcac-acfc.gc.ca/MC-CH/MCCalc-CHCalc-eng.aspx)
 - [Calculator.net Mortgage Payoff Calculator](https://www.calculator.net/mortgage-payoff-calculator.html)
-- PRODUCT_ROADMAP.md - Full feature roadmap with priorities
-- PRD_vs_MVP_Analysis.md - Original requirements analysis
-- DESIGN_DEFICIENCIES.md - Addressed design gaps
+- docs/IMPLEMENTATION_STATUS.md - Feature implementation tracking
+- docs/TECHNICAL_ARCHITECTURE.md - System architecture documentation
