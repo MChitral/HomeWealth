@@ -1,8 +1,8 @@
 # Canadian Mortgage Strategy & Wealth Forecasting
 ## Technical Architecture & Implementation Documentation
 
-**Last Updated**: December 2024  
-**Version**: MVP 1.0  
+**Last Updated**: November 18, 2024  
+**Version**: MVP 1.0 (All Core Pages Complete)  
 **Audience**: Developers, Technical Stakeholders
 
 ---
@@ -1475,7 +1475,7 @@ app.get("/api/scenarios", async (req, res) => {
 2. Backend: Zod validation (prevent bad data)
 3. Database: Type constraints, NOT NULL (last line of defense)
 
-**Example**:
+**POST Validation Example**:
 ```typescript
 app.post("/api/scenarios", async (req, res) => {
   try {
@@ -1493,6 +1493,64 @@ app.post("/api/scenarios", async (req, res) => {
   }
 });
 ```
+
+**PATCH Validation Pattern** (Completed Nov 18, 2024):
+
+All update endpoints now use dedicated update schemas that:
+- Omit immutable fields (id, userId, createdAt, updatedAt)
+- Make all fields partial (optional) for flexible updates
+- Preserve number→string transformations for decimal fields
+
+**Update Schema Pattern**:
+```typescript
+// Example: updateCashFlowSchema
+export const updateCashFlowSchema = insertCashFlowSchema
+  .omit({ id: true, userId: true })
+  .partial()
+  .extend({
+    // All decimal fields accept both numbers and strings
+    monthlyIncome: z.union([z.string(), z.number()])
+      .transform(val => typeof val === 'number' ? val.toFixed(2) : val),
+    propertyTax: z.union([z.string(), z.number()])
+      .transform(val => typeof val === 'number' ? val.toFixed(2) : val),
+    // ... all other decimal fields
+  });
+```
+
+**PATCH Endpoint Example**:
+```typescript
+app.patch("/api/cash-flow/:id", async (req, res) => {
+  try {
+    // Validate with update schema (partial, optional fields)
+    const updates = updateCashFlowSchema.parse(req.body);
+    const cashFlow = await storage.updateCashFlow(req.params.id, updates);
+    res.json(cashFlow);
+  } catch (error) {
+    res.status(400).json({ 
+      error: "Invalid update data", 
+      details: error 
+    });
+  }
+});
+```
+
+**Update Schemas Created**:
+- `updateCashFlowSchema` - 13 decimal fields with transformations
+- `updateEmergencyFundSchema` - Target, balance, contribution fields
+- `updateMortgageSchema` - Property details, balance, frequency
+- `updateMortgageTermSchema` - Term details, rates, payment amounts
+
+**Applied To**:
+- PATCH /api/cash-flow/:id
+- PATCH /api/emergency-fund/:id
+- PATCH /api/mortgages/:id
+- PATCH /api/mortgage-terms/:id
+
+**Benefits**:
+- Type-safe updates with partial data
+- Prevents frontend number/string type mismatches
+- Consistent validation across all update operations
+- Proper immutability enforcement (can't change IDs)
 
 ### SQL Injection Prevention
 
