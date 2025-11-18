@@ -77,10 +77,24 @@ A full-stack web application helping Canadians compare financial strategies for 
    - **Form validation**: Submit button disabled until all required fields filled
    - E2E tested ✅ (payment logging, term renewal, year filtering, data persistence)
 
-### 🚧 Next Tasks (2 pages remaining)
-- wire-7: Wire Cash Flow Page  
+7. ✅ **Cash Flow Page** (wire-7):
+   - GET /api/cash-flow - Fetch user's cash flow data
+   - POST /api/cash-flow - Create new cash flow data
+   - PATCH /api/cash-flow/:id - Update existing cash flow data
+   - **Schema validation**: Created updateCashFlowSchema for PATCH (omits userId, partial fields)
+   - **Number→String transformation**: All 13 decimal fields accept numbers/strings
+   - **Form sections**: Income (monthly + extra paycheques + bonus), Fixed Expenses, Variable Expenses, Other Debt
+   - **Calculated totals**: Real-time calculation of income, expenses, monthly surplus
+   - **Warning states**: Negative cash flow warning displayed when expenses > income
+   - **Pre-population**: Form auto-fills with existing data on load
+   - **Loading states**: Skeleton loading while fetching data
+   - E2E tested ✅ (create, update, persistence, calculated totals, toast notifications)
+
+### 🚧 Next Tasks (1 page remaining)
 - wire-8: Wire final remaining page
-- Known issues: TypeScript req.user type errors (59 non-blocking errors in routes.ts)
+- Known issues: 
+  - TypeScript req.user type errors (59 non-blocking errors in routes.ts)
+  - Other PATCH endpoints (emergency fund, mortgages, mortgage terms) still bypass schema validation (non-blocking, works but should be improved)
 
 ## Key Product Differentiators
 
