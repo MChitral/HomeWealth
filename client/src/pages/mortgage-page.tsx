@@ -124,6 +124,7 @@ export default function MortgageHistoryPage() {
   const [renewalPrime, setRenewalPrime] = useState("");
   const [renewalTermYears, setRenewalTermYears] = useState("5");
   const [renewalStartDate, setRenewalStartDate] = useState("");
+  const [renewalPaymentAmount, setRenewalPaymentAmount] = useState("");
   
   // Payment form state
   const [paymentDate, setPaymentDate] = useState("");
@@ -339,10 +340,6 @@ export default function MortgageHistoryPage() {
       setPrimeRate(renewalPrime);
     }
 
-    // TODO: Calculate regularPaymentAmount using mortgage calculation engine
-    // For now, use a placeholder
-    const regularPaymentAmount = "2100.00";
-
     createTermMutation.mutate({
       termType: renewalTermType,
       startDate,
@@ -351,7 +348,7 @@ export default function MortgageHistoryPage() {
       fixedRate: renewalTermType === 'fixed' ? renewalRate : undefined,
       lockedSpread: renewalTermType.startsWith('variable') ? renewalSpread : undefined,
       paymentFrequency: renewalPaymentFrequency,
-      regularPaymentAmount,
+      regularPaymentAmount: renewalPaymentAmount,
     });
   };
 
@@ -989,6 +986,24 @@ export default function MortgageHistoryPage() {
                       </div>
                     </>
                   )}
+                  
+                  <Separator />
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="new-payment-amount">Regular Payment Amount ($)</Label>
+                    <Input 
+                      id="new-payment-amount" 
+                      type="number" 
+                      step="0.01" 
+                      placeholder="2100.00" 
+                      value={renewalPaymentAmount}
+                      onChange={(e) => setRenewalPaymentAmount(e.target.value)}
+                      data-testid="input-payment-amount"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Your regular payment amount for this term. This can be calculated based on your balance and rate.
+                    </p>
+                  </div>
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setIsTermRenewalOpen(false)} data-testid="button-cancel-renewal">
@@ -996,6 +1011,13 @@ export default function MortgageHistoryPage() {
                   </Button>
                   <Button 
                     onClick={handleTermRenewal}
+                    disabled={
+                      !renewalStartDate || 
+                      !renewalTermYears || 
+                      (renewalTermType === 'fixed' && !renewalRate) ||
+                      (renewalTermType.startsWith('variable') && (!renewalSpread || !renewalPrime)) ||
+                      !renewalPaymentAmount
+                    }
                     data-testid="button-save-renewal"
                   >
                     Start New Term
