@@ -47,7 +47,49 @@ export const cashFlow = pgTable("cash_flow", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const insertCashFlowSchema = createInsertSchema(cashFlow).omit({ id: true, updatedAt: true });
+export const insertCashFlowSchema = createInsertSchema(cashFlow)
+  .omit({ id: true, updatedAt: true })
+  .extend({
+    monthlyIncome: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+    annualBonus: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+    propertyTax: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+    homeInsurance: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+    condoFees: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+    utilities: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+    groceries: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+    dining: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+    transportation: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+    entertainment: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+    carLoan: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+    studentLoan: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+    creditCard: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+  });
 export type InsertCashFlow = z.infer<typeof insertCashFlowSchema>;
 export type CashFlow = typeof cashFlow.$inferSelect;
 
