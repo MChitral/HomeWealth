@@ -110,7 +110,19 @@ export const mortgageTerms = pgTable("mortgage_terms", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertMortgageTermSchema = createInsertSchema(mortgageTerms).omit({ id: true, createdAt: true });
+export const insertMortgageTermSchema = createInsertSchema(mortgageTerms)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    fixedRate: z.union([z.string(), z.number(), z.null(), z.undefined()]).transform((val) => 
+      val == null ? null : (typeof val === 'number' ? val.toFixed(3) : val)
+    ).optional(),
+    lockedSpread: z.union([z.string(), z.number(), z.null(), z.undefined()]).transform((val) => 
+      val == null ? null : (typeof val === 'number' ? val.toFixed(3) : val)
+    ).optional(),
+    regularPaymentAmount: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+  });
 export type InsertMortgageTerm = z.infer<typeof insertMortgageTermSchema>;
 export type MortgageTerm = typeof mortgageTerms.$inferSelect;
 
@@ -138,7 +150,28 @@ export const mortgagePayments = pgTable("mortgage_payments", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertMortgagePaymentSchema = createInsertSchema(mortgagePayments).omit({ id: true, createdAt: true });
+export const insertMortgagePaymentSchema = createInsertSchema(mortgagePayments)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    paymentAmount: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+    principalPaid: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+    interestPaid: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+    remainingBalance: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+    primeRate: z.union([z.string(), z.number(), z.null(), z.undefined()]).transform((val) => 
+      val == null ? null : (typeof val === 'number' ? val.toFixed(3) : val)
+    ).optional(),
+    effectiveRate: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(3) : val
+    ),
+  });
 export type InsertMortgagePayment = z.infer<typeof insertMortgagePaymentSchema>;
 export type MortgagePayment = typeof mortgagePayments.$inferSelect;
 
