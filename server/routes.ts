@@ -174,7 +174,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!mortgage || mortgage.userId !== req.user.id) {
         return res.status(404).json({ error: "Mortgage not found" });
       }
-      const updated = await storage.updateMortgage(req.params.id, req.body);
+      const data = updateMortgageSchema.parse(req.body);
+      const updated = await storage.updateMortgage(req.params.id, data);
       res.json(updated);
     } catch (error) {
       res.status(400).json({ error: "Invalid update data", details: error });
@@ -236,7 +237,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!mortgage || mortgage.userId !== req.user.id) {
         return res.status(403).json({ error: "Forbidden" });
       }
-      const updated = await storage.updateMortgageTerm(req.params.id, req.body);
+      const data = updateMortgageTermSchema.parse(req.body);
+      const updated = await storage.updateMortgageTerm(req.params.id, data);
       res.json(updated);
     } catch (error) {
       res.status(400).json({ error: "Invalid update data", details: error });
