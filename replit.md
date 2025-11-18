@@ -108,7 +108,6 @@ A full-stack web application helping Canadians compare financial strategies for 
 
 **✅ Project Cleanup (Nov 18, 2024):**
 - ✅ Removed example components directory (duplicate/old code)
-- ✅ Removed Docker files (not needed on Replit)
 - ✅ Removed planning/audit documentation (kept active docs: replit.md, design_guidelines.md, README.md)
 - ✅ Removed attached assets (initial requirement files)
 
