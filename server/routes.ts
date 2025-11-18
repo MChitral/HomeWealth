@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import {
   insertCashFlowSchema,
+  updateCashFlowSchema,
   insertEmergencyFundSchema,
   insertMortgageSchema,
   insertMortgageTermSchema,
@@ -81,7 +82,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!existing || existing.id !== req.params.id) {
         return res.status(404).json({ error: "Cash flow not found" });
       }
-      const updated = await storage.updateCashFlow(req.params.id, req.body);
+      const data = updateCashFlowSchema.parse(req.body);
+      const updated = await storage.updateCashFlow(req.params.id, data);
       res.json(updated);
     } catch (error) {
       res.status(400).json({ error: "Invalid update data", details: error });

@@ -90,7 +90,12 @@ export const insertCashFlowSchema = createInsertSchema(cashFlow)
       typeof val === 'number' ? val.toFixed(2) : val
     ),
   });
+
+// Update schema - omits userId since we don't allow changing it
+export const updateCashFlowSchema = insertCashFlowSchema.omit({ userId: true }).partial();
+
 export type InsertCashFlow = z.infer<typeof insertCashFlowSchema>;
+export type UpdateCashFlow = z.infer<typeof updateCashFlowSchema>;
 export type CashFlow = typeof cashFlow.$inferSelect;
 
 // Emergency Fund settings
