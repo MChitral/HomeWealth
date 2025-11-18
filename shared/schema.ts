@@ -218,7 +218,13 @@ export const mortgagePayments = pgTable("mortgage_payments", {
   mortgageId: varchar("mortgage_id").notNull().references(() => mortgages.id),
   termId: varchar("term_id").notNull().references(() => mortgageTerms.id),
   paymentDate: date("payment_date").notNull(),
-  paymentAmount: decimal("payment_amount", { precision: 10, scale: 2 }).notNull(),
+  
+  // Payment breakdown: regular + prepayment = total
+  paymentPeriodLabel: text("payment_period_label"), // e.g., "January 2025", "Payment #23", "Week 3"
+  regularPaymentAmount: decimal("regular_payment_amount", { precision: 10, scale: 2 }).notNull(),
+  prepaymentAmount: decimal("prepayment_amount", { precision: 10, scale: 2 }).notNull().default("0.00"),
+  paymentAmount: decimal("payment_amount", { precision: 10, scale: 2 }).notNull(), // Total = regular + prepayment
+  
   principalPaid: decimal("principal_paid", { precision: 10, scale: 2 }).notNull(),
   interestPaid: decimal("interest_paid", { precision: 10, scale: 2 }).notNull(),
   remainingBalance: decimal("remaining_balance", { precision: 12, scale: 2 }).notNull(),
@@ -239,6 +245,12 @@ export const mortgagePayments = pgTable("mortgage_payments", {
 export const insertMortgagePaymentSchema = createInsertSchema(mortgagePayments)
   .omit({ id: true, createdAt: true })
   .extend({
+    regularPaymentAmount: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
+    prepaymentAmount: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ),
     paymentAmount: z.union([z.string(), z.number()]).transform((val) => 
       typeof val === 'number' ? val.toFixed(2) : val
     ),
