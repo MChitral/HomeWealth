@@ -49,6 +49,9 @@ type UiPayment = {
   id: string;
   date: string;
   year: number;
+  paymentPeriodLabel?: string;
+  regularPaymentAmount: number;
+  prepaymentAmount: number;
   paymentAmount: number;
   primeRate?: number;
   termSpread?: number;
@@ -89,6 +92,9 @@ function normalizePayments(payments: MortgagePayment[] | undefined, terms: Mortg
       id: p.id,
       date: p.paymentDate,
       year: paymentDate.getFullYear(),
+      paymentPeriodLabel: p.paymentPeriodLabel || undefined,
+      regularPaymentAmount: Number(p.regularPaymentAmount || 0),
+      prepaymentAmount: Number(p.prepaymentAmount || 0),
       paymentAmount: Number(p.paymentAmount),
       primeRate: p.primeRate ? Number(p.primeRate) : undefined,
       termSpread: term?.lockedSpread ? Number(term.lockedSpread) : undefined,
@@ -128,7 +134,12 @@ export default function MortgageHistoryPage() {
   
   // Payment form state
   const [paymentDate, setPaymentDate] = useState("");
-  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentPeriodLabel, setPaymentPeriodLabel] = useState("");
+  const [regularPaymentAmount, setRegularPaymentAmount] = useState("");
+  const [prepaymentAmount, setPrepaymentAmount] = useState("0");
+  
+  // Calculate total payment amount from regular + prepayment
+  const totalPaymentAmount = (parseFloat(regularPaymentAmount) || 0) + (parseFloat(prepaymentAmount) || 0);
   
   // Create mortgage form state
   const [isCreateMortgageOpen, setIsCreateMortgageOpen] = useState(false);
@@ -713,15 +724,56 @@ export default function MortgageHistoryPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="payment-amount">Payment Amount</Label>
+                  <Label htmlFor="payment-period">Payment Period (Optional)</Label>
                   <Input
-                    id="payment-amount"
-                    type="number"
-                    placeholder="2100.00"
-                    value={paymentAmount}
-                    onChange={(e) => setPaymentAmount(e.target.value)}
-                    data-testid="input-payment-amount"
+                    id="payment-period"
+                    type="text"
+                    placeholder="e.g., January 2025, Payment #23, Week 3"
+                    value={paymentPeriodLabel}
+                    onChange={(e) => setPaymentPeriodLabel(e.target.value)}
+                    data-testid="input-payment-period"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Label to identify which scheduled payment this is
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="regular-payment">Regular Payment ($)</Label>
+                    <Input
+                      id="regular-payment"
+                      type="number"
+                      step="0.01"
+                      placeholder="2100.00"
+                      value={regularPaymentAmount}
+                      onChange={(e) => setRegularPaymentAmount(e.target.value)}
+                      data-testid="input-regular-payment"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="prepayment-amount">Prepayment ($)</Label>
+                    <Input
+                      id="prepayment-amount"
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={prepaymentAmount}
+                      onChange={(e) => setPrepaymentAmount(e.target.value)}
+                      data-testid="input-prepayment-amount"
+                    />
+                  </div>
+                </div>
+
+                <div className="p-3 bg-accent/30 rounded-md">
+                  <p className="text-sm text-muted-foreground mb-1">Total Payment</p>
+                  <p className="text-2xl font-mono font-bold" data-testid="text-total-payment">
+                    ${totalPaymentAmount.toFixed(2)}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Regular (${parseFloat(regularPaymentAmount) || 0}) + Prepayment (${parseFloat(prepaymentAmount) || 0})
+                  </p>
                 </div>
 
                 {uiCurrentTerm?.termType === "fixed" ? (
@@ -799,15 +851,21 @@ export default function MortgageHistoryPage() {
                   onClick={() => {
                     // TODO: Use calculation engine to compute principal/interest split
                     // For now, stub with 70/30 split as placeholder
-                    const amount = parseFloat(paymentAmount) || 2100;
-                    const principal = Math.round(amount * 0.3 * 100) / 100;
-                    const interest = Math.round(amount * 0.7 * 100) / 100;
+                    const regularPayment = parseFloat(regularPaymentAmount) || 0;
+                    const prepayment = parseFloat(prepaymentAmount) || 0;
+                    const totalAmount = regularPayment + prepayment;
+                    
+                    const principal = Math.round(totalAmount * 0.3 * 100) / 100;
+                    const interest = Math.round(totalAmount * 0.7 * 100) / 100;
                     const lastBalance = paymentHistory[paymentHistory.length - 1]?.remainingBalance || Number(mortgage?.currentBalance || 400000);
                     const newBalance = lastBalance - principal;
                     
                     createPaymentMutation.mutate({
                       paymentDate: paymentDate || new Date().toISOString().split('T')[0],
-                      paymentAmount: amount,
+                      paymentPeriodLabel: paymentPeriodLabel || null,
+                      regularPaymentAmount: regularPayment,
+                      prepaymentAmount: prepayment,
+                      paymentAmount: totalAmount,
                       principalPaid: principal,
                       interestPaid: interest,
                       remainingBalance: newBalance,
@@ -817,7 +875,7 @@ export default function MortgageHistoryPage() {
                       remainingAmortizationMonths: Math.round((paymentHistory[paymentHistory.length - 1]?.amortizationYears || 25) * 12),
                     });
                   }}
-                  disabled={!paymentDate || !paymentAmount || createPaymentMutation.isPending}
+                  disabled={!paymentDate || !regularPaymentAmount || createPaymentMutation.isPending}
                   data-testid="button-save-payment"
                 >
                   {createPaymentMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
@@ -1191,10 +1249,13 @@ export default function MortgageHistoryPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
+                  <TableHead>Period</TableHead>
                   <TableHead className="text-right">Prime</TableHead>
-                  <TableHead className="text-right">Term Spread</TableHead>
-                  <TableHead className="text-right">Effective Rate</TableHead>
-                  <TableHead className="text-right">Payment</TableHead>
+                  <TableHead className="text-right">Spread</TableHead>
+                  <TableHead className="text-right">Eff. Rate</TableHead>
+                  <TableHead className="text-right">Regular</TableHead>
+                  <TableHead className="text-right">Prepayment</TableHead>
+                  <TableHead className="text-right">Total Paid</TableHead>
                   <TableHead className="text-right">Principal</TableHead>
                   <TableHead className="text-right">Interest</TableHead>
                   <TableHead className="text-right">Balance</TableHead>
@@ -1204,7 +1265,7 @@ export default function MortgageHistoryPage() {
               <TableBody>
                 {filteredPayments.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
                       No payments recorded yet. Click "Log Payment" to add your first payment.
                     </TableCell>
                   </TableRow>
@@ -1217,14 +1278,27 @@ export default function MortgageHistoryPage() {
                           <Badge variant="destructive" className="ml-2 text-xs">Trigger</Badge>
                         )}
                       </TableCell>
+                      <TableCell className="text-sm text-muted-foreground max-w-[120px] truncate">
+                        {payment.paymentPeriodLabel || "-"}
+                      </TableCell>
                       <TableCell className="text-right font-mono text-sm">
                         {payment.primeRate ? `${payment.primeRate}%` : "-"}
                       </TableCell>
                       <TableCell className="text-right font-mono text-sm">
                         {payment.termSpread !== undefined ? `${payment.termSpread >= 0 ? '+' : ''}${payment.termSpread}%` : "-"}
                       </TableCell>
-                      <TableCell className="text-right font-mono font-medium">{payment.effectiveRate}%</TableCell>
-                      <TableCell className="text-right font-mono">
+                      <TableCell className="text-right font-mono text-sm">{payment.effectiveRate}%</TableCell>
+                      <TableCell className="text-right font-mono text-sm">
+                        ${payment.regularPaymentAmount.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-sm">
+                        {payment.prepaymentAmount > 0 ? (
+                          <span className="text-primary font-medium">+${payment.prepaymentAmount.toLocaleString()}</span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right font-mono font-medium">
                         ${payment.paymentAmount.toLocaleString()}
                       </TableCell>
                       <TableCell className="text-right font-mono text-green-600">
