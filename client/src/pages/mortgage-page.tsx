@@ -41,7 +41,7 @@ type UiTerm = {
   termYears: number;
   lockedSpread: number;
   fixedRate: number | null;
-  paymentFrequency: "monthly" | "biweekly" | "accelerated-biweekly";
+  paymentFrequency: "monthly" | "biweekly" | "accelerated-biweekly" | "semi-monthly" | "weekly" | "accelerated-weekly";
   regularPaymentAmount: number;
 };
 
@@ -77,7 +77,7 @@ function normalizeTerm(term: MortgageTerm | undefined): UiTerm | null {
     termYears: term.termYears,
     lockedSpread: Number(term.lockedSpread || 0),
     fixedRate: term.fixedRate ? Number(term.fixedRate) : null,
-    paymentFrequency: term.paymentFrequency as "monthly" | "biweekly" | "accelerated-biweekly",
+    paymentFrequency: term.paymentFrequency as "monthly" | "biweekly" | "accelerated-biweekly" | "semi-monthly" | "weekly" | "accelerated-weekly",
     regularPaymentAmount: Number(term.regularPaymentAmount),
   };
 }
@@ -508,9 +508,12 @@ export default function MortgageHistoryPage() {
                   onChange={(e) => setCreateFrequency(e.target.value)}
                   data-testid="select-frequency"
                 >
-                  <option value="monthly">Monthly</option>
-                  <option value="biweekly">Biweekly</option>
-                  <option value="accelerated-biweekly">Accelerated Biweekly</option>
+                  <option value="monthly">Monthly (12 payments/year)</option>
+                  <option value="biweekly">Bi-weekly (26 payments/year)</option>
+                  <option value="accelerated-biweekly">Accelerated Bi-weekly (pays off faster)</option>
+                  <option value="semi-monthly">Semi-monthly (24 payments/year)</option>
+                  <option value="weekly">Weekly (52 payments/year)</option>
+                  <option value="accelerated-weekly">Accelerated Weekly (pays off faster)</option>
                 </select>
               </div>
             </div>
@@ -968,10 +971,13 @@ export default function MortgageHistoryPage() {
                         <SelectItem value="monthly">Monthly (12 payments/year)</SelectItem>
                         <SelectItem value="biweekly">Bi-weekly (26 payments/year)</SelectItem>
                         <SelectItem value="accelerated-biweekly">Accelerated Bi-weekly (pays off faster)</SelectItem>
+                        <SelectItem value="semi-monthly">Semi-monthly (24 payments/year)</SelectItem>
+                        <SelectItem value="weekly">Weekly (52 payments/year)</SelectItem>
+                        <SelectItem value="accelerated-weekly">Accelerated Weekly (pays off faster)</SelectItem>
                       </SelectContent>
                     </Select>
                     <p className="text-sm text-muted-foreground">
-                      Accelerated bi-weekly pays your mortgage off faster by making the equivalent of one extra monthly payment per year
+                      Accelerated payments pay your mortgage off faster by making the equivalent of one extra monthly payment per year
                     </p>
                   </div>
 

@@ -158,20 +158,23 @@ A comprehensive financial planning tool designed specifically for Canadian homeo
 - Effective rate calculation from Prime + spread
 - Trigger rate tracking for fixed-payment VRMs
 
-#### 2.4 Payment Frequencies Supported
+#### 2.4 Payment Frequencies Supported ✅ (All 6 Implemented)
 
-1. **Monthly** (12 payments/year)
-2. **Bi-weekly** (26 payments/year)
-3. **Accelerated Bi-weekly** (26 payments/year, pays off faster)
-4. **Semi-monthly** (24 payments/year)
-5. **Weekly** (52 payments/year)
-6. **Accelerated Weekly** (52 payments/year, pays off faster)
+1. **Monthly** (12 payments/year) ✅
+2. **Bi-weekly** (26 payments/year) ✅
+3. **Accelerated Bi-weekly** (26 payments/year, pays off faster) ✅
+4. **Semi-monthly** (24 payments/year) ✅
+5. **Weekly** (52 payments/year) ✅
+6. **Accelerated Weekly** (52 payments/year, pays off faster) ✅
 
 **Understanding Accelerated:**
 - Takes monthly payment amount
 - Divides by 2 (bi-weekly) or 4 (weekly)
 - Results in extra payments per year
 - Pays off mortgage faster with no budget change
+
+**Implementation Note** (Nov 19, 2024):
+All 6 payment frequencies are now fully supported across Create Mortgage, Edit Mortgage, and Term Renewal dialogs.
 
 ---
 

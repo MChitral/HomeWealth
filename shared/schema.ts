@@ -137,7 +137,7 @@ export const mortgages = pgTable("mortgages", {
   startDate: date("start_date").notNull(),
   amortizationYears: integer("amortization_years").notNull(),
   amortizationMonths: integer("amortization_months").notNull().default(0),
-  paymentFrequency: text("payment_frequency").notNull(), // monthly, biweekly, accelerated-biweekly
+  paymentFrequency: text("payment_frequency").notNull(), // monthly, biweekly, accelerated-biweekly, semi-monthly, weekly, accelerated-weekly
   
   // Canadian lender prepayment constraints
   annualPrepaymentLimitPercent: integer("annual_prepayment_limit_percent").notNull().default(20), // 10-20% typical
@@ -185,7 +185,7 @@ export const mortgageTerms = pgTable("mortgage_terms", {
   // For variable rate terms
   lockedSpread: decimal("locked_spread", { precision: 5, scale: 3 }), // e.g., -0.800
   
-  paymentFrequency: text("payment_frequency").notNull(),
+  paymentFrequency: text("payment_frequency").notNull(), // monthly, biweekly, accelerated-biweekly, semi-monthly, weekly, accelerated-weekly
   regularPaymentAmount: decimal("regular_payment_amount", { precision: 10, scale: 2 }).notNull(),
   
   createdAt: timestamp("created_at").defaultNow().notNull(),
