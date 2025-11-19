@@ -1,4 +1,6 @@
 import type { IStorage } from "./storage";
+import { db } from "./db";
+import { users } from "@shared/schema";
 
 /**
  * Auto-seeds demo data on server startup if no scenarios exist
@@ -32,6 +34,19 @@ export async function seedDemoData(storage: IStorage) {
 
   try {
     console.log("🌱 Seeding demo data...");
+
+    // 0. Ensure demo user exists in database with specific ID
+    let user = await storage.getUser(DEMO_USER_ID);
+    if (!user) {
+      console.log("📝 Creating demo user...");
+      const result = await db.insert(users).values({
+        id: DEMO_USER_ID,
+        username: "devuser",
+        password: "dev-password-not-used", // Not used in dev auth
+      }).returning();
+      user = result[0];
+      console.log(`✅ Created demo user: ${user.username} (${user.id})`);
+    }
 
     // 1. Create demo mortgage - typical Toronto condo purchase
     const mortgage = await storage.createMortgage({

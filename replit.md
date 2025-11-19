@@ -17,13 +17,13 @@ Not specified.
 **Technical Implementations:**
 - **Frontend**: React with TypeScript, Wouter for routing, TanStack Query for data fetching. Form validation handled by `react-hook-form` and Zod.
 - **Backend**: Express.js with TypeScript, RESTful API design. Zod for request body validation.
-- **Database**: PostgreSQL (currently using in-memory `MemStorage` for MVP, Drizzle ORM planned for persistence).
+- **Database**: PostgreSQL with Drizzle ORM for full data persistence across all entities.
 - **Core Engine**:
     - **Mortgage Calculation**: Canadian-specific semi-annual compounding, payment frequency conversions, amortization schedule generation, and prepayment modeling (lump sum, annual, one-time).
     - **Net Worth Projection**: 10-30 year forecasts integrating mortgage, investments, emergency fund, and expenses.
     - **Comparison Metrics**: Calculates interest savings, time savings, and net worth differences between strategies.
 - **Data Flow**:
-    - Uses an `IStorage` interface for data operations, allowing easy switching between in-memory and persistent storage.
+    - Uses an `IStorage` interface for data operations (currently DBStorage with PostgreSQL).
     - API routes are secured and validated.
     - Horizon-aware metrics system for consistent 10/20/30-year projections across the UI.
 
@@ -37,10 +37,17 @@ Not specified.
 - **Validation**: Comprehensive Zod schemas for all API endpoints (POST, PATCH) ensuring data integrity and consistency, including number-to-string transformations for decimal fields.
 
 ## External Dependencies
-- **PostgreSQL**: Relational database for persistent data storage (planned, currently using in-memory `MemStorage`).
+- **PostgreSQL**: Relational database for persistent data storage with Drizzle ORM.
 - **Shadcn UI**: Frontend component library.
 - **TanStack Query**: Data fetching and state management in the frontend.
 - **Zod**: Schema validation for both frontend forms and backend API requests.
 - **React Hook Form**: Form management and validation in the frontend.
 - **Express.js**: Backend web framework.
-- **Drizzle ORM**: (Planned) ORM for interacting with PostgreSQL.
+- **Drizzle ORM**: ORM for interacting with PostgreSQL (implemented with DBStorage class).
+
+## Recent Updates (Nov 19, 2024)
+- ✅ **Database Persistence**: Fully implemented DBStorage class using Drizzle ORM
+  - All CRUD operations for users, scenarios, prepayment events, mortgages, cash flow, emergency fund
+  - Fixed seed script to create demo user with specific ID
+  - Fixed frontend apiRequest to return parsed JSON
+  - E2E tested: scenarios and prepayment events persist across app restarts
