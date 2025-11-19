@@ -346,6 +346,18 @@
 **Critical Bug Fix**:
 - Fixed mortgage balance display to pull from mortgage object instead of payment history
 
+**Enhanced Payment Tracking** (Nov 18, 2024):
+- [x] Payment period label tracking (e.g., "January 2025", "Payment #23")
+- [x] Regular payment amount field (scheduled payment)
+- [x] Prepayment amount field (extra payments)
+- [x] Auto-calculated total payment (regular + prepayment)
+- [x] Expanded payment history table to 12 columns
+- [x] Prepayment highlighting when > $0
+- [x] Schema updated: paymentPeriodLabel, regularPaymentAmount, prepaymentAmount
+- [x] TypeScript mutation type fixed to include new fields
+- [x] E2E tested (form, calculations, persistence, table display)
+- [x] Architect reviewed
+
 ---
 
 #### 7. Cash Flow Page ✅ (100%)

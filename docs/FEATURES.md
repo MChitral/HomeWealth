@@ -1,7 +1,7 @@
 # Canadian Mortgage Strategy & Wealth Forecasting
 ## Complete Features Documentation
 
-**Last Updated**: December 2024  
+**Last Updated**: November 2024  
 **Version**: MVP 1.0  
 **Target Audience**: Canadian homeowners with mortgages
 
@@ -134,13 +134,23 @@ A comprehensive financial planning tool designed specifically for Canadian homeo
 **What You Can Log:**
 - Individual payment details
 - Payment date
-- Payment amount
+- Payment period label (e.g., "January 2025", "Payment #23")
+- Regular payment amount (scheduled payment)
+- Prepayment amount (extra payments)
+- Total payment amount (auto-calculated: regular + prepayment)
 - Principal vs interest breakdown
 - Remaining balance after payment
 - Current Prime rate (for variable mortgages)
 - Effective interest rate
 - Trigger rate status (VRM-Fixed Payment only)
 - Remaining amortization
+
+**Enhanced Payment Tracking** (Nov 18, 2024):
+- Track regular payments separately from prepayments
+- Optional payment period labels for organization
+- Auto-calculated totals show full payment breakdown
+- Expanded 12-column payment history table
+- Prepayments highlighted when > $0
 
 **Canadian-Specific Calculations:**
 - Semi-annual compounding (not monthly like US)

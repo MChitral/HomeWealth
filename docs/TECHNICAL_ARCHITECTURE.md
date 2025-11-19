@@ -342,7 +342,13 @@ users
   mortgageId: varchar (FK -> mortgages.id),
   termId: varchar (FK -> mortgage_terms.id),
   paymentDate: date,
-  paymentAmount: decimal(10,2),
+  
+  // Enhanced Payment Tracking (Nov 18, 2024)
+  paymentPeriodLabel: text,           // Optional label (e.g., "January 2025")
+  regularPaymentAmount: decimal(10,2),// Scheduled regular payment
+  prepaymentAmount: decimal(10,2),    // Extra payment amount (default 0.00)
+  paymentAmount: decimal(10,2),       // Total payment (regular + prepayment)
+  
   principalPaid: decimal(10,2),
   interestPaid: decimal(10,2),
   remainingBalance: decimal(12,2),
@@ -362,6 +368,10 @@ users
 **Purpose**: Historical payment records with Canadian mortgage specifics
 **Cardinality**: 1:N with mortgages and mortgage_terms
 **Key Fields**:
+- `paymentPeriodLabel` - Optional label for which payment period (e.g., "January 2025", "Payment #23")
+- `regularPaymentAmount` - The scheduled regular payment amount
+- `prepaymentAmount` - Extra payment amount (defaults to $0.00)
+- `paymentAmount` - Total payment (auto-calculated: regular + prepayment)
 - `principalPaid` + `interestPaid` calculated using semi-annual compounding
 - `primeRate` tracks Bank of Canada rate changes
 - `triggerRateHit` flags when VRM-Fixed payment can't cover interest
