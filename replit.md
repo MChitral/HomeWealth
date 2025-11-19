@@ -90,6 +90,19 @@ A full-stack web application helping Canadians compare financial strategies for 
    - **Loading states**: Skeleton loading while fetching data
    - E2E tested ✅ (create, update, persistence, calculated totals, toast notifications)
 
+8. ✅ **Prepayment Events UI** (Nov 19, 2024):
+   - GET /api/scenarios/:id/prepayment-events - Fetch events for scenario
+   - POST /api/scenarios/:id/prepayment-events - Create new prepayment event
+   - PATCH /api/prepayment-events/:id - Update existing event
+   - DELETE /api/prepayment-events/:id - Delete event
+   - **Event types**: Annual (recurring monthly) and One-Time (specific year)
+   - **UI features**: Add/Edit/Delete events with inline form, event cards with badges
+   - **Annual events**: Select month (1-12), amount, optional description
+   - **One-Time events**: Select year offset, amount, optional description
+   - **Save flow**: New scenarios batch-save events after scenario creation, existing scenarios save immediately
+   - **Known limitation**: Currently uses MemStorage (in-memory), data persists within session but not to database
+   - **Future improvement**: Implement DBStorage class for PostgreSQL persistence
+
 **✅ Complete PATCH Validation Coverage (Nov 18, 2024):**
 - ✅ Created update schemas: updateEmergencyFundSchema, updateMortgageSchema, updateMortgageTermSchema
 - ✅ All PATCH endpoints now validate: /api/emergency-fund/:id, /api/mortgages/:id, /api/mortgage-terms/:id

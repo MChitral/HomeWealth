@@ -117,6 +117,7 @@ export default function ScenarioEditorPage() {
 
       // Save prepayment events for new scenario
       if (isNewScenario && savedScenario?.id && prepaymentEvents.length > 0) {
+        console.log(`Saving ${prepaymentEvents.length} prepayment events for scenario ${savedScenario.id}`);
         for (const event of prepaymentEvents) {
           const eventData: InsertPrepaymentEvent = {
             scenarioId: savedScenario.id,
@@ -127,8 +128,21 @@ export default function ScenarioEditorPage() {
             oneTimeYear: event.oneTimeYear,
             description: event.description,
           };
-          await apiRequest("POST", `/api/scenarios/${savedScenario.id}/prepayment-events`, eventData);
+          console.log('Saving event:', eventData);
+          try {
+            const savedEvent = await apiRequest("POST", `/api/scenarios/${savedScenario.id}/prepayment-events`, eventData);
+            console.log('Event saved successfully:', savedEvent);
+          } catch (error) {
+            console.error('Error saving prepayment event:', error);
+            throw error; // Re-throw to trigger mutation error handler
+          }
         }
+      } else {
+        console.log('Skipping prepayment events save:', {
+          isNewScenario,
+          hasScenarioId: !!savedScenario?.id,
+          eventsCount: prepaymentEvents.length
+        });
       }
 
       return savedScenario;
@@ -795,11 +809,8 @@ export default function ScenarioEditorPage() {
             <CardHeader>
               <CardTitle>Projected Mortgage Outcome</CardTitle>
               <CardDescription>
-                Based on current prepayment strategy: 
-                {monthlyExtra && parseFloat(monthlyExtra) > 0 && ` $${monthlyExtra}/month`}
-                {annualLump && parseFloat(annualLump) > 0 && ` + $${annualLump}/year lump sum`}
-                {useBonus && " + annual bonus"}
-                {useExtraPay && " + extra paycheques"}
+                Based on current prepayment strategy
+                {prepaymentEvents.length > 0 && ` (${prepaymentEvents.length} prepayment ${prepaymentEvents.length === 1 ? 'event' : 'events'})`}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
