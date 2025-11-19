@@ -8,7 +8,8 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Save, ArrowLeft, Info } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Save, ArrowLeft, Info, Plus, Trash2, Edit2 } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -16,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { MortgageBalanceChart } from "@/components/mortgage-balance-chart";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import type { Scenario } from "@shared/schema";
+import type { Scenario, PrepaymentEvent, InsertPrepaymentEvent } from "@shared/schema";
 
 export default function ScenarioEditorPage() {
   const { toast } = useToast();
@@ -32,11 +33,17 @@ export default function ScenarioEditorPage() {
   const [expectedReturnRate, setExpectedReturnRate] = useState(6.0);
   const [efPriorityPercent, setEfPriorityPercent] = useState(0);
   
-  // Additional UI state (not in schema yet - stubbed)
-  const [useBonus, setUseBonus] = useState(false);
-  const [useExtraPay, setUseExtraPay] = useState(false);
-  const [monthlyExtra, setMonthlyExtra] = useState("200");
-  const [annualLump, setAnnualLump] = useState("5000");
+  // Prepayment events state
+  const [prepaymentEvents, setPrepaymentEvents] = useState<PrepaymentEvent[]>([]);
+  const [editingEvent, setEditingEvent] = useState<PrepaymentEvent | null>(null);
+  const [isAddingEvent, setIsAddingEvent] = useState(false);
+  
+  // Event form state
+  const [eventType, setEventType] = useState<"annual" | "one-time">("annual");
+  const [eventAmount, setEventAmount] = useState("");
+  const [eventDescription, setEventDescription] = useState("");
+  const [recurrenceMonth, setRecurrenceMonth] = useState("3"); // March for tax refund
+  const [oneTimeYear, setOneTimeYear] = useState("1");
 
   // Set page title
   useEffect(() => {
@@ -54,6 +61,17 @@ export default function ScenarioEditorPage() {
     enabled: !isNewScenario && !!scenarioId,
   });
 
+  // Fetch prepayment events for this scenario
+  const { data: fetchedEvents, isLoading: isLoadingEvents } = useQuery<PrepaymentEvent[]>({
+    queryKey: ["/api/scenarios", scenarioId, "prepayment-events"],
+    queryFn: async () => {
+      const response = await fetch(`/api/scenarios/${scenarioId}/prepayment-events`);
+      if (!response.ok) throw new Error("Failed to fetch prepayment events");
+      return response.json();
+    },
+    enabled: !isNewScenario && !!scenarioId,
+  });
+
   // Initialize form when editing existing scenario
   useEffect(() => {
     if (scenario && !isNewScenario) {
@@ -64,6 +82,13 @@ export default function ScenarioEditorPage() {
       setEfPriorityPercent(scenario.efPriorityPercent);
     }
   }, [scenario, isNewScenario]);
+
+  // Load prepayment events
+  useEffect(() => {
+    if (fetchedEvents) {
+      setPrepaymentEvents(fetchedEvents);
+    }
+  }, [fetchedEvents]);
 
   // Save mutation
   const saveMutation = useMutation({
@@ -83,19 +108,40 @@ export default function ScenarioEditorPage() {
         efPriorityPercent: efPriority,
       };
 
+      let savedScenario: Scenario;
       if (isNewScenario) {
-        return apiRequest("POST", "/api/scenarios", data);
+        savedScenario = await apiRequest("POST", "/api/scenarios", data);
       } else {
-        return apiRequest("PATCH", `/api/scenarios/${scenarioId}`, data);
+        savedScenario = await apiRequest("PATCH", `/api/scenarios/${scenarioId}`, data);
       }
+
+      // Save prepayment events for new scenario
+      if (isNewScenario && savedScenario?.id && prepaymentEvents.length > 0) {
+        for (const event of prepaymentEvents) {
+          const eventData: InsertPrepaymentEvent = {
+            scenarioId: savedScenario.id,
+            eventType: event.eventType,
+            amount: event.amount,
+            startPaymentNumber: event.startPaymentNumber || 1,
+            recurrenceMonth: event.recurrenceMonth,
+            oneTimeYear: event.oneTimeYear,
+            description: event.description,
+          };
+          await apiRequest("POST", `/api/scenarios/${savedScenario.id}/prepayment-events`, eventData);
+        }
+      }
+
+      return savedScenario;
     },
     onSuccess: (savedScenario: Scenario) => {
       queryClient.invalidateQueries({ queryKey: ["/api/scenarios"] });
       if (savedScenario?.id) {
         queryClient.invalidateQueries({ queryKey: ["/api/scenarios", savedScenario.id] });
+        queryClient.invalidateQueries({ queryKey: ["/api/scenarios", savedScenario.id, "prepayment-events"] });
       }
       if (!isNewScenario && scenarioId) {
         queryClient.invalidateQueries({ queryKey: ["/api/scenarios", scenarioId] });
+        queryClient.invalidateQueries({ queryKey: ["/api/scenarios", scenarioId, "prepayment-events"] });
       }
       toast({
         title: isNewScenario ? "Scenario created" : "Scenario saved",
@@ -124,6 +170,153 @@ export default function ScenarioEditorPage() {
       return;
     }
     saveMutation.mutate();
+  };
+
+  // Prepayment event management
+  const handleAddEvent = async () => {
+    if (!eventAmount || parseFloat(eventAmount) <= 0) {
+      toast({
+        title: "Invalid amount",
+        description: "Please enter a valid prepayment amount.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const eventData: Partial<PrepaymentEvent> = {
+      id: `temp-${Date.now()}`,
+      scenarioId: scenarioId || "",
+      eventType,
+      amount: parseFloat(eventAmount).toFixed(2),
+      startPaymentNumber: 1,
+      description: eventDescription || null,
+      recurrenceMonth: eventType === "annual" ? parseInt(recurrenceMonth) : null,
+      oneTimeYear: eventType === "one-time" ? parseInt(oneTimeYear) : null,
+    };
+
+    // For existing scenarios, save to API immediately
+    if (!isNewScenario && scenarioId) {
+      try {
+        const savedEvent = await apiRequest("POST", `/api/scenarios/${scenarioId}/prepayment-events`, eventData);
+        setPrepaymentEvents([...prepaymentEvents, savedEvent]);
+        queryClient.invalidateQueries({ queryKey: ["/api/scenarios", scenarioId, "prepayment-events"] });
+        toast({
+          title: "Event added",
+          description: "Prepayment event has been saved.",
+        });
+      } catch (error) {
+        toast({
+          title: "Error adding event",
+          description: "Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+    } else {
+      // For new scenarios, just add to local state (will be saved when scenario is created)
+      setPrepaymentEvents([...prepaymentEvents, eventData as PrepaymentEvent]);
+    }
+
+    setIsAddingEvent(false);
+    resetEventForm();
+  };
+
+  const handleEditEvent = (event: PrepaymentEvent) => {
+    setEditingEvent(event);
+    setEventType(event.eventType as "annual" | "one-time");
+    setEventAmount(event.amount);
+    setEventDescription(event.description || "");
+    if (event.eventType === "annual" && event.recurrenceMonth) {
+      setRecurrenceMonth(event.recurrenceMonth.toString());
+    } else if (event.eventType === "one-time" && event.oneTimeYear) {
+      setOneTimeYear(event.oneTimeYear.toString());
+    }
+    setIsAddingEvent(true);
+  };
+
+  const handleUpdateEvent = async () => {
+    if (!editingEvent || !eventAmount || parseFloat(eventAmount) <= 0) {
+      toast({
+        title: "Invalid amount",
+        description: "Please enter a valid prepayment amount.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedEvent: PrepaymentEvent = {
+      ...editingEvent,
+      eventType,
+      amount: parseFloat(eventAmount).toFixed(2),
+      description: eventDescription || null,
+      recurrenceMonth: eventType === "annual" ? parseInt(recurrenceMonth) : null,
+      oneTimeYear: eventType === "one-time" ? parseInt(oneTimeYear) : null,
+    };
+
+    // For existing scenarios with real event IDs, update via API
+    if (!isNewScenario && !editingEvent.id.startsWith("temp-")) {
+      try {
+        await apiRequest("PATCH", `/api/prepayment-events/${editingEvent.id}`, updatedEvent);
+        queryClient.invalidateQueries({ queryKey: ["/api/scenarios", scenarioId, "prepayment-events"] });
+        toast({
+          title: "Event updated",
+          description: "Prepayment event has been saved.",
+        });
+      } catch (error) {
+        toast({
+          title: "Error updating event",
+          description: "Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    setPrepaymentEvents(
+      prepaymentEvents.map((e) => (e.id === editingEvent.id ? updatedEvent : e))
+    );
+    setIsAddingEvent(false);
+    setEditingEvent(null);
+    resetEventForm();
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    // For existing scenarios with real event IDs, delete via API
+    if (!isNewScenario && !eventId.startsWith("temp-")) {
+      try {
+        await apiRequest("DELETE", `/api/prepayment-events/${eventId}`, {});
+        queryClient.invalidateQueries({ queryKey: ["/api/scenarios", scenarioId, "prepayment-events"] });
+        toast({
+          title: "Event deleted",
+          description: "Prepayment event has been removed.",
+        });
+      } catch (error) {
+        toast({
+          title: "Error deleting event",
+          description: "Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    setPrepaymentEvents(prepaymentEvents.filter((e) => e.id !== eventId));
+  };
+
+  const resetEventForm = () => {
+    setEventType("annual");
+    setEventAmount("");
+    setEventDescription("");
+    setRecurrenceMonth("3");
+    setOneTimeYear("1");
+  };
+
+  const getMonthName = (month: number) => {
+    const months = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    return months[month - 1] || "";
   };
 
   // Current mortgage data from Mortgage History (pre-populated)
@@ -366,64 +559,210 @@ export default function ScenarioEditorPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Prepayment Strategy</CardTitle>
-              <CardDescription>Configure how aggressively you'll pay down your mortgage going forward</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Prepayment Events</CardTitle>
+                  <CardDescription>Annual lump sums (bonuses, tax refunds) and one-time prepayments</CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    resetEventForm();
+                    setIsAddingEvent(true);
+                    setEditingEvent(null);
+                  }}
+                  data-testid="button-add-event"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Event
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="annual-lump">Annual Lump Sum Prepayment</Label>
-                  <Input 
-                    id="annual-lump" 
-                    type="number" 
-                    placeholder="5000" 
-                    value={annualLump}
-                    onChange={(e) => setAnnualLump(e.target.value)}
-                    data-testid="input-annual-lump" 
-                  />
-                  <p className="text-sm text-muted-foreground">Typically up to 15-20% of original principal per year</p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="monthly-extra">Monthly Extra Payment</Label>
-                  <Input 
-                    id="monthly-extra" 
-                    type="number" 
-                    placeholder="200" 
-                    value={monthlyExtra}
-                    onChange={(e) => setMonthlyExtra(e.target.value)}
-                    data-testid="input-monthly-extra" 
-                  />
-                  <p className="text-sm text-muted-foreground">Additional principal on top of regular payment</p>
-                </div>
-              </div>
+              {/* List of existing prepayment events */}
+              {prepaymentEvents.length === 0 && !isAddingEvent && (
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertDescription>
+                    No prepayment events configured. Add annual lump sums (like tax refunds) or one-time prepayments (like inheritances).
+                  </AlertDescription>
+                </Alert>
+              )}
 
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="use-bonus">Use Annual Bonus for Prepayment</Label>
-                  <p className="text-sm text-muted-foreground">Apply bonus to mortgage principal</p>
+              {prepaymentEvents.length > 0 && (
+                <div className="space-y-3">
+                  {prepaymentEvents.map((event) => (
+                    <div
+                      key={event.id}
+                      className="flex items-start justify-between gap-4 p-4 rounded-lg border bg-muted/30"
+                      data-testid={`event-${event.id}`}
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="outline" data-testid={`badge-${event.eventType}`}>
+                            {event.eventType === "annual" ? "Annual" : "One-Time"}
+                          </Badge>
+                          <span className="font-mono font-semibold text-lg">
+                            ${parseFloat(event.amount).toLocaleString()}
+                          </span>
+                        </div>
+                        {event.eventType === "annual" && event.recurrenceMonth && (
+                          <p className="text-sm text-muted-foreground">
+                            Every {getMonthName(event.recurrenceMonth)}
+                          </p>
+                        )}
+                        {event.eventType === "one-time" && event.oneTimeYear && (
+                          <p className="text-sm text-muted-foreground">
+                            Year {event.oneTimeYear} from mortgage start
+                          </p>
+                        )}
+                        {event.description && (
+                          <p className="text-sm mt-1">{event.description}</p>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditEvent(event)}
+                          data-testid={`button-edit-${event.id}`}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteEvent(event.id)}
+                          data-testid={`button-delete-${event.id}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <Switch 
-                  id="use-bonus" 
-                  checked={useBonus}
-                  onCheckedChange={setUseBonus}
-                  data-testid="switch-use-bonus" 
-                />
-              </div>
+              )}
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="use-extra-pay">Use Extra Paycheques for Prepayment</Label>
-                  <p className="text-sm text-muted-foreground">Apply extra paycheques to mortgage</p>
-                </div>
-                <Switch 
-                  id="use-extra-pay" 
-                  checked={useExtraPay}
-                  onCheckedChange={setUseExtraPay}
-                  data-testid="switch-use-extra-pay" 
-                />
-              </div>
+              {/* Add/Edit Event Form */}
+              {isAddingEvent && (
+                <Card className="border-primary">
+                  <CardHeader>
+                    <CardTitle className="text-base">
+                      {editingEvent ? "Edit Prepayment Event" : "Add Prepayment Event"}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="event-type">Event Type</Label>
+                      <Select
+                        value={eventType}
+                        onValueChange={(value) => setEventType(value as "annual" | "one-time")}
+                      >
+                        <SelectTrigger id="event-type" data-testid="select-event-type">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="annual">Annual (recurring every year)</SelectItem>
+                          <SelectItem value="one-time">One-Time</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="event-amount">Amount ($)</Label>
+                      <Input
+                        id="event-amount"
+                        type="number"
+                        placeholder="5000"
+                        value={eventAmount}
+                        onChange={(e) => setEventAmount(e.target.value)}
+                        data-testid="input-event-amount"
+                      />
+                    </div>
+
+                    {eventType === "annual" && (
+                      <div className="space-y-2">
+                        <Label htmlFor="recurrence-month">Which Month?</Label>
+                        <Select
+                          value={recurrenceMonth}
+                          onValueChange={setRecurrenceMonth}
+                        >
+                          <SelectTrigger id="recurrence-month" data-testid="select-recurrence-month">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">January</SelectItem>
+                            <SelectItem value="2">February</SelectItem>
+                            <SelectItem value="3">March (Tax Refund)</SelectItem>
+                            <SelectItem value="4">April</SelectItem>
+                            <SelectItem value="5">May</SelectItem>
+                            <SelectItem value="6">June</SelectItem>
+                            <SelectItem value="7">July</SelectItem>
+                            <SelectItem value="8">August</SelectItem>
+                            <SelectItem value="9">September</SelectItem>
+                            <SelectItem value="10">October</SelectItem>
+                            <SelectItem value="11">November</SelectItem>
+                            <SelectItem value="12">December (Bonus)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-sm text-muted-foreground">
+                          Common: March for tax refunds, December for year-end bonuses
+                        </p>
+                      </div>
+                    )}
+
+                    {eventType === "one-time" && (
+                      <div className="space-y-2">
+                        <Label htmlFor="one-time-year">Which Year? (from mortgage start)</Label>
+                        <Input
+                          id="one-time-year"
+                          type="number"
+                          min="1"
+                          placeholder="1"
+                          value={oneTimeYear}
+                          onChange={(e) => setOneTimeYear(e.target.value)}
+                          data-testid="input-one-time-year"
+                        />
+                        <p className="text-sm text-muted-foreground">
+                          E.g., "5" means 5 years from when your mortgage started
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="event-description">Description (Optional)</Label>
+                      <Input
+                        id="event-description"
+                        placeholder="e.g., Annual bonus, Tax refund, Inheritance"
+                        value={eventDescription}
+                        onChange={(e) => setEventDescription(e.target.value)}
+                        data-testid="input-event-description"
+                      />
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={editingEvent ? handleUpdateEvent : handleAddEvent}
+                        data-testid="button-save-event"
+                      >
+                        {editingEvent ? "Update Event" : "Add Event"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setIsAddingEvent(false);
+                          setEditingEvent(null);
+                          resetEventForm();
+                        }}
+                        data-testid="button-cancel-event"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               <Separator />
 
