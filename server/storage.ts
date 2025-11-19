@@ -15,8 +15,18 @@ import {
   type InsertScenario,
   type PrepaymentEvent,
   type InsertPrepaymentEvent,
+  users,
+  cashFlow,
+  emergencyFund,
+  mortgages,
+  mortgageTerms,
+  mortgagePayments,
+  scenarios,
+  prepaymentEvents,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { eq } from "drizzle-orm";
+import { db } from "./db";
 
 export interface IStorage {
   // Users
@@ -388,4 +398,173 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DBStorage implements IStorage {
+  // Users
+  async getUser(id: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.id, id));
+    return result[0];
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.username, username));
+    return result[0];
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const result = await db.insert(users).values(insertUser).returning();
+    return result[0];
+  }
+
+  // Cash Flow
+  async getCashFlow(userId: string): Promise<CashFlow | undefined> {
+    const result = await db.select().from(cashFlow).where(eq(cashFlow.userId, userId));
+    return result[0];
+  }
+
+  async createCashFlow(insertCashFlow: InsertCashFlow): Promise<CashFlow> {
+    const result = await db.insert(cashFlow).values(insertCashFlow).returning();
+    return result[0];
+  }
+
+  async updateCashFlow(id: string, update: Partial<InsertCashFlow>): Promise<CashFlow | undefined> {
+    const result = await db.update(cashFlow).set(update).where(eq(cashFlow.id, id)).returning();
+    return result[0];
+  }
+
+  // Emergency Fund
+  async getEmergencyFund(userId: string): Promise<EmergencyFund | undefined> {
+    const result = await db.select().from(emergencyFund).where(eq(emergencyFund.userId, userId));
+    return result[0];
+  }
+
+  async createEmergencyFund(insertEF: InsertEmergencyFund): Promise<EmergencyFund> {
+    const result = await db.insert(emergencyFund).values(insertEF).returning();
+    return result[0];
+  }
+
+  async updateEmergencyFund(id: string, update: Partial<InsertEmergencyFund>): Promise<EmergencyFund | undefined> {
+    const result = await db.update(emergencyFund).set(update).where(eq(emergencyFund.id, id)).returning();
+    return result[0];
+  }
+
+  // Mortgages
+  async getMortgage(id: string): Promise<Mortgage | undefined> {
+    const result = await db.select().from(mortgages).where(eq(mortgages.id, id));
+    return result[0];
+  }
+
+  async getMortgagesByUser(userId: string): Promise<Mortgage[]> {
+    return db.select().from(mortgages).where(eq(mortgages.userId, userId));
+  }
+
+  async createMortgage(insertMortgage: InsertMortgage): Promise<Mortgage> {
+    const result = await db.insert(mortgages).values(insertMortgage).returning();
+    return result[0];
+  }
+
+  async updateMortgage(id: string, update: Partial<InsertMortgage>): Promise<Mortgage | undefined> {
+    const result = await db.update(mortgages).set(update).where(eq(mortgages.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteMortgage(id: string): Promise<boolean> {
+    const result = await db.delete(mortgages).where(eq(mortgages.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Mortgage Terms
+  async getMortgageTerm(id: string): Promise<MortgageTerm | undefined> {
+    const result = await db.select().from(mortgageTerms).where(eq(mortgageTerms.id, id));
+    return result[0];
+  }
+
+  async getMortgageTermsByMortgage(mortgageId: string): Promise<MortgageTerm[]> {
+    return db.select().from(mortgageTerms).where(eq(mortgageTerms.mortgageId, mortgageId));
+  }
+
+  async createMortgageTerm(insertTerm: InsertMortgageTerm): Promise<MortgageTerm> {
+    const result = await db.insert(mortgageTerms).values(insertTerm).returning();
+    return result[0];
+  }
+
+  async updateMortgageTerm(id: string, update: Partial<InsertMortgageTerm>): Promise<MortgageTerm | undefined> {
+    const result = await db.update(mortgageTerms).set(update).where(eq(mortgageTerms.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteMortgageTerm(id: string): Promise<boolean> {
+    const result = await db.delete(mortgageTerms).where(eq(mortgageTerms.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Mortgage Payments
+  async getMortgagePayment(id: string): Promise<MortgagePayment | undefined> {
+    const result = await db.select().from(mortgagePayments).where(eq(mortgagePayments.id, id));
+    return result[0];
+  }
+
+  async getMortgagePaymentsByMortgage(mortgageId: string): Promise<MortgagePayment[]> {
+    return db.select().from(mortgagePayments).where(eq(mortgagePayments.mortgageId, mortgageId));
+  }
+
+  async getMortgagePaymentsByTerm(termId: string): Promise<MortgagePayment[]> {
+    return db.select().from(mortgagePayments).where(eq(mortgagePayments.termId, termId));
+  }
+
+  async createMortgagePayment(insertPayment: InsertMortgagePayment): Promise<MortgagePayment> {
+    const result = await db.insert(mortgagePayments).values(insertPayment).returning();
+    return result[0];
+  }
+
+  // Scenarios
+  async getScenario(id: string): Promise<Scenario | undefined> {
+    const result = await db.select().from(scenarios).where(eq(scenarios.id, id));
+    return result[0];
+  }
+
+  async getScenariosByUser(userId: string): Promise<Scenario[]> {
+    return db.select().from(scenarios).where(eq(scenarios.userId, userId));
+  }
+
+  async createScenario(insertScenario: InsertScenario): Promise<Scenario> {
+    const result = await db.insert(scenarios).values(insertScenario).returning();
+    return result[0];
+  }
+
+  async updateScenario(id: string, update: Partial<InsertScenario>): Promise<Scenario | undefined> {
+    const result = await db.update(scenarios).set(update).where(eq(scenarios.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteScenario(id: string): Promise<boolean> {
+    const result = await db.delete(scenarios).where(eq(scenarios.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Prepayment Events
+  async getPrepaymentEvent(id: string): Promise<PrepaymentEvent | undefined> {
+    const result = await db.select().from(prepaymentEvents).where(eq(prepaymentEvents.id, id));
+    return result[0];
+  }
+
+  async getPrepaymentEventsByScenario(scenarioId: string): Promise<PrepaymentEvent[]> {
+    return db.select().from(prepaymentEvents).where(eq(prepaymentEvents.scenarioId, scenarioId));
+  }
+
+  async createPrepaymentEvent(insertEvent: InsertPrepaymentEvent): Promise<PrepaymentEvent> {
+    const result = await db.insert(prepaymentEvents).values(insertEvent).returning();
+    return result[0];
+  }
+
+  async updatePrepaymentEvent(id: string, update: Partial<InsertPrepaymentEvent>): Promise<PrepaymentEvent | undefined> {
+    const result = await db.update(prepaymentEvents).set(update).where(eq(prepaymentEvents.id, id)).returning();
+    return result[0];
+  }
+
+  async deletePrepaymentEvent(id: string): Promise<boolean> {
+    const result = await db.delete(prepaymentEvents).where(eq(prepaymentEvents.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+}
+
+export const storage = new DBStorage();
