@@ -47,7 +47,7 @@ Not specified.
 
 ## Implementation Status
 
-**MVP Completion: 95%** - See [IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md) for detailed breakdown.
+**MVP Completion: 97%** - See [IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md) for detailed breakdown.
 
 ### ✅ Fully Implemented (Production-Ready)
 - **All 7 Core Pages:** Dashboard, Mortgage, Scenarios (List/Editor), Comparison, Cash Flow, Emergency Fund
@@ -57,15 +57,24 @@ Not specified.
 - **Payment Frequencies:** All 6 types (monthly, biweekly, accelerated-biweekly, semi-monthly, weekly, accelerated-weekly)
 - **Calculation Engines:** Semi-annual compounding, amortization, net worth projections (10/20/30 years)
 - **Prepayment Events:** Annual recurring + one-time events with full CRUD
-- **E2E Testing:** All pages tested with Playwright
+- **UI/UX Polish:** Professional design with educational tooltips explaining Canadian mortgage concepts
+- **E2E Testing:** All pages tested with Playwright, tooltips verified
 
-### 🔧 Remaining Polish (5%)
-- TypeScript type errors (59 non-blocking warnings in routes.ts)
-- Prime rate scenario projections (UI exists, backend enhancement needed)
-- Design guidelines and visual polish
-- Additional unit tests for calculation engines
+### 🔧 Remaining Polish (3%)
+- TypeScript type errors (59 non-blocking warnings in routes.ts) - 30 min fix
+- Prime rate scenario projections (UI exists, backend enhancement needed) - 2-3 hour enhancement
+- Additional unit tests for calculation engines - 2-3 hours
 
-## Recent Updates (Nov 19, 2024)
+## Recent Updates (Nov 20, 2024)
+- ✅ **UI/UX Polish**: Added InfoTooltip component with educational content
+  - Explains VRM types (Variable-Changing vs Variable-Fixed Payment)
+  - Explains locked spread concept (Prime ± spread locked for term)
+  - Explains trigger rate warnings
+  - Professional color scheme with Deep Blue primary
+  - Mobile responsiveness verified
+  - E2E tested with Playwright
+
+## Previous Updates (Nov 19, 2024)
 - ✅ **Database Persistence**: Fully implemented DBStorage class using Drizzle ORM
   - All CRUD operations for users, scenarios, prepayment events, mortgages, cash flow, emergency fund
   - Fixed seed script to create demo user with specific ID
