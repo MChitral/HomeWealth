@@ -1,82 +1,98 @@
-# Canadian Mortgage Strategy & Wealth Forecasting MVP
+# Canadian Mortgage Strategy & Wealth Forecasting
 
 ## Overview
-This full-stack web application assists Canadians in optimizing mortgage management and wealth building. It allows users to compare various financial strategies, such as aggressive mortgage prepayment versus investment, over 10-30 year horizons. The project aims to provide a holistic view of financial health, integrating cash flow, emergency funds, and net worth projections, distinguishing itself from standard calculators by offering multi-scenario comparisons and Canadian-specific mortgage rules.
+
+A full-stack financial planning application designed specifically for Canadian homeowners to compare mortgage management strategies and build wealth. The system allows users to model multiple scenarios (up to 4 simultaneously) comparing aggressive mortgage prepayment versus balanced versus investment-focused approaches, projecting net worth over 10-30 year horizons. Users can track their mortgage details, cash flow, emergency fund, and investment growth while understanding trade-offs between mortgage freedom and wealth accumulation.
 
 ## User Preferences
-Not specified.
+
+Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-**UI/UX Decisions:**
-- **Component Library**: Shadcn UI for consistent and accessible components.
-- **Styling**: Tailwind CSS for utility-first styling.
-- **Design Approach**: Focus on clear data visualization with tables, charts, and metric cards for scenario comparison and financial snapshots.
-- **Interaction**: Controlled inputs, loading states, and confirmation dialogs (e.g., AlertDialog for deletions).
+**Frontend Architecture**
+- **Framework**: React with TypeScript, built using Vite for fast development and optimized production builds
+- **Routing**: Wouter for lightweight client-side routing
+- **State Management**: TanStack Query for server state management, caching, and automatic refetching
+- **Form Handling**: React Hook Form with Zod for schema validation and type-safe form management
+- **UI Components**: Shadcn UI component library built on Radix UI primitives, styled with Tailwind CSS
+- **Design System**: Material Design + Carbon Design System hybrid for professional financial data presentation with consistent form interactions
+- **Visualization**: Recharts for financial charts (net worth projections, mortgage balance, investment growth)
 
-**Technical Implementations:**
-- **Frontend**: React with TypeScript, Wouter for routing, TanStack Query for data fetching. Form validation handled by `react-hook-form` and Zod.
-- **Backend**: Express.js with TypeScript, RESTful API design. Zod for request body validation.
-- **Database**: PostgreSQL with Drizzle ORM for full data persistence across all entities.
-- **Core Engine**:
-    - **Mortgage Calculation**: Canadian-specific semi-annual compounding, payment frequency conversions, amortization schedule generation, and prepayment modeling (lump sum, annual, one-time).
-    - **Net Worth Projection**: 10-30 year forecasts integrating mortgage, investments, emergency fund, and expenses.
-    - **Comparison Metrics**: Calculates interest savings, time savings, and net worth differences between strategies.
-- **Data Flow**:
-    - Uses an `IStorage` interface for data operations (currently DBStorage with PostgreSQL).
-    - API routes are secured and validated.
-    - Horizon-aware metrics system for consistent 10/20/30-year projections across the UI.
+**Backend Architecture**
+- **Runtime**: Node.js with Express.js web framework
+- **Language**: TypeScript with ESNext modules
+- **API Design**: RESTful API with 30+ endpoints following resource-based routing
+- **Validation Layer**: Zod schemas for request/response validation at API boundaries
+- **Authentication**: Development auth middleware (placeholder for production Replit Auth)
+- **Data Access Pattern**: IStorage interface abstraction with DBStorage implementation for database operations
+- **Calculation Engines**: Separate modules for mortgage calculations (Canadian-specific semi-annual compounding) and net worth projections
 
-**Feature Specifications:**
-- **Emergency Fund Page**: Manages EF targets, current balance, and contributions with zero-safe calculations.
-- **Scenario Management**: CRUD operations for financial scenarios, supporting up to 4 simultaneous comparisons. Scenarios define prepayment and investment strategies, and EF priority.
-- **Cash Flow Management**: Input for income, fixed/variable expenses, and other debts, with real-time surplus calculation and negative cash flow warnings.
-- **Mortgage History**: Tracks mortgage details, terms (renewals), and payment history with principal/interest breakdowns. Supports updating property values and payment frequencies.
-- **Prepayment Events UI**: Full CRUD for annual and one-time prepayment events, integrated into scenario modeling.
-- **Dashboard**: Provides a financial snapshot (home equity, EF, mortgage balance), horizon-aware metric cards, and charts for net worth, mortgage balance, and investment growth.
-- **Validation**: Comprehensive Zod schemas for all API endpoints (POST, PATCH) ensuring data integrity and consistency, including number-to-string transformations for decimal fields.
+**Database Design**
+- **ORM**: Drizzle ORM with type-safe query builder
+- **Schema Management**: Centralized schema definition in `shared/schema.ts` with Drizzle-Zod integration
+- **Tables**: users, cashFlow, emergencyFund, mortgages, mortgageTerms, mortgagePayments, scenarios, prepaymentEvents
+- **Key Features**: UUID primary keys, timestamp tracking, decimal precision for financial data, foreign key relationships
+
+**Core Calculation Logic**
+- **Canadian Mortgage Specifics**: 
+  - Semi-annual compounding (not monthly like US mortgages)
+  - Payment frequency conversions (monthly, biweekly, accelerated-biweekly, weekly, etc.)
+  - Term-based renewals (3-5 year terms vs 25-30 year amortization)
+  - Variable Rate Mortgage (VRM) support with two types: Variable-Changing Payment and Variable-Fixed Payment
+  - Trigger rate detection for VRMs
+- **Projection Engine**: 
+  - Generates 10-30 year monthly projections integrating mortgage paydown, investment growth, emergency fund contributions, and cash flow
+  - Horizon-aware metrics (10yr/20yr/30yr snapshots)
+  - Scenario comparison calculations (interest savings, time savings, net worth differences)
+- **Prepayment Modeling**: Annual recurring and one-time prepayment events with amount and timing specifications
+
+**Data Flow**
+- Client fetches data via TanStack Query from REST endpoints
+- API routes validate requests with Zod schemas
+- Storage layer (DBStorage) executes Drizzle ORM queries against PostgreSQL
+- Calculation engines process financial data and return metrics
+- Results cached client-side until invalidated by mutations
+
+**Key Architectural Decisions**
+- **Monorepo Structure**: Shared types and schemas between client/server via `@shared` path alias eliminates type drift
+- **Type Safety**: End-to-end TypeScript with Zod runtime validation ensures data integrity
+- **Separation of Concerns**: Calculation logic isolated from data access and API layers for testability
+- **Canadian-First Design**: All financial calculations built specifically for Canadian mortgage rules rather than adapting US-centric logic
+- **Scenario-Based Planning**: Core feature allows comparing up to 4 strategies simultaneously with side-by-side metrics and visualizations
 
 ## External Dependencies
-- **PostgreSQL**: Relational database for persistent data storage with Drizzle ORM.
-- **Shadcn UI**: Frontend component library.
-- **TanStack Query**: Data fetching and state management in the frontend.
-- **Zod**: Schema validation for both frontend forms and backend API requests.
-- **React Hook Form**: Form management and validation in the frontend.
-- **Express.js**: Backend web framework.
-- **Drizzle ORM**: ORM for interacting with PostgreSQL (implemented with DBStorage class).
 
-## Implementation Status
+**Database**
+- PostgreSQL via Neon serverless driver (`@neondatabase/serverless`)
+- Drizzle ORM (`drizzle-orm`) for type-safe database queries
+- Drizzle Kit (`drizzle-kit`) for schema migrations
 
-**MVP Completion: 97%** - See [IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md) for detailed breakdown.
+**Frontend Libraries**
+- React 18 with TypeScript
+- Wouter (lightweight routing)
+- TanStack Query (data fetching and caching)
+- React Hook Form (form state management)
+- Zod (schema validation)
+- Shadcn UI + Radix UI (component primitives)
+- Tailwind CSS (styling)
+- Recharts (data visualization)
+- date-fns (date manipulation)
 
-### ✅ Fully Implemented (Production-Ready)
-- **All 7 Core Pages:** Dashboard, Mortgage, Scenarios (List/Editor), Comparison, Cash Flow, Emergency Fund
-- **Database Persistence:** PostgreSQL with Drizzle ORM (DBStorage class)
-- **30+ API Endpoints:** Full CRUD with Zod validation
-- **Canadian VRM Features:** Variable-Changing/Fixed Payment, Prime-based rates, trigger rate detection
-- **Payment Frequencies:** All 6 types (monthly, biweekly, accelerated-biweekly, semi-monthly, weekly, accelerated-weekly)
-- **Calculation Engines:** Semi-annual compounding, amortization, net worth projections (10/20/30 years)
-- **Prepayment Events:** Annual recurring + one-time events with full CRUD
-- **UI/UX Polish:** Professional design with educational tooltips explaining Canadian mortgage concepts
-- **E2E Testing:** All pages tested with Playwright, tooltips verified
+**Backend Libraries**
+- Express.js (web framework)
+- ws (WebSocket for Neon connection)
+- Zod (request validation)
 
-### 🔧 Remaining Polish (3%)
-- TypeScript type errors (59 non-blocking warnings in routes.ts) - 30 min fix
-- Prime rate scenario projections (UI exists, backend enhancement needed) - 2-3 hour enhancement
-- Additional unit tests for calculation engines - 2-3 hours
+**Development Tools**
+- Vite (build tool and dev server)
+- tsx (TypeScript execution)
+- esbuild (production bundling)
+- TypeScript compiler
+- Replit-specific plugins (error overlay, cartographer, dev banner)
 
-## Recent Updates (Nov 20, 2024)
-- ✅ **UI/UX Polish**: Added InfoTooltip component with educational content
-  - Explains VRM types (Variable-Changing vs Variable-Fixed Payment)
-  - Explains locked spread concept (Prime ± spread locked for term)
-  - Explains trigger rate warnings
-  - Professional color scheme with Deep Blue primary
-  - Mobile responsiveness verified
-  - E2E tested with Playwright
+**Session Management**
+- connect-pg-simple (PostgreSQL session store for Express)
 
-## Previous Updates (Nov 19, 2024)
-- ✅ **Database Persistence**: Fully implemented DBStorage class using Drizzle ORM
-  - All CRUD operations for users, scenarios, prepayment events, mortgages, cash flow, emergency fund
-  - Fixed seed script to create demo user with specific ID
-  - Fixed frontend apiRequest to return parsed JSON
-  - E2E tested: scenarios and prepayment events persist across app restarts
+**CSS Processing**
+- PostCSS with Tailwind CSS and Autoprefixer
