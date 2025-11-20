@@ -1,0 +1,10 @@
+# Keep environment templates accessible (do not list *.env here)
+
+node_modules/
+dist/
+server/public/
+*.log
+**/*.log
+coverage/
+tmp/
+

@@ -16,38 +16,53 @@ A full-stack web application helping Canadians compare financial strategies for 
    cd <repo-name>
    ```
 
-2. **Start with Docker Compose**
+2. **Install dependencies**
    ```bash
-   docker-compose up
+   npm install
    ```
 
-3. **Access the app**
-   - Open http://localhost:5000 in your browser
-   - The database will be automatically set up and ready to use
-
-4. **Stop the app**
+3. **Create `.env.local`**
    ```bash
-   # Press Ctrl+C in the terminal, then:
-   docker-compose down
+   cp env.local.example .env.local
+   # Update DATABASE_URL if you changed the Postgres port/user/password
+   ```
+
+4. **Start PostgreSQL with Docker Compose**
+   ```bash
+   docker compose up db -d
+   ```
+
+5. **Push the database schema**
+   ```bash
+   npm run db:push
+   ```
+
+6. **Start the dev server**
+   ```bash
+   npm run dev
+   ```
+   - Open http://localhost:5000 in your browser
+
+7. **Stop services**
+   ```bash
+   # Stop the app (Ctrl+C)
+   docker compose down
    ```
 
 ### Useful Docker Commands
 
 ```bash
-# Start in background (detached mode)
-docker-compose up -d
+# Start Postgres in the background
+docker compose up db -d
 
-# View logs
-docker-compose logs -f
+# View Postgres logs
+docker compose logs -f db
 
-# Stop all services
-docker-compose down
+# Stop the database
+docker compose down
 
-# Stop and remove all data (fresh start)
-docker-compose down -v
-
-# Rebuild after code changes
-docker-compose up --build
+# Stop and remove data (fresh start)
+docker compose down -v
 ```
 
 ## Local Development (Without Docker)
@@ -58,31 +73,7 @@ docker-compose up --build
 
 ### Setup
 
-1. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-2. **Set up environment variables**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your local database credentials
-   ```
-
-3. **Create database**
-   ```bash
-   createdb mortgage_app
-   ```
-
-4. **Push database schema**
-   ```bash
-   npm run db:push
-   ```
-
-5. **Start development server**
-   ```bash
-   npm run dev
-   ```
+The steps above already cover local development (run Docker for Postgres, push the schema, then `npm run dev`). If you prefer a fully manual setup, create a Postgres database yourself and point `DATABASE_URL` at it before running `npm run db:push`.
 
 ## Tech Stack
 

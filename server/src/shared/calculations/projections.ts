@@ -6,12 +6,12 @@
  */
 
 import type { Scenario, Mortgage, CashFlow, EmergencyFund } from "@shared/schema";
-import { 
-  generateAmortizationSchedule, 
+import {
+  generateAmortizationSchedule,
   type PrepaymentEvent,
   type PaymentFrequency,
-  getPaymentsPerYear
-} from "../mortgage-calculations";
+  getPaymentsPerYear,
+} from "./mortgage";
 
 export interface ProjectionParams {
   scenario: Scenario;
