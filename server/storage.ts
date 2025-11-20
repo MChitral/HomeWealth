@@ -126,21 +126,22 @@ export class MemStorage implements IStorage {
   async createCashFlow(insertCashFlow: InsertCashFlow): Promise<CashFlow> {
     const id = randomUUID();
     const cashFlow: CashFlow = { 
-      extraPaycheques: 2,
-      annualBonus: "0",
-      propertyTax: "0",
-      homeInsurance: "0",
-      condoFees: "0",
-      utilities: "0",
-      groceries: "0",
-      dining: "0",
-      transportation: "0",
-      entertainment: "0",
-      carLoan: "0",
-      studentLoan: "0",
-      creditCard: "0",
-      ...insertCashFlow, 
-      id, 
+      id,
+      userId: insertCashFlow.userId,
+      monthlyIncome: insertCashFlow.monthlyIncome,
+      extraPaycheques: insertCashFlow.extraPaycheques ?? 2,
+      annualBonus: insertCashFlow.annualBonus ?? "0",
+      propertyTax: insertCashFlow.propertyTax ?? "0",
+      homeInsurance: insertCashFlow.homeInsurance ?? "0",
+      condoFees: insertCashFlow.condoFees ?? "0",
+      utilities: insertCashFlow.utilities ?? "0",
+      groceries: insertCashFlow.groceries ?? "0",
+      dining: insertCashFlow.dining ?? "0",
+      transportation: insertCashFlow.transportation ?? "0",
+      entertainment: insertCashFlow.entertainment ?? "0",
+      carLoan: insertCashFlow.carLoan ?? "0",
+      studentLoan: insertCashFlow.studentLoan ?? "0",
+      creditCard: insertCashFlow.creditCard ?? "0",
       updatedAt: new Date() 
     };
     this.cashFlows.set(id, cashFlow);
@@ -168,10 +169,10 @@ export class MemStorage implements IStorage {
   async createEmergencyFund(insertEf: InsertEmergencyFund): Promise<EmergencyFund> {
     const id = randomUUID();
     const ef: EmergencyFund = { 
-      targetMonths: 6,
-      currentBalance: "0",
-      monthlyContribution: "0",
-      ...insertEf, 
+      ...insertEf,
+      targetMonths: insertEf.targetMonths ?? 6,
+      currentBalance: insertEf.currentBalance ?? "0",
+      monthlyContribution: insertEf.monthlyContribution ?? "0", 
       id, 
       updatedAt: new Date() 
     };
@@ -301,9 +302,10 @@ export class MemStorage implements IStorage {
   async createMortgagePayment(insertPayment: InsertMortgagePayment): Promise<MortgagePayment> {
     const id = randomUUID();
     const payment: MortgagePayment = { 
-      primeRate: null,
-      triggerRateHit: 0,
-      ...insertPayment, 
+      ...insertPayment,
+      paymentPeriodLabel: insertPayment.paymentPeriodLabel ?? null,
+      primeRate: insertPayment.primeRate ?? null,
+      triggerRateHit: insertPayment.triggerRateHit ?? 0,
       id, 
       createdAt: new Date() 
     };
@@ -323,12 +325,12 @@ export class MemStorage implements IStorage {
   async createScenario(insertScenario: InsertScenario): Promise<Scenario> {
     const id = randomUUID();
     const scenario: Scenario = { 
-      description: null,
-      prepaymentMonthlyPercent: 50,
-      investmentMonthlyPercent: 50,
-      expectedReturnRate: "6.000",
-      efPriorityPercent: 0,
-      ...insertScenario, 
+      ...insertScenario,
+      description: insertScenario.description ?? null,
+      prepaymentMonthlyPercent: insertScenario.prepaymentMonthlyPercent ?? 50,
+      investmentMonthlyPercent: insertScenario.investmentMonthlyPercent ?? 50,
+      expectedReturnRate: insertScenario.expectedReturnRate ?? "6.000",
+      efPriorityPercent: insertScenario.efPriorityPercent ?? 0, 
       id, 
       createdAt: new Date(), 
       updatedAt: new Date() 

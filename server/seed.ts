@@ -71,7 +71,7 @@ export async function seedDemoData(storage: IStorage) {
       description: "Focus 80% of surplus on paying down mortgage faster. Good for debt-averse individuals who prioritize becoming mortgage-free.",
       prepaymentMonthlyPercent: 80,
       investmentMonthlyPercent: 20,
-      expectedReturnRate: 6.5, // Conservative investment return
+      expectedReturnRate: "6.500", // Conservative investment return
       efPriorityPercent: 0, // Split surplus after EF is full
     });
 
@@ -84,7 +84,7 @@ export async function seedDemoData(storage: IStorage) {
       description: "Split surplus 50/50 between mortgage prepayment and long-term investments. Balances debt reduction with wealth accumulation.",
       prepaymentMonthlyPercent: 50,
       investmentMonthlyPercent: 50,
-      expectedReturnRate: 7.0, // Moderate investment return
+      expectedReturnRate: "7.000", // Moderate investment return
       efPriorityPercent: 0,
     });
 

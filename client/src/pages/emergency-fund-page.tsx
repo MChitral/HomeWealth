@@ -53,11 +53,7 @@ export default function EmergencyFundPage() {
     parseFloat(cashFlow.groceries || "0") +
     parseFloat(cashFlow.dining || "0") +
     parseFloat(cashFlow.transportation || "0") +
-    parseFloat(cashFlow.entertainment || "0") +
-    parseFloat(cashFlow.shopping || "0") +
-    parseFloat(cashFlow.subscriptions || "0") +
-    parseFloat(cashFlow.healthcare || "0") +
-    parseFloat(cashFlow.other || "0")
+    parseFloat(cashFlow.entertainment || "0")
   ) : 0;
 
   const monthlyExpenses = fixedExpenses + variableExpenses;
