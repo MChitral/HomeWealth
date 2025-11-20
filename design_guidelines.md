@@ -2,117 +2,157 @@
 
 ## Design Approach
 
-**Selected System:** Material Design + Carbon Design System hybrid  
-**Justification:** This financial planning application requires a data-heavy, trust-building interface. Material Design provides excellent form components and visual feedback, while Carbon's enterprise patterns guide dashboard and table design.
+**System:** Material Design + Carbon Design System hybrid  
+**Justification:** Financial planning demands enterprise-grade data presentation (Carbon) with polished form interactions (Material Design). This combination establishes credibility while maintaining clarity for complex financial decisions.
 
 **Core Principles:**
-- Professional credibility through clean, structured layouts
-- Information hierarchy that guides users through complex data
-- Scannable dashboards prioritizing key metrics
-- Trust-building through consistent, predictable interactions
+- Professional trust through structured, predictable layouts
+- Information hierarchy prioritizing actionable insights
+- Scannable dashboards with metric cards and clear data visualization
+- Stability over trends—users need consistency for important financial decisions
 
 ---
 
-## Typography System
+## Color System
 
-**Font Stack:** Inter (primary), Roboto Mono (numeric data)
+**Primary Palette:**
+- Deep Blue: Primary actions, navigation highlights, positive trends
+- Slate Gray: Text, borders, neutral data
+- Sky Blue: Secondary actions, information states
+- Charcoal: Headers, emphasis text
+
+**Data Visualization:**
+- Scenario 1: Deep Blue
+- Scenario 2: Teal
+- Scenario 3: Purple
+- Scenario 4: Amber
+- Positive metrics: Forest Green
+- Negative metrics: Crimson Red
+- Neutral/projections: Slate
+
+**Semantic Colors:**
+- Success: Green (EF fully funded, goals met)
+- Warning: Orange (approaching thresholds)
+- Error: Red (invalid inputs, negative cash flow)
+- Info: Blue (tooltips, helper text)
+
+---
+
+## Typography
+
+**Fonts:** Inter (UI/text), Roboto Mono (financial data)
 
 **Hierarchy:**
-- **Page Titles:** text-3xl font-semibold (Scenario Comparison, Dashboard)
-- **Section Headers:** text-xl font-semibold (Mortgage Configuration, Cash Flow)
-- **Card Titles:** text-lg font-medium
-- **Body Text:** text-base font-normal
-- **Labels:** text-sm font-medium uppercase tracking-wide
-- **Numeric Data:** text-base font-mono (balances, projections)
-- **Large Metrics:** text-4xl font-bold font-mono (net worth callouts)
-- **Helper Text:** text-sm font-normal opacity-70
+- Page Titles: text-3xl font-bold
+- Section Headers: text-xl font-semibold
+- Card Titles: text-lg font-medium
+- Body: text-base font-normal
+- Labels: text-sm font-medium uppercase tracking-wide
+- Financial Data: text-base font-mono
+- Large Metrics: text-4xl font-bold font-mono
+- Helper Text: text-sm opacity-70
 
 ---
 
 ## Layout System
 
-**Spacing Primitives:** Tailwind units of 3, 4, 6, 8, 12, 16  
-**Common patterns:**
+**Spacing:** Tailwind units of 4, 6, 8, 12, 16
+
+**Patterns:**
 - Card padding: p-6
-- Section margins: mb-8 or mb-12
-- Form field gaps: space-y-4
+- Section spacing: mb-8 to mb-12
+- Form gaps: space-y-4
 - Grid gaps: gap-6
-- Page containers: px-6 py-8
+- Container: max-w-7xl mx-auto px-6 py-8
 
 **Grid Structure:**
-- Dashboard: 3-column metric cards (grid-cols-1 md:grid-cols-3 gap-6)
-- Scenario list: 2-column cards (md:grid-cols-2)
-- Comparison view: Side-by-side 2-column (lg:grid-cols-2)
-- Forms: Single column max-w-4xl with 2-column sections for related fields
+- Dashboard metrics: grid-cols-1 md:grid-cols-2 lg:grid-cols-4
+- Scenario cards: md:grid-cols-2 lg:grid-cols-3
+- Comparison: lg:grid-cols-2 (side-by-side)
+- Forms: Single column max-w-3xl, 2-column for related fields
 
 ---
 
 ## Component Library
 
 ### Navigation
-- **Top Navigation Bar:** Fixed header with logo left, scenario selector center, user menu right, height h-16, border-b
-- **Sidebar:** Persistent left sidebar (w-64) with Dashboard, Scenarios, Comparison, Settings links
+**Top Bar:** Logo left, scenario dropdown center, user profile right, h-16, border-b, sticky
+**Sidebar:** w-64, Dashboard, Scenarios, Comparison, Cash Flow, Emergency Fund, Settings
 
 ### Data Display
-- **Metric Cards:** Elevated cards with large numeric value, label above, trend indicator, compact info below
-- **Projection Tables:** Striped rows, fixed header, sticky first column for year labels, monospace numbers right-aligned
-- **Timeline View:** Vertical timeline with year markers, milestone indicators for mortgage payoff/EF targets
+**Metric Cards:** Large value (text-4xl font-mono), label above, trend indicator, supporting info below, elevated shadow
+**Tables:** Fixed header, striped rows, sticky first column (years), right-aligned numbers, monospace
+**Timeline:** Vertical with year markers, milestone badges (mortgage payoff, EF targets), connecting line
 
 ### Forms
-- **Input Groups:** Label above, input below, helper text underneath, error states with red border + message
-- **Number Inputs:** Right-aligned monospace text, currency prefix ($), percentage suffix (%)
-- **Radio Groups:** Horizontal for 2-3 options (payment frequency), vertical for 4+ options
-- **Toggle Switches:** For boolean configs (use_bonus_for_prepay)
-- **Slider + Input Combo:** Prepay/invest split percentage with live preview
+**Input Groups:** Label above, input below, helper text, error states with red border
+**Number Inputs:** Right-aligned monospace, $ prefix or % suffix
+**Sliders:** Combined with number input for prepay/invest allocation
+**Toggles:** Boolean settings (bonus allocation)
+**Radio Groups:** Horizontal for 2-3 options, vertical for 4+
 
 ### Charts (Recharts)
-- **Net Worth Line Chart:** Multi-line comparing scenarios, gridlines, tooltips with formatted currency
-- **Mortgage Balance Area Chart:** Stacked showing principal vs interest paid
-- **Cash Flow Bar Chart:** Monthly surplus/deficit visualization
-- **Allocation Pie Chart:** EF, investments, prepayments distribution
+**Net Worth Line:** Multi-line scenario comparison, tooltips with formatted currency, gridlines
+**Mortgage Area:** Stacked principal/interest visualization
+**Cash Flow Bars:** Monthly surplus/deficit
+**Allocation Pie:** EF, investments, prepayments breakdown
 
 ### Scenario Management
-- **Scenario Card:** Title, description, last modified date, "Edit" and "Compare" action buttons, quick metrics preview
-- **Comparison Panel:** 2-3 scenarios side-by-side with synchronized scrolling, highlighted differences
-
-### Dashboard Layout
-- **Top Metrics Row:** 4 key KPIs (Net Worth, Mortgage Balance, EF Status, Investment Total)
-- **Chart Section:** Large net worth projection chart spanning full width below metrics
-- **Quick Actions:** Buttons for "New Scenario", "Run Projection", "Export Data"
+**Scenario Card:** Title, description, last modified, quick metrics preview (net worth at year 30, payoff date), Edit/Compare/Duplicate buttons
+**Comparison Panel:** 2-4 scenarios side-by-side, synchronized scroll, highlighted differences
 
 ---
 
-## Page-Specific Layouts
+## Page Layouts
 
-### Dashboard Page
-- Hero metrics: 4-column grid showing current net worth, mortgage balance, EF progress, total investments
-- Main chart: Full-width net worth projection over time
-- Secondary charts: 2-column grid for mortgage paydown + investment growth
-- Recent scenarios: List of 3 most recent with quick access
+### Dashboard
+**Hero Metrics:** 4-column grid (Net Worth, Mortgage Balance, EF Progress, Investment Total), large values with trend arrows
+**Main Chart:** Full-width net worth projection comparing all scenarios
+**Secondary Charts:** 2-column grid (Mortgage Paydown + Investment Growth)
+**Quick Actions:** New Scenario, Run Projection, Export buttons
+**Recent Activity:** Last 3 scenarios edited
 
 ### Scenario Editor
-- Sticky header: Scenario name input, save/cancel buttons
-- Tabbed sections: Mortgage, Cash Flow, Emergency Fund, Investments, Prepayments
-- Each tab: Form with logical grouping, collapsible advanced options
-- Live preview panel (right sidebar on desktop): Shows key calculated metrics as user types
+**Sticky Header:** Scenario name input, Save/Cancel buttons, last saved timestamp
+**Tabbed Sections:** Mortgage Details, Income & Expenses, Emergency Fund, Investments, Prepayment Strategy
+**Form Layout:** Logical grouping with collapsible advanced options
+**Live Preview Sidebar:** Right panel (desktop) showing calculated metrics updating as user types
 
-### Comparison Page
-- Scenario selector: Multi-select dropdown to choose 2-3 scenarios
-- Comparison table: Side-by-side configurations with diff highlighting
-- Synchronized charts: Net worth comparison, mortgage payoff timeline
-- Winner callout: Prominent card showing which scenario achieves highest net worth at year 10, 20, 30
+### Scenario Comparison
+**Scenario Selector:** Multi-select (2-4 scenarios), Clear All button
+**Configuration Table:** Side-by-side comparison with diff highlighting (green for better, gray for same)
+**Chart Section:** Synchronized net worth comparison, mortgage payoff timeline, investment growth
+**Winner Callout:** Prominent card showing optimal scenario at 10/20/30 years with reasons
 
-### Projection Timeline
-- Table view: Expandable yearly summaries with monthly detail rows
-- Chart view: Switch between different metrics (balance, equity, cash flow)
-- Export button: CSV download for detailed analysis
+### Cash Flow Analysis
+**Monthly Breakdown:** Table with income, expenses, surplus/deficit, expandable categories
+**Visualization:** Bar chart showing monthly cash flow over projection period
+**Annual Summary:** Year-over-year comparison cards
+
+### Emergency Fund Tracker
+**Progress Bar:** Current vs target with percentage, visual indicator
+**Timeline to Goal:** Projection chart showing months to full funding
+**Funding Strategy:** Configuration for monthly contributions vs lump sum
+
+### Mortgage Tracking
+**Amortization Table:** Year-by-year breakdown with principal, interest, balance
+**Payoff Timeline:** Visual timeline showing projected payoff date
+**Prepayment Impact:** Before/after comparison showing time and interest saved
+
+---
+
+## Images
+
+**Dashboard Hero Background:** Abstract geometric pattern with financial graph elements (subtle, low opacity), positioned behind hero metrics, maintains readability
+**Empty States:** Illustration for "No scenarios yet" (friendly graph/calculator icon), "Create your first projection" CTA
 
 ---
 
 ## Critical Constraints
 
-- **No viewport forcing:** Natural content flow, no 100vh sections except dashboard hero
-- **Accessibility:** All form inputs have associated labels, ARIA labels on charts, keyboard navigation throughout
-- **No animations:** Stable, professional interface prioritizing trust over flair
-- **Responsive breakpoints:** Mobile stacks to single column, tablet shows 2 columns, desktop full 3-column layouts
-- **Data density:** Comfortable information density without overwhelming—use whitespace strategically around dense tables/charts
+- Natural content flow—no forced viewport heights except dashboard hero
+- All inputs have labels, charts have ARIA descriptions, full keyboard navigation
+- Minimal animations—data updates smoothly without distraction
+- Responsive: Mobile single-column, tablet 2-column, desktop 3-4 columns
+- Strategic whitespace around dense tables/charts for comfortable scanning
+- Buttons on hero backgrounds use backdrop-blur-md with semi-transparent backgrounds
