@@ -126,22 +126,9 @@ export class MemStorage implements IStorage {
   async createCashFlow(insertCashFlow: InsertCashFlow): Promise<CashFlow> {
     const id = randomUUID();
     const cashFlow: CashFlow = { 
-      id,
-      userId: insertCashFlow.userId,
-      monthlyIncome: insertCashFlow.monthlyIncome,
+      ...insertCashFlow,
       extraPaycheques: insertCashFlow.extraPaycheques ?? 2,
-      annualBonus: insertCashFlow.annualBonus ?? "0",
-      propertyTax: insertCashFlow.propertyTax ?? "0",
-      homeInsurance: insertCashFlow.homeInsurance ?? "0",
-      condoFees: insertCashFlow.condoFees ?? "0",
-      utilities: insertCashFlow.utilities ?? "0",
-      groceries: insertCashFlow.groceries ?? "0",
-      dining: insertCashFlow.dining ?? "0",
-      transportation: insertCashFlow.transportation ?? "0",
-      entertainment: insertCashFlow.entertainment ?? "0",
-      carLoan: insertCashFlow.carLoan ?? "0",
-      studentLoan: insertCashFlow.studentLoan ?? "0",
-      creditCard: insertCashFlow.creditCard ?? "0",
+      id,
       updatedAt: new Date() 
     };
     this.cashFlows.set(id, cashFlow);
@@ -171,8 +158,6 @@ export class MemStorage implements IStorage {
     const ef: EmergencyFund = { 
       ...insertEf,
       targetMonths: insertEf.targetMonths ?? 6,
-      currentBalance: insertEf.currentBalance ?? "0",
-      monthlyContribution: insertEf.monthlyContribution ?? "0", 
       id, 
       updatedAt: new Date() 
     };
@@ -329,8 +314,7 @@ export class MemStorage implements IStorage {
       description: insertScenario.description ?? null,
       prepaymentMonthlyPercent: insertScenario.prepaymentMonthlyPercent ?? 50,
       investmentMonthlyPercent: insertScenario.investmentMonthlyPercent ?? 50,
-      expectedReturnRate: insertScenario.expectedReturnRate ?? "6.000",
-      efPriorityPercent: insertScenario.efPriorityPercent ?? 0, 
+      efPriorityPercent: insertScenario.efPriorityPercent ?? 0,
       id, 
       createdAt: new Date(), 
       updatedAt: new Date() 

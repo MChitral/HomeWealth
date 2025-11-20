@@ -400,28 +400,28 @@ export default function DashboardPage() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">{selectedHorizon}-Year Net Worth</span>
-                    <span className="text-lg font-mono font-semibold text-green-600" data-testid={`text-value-net-worth-(${selectedHorizon}yr)`}>
+                    <span className="text-lg font-mono font-semibold text-green-600" data-testid={`text-summary-net-worth-(${selectedHorizon}yr)`}>
                       ${getMetricForHorizon('netWorth').toLocaleString()}
                     </span>
                   </div>
                   <Separator />
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Mortgage Reduction ({selectedHorizon}yr)</span>
-                    <span className="text-lg font-mono font-semibold" data-testid={`text-value-mortgage-reduction-(${selectedHorizon}yr)`}>
+                    <span className="text-lg font-mono font-semibold" data-testid={`text-summary-mortgage-reduction-(${selectedHorizon}yr)`}>
                       ${(mortgageBalance - getMetricForHorizon('mortgageBalance')).toLocaleString()}
                     </span>
                   </div>
                   <Separator />
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Investment Returns</span>
-                    <span className="text-lg font-mono font-semibold text-blue-600" data-testid={`text-value-investment-returns-(${selectedHorizon}yr)`}>
+                    <span className="text-lg font-mono font-semibold text-blue-600" data-testid={`text-summary-investment-returns-(${selectedHorizon}yr)`}>
                       +${getMetricForHorizon('investmentReturns').toLocaleString()}
                     </span>
                   </div>
                   <Separator />
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Emergency Fund Filled By</span>
-                    <span className="text-lg font-mono font-semibold" data-testid="text-value-ef-years">
+                    <span className="text-lg font-mono font-semibold" data-testid="text-summary-ef-years">
                       Year {selectedScenario.metrics.emergencyFundYears}
                     </span>
                   </div>
