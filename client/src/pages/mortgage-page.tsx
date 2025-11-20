@@ -30,6 +30,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Mortgage, MortgageTerm, MortgagePayment } from "@shared/schema";
 import { useMemo } from "react";
+import { InfoTooltip } from "@/components/info-tooltip";
 
 // UI-friendly types (normalized from DB schema)
 type UiTerm = {
@@ -937,7 +938,10 @@ export default function MortgageHistoryPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="new-term-type">Mortgage Type</Label>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="new-term-type">Mortgage Type</Label>
+                      <InfoTooltip content="Fixed Rate: Interest rate stays the same for the entire term. Variable-Changing Payment: Your payment adjusts when Prime rate changes. Variable-Fixed Payment: Payment stays constant, but if Prime rises too much, you may hit the 'trigger rate' where payment doesn't cover interest." />
+                    </div>
                     <Select 
                       value={renewalTermType} 
                       onValueChange={setRenewalTermType}
