@@ -10,7 +10,15 @@ Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-**Frontend Architecture**
+**Frontend Architecture (Feature-Sliced Design)**
+- **Pattern**: Feature-Sliced Design (FSD) with facade pattern for clean module boundaries
+- **Structure**: 
+  - `app/` - Application shell (layout, providers, router)
+  - `pages/` - Thin orchestrators (< 50 lines) that import features
+  - `features/` - Self-contained feature modules with private internals (cash-flow, dashboard, emergency-fund, mortgage-tracking, scenario-management, scenario-comparison)
+  - `widgets/` - Complex reusable components (charts, navigation)
+  - `shared/` - Shared utilities, UI components, hooks
+  - `entities/` - Business entity types
 - **Framework**: React with TypeScript, built using Vite for fast development and optimized production builds
 - **Routing**: Wouter for lightweight client-side routing
 - **State Management**: TanStack Query for server state management, caching, and automatic refetching
@@ -18,14 +26,24 @@ Preferred communication style: Simple, everyday language.
 - **UI Components**: Shadcn UI component library built on Radix UI primitives, styled with Tailwind CSS
 - **Design System**: Material Design + Carbon Design System hybrid for professional financial data presentation with consistent form interactions
 - **Visualization**: Recharts for financial charts (net worth projections, mortgage balance, investment growth)
+- **Feature Module Structure**: Each feature contains api/, hooks/, components/, main feature component, types, and public API facade (index.ts)
 
-**Backend Architecture**
+**Backend Architecture (Clean Architecture / Layered)**
+- **Pattern**: Clean Architecture with clear layer separation and dependency inversion
+- **Structure**:
+  - `api/` - HTTP layer (routes by domain, middleware, request validation)
+  - `application/` - Business orchestration layer (services coordinate repositories)
+  - `domain/` - Core business models and entity types
+  - `infrastructure/` - External dependencies (database connection, repositories)
+  - `shared/` - Pure calculation utilities (mortgage, projections)
+  - `types/` - Type augmentations (Express session types)
 - **Runtime**: Node.js with Express.js web framework
 - **Language**: TypeScript with ESNext modules
-- **API Design**: RESTful API with 30+ endpoints following resource-based routing
+- **API Design**: RESTful API with 30+ endpoints organized by domain (cash-flow.routes.ts, mortgage.routes.ts, scenario.routes.ts)
 - **Validation Layer**: Zod schemas for request/response validation at API boundaries
 - **Authentication**: Development auth middleware (placeholder for production Replit Auth)
-- **Data Access Pattern**: IStorage interface abstraction with DBStorage implementation for database operations
+- **Service Layer**: Business logic orchestration (cascade deletes, cross-domain workflows)
+- **Repository Pattern**: Thin data access layer (Drizzle ORM queries)
 - **Calculation Engines**: Separate modules for mortgage calculations (Canadian-specific semi-annual compounding) and net worth projections
 
 **Database Design**
@@ -60,6 +78,10 @@ Preferred communication style: Simple, everyday language.
 - **Separation of Concerns**: Calculation logic isolated from data access and API layers for testability
 - **Canadian-First Design**: All financial calculations built specifically for Canadian mortgage rules rather than adapting US-centric logic
 - **Scenario-Based Planning**: Core feature allows comparing up to 4 strategies simultaneously with side-by-side metrics and visualizations
+- **Layered Architecture**: Backend follows Clean Architecture principles with API → Services → Repositories → Database dependency flow
+- **Feature-Sliced Design**: Frontend organizes code by features (not technical layers) with facade pattern for clean module boundaries
+- **Thin Pages**: Page components are < 50 lines and simply orchestrate features (e.g., comparison-page.tsx: 5 lines, down from 567)
+- **Private Internals**: Features expose only public APIs via index.ts; hooks, components, and types remain private unless explicitly exported
 
 ## External Dependencies
 
