@@ -1,22 +1,32 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { Trophy, TrendingUp, Home, DollarSign, PiggyBank, Calendar, AlertTriangle, CheckCircle2, ArrowUpRight, ArrowDownRight, X, GitCompare, Info } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/shared/ui/card";
+import { Badge } from "@/shared/ui/badge";
+import { Separator } from "@/shared/ui/separator";
+import { Skeleton } from "@/shared/ui/skeleton";
+import { Button } from "@/shared/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Trophy,
+  TrendingUp,
+  Home,
+  DollarSign,
+  PiggyBank,
+  Calendar,
+  AlertTriangle,
+  CheckCircle2,
+  ArrowUpRight,
+  ArrowDownRight,
+  X,
+  GitCompare,
+  Info,
+} from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { ComparisonNetWorthChart } from "@/components/comparison-net-worth-chart";
-import { ComparisonLineChart } from "@/components/comparison-line-chart";
+import { ComparisonNetWorthChart } from "@/widgets/charts/comparison-net-worth-chart";
+import { ComparisonLineChart } from "@/widgets/charts/comparison-line-chart";
+import { usePageTitle } from "@/shared/hooks/use-page-title";
+import { PageHeader } from "@/shared/ui/page-header";
 
 // Chart colors for scenarios
 const SCENARIO_COLORS = [
@@ -33,13 +43,10 @@ export default function ComparisonPage() {
 
   // Fetch scenarios with calculated projections
   const { data: scenariosWithMetrics, isLoading } = useQuery<any[]>({
-    queryKey: ['/api/scenarios/with-projections']
+    queryKey: ["/api/scenarios/with-projections"],
   });
 
-  // Set page title
-  useEffect(() => {
-    document.title = "Scenario Comparison | Mortgage Strategy";
-  }, []);
+  usePageTitle("Scenario Comparison | Mortgage Strategy");
 
   // Read URL params on mount and select scenarios
   useEffect(() => {
@@ -61,6 +68,22 @@ export default function ComparisonPage() {
       setSelectedScenarios(defaultIds);
     }
   }, [location, scenariosWithMetrics]);
+
+  const horizonSelector = (
+    <div className="space-y-1">
+      <label className="text-sm text-muted-foreground">Time Horizon</label>
+      <Select value={timeHorizon} onValueChange={setTimeHorizon}>
+        <SelectTrigger className="w-32" data-testid="select-horizon">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="10">10 Years</SelectItem>
+          <SelectItem value="20">20 Years</SelectItem>
+          <SelectItem value="30">30 Years</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
 
   const toggleScenario = (scenarioId: string) => {
     if (selectedScenarios.includes(scenarioId)) {
@@ -162,12 +185,10 @@ export default function ComparisonPage() {
   if (selectedScenarios.length === 0) {
     return (
       <div className="space-y-6">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex-1">
-            <h1 className="text-3xl font-semibold">Scenario Comparison</h1>
-            <p className="text-muted-foreground">Compare different financial strategies side-by-side</p>
-          </div>
-        </div>
+        <PageHeader
+          title="Scenario Comparison"
+          description="Compare different financial strategies side-by-side"
+        />
 
         <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 p-8">
           <div className="flex items-center justify-center w-20 h-20 rounded-full bg-primary/10" data-testid="icon-empty-comparison">
@@ -218,27 +239,11 @@ export default function ComparisonPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="flex-1">
-          <h1 className="text-3xl font-semibold">Scenario Comparison</h1>
-          <p className="text-muted-foreground">Compare different financial strategies side-by-side</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">Time Horizon</label>
-            <Select value={timeHorizon} onValueChange={setTimeHorizon}>
-              <SelectTrigger className="w-32" data-testid="select-horizon">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10 Years</SelectItem>
-                <SelectItem value="20">20 Years</SelectItem>
-                <SelectItem value="30">30 Years</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Scenario Comparison"
+        description="Compare different financial strategies side-by-side"
+        actions={<div className="flex items-center gap-3">{horizonSelector}</div>}
+      />
 
       {/* Scenario Selector */}
       <Card>

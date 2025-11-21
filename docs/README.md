@@ -92,12 +92,52 @@ The steps above already cover local development (run Docker for Postgres, push t
 - 🎯 Emergency fund planning
 - 💸 Cash flow management
 
+## Architecture Overview
+
+### Backend (monolithic, layered)
+- `server/src/api`: Express routers + middleware (validation, error handling, logging).
+- `server/src/application`: Orchestrates business rules via services, seeding, background jobs.
+- `server/src/domain`: Pure domain models, calculation helpers, and shared DTOs.
+- `server/src/infrastructure`: Drizzle repositories, db connection management, Vite/static hosting helpers.
+- Dependency flow is strictly one-directional: `api → application → domain/infrastructure`.
+
+### Frontend (feature-first)
+- `client/src/app`: App shell, global providers, router, and layout scaffolding.
+- `client/src/features`: Each slice (dashboard, mortgage-tracking, cash-flow, etc) owns UI + hooks + API helpers.
+- `client/src/widgets`: Larger reusable compositions (navigation, charts).
+- `client/src/shared`: Design system primitives (`ui/`), hooks (`use-page-title`, `use-toast`), and API utilities.
+- `client/src/entities`: Cross-feature types (`ScenarioWithMetrics`, etc).
+- Pages in `client/src/pages` are now thin wrappers that render a feature.
+
+```
+client/src/
+  app/
+  entities/
+  features/
+  pages/
+  shared/
+  widgets/
+server/src/
+  api/
+  application/
+  config/
+  domain/
+  infrastructure/
+```
+
 ## Available Scripts
 
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run db:push` - Sync database schema
 - `npm run db:studio` - Open database GUI
+- `npm run check` - Type-check the monorepo (frontend + backend)
+
+## Environment
+
+- `.env.local` is loaded after `.env` so you can override values locally.
+- Set `DATABASE_URL`, `DATABASE_CLIENT=pg`, and `PORT` for local dev (see `env.local.example`).
+- Backend and Drizzle CLI both read the same variables because `server/src/config/loadEnv.ts` is imported first.
 
 ## License
 
