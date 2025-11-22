@@ -250,9 +250,11 @@ export default function MortgageFeature() {
       queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.mortgages() });
       toast({
         title: "Mortgage created",
-        description: "Your mortgage has been created successfully",
+        description: "Now create your first mortgage term to start tracking",
       });
       setIsCreateMortgageOpen(false);
+      // Automatically open term renewal dialog to guide user
+      setTimeout(() => setIsTermRenewalOpen(true), 300);
     },
     onError: (error: Error) => {
       toast({
