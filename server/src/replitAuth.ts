@@ -46,10 +46,33 @@ function updateUserSession(
   user: any,
   tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers
 ) {
-  user.claims = tokens.claims();
+  const now = Math.floor(Date.now() / 1000);
+  const previousExpiresAt = user.expires_at;
+  
+  // Update access token
   user.access_token = tokens.access_token;
-  user.refresh_token = tokens.refresh_token;
-  user.expires_at = user.claims?.exp;
+  
+  // Only update refresh token if a new one is provided
+  if (tokens.refresh_token) {
+    user.refresh_token = tokens.refresh_token;
+  }
+  
+  // Try to get claims from ID token (may not be present in refresh responses)
+  try {
+    const claims = tokens.claims();
+    user.claims = claims;
+    user.expires_at = claims?.exp;
+  } catch {
+    // Refresh response may not include ID token, keep existing claims
+    // Use expires_in if available, otherwise use conservative short-lived default
+    if (tokens.expires_in !== undefined) {
+      user.expires_at = now + tokens.expires_in;
+    } else {
+      // Conservative default: 5 minutes (300 seconds) to avoid masking short-lived tokens
+      // This ensures we refresh more frequently rather than assuming long validity
+      user.expires_at = now + 300;
+    }
+  }
 }
 
 async function upsertUser(
@@ -76,10 +99,25 @@ export async function setupAuth(app: Express) {
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
-    const user = {};
-    updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
-    verified(null, user);
+    try {
+      const claims = tokens.claims();
+      
+      // Create user object with stable ID
+      const user: any = {
+        id: claims.sub,
+      };
+      
+      // Use centralized helper to populate session data
+      updateUserSession(user, tokens);
+      
+      // Persist user to database
+      await upsertUser(claims);
+      
+      verified(null, user);
+    } catch (error) {
+      console.error("Login verification failed:", error);
+      verified(error as Error, undefined);
+    }
   };
 
   // Keep track of registered strategies
@@ -148,17 +186,31 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
   const refreshToken = user.refresh_token;
   if (!refreshToken) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
   try {
     const config = await getOidcConfig();
     const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
+    
+    // Update user session with refreshed tokens using centralized helper
     updateUserSession(user, tokenResponse);
+    
+    // Persist the updated session using req.logIn with proper promise handling
+    await new Promise<void>((resolve, reject) => {
+      req.logIn(user, (err) => {
+        if (err) {
+          console.error("Session persistence failed during token refresh:", err);
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
+    
     return next();
   } catch (error) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
+    console.error("Token refresh failed:", error);
+    return res.status(401).json({ message: "Unauthorized" });
   }
 };

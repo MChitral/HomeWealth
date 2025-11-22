@@ -24,19 +24,17 @@ export async function seedDemoData(repositories: Repositories) {
   try {
     console.log("🌱 Seeding demo data...");
 
-    let user = await repositories.users.findById(DEMO_USER_ID);
+    let user = await repositories.users.getUser(DEMO_USER_ID);
     if (!user) {
       console.log("📝 Creating demo user...");
-      const [created] = await db
-        .insert(users)
-        .values({
-          id: DEMO_USER_ID,
-          username: "devuser",
-          password: "dev-password-not-used",
-        })
-        .returning();
-      user = created;
-      console.log(`✅ Created demo user: ${user.username} (${user.id})`);
+      user = await repositories.users.upsertUser({
+        id: DEMO_USER_ID,
+        email: "demo@example.com",
+        firstName: "Demo",
+        lastName: "User",
+        profileImageUrl: null,
+      });
+      console.log(`✅ Created demo user: ${user.firstName} ${user.lastName} (${user.id})`);
     }
 
     const mortgage = await repositories.mortgages.create({
