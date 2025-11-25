@@ -183,5 +183,45 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       res.status(400).json({ error: "Invalid payment data", details: error });
     }
   });
+
+  router.post("/mortgages/:mortgageId/payments/bulk", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+
+    try {
+      const { payments } = req.body as { payments: Array<Record<string, unknown>> };
+      
+      if (!Array.isArray(payments) || payments.length === 0) {
+        res.status(400).json({ error: "Payments array is required" });
+        return;
+      }
+
+      if (payments.length > 60) {
+        res.status(400).json({ error: "Maximum 60 payments can be created at once" });
+        return;
+      }
+
+      const createdPayments = [];
+      for (const paymentData of payments) {
+        const data = mortgagePaymentCreateSchema.parse({
+          ...paymentData,
+          mortgageId: req.params.mortgageId,
+        });
+        const { mortgageId, ...payload } = data;
+        const payment = await services.mortgagePayments.create(
+          req.params.mortgageId,
+          user.id,
+          payload,
+        );
+        if (payment) {
+          createdPayments.push(payment);
+        }
+      }
+
+      res.json({ created: createdPayments.length, payments: createdPayments });
+    } catch (error) {
+      res.status(400).json({ error: "Invalid payment data", details: error });
+    }
+  });
 }
 

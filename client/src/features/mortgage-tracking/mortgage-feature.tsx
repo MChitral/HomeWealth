@@ -42,6 +42,7 @@ import {
   type UpdateMortgagePayload,
   type UpdateTermPayload,
   type PrimeRateResponse,
+  type CreatePaymentPayload,
 } from "./api";
 
 // UI-friendly types (normalized from DB schema)
@@ -129,7 +130,14 @@ export default function MortgageFeature() {
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isTermRenewalOpen, setIsTermRenewalOpen] = useState(false);
+  const [isBackfillOpen, setIsBackfillOpen] = useState(false);
   const [filterYear, setFilterYear] = useState("all");
+  
+  // Backfill payment state
+  const [backfillStartDate, setBackfillStartDate] = useState("");
+  const [backfillNumberOfPayments, setBackfillNumberOfPayments] = useState("12");
+  const [backfillPaymentAmount, setBackfillPaymentAmount] = useState("");
+  const [backfillPrimeRate, setBackfillPrimeRate] = useState("");
   const [mortgageType, setMortgageType] = useState("variable-fixed");
   const [primeRate, setPrimeRate] = useState("6.45");
   const [renewalTermType, setRenewalTermType] = useState("variable-fixed");
@@ -407,6 +415,33 @@ export default function MortgageFeature() {
       toast({
         title: "Error",
         description: error.message || "Failed to renew term",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation for bulk payment backfill
+  const backfillPaymentsMutation = useMutation({
+    mutationFn: (payments: CreatePaymentPayload[]) => {
+      if (!mortgage?.id) throw new Error("No mortgage selected");
+      return mortgageApi.createBulkPayments(mortgage.id, payments);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.mortgagePayments(mortgage?.id ?? null) });
+      toast({
+        title: "Payments backfilled",
+        description: `Successfully created ${data.created} payments`,
+      });
+      setIsBackfillOpen(false);
+      setBackfillStartDate("");
+      setBackfillNumberOfPayments("12");
+      setBackfillPaymentAmount("");
+      setBackfillPrimeRate("");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to backfill payments",
         variant: "destructive",
       });
     },
@@ -1094,6 +1129,10 @@ export default function MortgageFeature() {
             <Button variant="outline" data-testid="button-edit-mortgage" onClick={() => setIsEditMortgageOpen(true)}>
               Edit Details
             </Button>
+            <Button variant="outline" data-testid="button-backfill-payments" onClick={() => setIsBackfillOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Backfill Payments
+            </Button>
             <Button data-testid="button-add-payment" onClick={() => setIsDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Log Payment
@@ -1365,6 +1404,165 @@ export default function MortgageFeature() {
             >
               {createPaymentMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Save Payment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isBackfillOpen} onOpenChange={setIsBackfillOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Backfill Payments</DialogTitle>
+            <DialogDescription>
+              Quickly log multiple past payments at once (up to 60 payments)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                This will create multiple payments starting from the start date, one per month. 
+                All payments will use the same amount and prime rate.
+              </AlertDescription>
+            </Alert>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="backfill-start">First Payment Date</Label>
+                <Input
+                  id="backfill-start"
+                  type="date"
+                  value={backfillStartDate}
+                  onChange={(e) => setBackfillStartDate(e.target.value)}
+                  data-testid="input-backfill-start"
+                />
+                <p className="text-xs text-muted-foreground">Date of your first payment</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="backfill-count">Number of Payments</Label>
+                <Select value={backfillNumberOfPayments} onValueChange={setBackfillNumberOfPayments}>
+                  <SelectTrigger id="backfill-count" data-testid="select-backfill-count">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="3">3 months</SelectItem>
+                    <SelectItem value="6">6 months</SelectItem>
+                    <SelectItem value="12">12 months (1 year)</SelectItem>
+                    <SelectItem value="24">24 months (2 years)</SelectItem>
+                    <SelectItem value="36">36 months (3 years)</SelectItem>
+                    <SelectItem value="48">48 months (4 years)</SelectItem>
+                    <SelectItem value="60">60 months (5 years)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="backfill-payment">Payment Amount ($)</Label>
+                <Input
+                  id="backfill-payment"
+                  type="number"
+                  step="0.01"
+                  placeholder={uiCurrentTerm.regularPaymentAmount?.toString() || "1500.00"}
+                  value={backfillPaymentAmount}
+                  onChange={(e) => setBackfillPaymentAmount(e.target.value)}
+                  data-testid="input-backfill-payment"
+                />
+                <p className="text-xs text-muted-foreground">Your regular monthly payment</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="backfill-prime">Prime Rate (%)</Label>
+                <Input
+                  id="backfill-prime"
+                  type="number"
+                  step="0.01"
+                  placeholder={primeRateData?.primeRate?.toString() || "5.45"}
+                  value={backfillPrimeRate}
+                  onChange={(e) => setBackfillPrimeRate(e.target.value)}
+                  data-testid="input-backfill-prime"
+                />
+                <p className="text-xs text-muted-foreground">Average prime rate during this period</p>
+              </div>
+            </div>
+
+            {backfillStartDate && backfillNumberOfPayments && (
+              <div className="p-3 bg-muted rounded-md">
+                <p className="text-sm font-medium mb-2">Summary</p>
+                <p className="text-sm text-muted-foreground">
+                  Creating <span className="font-medium">{backfillNumberOfPayments} payments</span> from{" "}
+                  <span className="font-medium">{backfillStartDate}</span> to{" "}
+                  <span className="font-medium">
+                    {(() => {
+                      const start = new Date(backfillStartDate);
+                      start.setMonth(start.getMonth() + parseInt(backfillNumberOfPayments) - 1);
+                      return start.toISOString().split('T')[0];
+                    })()}
+                  </span>
+                </p>
+                {backfillPaymentAmount && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Total: <span className="font-medium font-mono">
+                      ${(parseFloat(backfillPaymentAmount) * parseInt(backfillNumberOfPayments)).toLocaleString('en-CA', { minimumFractionDigits: 2 })}
+                    </span>
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsBackfillOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                const numPayments = parseInt(backfillNumberOfPayments);
+                const paymentAmount = parseFloat(backfillPaymentAmount) || uiCurrentTerm.regularPaymentAmount || 1500;
+                const primeRateValue = parseFloat(backfillPrimeRate) || primeRateData?.primeRate || 5.45;
+                const currentTerm = terms?.[terms.length - 1];
+                
+                if (!currentTerm || !backfillStartDate) return;
+
+                const payments: CreatePaymentPayload[] = [];
+                let runningBalance = Number(mortgage?.currentBalance || 300000);
+
+                for (let i = 0; i < numPayments; i++) {
+                  const paymentDate = new Date(backfillStartDate);
+                  paymentDate.setMonth(paymentDate.getMonth() + i);
+                  
+                  const effectiveRateValue = uiCurrentTerm.termType === "fixed" 
+                    ? uiCurrentTerm.fixedRate || 4.5 
+                    : primeRateValue + uiCurrentTerm.lockedSpread;
+                  
+                  const monthlyRate = effectiveRateValue / 100 / 12;
+                  const interest = Math.round(runningBalance * monthlyRate * 100) / 100;
+                  const principal = Math.round((paymentAmount - interest) * 100) / 100;
+                  runningBalance = Math.round((runningBalance - principal) * 100) / 100;
+
+                  payments.push({
+                    termId: currentTerm.id,
+                    paymentDate: paymentDate.toISOString().split('T')[0],
+                    paymentPeriodLabel: `Payment ${i + 1}`,
+                    regularPaymentAmount: paymentAmount.toString(),
+                    prepaymentAmount: "0",
+                    paymentAmount: paymentAmount.toString(),
+                    principalPaid: principal.toString(),
+                    interestPaid: interest.toString(),
+                    remainingBalance: runningBalance.toString(),
+                    primeRate: primeRateValue.toString(),
+                    effectiveRate: effectiveRateValue.toString(),
+                    triggerRateHit: 0,
+                    remainingAmortizationMonths: Math.round((mortgage?.amortizationYears || 25) * 12 - i),
+                  });
+                }
+
+                backfillPaymentsMutation.mutate(payments);
+              }}
+              disabled={!backfillStartDate || !backfillPaymentAmount || backfillPaymentsMutation.isPending}
+              data-testid="button-save-backfill"
+            >
+              {backfillPaymentsMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Create {backfillNumberOfPayments} Payments
             </Button>
           </DialogFooter>
         </DialogContent>

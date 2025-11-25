@@ -60,6 +60,11 @@ export const mortgageQueryKeys = {
   primeRate: () => ["/api/prime-rate"] as const,
 };
 
+export type BulkCreatePaymentsResponse = {
+  created: number;
+  payments: MortgagePayment[];
+};
+
 export const mortgageApi = {
   fetchMortgages: () => apiRequest<Mortgage[]>("GET", "/api/mortgages"),
   fetchMortgageTerms: (mortgageId: string) =>
@@ -76,5 +81,7 @@ export const mortgageApi = {
     apiRequest<MortgageTerm>("PATCH", `/api/mortgage-terms/${termId}`, payload),
   createPayment: (mortgageId: string, payload: CreatePaymentPayload) =>
     apiRequest<MortgagePayment>("POST", `/api/mortgages/${mortgageId}/payments`, payload),
+  createBulkPayments: (mortgageId: string, payments: CreatePaymentPayload[]) =>
+    apiRequest<BulkCreatePaymentsResponse>("POST", `/api/mortgages/${mortgageId}/payments/bulk`, { payments }),
 };
 
