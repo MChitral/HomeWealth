@@ -43,5 +43,10 @@ export class MortgagePaymentsRepository {
   async deleteByTermId(termId: string): Promise<void> {
     await this.database.delete(mortgagePayments).where(eq(mortgagePayments.termId, termId));
   }
+
+  async delete(id: string): Promise<boolean> {
+    const result = await this.database.delete(mortgagePayments).where(eq(mortgagePayments.id, id)).returning();
+    return result.length > 0;
+  }
 }
 

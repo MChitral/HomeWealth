@@ -223,5 +223,17 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       res.status(400).json({ error: "Invalid payment data", details: error });
     }
   });
+
+  router.delete("/mortgage-payments/:paymentId", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+
+    const deleted = await services.mortgagePayments.delete(req.params.paymentId, user.id);
+    if (!deleted) {
+      res.status(404).json({ error: "Payment not found or not authorized" });
+      return;
+    }
+    res.json({ success: true });
+  });
 }
 

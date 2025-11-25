@@ -97,5 +97,7 @@ export const mortgageApi = {
     apiRequest<MortgagePayment>("POST", `/api/mortgages/${mortgageId}/payments`, payload),
   createBulkPayments: (mortgageId: string, payments: CreatePaymentPayload[]) =>
     apiRequest<BulkCreatePaymentsResponse>("POST", `/api/mortgages/${mortgageId}/payments/bulk`, { payments }),
+  deletePayment: (paymentId: string) =>
+    apiRequest<{ success: boolean }>("DELETE", `/api/mortgage-payments/${paymentId}`),
 };
 

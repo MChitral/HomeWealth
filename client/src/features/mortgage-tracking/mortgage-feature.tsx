@@ -21,7 +21,7 @@ import {
 } from "@/shared/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { Badge } from "@/shared/ui/badge";
-import { Plus, Download, AlertTriangle, RefreshCw, Info, Loader2 } from "lucide-react";
+import { Plus, Download, AlertTriangle, RefreshCw, Info, Loader2, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Separator } from "@/shared/ui/separator";
@@ -444,6 +444,40 @@ export default function MortgageFeature() {
       });
     },
   });
+
+  // Mutation for deleting a payment
+  const deletePaymentMutation = useMutation({
+    mutationFn: (paymentId: string) => {
+      return mortgageApi.deletePayment(paymentId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.mortgagePayments(mortgage?.id ?? null) });
+      toast({
+        title: "Payment deleted",
+        description: "The payment has been removed from your records",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete payment",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Helper function to format amortization as "X yr Y mo"
+  const formatAmortization = (years: number): string => {
+    const wholeYears = Math.floor(years);
+    const months = Math.round((years - wholeYears) * 12);
+    if (months === 0) {
+      return `${wholeYears} yr`;
+    }
+    if (wholeYears === 0) {
+      return `${months} mo`;
+    }
+    return `${wholeYears} yr ${months} mo`;
+  };
 
   // Mutation for editing mortgage
   const editMortgageMutation = useMutation({
@@ -2156,7 +2190,7 @@ export default function MortgageFeature() {
               ${summaryStats.currentBalance.toLocaleString()}
             </p>
             <p className="text-sm text-muted-foreground mt-1">
-              {summaryStats.amortizationYears} years amort.
+              {formatAmortization(summaryStats.amortizationYears)} amort.
             </p>
           </CardContent>
         </Card>
@@ -2203,6 +2237,7 @@ export default function MortgageFeature() {
                   <TableHead className="text-right">Interest</TableHead>
                   <TableHead className="text-right">Balance</TableHead>
                   <TableHead className="text-right">Amort.</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -2254,7 +2289,19 @@ export default function MortgageFeature() {
                         ${payment.remainingBalance.toLocaleString()}
                       </TableCell>
                       <TableCell className="text-right font-mono text-sm">
-                        {payment.amortizationYears} yr
+                        {formatAmortization(payment.amortizationYears)}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                          onClick={() => deletePaymentMutation.mutate(payment.id)}
+                          disabled={deletePaymentMutation.isPending}
+                          data-testid={`button-delete-payment-${payment.id}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))

@@ -59,5 +59,17 @@ export class MortgagePaymentService {
       mortgageId,
     });
   }
+
+  async delete(paymentId: string, userId: string): Promise<boolean> {
+    const payment = await this.mortgagePayments.findById(paymentId);
+    if (!payment) {
+      return false;
+    }
+    const authorized = await this.authorizeMortgage(payment.mortgageId, userId);
+    if (!authorized) {
+      return false;
+    }
+    return this.mortgagePayments.delete(paymentId);
+  }
 }
 
