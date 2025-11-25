@@ -440,8 +440,9 @@ export default function MortgageFeature() {
     mutationFn: ({ termId, updates }: { termId: string; updates: UpdateTermPayload }) => {
       return mortgageApi.updateTerm(termId, updates);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.mortgageTerms(mortgage?.id ?? null) });
+    onSuccess: async () => {
+      // Refetch terms to ensure UI is updated with new values
+      await queryClient.refetchQueries({ queryKey: mortgageQueryKeys.mortgageTerms(mortgage?.id ?? null) });
       toast({
         title: "Term updated",
         description: "Your mortgage term has been updated successfully",
@@ -475,18 +476,27 @@ export default function MortgageFeature() {
       setEditTermEndDate(currentTerm.endDate || "");
       setEditTermPaymentFrequency(currentTerm.paymentFrequency || "");
       setEditTermPaymentAmount(currentTerm.regularPaymentAmount || "");
-      setEditTermFixedRate(currentTerm.fixedRate || "");
-      setEditTermSpread(currentTerm.lockedSpread || "");
+      
+      // Only set rate fields based on term type
+      if (currentTerm.termType === "fixed") {
+        setEditTermFixedRate(currentTerm.fixedRate || "");
+        setEditTermSpread("");
+        setEditTermPrimeRate("");
+      } else {
+        setEditTermFixedRate("");
+        setEditTermSpread(currentTerm.lockedSpread || "");
+        // Set prime rate from fetched data for variable terms
+        if (primeRateData?.primeRate) {
+          setEditTermPrimeRate(primeRateData.primeRate.toString());
+        }
+      }
+      
       // Calculate term years from dates
       if (currentTerm.startDate && currentTerm.endDate) {
         const start = new Date(currentTerm.startDate);
         const end = new Date(currentTerm.endDate);
         const years = Math.round((end.getTime() - start.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
         setEditTermYears(years.toString());
-      }
-      // Set prime rate from fetched data
-      if (primeRateData?.primeRate) {
-        setEditTermPrimeRate(primeRateData.primeRate.toString());
       }
     }
   }, [isEditTermOpen, terms, primeRateData]);
@@ -1547,13 +1557,15 @@ export default function MortgageFeature() {
                         const currentTerm = terms?.[terms.length - 1];
                         if (!currentTerm) return;
                         
+                        const termYearsNum = parseInt(editTermYears) || 5;
+                        
                         updateTermMutation.mutate({
                           termId: currentTerm.id,
                           updates: {
                             termType: editTermType,
                             startDate: editTermStartDate,
                             endDate: editTermEndDate,
-                            termYears: parseInt(editTermYears),
+                            termYears: termYearsNum,
                             paymentFrequency: editTermPaymentFrequency,
                             regularPaymentAmount: editTermPaymentAmount,
                             fixedRate: editTermType === "fixed" ? editTermFixedRate : undefined,
@@ -1561,7 +1573,7 @@ export default function MortgageFeature() {
                           },
                         });
                       }}
-                      disabled={updateTermMutation.isPending || !editTermPaymentAmount || 
+                      disabled={updateTermMutation.isPending || !editTermPaymentAmount || !editTermStartDate ||
                         (editTermType === "fixed" ? !editTermFixedRate : !editTermSpread)}
                       data-testid="button-save-edit-term"
                     >
