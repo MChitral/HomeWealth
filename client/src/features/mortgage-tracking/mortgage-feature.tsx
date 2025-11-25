@@ -537,12 +537,186 @@ export default function MortgageFeature() {
     );
   }
   
-  // Show message if no term exists
+  // Show message if no term exists - with create term dialog
   if (!uiCurrentTerm) {
+    const defaultStartDate = mortgage?.startDate || new Date().toISOString().split('T')[0];
+    const termYears = Number(renewalTermYears) || 5;
+    const getEndDate = (start: string, years: number) => {
+      const d = new Date(start);
+      d.setFullYear(d.getFullYear() + years);
+      return d.toISOString().split('T')[0];
+    };
+
     return (
-      <div className="flex flex-col items-center justify-center h-screen gap-4">
-        <h2 className="text-2xl font-semibold">No Term Data</h2>
-        <p className="text-muted-foreground">Create a mortgage term to start tracking payments.</p>
+      <div className="flex flex-col items-center justify-center h-screen gap-6">
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-semibold">No Term Data</h2>
+          <p className="text-muted-foreground max-w-md">
+            Your mortgage has been created! Now create your first mortgage term to start tracking payments.
+          </p>
+        </div>
+        
+        <Dialog open={isTermRenewalOpen} onOpenChange={setIsTermRenewalOpen}>
+          <DialogTrigger asChild>
+            <Button size="lg" data-testid="button-create-first-term">
+              <Plus className="h-5 w-5 mr-2" />
+              Create First Term
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Create Mortgage Term</DialogTitle>
+              <DialogDescription>
+                Set up your initial mortgage term with interest rate and payment details
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="first-term-start">Term Start Date</Label>
+                <Input 
+                  id="first-term-start" 
+                  type="date" 
+                  value={renewalStartDate || defaultStartDate}
+                  onChange={(e) => setRenewalStartDate(e.target.value)}
+                  data-testid="input-first-term-start-date"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="first-term-type">Mortgage Type</Label>
+                  <InfoTooltip content="Fixed Rate: Interest rate stays the same for the entire term. Variable-Changing Payment: Your payment adjusts when Prime rate changes. Variable-Fixed Payment: Payment stays constant, but if Prime rises too much, you may hit the 'trigger rate'." />
+                </div>
+                <Select value={renewalTermType} onValueChange={setRenewalTermType}>
+                  <SelectTrigger id="first-term-type" data-testid="select-first-term-type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fixed">Fixed Rate</SelectItem>
+                    <SelectItem value="variable-changing">Variable Rate (Changing Payment)</SelectItem>
+                    <SelectItem value="variable-fixed">Variable Rate (Fixed Payment)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="first-payment-frequency">Payment Frequency</Label>
+                <Select value={renewalPaymentFrequency} onValueChange={setRenewalPaymentFrequency}>
+                  <SelectTrigger id="first-payment-frequency" data-testid="select-first-payment-frequency">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="monthly">Monthly (12 payments/year)</SelectItem>
+                    <SelectItem value="biweekly">Bi-weekly (26 payments/year)</SelectItem>
+                    <SelectItem value="accelerated-biweekly">Accelerated Bi-weekly</SelectItem>
+                    <SelectItem value="semi-monthly">Semi-monthly (24 payments/year)</SelectItem>
+                    <SelectItem value="weekly">Weekly (52 payments/year)</SelectItem>
+                    <SelectItem value="accelerated-weekly">Accelerated Weekly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="first-term-length">Term Length</Label>
+                <Select value={renewalTermYears} onValueChange={setRenewalTermYears}>
+                  <SelectTrigger id="first-term-length" data-testid="select-first-term-length">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 Year</SelectItem>
+                    <SelectItem value="2">2 Years</SelectItem>
+                    <SelectItem value="3">3 Years</SelectItem>
+                    <SelectItem value="5">5 Years</SelectItem>
+                    <SelectItem value="7">7 Years</SelectItem>
+                    <SelectItem value="10">10 Years</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {renewalTermType === "fixed" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="first-fixed-rate">Fixed Interest Rate (%)</Label>
+                  <Input
+                    id="first-fixed-rate"
+                    type="number"
+                    step="0.01"
+                    placeholder="e.g., 4.99"
+                    value={renewalRate}
+                    onChange={(e) => setRenewalRate(e.target.value)}
+                    data-testid="input-first-fixed-rate"
+                  />
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="first-prime-rate">Current Prime Rate (%)</Label>
+                    <Input
+                      id="first-prime-rate"
+                      type="number"
+                      step="0.01"
+                      placeholder="e.g., 6.45"
+                      value={renewalPrime || primeRate}
+                      onChange={(e) => setRenewalPrime(e.target.value)}
+                      data-testid="input-first-prime-rate"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="first-spread">Your Spread (+/- from Prime)</Label>
+                    <Input
+                      id="first-spread"
+                      type="number"
+                      step="0.01"
+                      placeholder="e.g., -0.80 (Prime minus 0.80%)"
+                      value={renewalSpread}
+                      onChange={(e) => setRenewalSpread(e.target.value)}
+                      data-testid="input-first-spread"
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="first-payment-amount">Regular Payment Amount ($)</Label>
+                <Input
+                  id="first-payment-amount"
+                  type="number"
+                  step="0.01"
+                  placeholder="e.g., 2500.00"
+                  value={renewalPaymentAmount}
+                  onChange={(e) => setRenewalPaymentAmount(e.target.value)}
+                  data-testid="input-first-payment-amount"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsTermRenewalOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  const startDate = renewalStartDate || defaultStartDate;
+                  const endDate = getEndDate(startDate, termYears);
+                  
+                  createTermMutation.mutate({
+                    termType: renewalTermType,
+                    startDate,
+                    endDate,
+                    termYears,
+                    lockedSpread: renewalTermType !== "fixed" ? renewalSpread : "0",
+                    fixedRate: renewalTermType === "fixed" ? renewalRate : undefined,
+                    paymentFrequency: renewalPaymentFrequency,
+                    regularPaymentAmount: renewalPaymentAmount,
+                  });
+                }}
+                disabled={createTermMutation.isPending || !renewalPaymentAmount || (renewalTermType === "fixed" ? !renewalRate : !renewalSpread)}
+                data-testid="button-save-first-term"
+              >
+                {createTermMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Create Term
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
