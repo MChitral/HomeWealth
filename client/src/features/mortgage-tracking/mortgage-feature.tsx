@@ -25,7 +25,7 @@ import { Plus, Download, AlertTriangle, RefreshCw, Info, Loader2 } from "lucide-
 import { useState, useEffect } from "react";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Separator } from "@/shared/ui/separator";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/shared/api/query-client";
 import { useToast } from "@/shared/hooks/use-toast";
 import { usePageTitle } from "@/shared/hooks/use-page-title";
@@ -40,6 +40,7 @@ import {
   type CreateMortgagePayload,
   type CreateTermPayload,
   type UpdateMortgagePayload,
+  type PrimeRateResponse,
 } from "./api";
 
 // UI-friendly types (normalized from DB schema)
@@ -197,6 +198,29 @@ export default function MortgageFeature() {
     && !propertyPriceError && !downPaymentError && !loanAmountError;
 
   const { mortgage, terms, payments, isLoading } = useMortgageData();
+
+  // Fetch Bank of Canada prime rate
+  const { data: primeRateData, isLoading: isPrimeRateLoading, refetch: refetchPrimeRate } = useQuery<PrimeRateResponse>({
+    queryKey: mortgageQueryKeys.primeRate(),
+    queryFn: () => mortgageApi.fetchPrimeRate(),
+    staleTime: 1000 * 60 * 30, // Cache for 30 minutes
+  });
+
+  // Auto-fill prime rate when data is fetched
+  useEffect(() => {
+    if (primeRateData?.primeRate) {
+      // Update create wizard prime rate
+      if (isCreateMortgageOpen && createTermType !== "fixed") {
+        setCreatePrimeRate(primeRateData.primeRate.toString());
+      }
+      // Update renewal dialog prime rate
+      if (isTermRenewalOpen && renewalTermType !== "fixed" && !renewalPrime) {
+        setRenewalPrime(primeRateData.primeRate.toString());
+      }
+      // Update global prime rate state
+      setPrimeRate(primeRateData.primeRate.toString());
+    }
+  }, [primeRateData, isCreateMortgageOpen, isTermRenewalOpen, createTermType, renewalTermType]);
 
   // Normalize data to UI-friendly format
   const uiCurrentTerm = useMemo(() => normalizeTerm(terms ? terms[terms.length - 1] : undefined), [terms]);
@@ -653,7 +677,25 @@ export default function MortgageFeature() {
                 ) : (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="prime-rate">Current Prime Rate (%)</Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="prime-rate">Current Prime Rate (%)</Label>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-xs"
+                          onClick={() => refetchPrimeRate()}
+                          disabled={isPrimeRateLoading}
+                          data-testid="button-refresh-prime"
+                        >
+                          {isPrimeRateLoading ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <RefreshCw className="h-3 w-3" />
+                          )}
+                          <span className="ml-1">Refresh</span>
+                        </Button>
+                      </div>
                       <Input
                         id="prime-rate"
                         type="number"
@@ -663,6 +705,11 @@ export default function MortgageFeature() {
                         onChange={(e) => setCreatePrimeRate(e.target.value)}
                         data-testid="input-prime-rate"
                       />
+                      {primeRateData && (
+                        <p className="text-xs text-muted-foreground">
+                          Bank of Canada rate as of {new Date(primeRateData.effectiveDate).toLocaleDateString()}
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="spread">Your Spread (+/- from Prime)</Label>

@@ -7,6 +7,7 @@ import { registerMortgageRoutes } from "./mortgage.routes";
 import { registerScenarioRoutes } from "./scenario.routes";
 import { registerPrepaymentEventRoutes } from "./prepayment-event.routes";
 import { registerSeedRoutes } from "./seed.routes";
+import { registerPrimeRateRoutes } from "./prime-rate.routes";
 
 export function buildApiRouter(
   services: ApplicationServices,
@@ -20,6 +21,7 @@ export function buildApiRouter(
   registerMortgageRoutes(router, services);
   registerScenarioRoutes(router, services);
   registerPrepaymentEventRoutes(router, services);
+  registerPrimeRateRoutes(router);
 
   return router;
 }

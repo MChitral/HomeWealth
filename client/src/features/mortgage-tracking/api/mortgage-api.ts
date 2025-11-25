@@ -44,10 +44,18 @@ export type CreatePaymentPayload = {
   remainingAmortizationMonths: number;
 };
 
+export type PrimeRateResponse = {
+  primeRate: number;
+  effectiveDate: string;
+  source: string;
+  lastUpdated: string;
+};
+
 export const mortgageQueryKeys = {
   mortgages: () => ["/api/mortgages"] as const,
   mortgageTerms: (mortgageId: string | null) => ["/api/mortgages", mortgageId, "terms"] as const,
   mortgagePayments: (mortgageId: string | null) => ["/api/mortgages", mortgageId, "payments"] as const,
+  primeRate: () => ["/api/prime-rate"] as const,
 };
 
 export const mortgageApi = {
@@ -56,6 +64,7 @@ export const mortgageApi = {
     apiRequest<MortgageTerm[]>("GET", `/api/mortgages/${mortgageId}/terms`),
   fetchMortgagePayments: (mortgageId: string) =>
     apiRequest<MortgagePayment[]>("GET", `/api/mortgages/${mortgageId}/payments`),
+  fetchPrimeRate: () => apiRequest<PrimeRateResponse>("GET", "/api/prime-rate"),
   createMortgage: (payload: CreateMortgagePayload) => apiRequest<Mortgage>("POST", "/api/mortgages", payload),
   updateMortgage: (mortgageId: string, payload: UpdateMortgagePayload) =>
     apiRequest<Mortgage>("PATCH", `/api/mortgages/${mortgageId}`, payload),
