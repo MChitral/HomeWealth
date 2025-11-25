@@ -252,9 +252,30 @@ export default function MortgageFeature() {
     },
   });
 
+  // Validate Step 2 inputs
+  const isStep2Valid = () => {
+    const paymentValid = createPaymentAmount && parseFloat(createPaymentAmount) > 0;
+    if (createTermType === 'fixed') {
+      return paymentValid && createFixedRate && parseFloat(createFixedRate) > 0;
+    }
+    return paymentValid && createSpread !== "" && createPrimeRate && parseFloat(createPrimeRate) > 0;
+  };
+
   // Combined mutation for creating mortgage + initial term
   const createMortgageWithTerm = async () => {
+    // Validate Step 2 before submission
+    if (!isStep2Valid()) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required term details",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsCreatingMortgage(true);
+    let newMortgageId: string | null = null;
+    
     try {
       const originalAmount = loanAmount;
       const termYears = Number(createTermYears) || 5;
@@ -274,6 +295,7 @@ export default function MortgageFeature() {
         paymentFrequency: createFrequency,
         annualPrepaymentLimitPercent: 20,
       });
+      newMortgageId = newMortgage.id;
 
       // Step 2: Create initial term
       await mortgageApi.createTerm(newMortgage.id, {
@@ -308,11 +330,23 @@ export default function MortgageFeature() {
       setCreateSpread("-0.80");
       setCreatePaymentAmount("");
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create mortgage",
-        variant: "destructive",
-      });
+      // Handle partial failure: mortgage created but term failed
+      if (newMortgageId) {
+        queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.mortgages() });
+        toast({
+          title: "Term creation failed",
+          description: "Mortgage was created but term setup failed. Please create a term manually.",
+          variant: "destructive",
+        });
+        setIsCreateMortgageOpen(false);
+        setWizardStep(1);
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to create mortgage",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsCreatingMortgage(false);
     }
@@ -694,7 +728,7 @@ export default function MortgageFeature() {
                   </Button>
                   <Button
                     onClick={createMortgageWithTerm}
-                    disabled={isCreatingMortgage || !createPaymentAmount || (createTermType === "fixed" ? !createFixedRate : !createSpread)}
+                    disabled={isCreatingMortgage || !isStep2Valid()}
                     data-testid="button-create-mortgage-term"
                   >
                     {isCreatingMortgage && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
