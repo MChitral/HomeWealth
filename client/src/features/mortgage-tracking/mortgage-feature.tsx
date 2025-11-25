@@ -1581,9 +1581,24 @@ export default function MortgageFeature() {
                 const payments: CreatePaymentPayload[] = [];
                 let runningBalance = Number(mortgage?.currentBalance || 300000);
 
+                // Parse the start date to get year, month, day
+                const startParts = backfillStartDate.split('-');
+                const startYear = parseInt(startParts[0]);
+                const startMonth = parseInt(startParts[1]) - 1; // 0-indexed
+                const startDay = parseInt(startParts[2]);
+
                 for (let i = 0; i < numPayments; i++) {
-                  const paymentDate = new Date(backfillStartDate);
-                  paymentDate.setMonth(paymentDate.getMonth() + i);
+                  // Calculate target month and year
+                  const totalMonths = startMonth + i;
+                  const targetYear = startYear + Math.floor(totalMonths / 12);
+                  const targetMonth = totalMonths % 12;
+                  
+                  // Get the last day of the target month
+                  const lastDayOfMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+                  // Use the original day or the last day of month if it doesn't exist
+                  const targetDay = Math.min(startDay, lastDayOfMonth);
+                  
+                  const paymentDate = new Date(targetYear, targetMonth, targetDay);
                   const paymentDateStr = paymentDate.toISOString().split('T')[0];
                   
                   const effectiveRateValue = getRateForDate(paymentDateStr);
