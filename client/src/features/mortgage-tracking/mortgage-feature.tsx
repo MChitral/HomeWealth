@@ -206,14 +206,14 @@ export default function MortgageFeature() {
     staleTime: 1000 * 60 * 30, // Cache for 30 minutes
   });
 
-  // Auto-fill prime rate when data is fetched
+  // Auto-fill prime rate when data is fetched (only if field is empty to preserve user edits)
   useEffect(() => {
     if (primeRateData?.primeRate) {
-      // Update create wizard prime rate
-      if (isCreateMortgageOpen && createTermType !== "fixed") {
+      // Update create wizard prime rate only if empty
+      if (isCreateMortgageOpen && createTermType !== "fixed" && !createPrimeRate) {
         setCreatePrimeRate(primeRateData.primeRate.toString());
       }
-      // Update renewal dialog prime rate
+      // Update renewal dialog prime rate only if empty
       if (isTermRenewalOpen && renewalTermType !== "fixed" && !renewalPrime) {
         setRenewalPrime(primeRateData.primeRate.toString());
       }
