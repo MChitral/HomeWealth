@@ -1813,11 +1813,26 @@ export default function MortgageFeature() {
                 {uiCurrentTerm.paymentFrequency === "monthly" && "Monthly"}
                 {uiCurrentTerm.paymentFrequency === "biweekly" && "Bi-weekly"}
                 {uiCurrentTerm.paymentFrequency === "accelerated-biweekly" && "Accelerated Bi-weekly"}
+                {uiCurrentTerm.paymentFrequency === "semi-monthly" && "Semi-monthly"}
+                {uiCurrentTerm.paymentFrequency === "weekly" && "Weekly"}
+                {uiCurrentTerm.paymentFrequency === "accelerated-weekly" && "Accelerated Weekly"}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 {uiCurrentTerm.paymentFrequency === "monthly" && "12 payments/year"}
                 {uiCurrentTerm.paymentFrequency === "biweekly" && "26 payments/year"}
                 {uiCurrentTerm.paymentFrequency === "accelerated-biweekly" && "26 payments/year + extra"}
+                {uiCurrentTerm.paymentFrequency === "semi-monthly" && "24 payments/year"}
+                {uiCurrentTerm.paymentFrequency === "weekly" && "52 payments/year"}
+                {uiCurrentTerm.paymentFrequency === "accelerated-weekly" && "52 payments/year + extra"}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Regular Payment</p>
+              <p className="text-base font-medium font-mono" data-testid="text-regular-payment">
+                ${uiCurrentTerm.regularPaymentAmount ? Number(uiCurrentTerm.regularPaymentAmount).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Principal & Interest
               </p>
             </div>
             <div>
