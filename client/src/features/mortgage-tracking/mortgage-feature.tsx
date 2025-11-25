@@ -148,13 +148,22 @@ export default function MortgageFeature() {
   // Calculate total payment amount from regular + prepayment
   const totalPaymentAmount = (parseFloat(regularPaymentAmount) || 0) + (parseFloat(prepaymentAmount) || 0);
   
-  // Create mortgage form state
+  // Create mortgage form state (multi-step wizard)
   const [isCreateMortgageOpen, setIsCreateMortgageOpen] = useState(false);
+  const [wizardStep, setWizardStep] = useState(1);
   const [createPropertyPrice, setCreatePropertyPrice] = useState("");
   const [createDownPayment, setCreateDownPayment] = useState("");
   const [createStartDate, setCreateStartDate] = useState("");
   const [createAmortization, setCreateAmortization] = useState("25");
   const [createFrequency, setCreateFrequency] = useState("monthly");
+  // Step 2: Term details
+  const [createTermType, setCreateTermType] = useState("variable-fixed");
+  const [createTermYears, setCreateTermYears] = useState("5");
+  const [createFixedRate, setCreateFixedRate] = useState("");
+  const [createPrimeRate, setCreatePrimeRate] = useState("6.45");
+  const [createSpread, setCreateSpread] = useState("-0.80");
+  const [createPaymentAmount, setCreatePaymentAmount] = useState("");
+  const [isCreatingMortgage, setIsCreatingMortgage] = useState(false);
   
   // Edit mortgage form state
   const [isEditMortgageOpen, setIsEditMortgageOpen] = useState(false);
@@ -243,27 +252,71 @@ export default function MortgageFeature() {
     },
   });
 
-  // Mutation for creating a new mortgage
-  const createMortgageMutation = useMutation({
-    mutationFn: (mortgageData: CreateMortgagePayload) => mortgageApi.createMortgage(mortgageData),
-    onSuccess: () => {
+  // Combined mutation for creating mortgage + initial term
+  const createMortgageWithTerm = async () => {
+    setIsCreatingMortgage(true);
+    try {
+      const originalAmount = loanAmount;
+      const termYears = Number(createTermYears) || 5;
+      const termStartDate = createStartDate;
+      const termEndDate = new Date(termStartDate);
+      termEndDate.setFullYear(termEndDate.getFullYear() + termYears);
+
+      // Step 1: Create mortgage
+      const newMortgage = await mortgageApi.createMortgage({
+        propertyPrice: propertyPrice.toString(),
+        downPayment: downPayment.toString(),
+        originalAmount: originalAmount.toString(),
+        currentBalance: originalAmount.toString(),
+        startDate: createStartDate,
+        amortizationYears: parseInt(createAmortization),
+        amortizationMonths: 0,
+        paymentFrequency: createFrequency,
+        annualPrepaymentLimitPercent: 20,
+      });
+
+      // Step 2: Create initial term
+      await mortgageApi.createTerm(newMortgage.id, {
+        termType: createTermType,
+        startDate: termStartDate,
+        endDate: termEndDate.toISOString().split('T')[0],
+        termYears,
+        fixedRate: createTermType === 'fixed' ? createFixedRate : undefined,
+        lockedSpread: createTermType !== 'fixed' ? createSpread : "0",
+        paymentFrequency: createFrequency,
+        regularPaymentAmount: createPaymentAmount,
+      });
+
+      // Invalidate queries and show success
       queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.mortgages() });
       toast({
         title: "Mortgage created",
-        description: "Now create your first mortgage term to start tracking",
+        description: "Your mortgage and initial term have been set up successfully",
       });
+      
+      // Reset form and close dialog
       setIsCreateMortgageOpen(false);
-      // Automatically open term renewal dialog to guide user
-      setTimeout(() => setIsTermRenewalOpen(true), 300);
-    },
-    onError: (error: Error) => {
+      setWizardStep(1);
+      setCreatePropertyPrice("");
+      setCreateDownPayment("");
+      setCreateStartDate("");
+      setCreateAmortization("25");
+      setCreateFrequency("monthly");
+      setCreateTermType("variable-fixed");
+      setCreateTermYears("5");
+      setCreateFixedRate("");
+      setCreateSpread("-0.80");
+      setCreatePaymentAmount("");
+    } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Failed to create mortgage",
         variant: "destructive",
       });
-    },
-  });
+    } finally {
+      setIsCreatingMortgage(false);
+    }
+  };
 
   // Mutation for creating a new term (renewal)
   const createTermMutation = useMutation({
@@ -400,136 +453,255 @@ export default function MortgageFeature() {
             </div>
           </CardContent>
         </Card>
-        <Dialog open={isCreateMortgageOpen} onOpenChange={setIsCreateMortgageOpen}>
+        <Dialog open={isCreateMortgageOpen} onOpenChange={(open) => {
+          setIsCreateMortgageOpen(open);
+          if (!open) setWizardStep(1);
+        }}>
           <DialogTrigger asChild>
             <Button size="lg" data-testid="button-create-mortgage">
               <Plus className="h-5 w-5 mr-2" />
               Create Your First Mortgage
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Create Mortgage</DialogTitle>
+              <DialogTitle>
+                {wizardStep === 1 ? "Step 1: Mortgage Details" : "Step 2: Term Details"}
+              </DialogTitle>
               <DialogDescription>
-                Enter your mortgage details to start tracking payments
+                {wizardStep === 1 
+                  ? "Enter your property and loan information" 
+                  : "Set up your initial mortgage term with interest rate"}
               </DialogDescription>
+              <div className="flex gap-2 pt-2">
+                <div className={`h-1.5 flex-1 rounded-full ${wizardStep >= 1 ? 'bg-primary' : 'bg-muted'}`} />
+                <div className={`h-1.5 flex-1 rounded-full ${wizardStep >= 2 ? 'bg-primary' : 'bg-muted'}`} />
+              </div>
             </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="property-price">Property Price ($)</Label>
-                  <Input
-                    id="property-price"
-                    type="number"
-                    placeholder="500000"
-                    value={createPropertyPrice}
-                    onChange={(e) => setCreatePropertyPrice(e.target.value)}
-                    className={propertyPriceError ? "border-destructive" : ""}
-                    data-testid="input-property-price"
-                  />
-                  {propertyPriceError && (
-                    <p className="text-sm text-destructive" data-testid="error-property-price">{propertyPriceError}</p>
-                  )}
+            
+            {wizardStep === 1 ? (
+              <div className="space-y-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="property-price">Property Price ($)</Label>
+                    <Input
+                      id="property-price"
+                      type="number"
+                      placeholder="500000"
+                      value={createPropertyPrice}
+                      onChange={(e) => setCreatePropertyPrice(e.target.value)}
+                      className={propertyPriceError ? "border-destructive" : ""}
+                      data-testid="input-property-price"
+                    />
+                    {propertyPriceError && (
+                      <p className="text-sm text-destructive">{propertyPriceError}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="down-payment">Down Payment ($)</Label>
+                    <Input
+                      id="down-payment"
+                      type="number"
+                      placeholder="100000"
+                      value={createDownPayment}
+                      onChange={(e) => setCreateDownPayment(e.target.value)}
+                      className={downPaymentError || loanAmountError ? "border-destructive" : ""}
+                      data-testid="input-down-payment"
+                    />
+                    {downPaymentError && (
+                      <p className="text-sm text-destructive">{downPaymentError}</p>
+                    )}
+                    {loanAmountError && !downPaymentError && (
+                      <p className="text-sm text-destructive">{loanAmountError}</p>
+                    )}
+                    {!downPaymentError && !loanAmountError && propertyPrice > 0 && downPayment > 0 && (
+                      <p className="text-sm text-muted-foreground font-medium">
+                        Loan amount: ${loanAmount.toLocaleString()}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="down-payment">Down Payment ($)</Label>
+                  <Label htmlFor="start-date">Mortgage Start Date</Label>
                   <Input
-                    id="down-payment"
-                    type="number"
-                    placeholder="100000"
-                    value={createDownPayment}
-                    onChange={(e) => setCreateDownPayment(e.target.value)}
-                    className={downPaymentError || loanAmountError ? "border-destructive" : ""}
-                    data-testid="input-down-payment"
+                    id="start-date"
+                    type="date"
+                    value={createStartDate}
+                    onChange={(e) => setCreateStartDate(e.target.value)}
+                    data-testid="input-start-date"
                   />
-                  {downPaymentError && (
-                    <p className="text-sm text-destructive" data-testid="error-down-payment">{downPaymentError}</p>
-                  )}
-                  {loanAmountError && !downPaymentError && (
-                    <p className="text-sm text-destructive" data-testid="error-loan-amount">{loanAmountError}</p>
-                  )}
-                  {!downPaymentError && !loanAmountError && propertyPrice > 0 && downPayment > 0 && (
-                    <p className="text-sm text-muted-foreground font-medium" data-testid="text-loan-amount">
-                      ✓ Loan amount: ${loanAmount.toLocaleString()}
-                    </p>
-                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="amortization-years">Amortization (years)</Label>
+                    <Select value={createAmortization} onValueChange={setCreateAmortization}>
+                      <SelectTrigger data-testid="select-amortization">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="15">15 Years</SelectItem>
+                        <SelectItem value="20">20 Years</SelectItem>
+                        <SelectItem value="25">25 Years</SelectItem>
+                        <SelectItem value="30">30 Years</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="payment-frequency">Payment Frequency</Label>
+                    <Select value={createFrequency} onValueChange={setCreateFrequency}>
+                      <SelectTrigger data-testid="select-frequency">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                        <SelectItem value="biweekly">Bi-weekly</SelectItem>
+                        <SelectItem value="accelerated-biweekly">Accelerated Bi-weekly</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="start-date">Start Date</Label>
-                <Input
-                  id="start-date"
-                  type="date"
-                  value={createStartDate}
-                  onChange={(e) => setCreateStartDate(e.target.value)}
-                  data-testid="input-start-date"
-                />
+            ) : (
+              <div className="space-y-4 py-4">
+                <div className="p-3 bg-muted rounded-lg text-sm">
+                  <p><strong>Loan:</strong> ${loanAmount.toLocaleString()} over {createAmortization} years</p>
+                  <p><strong>Payments:</strong> {createFrequency.replace('-', ' ')}</p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label>Mortgage Type</Label>
+                      <InfoTooltip content="Fixed: Rate stays constant. Variable: Rate adjusts with Prime rate." />
+                    </div>
+                    <Select value={createTermType} onValueChange={setCreateTermType}>
+                      <SelectTrigger data-testid="select-term-type">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="fixed">Fixed Rate</SelectItem>
+                        <SelectItem value="variable-changing">Variable (Changing Payment)</SelectItem>
+                        <SelectItem value="variable-fixed">Variable (Fixed Payment)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Term Length</Label>
+                    <Select value={createTermYears} onValueChange={setCreateTermYears}>
+                      <SelectTrigger data-testid="select-term-years">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 Year</SelectItem>
+                        <SelectItem value="2">2 Years</SelectItem>
+                        <SelectItem value="3">3 Years</SelectItem>
+                        <SelectItem value="5">5 Years</SelectItem>
+                        <SelectItem value="7">7 Years</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {createTermType === "fixed" ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="fixed-rate">Fixed Interest Rate (%)</Label>
+                    <Input
+                      id="fixed-rate"
+                      type="number"
+                      step="0.01"
+                      placeholder="4.99"
+                      value={createFixedRate}
+                      onChange={(e) => setCreateFixedRate(e.target.value)}
+                      data-testid="input-fixed-rate"
+                    />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="prime-rate">Current Prime Rate (%)</Label>
+                      <Input
+                        id="prime-rate"
+                        type="number"
+                        step="0.01"
+                        placeholder="6.45"
+                        value={createPrimeRate}
+                        onChange={(e) => setCreatePrimeRate(e.target.value)}
+                        data-testid="input-prime-rate"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="spread">Your Spread (+/- from Prime)</Label>
+                      <Input
+                        id="spread"
+                        type="number"
+                        step="0.01"
+                        placeholder="-0.80"
+                        value={createSpread}
+                        onChange={(e) => setCreateSpread(e.target.value)}
+                        data-testid="input-spread"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Effective rate: {(parseFloat(createPrimeRate || "0") + parseFloat(createSpread || "0")).toFixed(2)}%
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="payment-amount">Regular Payment Amount ($)</Label>
+                  <Input
+                    id="payment-amount"
+                    type="number"
+                    step="0.01"
+                    placeholder="2500.00"
+                    value={createPaymentAmount}
+                    onChange={(e) => setCreatePaymentAmount(e.target.value)}
+                    data-testid="input-payment-amount"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="amortization-years">Amortization (years)</Label>
-                <Input
-                  id="amortization-years"
-                  type="number"
-                  placeholder="25"
-                  value={createAmortization}
-                  onChange={(e) => setCreateAmortization(e.target.value)}
-                  data-testid="input-amortization"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="payment-frequency">Payment Frequency</Label>
-                <select
-                  id="payment-frequency"
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors"
-                  value={createFrequency}
-                  onChange={(e) => setCreateFrequency(e.target.value)}
-                  data-testid="select-frequency"
-                >
-                  <option value="monthly">Monthly (12 payments/year)</option>
-                  <option value="biweekly">Bi-weekly (26 payments/year)</option>
-                  <option value="accelerated-biweekly">Accelerated Bi-weekly (pays off faster)</option>
-                  <option value="semi-monthly">Semi-monthly (24 payments/year)</option>
-                  <option value="weekly">Weekly (52 payments/year)</option>
-                  <option value="accelerated-weekly">Accelerated Weekly (pays off faster)</option>
-                </select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateMortgageOpen(false)}>
-                Cancel
-              </Button>
-              <Button
-                onClick={() => {
-                  // Prevent submission if validation fails
-                  if (!isFormValid) {
-                    toast({
-                      title: "Validation Error",
-                      description: propertyPriceError || downPaymentError || loanAmountError || "Please fill in all required fields",
-                      variant: "destructive",
-                    });
-                    return;
-                  }
-                  
-                  const originalAmount = loanAmount;
-                  
-                  createMortgageMutation.mutate({
-                    propertyPrice: propertyPrice.toString(),
-                    downPayment: downPayment.toString(),
-                    originalAmount: originalAmount.toString(),
-                    currentBalance: originalAmount.toString(),
-                    startDate: createStartDate,
-                    amortizationYears: parseInt(createAmortization),
-                    amortizationMonths: 0,
-                    paymentFrequency: createFrequency,
-                    annualPrepaymentLimitPercent: 20,
-                  });
-                }}
-                disabled={!isFormValid || createMortgageMutation.isPending}
-                data-testid="button-save-mortgage"
-              >
-                {createMortgageMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Create Mortgage
-              </Button>
+            )}
+            
+            <DialogFooter className="gap-2">
+              {wizardStep === 1 ? (
+                <>
+                  <Button variant="outline" onClick={() => setIsCreateMortgageOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      if (!isFormValid) {
+                        toast({
+                          title: "Validation Error",
+                          description: propertyPriceError || downPaymentError || loanAmountError || "Please fill in all required fields",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                      setWizardStep(2);
+                    }}
+                    disabled={!isFormValid}
+                    data-testid="button-next-step"
+                  >
+                    Next: Term Details
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" onClick={() => setWizardStep(1)}>
+                    Back
+                  </Button>
+                  <Button
+                    onClick={createMortgageWithTerm}
+                    disabled={isCreatingMortgage || !createPaymentAmount || (createTermType === "fixed" ? !createFixedRate : !createSpread)}
+                    data-testid="button-create-mortgage-term"
+                  >
+                    {isCreatingMortgage && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Create Mortgage
+                  </Button>
+                </>
+              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>
