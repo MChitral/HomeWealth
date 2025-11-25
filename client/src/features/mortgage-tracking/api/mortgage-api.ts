@@ -28,6 +28,8 @@ export type CreateTermPayload = {
   lockedSpread?: string;
 };
 
+export type UpdateTermPayload = Partial<CreateTermPayload>;
+
 export type CreatePaymentPayload = {
   termId: string;
   paymentDate: string;
@@ -70,6 +72,8 @@ export const mortgageApi = {
     apiRequest<Mortgage>("PATCH", `/api/mortgages/${mortgageId}`, payload),
   createTerm: (mortgageId: string, payload: CreateTermPayload) =>
     apiRequest<MortgageTerm>("POST", `/api/mortgages/${mortgageId}/terms`, payload),
+  updateTerm: (termId: string, payload: UpdateTermPayload) =>
+    apiRequest<MortgageTerm>("PATCH", `/api/mortgage-terms/${termId}`, payload),
   createPayment: (mortgageId: string, payload: CreatePaymentPayload) =>
     apiRequest<MortgagePayment>("POST", `/api/mortgages/${mortgageId}/payments`, payload),
 };

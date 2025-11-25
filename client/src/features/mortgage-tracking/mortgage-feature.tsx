@@ -40,6 +40,7 @@ import {
   type CreateMortgagePayload,
   type CreateTermPayload,
   type UpdateMortgagePayload,
+  type UpdateTermPayload,
   type PrimeRateResponse,
 } from "./api";
 
@@ -171,6 +172,18 @@ export default function MortgageFeature() {
   const [editPropertyPrice, setEditPropertyPrice] = useState("");
   const [editCurrentBalance, setEditCurrentBalance] = useState("");
   const [editPaymentFrequency, setEditPaymentFrequency] = useState("");
+  
+  // Edit term form state
+  const [isEditTermOpen, setIsEditTermOpen] = useState(false);
+  const [editTermType, setEditTermType] = useState("");
+  const [editTermStartDate, setEditTermStartDate] = useState("");
+  const [editTermEndDate, setEditTermEndDate] = useState("");
+  const [editTermYears, setEditTermYears] = useState("");
+  const [editTermPaymentFrequency, setEditTermPaymentFrequency] = useState("");
+  const [editTermPaymentAmount, setEditTermPaymentAmount] = useState("");
+  const [editTermFixedRate, setEditTermFixedRate] = useState("");
+  const [editTermPrimeRate, setEditTermPrimeRate] = useState("");
+  const [editTermSpread, setEditTermSpread] = useState("");
   
   // Validation for create mortgage form
   const propertyPrice = parseFloat(createPropertyPrice);
@@ -422,6 +435,28 @@ export default function MortgageFeature() {
     },
   });
   
+  // Mutation for editing term
+  const updateTermMutation = useMutation({
+    mutationFn: ({ termId, updates }: { termId: string; updates: UpdateTermPayload }) => {
+      return mortgageApi.updateTerm(termId, updates);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.mortgageTerms(mortgage?.id ?? null) });
+      toast({
+        title: "Term updated",
+        description: "Your mortgage term has been updated successfully",
+      });
+      setIsEditTermOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update term",
+        variant: "destructive",
+      });
+    },
+  });
+  
   // Initialize edit form when dialog opens
   useEffect(() => {
     if (isEditMortgageOpen && mortgage) {
@@ -430,6 +465,31 @@ export default function MortgageFeature() {
       setEditPaymentFrequency(mortgage.paymentFrequency || "");
     }
   }, [isEditMortgageOpen, mortgage]);
+  
+  // Initialize edit term form when dialog opens
+  useEffect(() => {
+    if (isEditTermOpen && terms && terms.length > 0) {
+      const currentTerm = terms[terms.length - 1];
+      setEditTermType(currentTerm.termType || "");
+      setEditTermStartDate(currentTerm.startDate || "");
+      setEditTermEndDate(currentTerm.endDate || "");
+      setEditTermPaymentFrequency(currentTerm.paymentFrequency || "");
+      setEditTermPaymentAmount(currentTerm.regularPaymentAmount || "");
+      setEditTermFixedRate(currentTerm.fixedRate || "");
+      setEditTermSpread(currentTerm.lockedSpread || "");
+      // Calculate term years from dates
+      if (currentTerm.startDate && currentTerm.endDate) {
+        const start = new Date(currentTerm.startDate);
+        const end = new Date(currentTerm.endDate);
+        const years = Math.round((end.getTime() - start.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+        setEditTermYears(years.toString());
+      }
+      // Set prime rate from fetched data
+      if (primeRateData?.primeRate) {
+        setEditTermPrimeRate(primeRateData.primeRate.toString());
+      }
+    }
+  }, [isEditTermOpen, terms, primeRateData]);
 
   const handleTermRenewal = () => {
     const termYears = Number(renewalTermYears) || 5;
@@ -1291,18 +1351,233 @@ export default function MortgageFeature() {
 
       <Card className="border-primary">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
             <div>
               <CardTitle className="text-xl font-semibold">Current Mortgage Term</CardTitle>
               <CardDescription>Your locked rate/spread for this term period</CardDescription>
             </div>
-            <Dialog open={isTermRenewalOpen} onOpenChange={setIsTermRenewalOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm" data-testid="button-renew-term">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Renew Term
-                </Button>
-              </DialogTrigger>
+            <div className="flex items-center gap-2">
+              <Dialog open={isEditTermOpen} onOpenChange={setIsEditTermOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" data-testid="button-edit-term">
+                    Edit Term
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Edit Current Term</DialogTitle>
+                    <DialogDescription>
+                      Update the details of your current mortgage term
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-term-start">Start Date</Label>
+                        <Input 
+                          id="edit-term-start" 
+                          type="date" 
+                          value={editTermStartDate}
+                          onChange={(e) => {
+                            setEditTermStartDate(e.target.value);
+                            // Recalculate end date based on term years
+                            if (editTermYears) {
+                              const start = new Date(e.target.value);
+                              start.setFullYear(start.getFullYear() + parseInt(editTermYears));
+                              setEditTermEndDate(start.toISOString().split('T')[0]);
+                            }
+                          }}
+                          data-testid="input-edit-term-start"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-term-years">Term Length (Years)</Label>
+                        <Select 
+                          value={editTermYears} 
+                          onValueChange={(value) => {
+                            setEditTermYears(value);
+                            // Recalculate end date
+                            if (editTermStartDate) {
+                              const start = new Date(editTermStartDate);
+                              start.setFullYear(start.getFullYear() + parseInt(value));
+                              setEditTermEndDate(start.toISOString().split('T')[0]);
+                            }
+                          }}
+                        >
+                          <SelectTrigger id="edit-term-years" data-testid="select-edit-term-years">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 year</SelectItem>
+                            <SelectItem value="2">2 years</SelectItem>
+                            <SelectItem value="3">3 years</SelectItem>
+                            <SelectItem value="4">4 years</SelectItem>
+                            <SelectItem value="5">5 years</SelectItem>
+                            <SelectItem value="7">7 years</SelectItem>
+                            <SelectItem value="10">10 years</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-term-type">Mortgage Type</Label>
+                      <Select 
+                        value={editTermType} 
+                        onValueChange={setEditTermType}
+                      >
+                        <SelectTrigger id="edit-term-type" data-testid="select-edit-term-type">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="fixed">Fixed Rate</SelectItem>
+                          <SelectItem value="variable-changing">Variable Rate (Changing Payment)</SelectItem>
+                          <SelectItem value="variable-fixed">Variable Rate (Fixed Payment)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {editTermType === "fixed" ? (
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-fixed-rate">Fixed Interest Rate (%)</Label>
+                        <Input
+                          id="edit-fixed-rate"
+                          type="number"
+                          step="0.01"
+                          placeholder="4.99"
+                          value={editTermFixedRate}
+                          onChange={(e) => setEditTermFixedRate(e.target.value)}
+                          data-testid="input-edit-fixed-rate"
+                        />
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="edit-prime-rate">Current Prime Rate (%)</Label>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-2 text-xs"
+                              onClick={() => refetchPrimeRate()}
+                              disabled={isPrimeRateLoading}
+                              data-testid="button-edit-refresh-prime"
+                            >
+                              {isPrimeRateLoading ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <RefreshCw className="h-3 w-3" />
+                              )}
+                              <span className="ml-1">Refresh</span>
+                            </Button>
+                          </div>
+                          <Input
+                            id="edit-prime-rate"
+                            type="number"
+                            step="0.01"
+                            placeholder="4.45"
+                            value={editTermPrimeRate}
+                            onChange={(e) => setEditTermPrimeRate(e.target.value)}
+                            data-testid="input-edit-prime-rate"
+                          />
+                          {primeRateData && (
+                            <p className="text-xs text-muted-foreground">
+                              Bank of Canada rate as of {new Date(primeRateData.effectiveDate).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-spread">Your Spread (+/- from Prime)</Label>
+                          <Input
+                            id="edit-spread"
+                            type="number"
+                            step="0.01"
+                            placeholder="-0.80"
+                            value={editTermSpread}
+                            onChange={(e) => setEditTermSpread(e.target.value)}
+                            data-testid="input-edit-spread"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Effective rate: {(parseFloat(editTermPrimeRate || "0") + parseFloat(editTermSpread || "0")).toFixed(2)}%
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-payment-frequency">Payment Frequency</Label>
+                      <Select 
+                        value={editTermPaymentFrequency} 
+                        onValueChange={setEditTermPaymentFrequency}
+                      >
+                        <SelectTrigger id="edit-payment-frequency" data-testid="select-edit-payment-frequency">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="monthly">Monthly (12 payments/year)</SelectItem>
+                          <SelectItem value="biweekly">Bi-weekly (26 payments/year)</SelectItem>
+                          <SelectItem value="accelerated-biweekly">Accelerated Bi-weekly</SelectItem>
+                          <SelectItem value="semi-monthly">Semi-monthly (24 payments/year)</SelectItem>
+                          <SelectItem value="weekly">Weekly (52 payments/year)</SelectItem>
+                          <SelectItem value="accelerated-weekly">Accelerated Weekly</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-payment-amount">Regular Payment Amount ($)</Label>
+                      <Input
+                        id="edit-payment-amount"
+                        type="number"
+                        step="0.01"
+                        placeholder="2500.00"
+                        value={editTermPaymentAmount}
+                        onChange={(e) => setEditTermPaymentAmount(e.target.value)}
+                        data-testid="input-edit-payment-amount"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsEditTermOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        const currentTerm = terms?.[terms.length - 1];
+                        if (!currentTerm) return;
+                        
+                        updateTermMutation.mutate({
+                          termId: currentTerm.id,
+                          updates: {
+                            termType: editTermType,
+                            startDate: editTermStartDate,
+                            endDate: editTermEndDate,
+                            termYears: parseInt(editTermYears),
+                            paymentFrequency: editTermPaymentFrequency,
+                            regularPaymentAmount: editTermPaymentAmount,
+                            fixedRate: editTermType === "fixed" ? editTermFixedRate : undefined,
+                            lockedSpread: editTermType !== "fixed" ? editTermSpread : undefined,
+                          },
+                        });
+                      }}
+                      disabled={updateTermMutation.isPending || !editTermPaymentAmount || 
+                        (editTermType === "fixed" ? !editTermFixedRate : !editTermSpread)}
+                      data-testid="button-save-edit-term"
+                    >
+                      {updateTermMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                      Save Changes
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              <Dialog open={isTermRenewalOpen} onOpenChange={setIsTermRenewalOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" data-testid="button-renew-term">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Renew Term
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Renew Mortgage Term</DialogTitle>
@@ -1491,6 +1766,7 @@ export default function MortgageFeature() {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
