@@ -137,7 +137,6 @@ export default function MortgageFeature() {
   const [backfillStartDate, setBackfillStartDate] = useState("");
   const [backfillNumberOfPayments, setBackfillNumberOfPayments] = useState("12");
   const [backfillPaymentAmount, setBackfillPaymentAmount] = useState("");
-  const [backfillPrimeRate, setBackfillPrimeRate] = useState("");
   const [mortgageType, setMortgageType] = useState("variable-fixed");
   const [primeRate, setPrimeRate] = useState("6.45");
   const [renewalTermType, setRenewalTermType] = useState("variable-fixed");
@@ -436,7 +435,6 @@ export default function MortgageFeature() {
       setBackfillStartDate("");
       setBackfillNumberOfPayments("12");
       setBackfillPaymentAmount("");
-      setBackfillPrimeRate("");
     },
     onError: (error: Error) => {
       toast({
@@ -1418,13 +1416,15 @@ export default function MortgageFeature() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertDescription>
-                This will create multiple payments starting from the start date, one per month. 
-                All payments will use the same amount and prime rate.
-              </AlertDescription>
-            </Alert>
+            {uiCurrentTerm.termType !== "fixed" && (
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  For variable rate mortgages, historical Bank of Canada prime rates will be fetched 
+                  automatically for each payment date to ensure accurate logging.
+                </AlertDescription>
+              </Alert>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -1439,54 +1439,38 @@ export default function MortgageFeature() {
                 <p className="text-xs text-muted-foreground">Date of your first payment</p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="backfill-count">Number of Payments</Label>
-                <Select value={backfillNumberOfPayments} onValueChange={setBackfillNumberOfPayments}>
-                  <SelectTrigger id="backfill-count" data-testid="select-backfill-count">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="3">3 months</SelectItem>
-                    <SelectItem value="6">6 months</SelectItem>
-                    <SelectItem value="12">12 months (1 year)</SelectItem>
-                    <SelectItem value="24">24 months (2 years)</SelectItem>
-                    <SelectItem value="36">36 months (3 years)</SelectItem>
-                    <SelectItem value="48">48 months (4 years)</SelectItem>
-                    <SelectItem value="60">60 months (5 years)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="backfill-count">Number of Payments (1-60)</Label>
+                <Input
+                  id="backfill-count"
+                  type="number"
+                  min="1"
+                  max="60"
+                  value={backfillNumberOfPayments}
+                  onChange={(e) => {
+                    const val = Math.min(60, Math.max(1, parseInt(e.target.value) || 1));
+                    setBackfillNumberOfPayments(val.toString());
+                  }}
+                  data-testid="input-backfill-count"
+                />
+                <p className="text-xs text-muted-foreground">Enter any number of months</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="backfill-payment">Payment Amount ($)</Label>
-                <Input
-                  id="backfill-payment"
-                  type="number"
-                  step="0.01"
-                  placeholder={uiCurrentTerm.regularPaymentAmount?.toString() || "1500.00"}
-                  value={backfillPaymentAmount}
-                  onChange={(e) => setBackfillPaymentAmount(e.target.value)}
-                  data-testid="input-backfill-payment"
-                />
-                <p className="text-xs text-muted-foreground">Your regular monthly payment</p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="backfill-prime">Prime Rate (%)</Label>
-                <Input
-                  id="backfill-prime"
-                  type="number"
-                  step="0.01"
-                  placeholder={primeRateData?.primeRate?.toString() || "5.45"}
-                  value={backfillPrimeRate}
-                  onChange={(e) => setBackfillPrimeRate(e.target.value)}
-                  data-testid="input-backfill-prime"
-                />
-                <p className="text-xs text-muted-foreground">Average prime rate during this period</p>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="backfill-payment">Payment Amount ($)</Label>
+              <Input
+                id="backfill-payment"
+                type="number"
+                step="0.01"
+                placeholder={uiCurrentTerm.regularPaymentAmount?.toString() || "1500.00"}
+                value={backfillPaymentAmount}
+                onChange={(e) => setBackfillPaymentAmount(e.target.value)}
+                data-testid="input-backfill-payment"
+              />
+              <p className="text-xs text-muted-foreground">Your regular monthly payment amount</p>
             </div>
 
-            {backfillStartDate && backfillNumberOfPayments && (
+            {backfillStartDate && parseInt(backfillNumberOfPayments) > 0 && (
               <div className="p-3 bg-muted rounded-md">
                 <p className="text-sm font-medium mb-2">Summary</p>
                 <p className="text-sm text-muted-foreground">
@@ -1507,6 +1491,11 @@ export default function MortgageFeature() {
                     </span>
                   </p>
                 )}
+                {uiCurrentTerm.termType !== "fixed" && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Prime rates will be fetched from Bank of Canada for accurate interest calculations
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -1515,13 +1504,45 @@ export default function MortgageFeature() {
               Cancel
             </Button>
             <Button
-              onClick={() => {
+              onClick={async () => {
                 const numPayments = parseInt(backfillNumberOfPayments);
                 const paymentAmount = parseFloat(backfillPaymentAmount) || uiCurrentTerm.regularPaymentAmount || 1500;
-                const primeRateValue = parseFloat(backfillPrimeRate) || primeRateData?.primeRate || 5.45;
                 const currentTerm = terms?.[terms.length - 1];
                 
-                if (!currentTerm || !backfillStartDate) return;
+                if (!currentTerm || !backfillStartDate || numPayments < 1) return;
+
+                const endDate = new Date(backfillStartDate);
+                endDate.setMonth(endDate.getMonth() + numPayments - 1);
+                const endDateStr = endDate.toISOString().split('T')[0];
+
+                let historicalRates: { date: string; primeRate: number }[] = [];
+                
+                if (uiCurrentTerm.termType !== "fixed") {
+                  try {
+                    const ratesResponse = await mortgageApi.fetchHistoricalPrimeRates(backfillStartDate, endDateStr);
+                    historicalRates = ratesResponse.rates || [];
+                  } catch (error) {
+                    console.error("Failed to fetch historical rates:", error);
+                  }
+                }
+
+                const getRateForDate = (dateStr: string): number => {
+                  if (uiCurrentTerm.termType === "fixed") {
+                    return uiCurrentTerm.fixedRate || 4.5;
+                  }
+                  
+                  const sortedRates = [...historicalRates].sort((a, b) => 
+                    new Date(b.date).getTime() - new Date(a.date).getTime()
+                  );
+                  
+                  for (const rate of sortedRates) {
+                    if (rate.date <= dateStr) {
+                      return rate.primeRate + uiCurrentTerm.lockedSpread;
+                    }
+                  }
+                  
+                  return (primeRateData?.primeRate || 5.45) + uiCurrentTerm.lockedSpread;
+                };
 
                 const payments: CreatePaymentPayload[] = [];
                 let runningBalance = Number(mortgage?.currentBalance || 300000);
@@ -1529,10 +1550,12 @@ export default function MortgageFeature() {
                 for (let i = 0; i < numPayments; i++) {
                   const paymentDate = new Date(backfillStartDate);
                   paymentDate.setMonth(paymentDate.getMonth() + i);
+                  const paymentDateStr = paymentDate.toISOString().split('T')[0];
                   
-                  const effectiveRateValue = uiCurrentTerm.termType === "fixed" 
-                    ? uiCurrentTerm.fixedRate || 4.5 
-                    : primeRateValue + uiCurrentTerm.lockedSpread;
+                  const effectiveRateValue = getRateForDate(paymentDateStr);
+                  const primeRateForPayment = uiCurrentTerm.termType === "fixed" 
+                    ? 0 
+                    : effectiveRateValue - uiCurrentTerm.lockedSpread;
                   
                   const monthlyRate = effectiveRateValue / 100 / 12;
                   const interest = Math.round(runningBalance * monthlyRate * 100) / 100;
@@ -1541,7 +1564,7 @@ export default function MortgageFeature() {
 
                   payments.push({
                     termId: currentTerm.id,
-                    paymentDate: paymentDate.toISOString().split('T')[0],
+                    paymentDate: paymentDateStr,
                     paymentPeriodLabel: `Payment ${i + 1}`,
                     regularPaymentAmount: paymentAmount.toString(),
                     prepaymentAmount: "0",
@@ -1549,7 +1572,7 @@ export default function MortgageFeature() {
                     principalPaid: principal.toString(),
                     interestPaid: interest.toString(),
                     remainingBalance: runningBalance.toString(),
-                    primeRate: primeRateValue.toString(),
+                    primeRate: primeRateForPayment.toString(),
                     effectiveRate: effectiveRateValue.toString(),
                     triggerRateHit: 0,
                     remainingAmortizationMonths: Math.round((mortgage?.amortizationYears || 25) * 12 - i),
@@ -1558,7 +1581,7 @@ export default function MortgageFeature() {
 
                 backfillPaymentsMutation.mutate(payments);
               }}
-              disabled={!backfillStartDate || !backfillPaymentAmount || backfillPaymentsMutation.isPending}
+              disabled={!backfillStartDate || !backfillPaymentAmount || parseInt(backfillNumberOfPayments) < 1 || backfillPaymentsMutation.isPending}
               data-testid="button-save-backfill"
             >
               {backfillPaymentsMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}

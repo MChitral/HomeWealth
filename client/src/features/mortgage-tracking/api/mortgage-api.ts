@@ -53,6 +53,18 @@ export type PrimeRateResponse = {
   lastUpdated: string;
 };
 
+export type HistoricalRateEntry = {
+  date: string;
+  primeRate: number;
+};
+
+export type HistoricalPrimeRatesResponse = {
+  rates: HistoricalRateEntry[];
+  source: string;
+  startDate: string;
+  endDate: string;
+};
+
 export const mortgageQueryKeys = {
   mortgages: () => ["/api/mortgages"] as const,
   mortgageTerms: (mortgageId: string | null) => ["/api/mortgages", mortgageId, "terms"] as const,
@@ -72,6 +84,8 @@ export const mortgageApi = {
   fetchMortgagePayments: (mortgageId: string) =>
     apiRequest<MortgagePayment[]>("GET", `/api/mortgages/${mortgageId}/payments`),
   fetchPrimeRate: () => apiRequest<PrimeRateResponse>("GET", "/api/prime-rate"),
+  fetchHistoricalPrimeRates: (startDate: string, endDate: string) =>
+    apiRequest<HistoricalPrimeRatesResponse>("GET", `/api/prime-rate/history?start_date=${startDate}&end_date=${endDate}`),
   createMortgage: (payload: CreateMortgagePayload) => apiRequest<Mortgage>("POST", "/api/mortgages", payload),
   updateMortgage: (mortgageId: string, payload: UpdateMortgagePayload) =>
     apiRequest<Mortgage>("PATCH", `/api/mortgages/${mortgageId}`, payload),
