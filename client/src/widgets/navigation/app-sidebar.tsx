@@ -1,4 +1,4 @@
-import { Home, FileText, GitCompare, DollarSign, Receipt, Shield, LogOut } from "lucide-react";
+import { Home, FileText, GitCompare, DollarSign, Receipt, Shield } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -10,10 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
-  SidebarFooter,
 } from "@/shared/ui/sidebar";
-import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/shared/ui/button";
 
 const navItems = [
   { title: "Dashboard", url: "/", icon: Home },
@@ -26,7 +23,6 @@ const navItems = [
 
 export function AppSidebar() {
   const [location] = useLocation();
-  const { user } = useAuth();
 
   return (
     <Sidebar>
@@ -57,30 +53,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="p-4 border-t">
-        <div className="space-y-3">
-          {user && (
-            <div className="text-sm">
-              <p className="font-medium truncate">{user.email || "User"}</p>
-              <p className="text-xs text-muted-foreground truncate">
-                {user.firstName && user.lastName 
-                  ? `${user.firstName} ${user.lastName}` 
-                  : ""}
-              </p>
-            </div>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            onClick={() => window.location.href = "/api/logout"}
-            data-testid="button-logout"
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
-          </Button>
-        </div>
-      </SidebarFooter>
     </Sidebar>
   );
 }
