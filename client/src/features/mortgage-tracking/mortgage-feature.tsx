@@ -1549,11 +1549,16 @@ export default function MortgageFeature() {
                 endDate.setMonth(endDate.getMonth() + numPayments - 1);
                 const endDateStr = endDate.toISOString().split('T')[0];
 
+                // Start historical rate query 3 months before first payment to capture the rate in effect
+                const queryStartDate = new Date(backfillStartDate);
+                queryStartDate.setMonth(queryStartDate.getMonth() - 3);
+                const queryStartDateStr = queryStartDate.toISOString().split('T')[0];
+
                 let historicalRates: { date: string; primeRate: number }[] = [];
                 
                 if (uiCurrentTerm.termType !== "fixed") {
                   try {
-                    const ratesResponse = await mortgageApi.fetchHistoricalPrimeRates(backfillStartDate, endDateStr);
+                    const ratesResponse = await mortgageApi.fetchHistoricalPrimeRates(queryStartDateStr, endDateStr);
                     historicalRates = ratesResponse.rates || [];
                   } catch (error) {
                     console.error("Failed to fetch historical rates:", error);
