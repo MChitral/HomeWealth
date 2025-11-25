@@ -1044,15 +1044,26 @@ export default function MortgageFeature() {
     );
   }
 
+  // Use real prime rate from Bank of Canada API, fallback to payment history, then to fetched primeRate state
+  const currentPrimeRateValue = primeRateData?.primeRate 
+    ?? (paymentHistory[paymentHistory.length - 1]?.primeRate) 
+    ?? parseFloat(primeRate) 
+    ?? 0;
+  
+  // Calculate effective rate based on term type and current prime rate
+  const currentEffectiveRate = uiCurrentTerm.termType === "fixed" && uiCurrentTerm.fixedRate
+    ? uiCurrentTerm.fixedRate
+    : currentPrimeRateValue + (uiCurrentTerm.lockedSpread || 0);
+
   const summaryStats = {
     totalPayments: paymentHistory.length,
     totalPaid: paymentHistory.reduce((sum, p) => sum + p.paymentAmount, 0),
     totalPrincipal: paymentHistory.reduce((sum, p) => sum + p.principal, 0),
     totalInterest: paymentHistory.reduce((sum, p) => sum + p.interest, 0),
-    currentBalance: mortgage ? Number(mortgage.currentBalance) : (paymentHistory[paymentHistory.length - 1]?.remainingBalance || 400000),
-    currentRate: paymentHistory[paymentHistory.length - 1]?.effectiveRate || 5.65,
-    currentPrimeRate: paymentHistory[paymentHistory.length - 1]?.primeRate || 6.45,
-    amortizationYears: mortgage ? mortgage.amortizationYears : (paymentHistory[paymentHistory.length - 1]?.amortizationYears || 25.0),
+    currentBalance: mortgage ? Number(mortgage.currentBalance) : (paymentHistory[paymentHistory.length - 1]?.remainingBalance || 0),
+    currentRate: currentEffectiveRate,
+    currentPrimeRate: currentPrimeRateValue,
+    amortizationYears: mortgage ? mortgage.amortizationYears : (paymentHistory[paymentHistory.length - 1]?.amortizationYears || 30),
     triggerHitCount: paymentHistory.filter(p => p.triggerHit).length,
   };
 
