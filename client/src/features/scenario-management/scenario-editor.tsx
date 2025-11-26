@@ -11,7 +11,7 @@ import { Skeleton } from "@/shared/ui/skeleton";
 import { Badge } from "@/shared/ui/badge";
 import { Save, ArrowLeft, Info, Plus, Trash2, Edit2 } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/shared/hooks/use-toast";
 import { usePageTitle } from "@/shared/hooks/use-page-title";
@@ -21,6 +21,8 @@ import { Alert, AlertDescription } from "@/shared/ui/alert";
 import type { Scenario, PrepaymentEvent, InsertPrepaymentEvent } from "@shared/schema";
 import { scenarioApi, scenarioQueryKeys, type ScenarioPayload } from "./api";
 import { useScenarioDetail } from "./hooks";
+import { useMortgageData } from "@/features/mortgage-tracking/hooks";
+import { useCashFlowData } from "@/features/cash-flow/hooks";
 
 type DraftPrepaymentEvent = {
   id: string;
@@ -45,6 +47,10 @@ export function ScenarioEditorFeature() {
     prepaymentEvents: fetchedEvents,
     isLoading: detailLoading,
   } = useScenarioDetail(scenarioId);
+
+  // Fetch real mortgage data from the database
+  const { mortgage, terms, payments, isLoading: mortgageLoading } = useMortgageData();
+  const { cashFlow, isLoading: cashFlowLoading } = useCashFlowData();
 
   // Form state
   const [name, setName] = useState("");
@@ -330,37 +336,161 @@ export function ScenarioEditorFeature() {
     return months[month - 1] || "";
   };
 
-  // Current mortgage data from Mortgage History (pre-populated)
-  const currentMortgageData = {
-    homeValue: 500000,
-    originalPrincipal: 400000,
-    currentBalance: 397745,
-    principalPaid: 2255,
-    interestPaid: 6145,
-    yearsIntoMortgage: 0.33, // 4 months
-    currentRate: 6.40,
-    currentAmortization: 26.2,
-    monthlyPayment: 2100,
-    termType: "Variable-Fixed Payment",
-    lockedSpread: -0.80,
-  };
+  // Get latest term and latest payment for current mortgage position (sorted by date)
+  const sortedTerms = useMemo(() => {
+    if (!terms?.length) return [];
+    return [...terms].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+  }, [terms]);
+  const latestTerm = sortedTerms[0] || null;
 
-  // Mock mortgage projection based on current prepayment settings
-  // TODO: This would be calculated by backend based on prepayment strategy
-  const mortgageProjection = [
-    { year: 0, balance: 397745, principal: 0, interest: 0 },
-    { year: 2, balance: 355000, principal: 42745, interest: 12000 },
-    { year: 4, balance: 310000, principal: 87745, interest: 24000 },
-    { year: 6, balance: 260000, principal: 137745, interest: 36000 },
-    { year: 8, balance: 205000, principal: 192745, interest: 48000 },
-    { year: 10, balance: 145000, principal: 252745, interest: 60000 },
-  ];
+  const sortedPayments = useMemo(() => {
+    if (!payments?.length) return [];
+    return [...payments].sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
+  }, [payments]);
+  const latestPayment = sortedPayments[0] || null;
+  const firstPayment = sortedPayments[sortedPayments.length - 1] || null;
 
-  const projectedPayoff = 18.2; // years from today
-  const totalInterest = 86000; // dollars from today forward
+  // Calculate totals from payment history
+  const totalPrincipalPaid = payments?.reduce((sum, p) => sum + Number(p.principalPaid || 0), 0) || 0;
+  const totalInterestPaid = payments?.reduce((sum, p) => sum + Number(p.interestPaid || 0), 0) || 0;
 
-  // Show loading skeleton when editing existing scenario
-  if (detailLoading && !isNewScenario) {
+  // Calculate years into mortgage from first payment
+  const yearsIntoMortgage = firstPayment 
+    ? (new Date().getTime() - new Date(firstPayment.paymentDate).getTime()) / (1000 * 60 * 60 * 24 * 365)
+    : 0;
+
+  // Current mortgage data from database
+  const currentMortgageData = useMemo(() => ({
+    homeValue: Number(mortgage?.propertyPrice || 500000),
+    originalPrincipal: Number(mortgage?.originalAmount || 400000),
+    currentBalance: latestPayment 
+      ? Number(latestPayment.remainingBalance) 
+      : Number(mortgage?.currentBalance || 400000),
+    principalPaid: Math.round(totalPrincipalPaid * 100) / 100,
+    interestPaid: Math.round(totalInterestPaid * 100) / 100,
+    yearsIntoMortgage: Math.round(yearsIntoMortgage * 100) / 100,
+    currentRate: latestPayment 
+      ? Number(latestPayment.effectiveRate) 
+      : Number(latestTerm?.fixedRate || latestTerm?.lockedSpread || 5.0),
+    currentAmortization: latestPayment 
+      ? Math.round((Number(latestPayment.remainingAmortizationMonths) / 12) * 10) / 10
+      : Number(mortgage?.amortizationYears || 25),
+    monthlyPayment: latestPayment 
+      ? Number(latestPayment.regularPaymentAmount)
+      : Number(latestTerm?.regularPaymentAmount || 2000),
+    termType: latestTerm?.termType === "fixed" 
+      ? "Fixed Rate" 
+      : latestTerm?.termType === "variable-fixed" 
+        ? "Variable-Fixed Payment" 
+        : "Variable-Changing Payment",
+    lockedSpread: Number(latestTerm?.lockedSpread || 0),
+  }), [mortgage, latestTerm, latestPayment, totalPrincipalPaid, totalInterestPaid, yearsIntoMortgage]);
+
+  // Calculate monthly expenses from all expense fields
+  const monthlyExpenses = useMemo(() => {
+    if (!cashFlow) return 0;
+    return (
+      Number(cashFlow.propertyTax || 0) +
+      Number(cashFlow.homeInsurance || 0) +
+      Number(cashFlow.condoFees || 0) +
+      Number(cashFlow.utilities || 0) +
+      Number(cashFlow.groceries || 0) +
+      Number(cashFlow.dining || 0) +
+      Number(cashFlow.transportation || 0) +
+      Number(cashFlow.entertainment || 0) +
+      Number(cashFlow.carLoan || 0) +
+      Number(cashFlow.studentLoan || 0) +
+      Number(cashFlow.creditCard || 0)
+    );
+  }, [cashFlow]);
+
+  // Calculate surplus cash from cash flow
+  const monthlySurplus = useMemo(() => {
+    if (!cashFlow) return 0;
+    const income = Number(cashFlow.monthlyIncome || 0);
+    const mortgagePayment = currentMortgageData.monthlyPayment;
+    return Math.max(0, income - monthlyExpenses - mortgagePayment);
+  }, [cashFlow, monthlyExpenses, currentMortgageData.monthlyPayment]);
+
+  // Calculate dynamic mortgage projection based on prepayment split
+  const { mortgageProjection, projectedPayoff, totalInterest, interestSaved } = useMemo(() => {
+    const balance = currentMortgageData.currentBalance;
+    const rate = currentMortgageData.currentRate / 100;
+    const monthlyRate = rate / 12;
+    const basePayment = currentMortgageData.monthlyPayment;
+    const prepayPercent = prepaymentSplit[0] / 100;
+    const monthlyPrepay = monthlySurplus * prepayPercent;
+    const totalMonthlyPayment = basePayment + monthlyPrepay;
+
+    // Calculate annual prepayment events total
+    const annualPrepayEvents = prepaymentEvents
+      .filter(e => e.eventType === "annual")
+      .reduce((sum, e) => sum + Number(e.amount || 0), 0);
+
+    // Generate projection data
+    const projection: { year: number; balance: number; principal: number; interest: number }[] = [];
+    let runningBalance = balance;
+    let totalPrincipal = 0;
+    let totalInterestCalc = 0;
+    let monthsToPayoff = 0;
+
+    for (let month = 0; month <= 360 && runningBalance > 0; month++) {
+      if (month % 24 === 0) { // Every 2 years
+        projection.push({
+          year: month / 12,
+          balance: Math.round(runningBalance),
+          principal: Math.round(totalPrincipal),
+          interest: Math.round(totalInterestCalc),
+        });
+      }
+
+      if (runningBalance <= 0) break;
+
+      const interestPayment = runningBalance * monthlyRate;
+      let principalPayment = totalMonthlyPayment - interestPayment;
+
+      // Add annual prepayment in month 3 (March)
+      if (month > 0 && month % 12 === 2) {
+        principalPayment += annualPrepayEvents;
+      }
+
+      principalPayment = Math.min(principalPayment, runningBalance);
+      runningBalance -= principalPayment;
+      totalPrincipal += principalPayment;
+      totalInterestCalc += interestPayment;
+      monthsToPayoff = month + 1;
+    }
+
+    // Ensure we have at least the final data point
+    if (projection.length === 0 || projection[projection.length - 1].balance > 0) {
+      projection.push({
+        year: Math.ceil(monthsToPayoff / 12),
+        balance: 0,
+        principal: Math.round(totalPrincipal),
+        interest: Math.round(totalInterestCalc),
+      });
+    }
+
+    // Calculate baseline (no prepayment) for comparison
+    let baselineInterest = 0;
+    let baselineBalance = balance;
+    for (let month = 0; month <= 360 && baselineBalance > 0; month++) {
+      const interestPayment = baselineBalance * monthlyRate;
+      const principalPayment = Math.min(basePayment - interestPayment, baselineBalance);
+      baselineBalance -= principalPayment;
+      baselineInterest += interestPayment;
+    }
+
+    return {
+      mortgageProjection: projection,
+      projectedPayoff: Math.round(monthsToPayoff / 12 * 10) / 10,
+      totalInterest: Math.round(totalInterestCalc),
+      interestSaved: Math.round(baselineInterest - totalInterestCalc),
+    };
+  }, [currentMortgageData, prepaymentSplit, monthlySurplus, prepaymentEvents]);
+
+  // Show loading skeleton when editing existing scenario or loading mortgage data
+  if ((detailLoading && !isNewScenario) || mortgageLoading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
@@ -779,10 +909,16 @@ export function ScenarioEditorFeature() {
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <Label htmlFor="split-slider">Surplus Cash Allocation</Label>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <Label htmlFor="split-slider">Surplus Cash Allocation</Label>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Monthly surplus: <span className="font-mono font-medium text-foreground">${monthlySurplus.toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+                        {!cashFlow && <span className="text-orange-500 ml-2">(Set up Cash Flow to calculate)</span>}
+                      </p>
+                    </div>
                     <span className="text-sm font-mono text-muted-foreground">
-                      {prepaymentSplit[0]}% Prepay / {100 - prepaymentSplit[0]}% Invest
+                      {prepaymentSplit[0]}% / {100 - prepaymentSplit[0]}%
                     </span>
                   </div>
                   <Slider
@@ -794,6 +930,16 @@ export function ScenarioEditorFeature() {
                     onValueChange={setPrepaymentSplit}
                     data-testid="slider-split"
                   />
+                  <div className="flex justify-between text-sm">
+                    <div className="space-y-1">
+                      <p className="font-medium text-primary">Mortgage Prepay</p>
+                      <p className="font-mono text-lg">${Math.round(monthlySurplus * prepaymentSplit[0] / 100).toLocaleString()}<span className="text-muted-foreground text-sm">/mo</span></p>
+                    </div>
+                    <div className="space-y-1 text-right">
+                      <p className="font-medium text-chart-2">Investments</p>
+                      <p className="font-mono text-lg">${Math.round(monthlySurplus * (100 - prepaymentSplit[0]) / 100).toLocaleString()}<span className="text-muted-foreground text-sm">/mo</span></p>
+                    </div>
+                  </div>
                   <p className="text-sm text-muted-foreground">
                     How to split surplus cash (after EF is full) between mortgage prepayment and investments
                   </p>
@@ -824,7 +970,7 @@ export function ScenarioEditorFeature() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Interest Saved</p>
-                  <p className="text-2xl font-bold font-mono text-green-600">$32,000</p>
+                  <p className="text-2xl font-bold font-mono text-green-600">${interestSaved.toLocaleString()}</p>
                   <p className="text-xs text-muted-foreground">vs minimum payments</p>
                 </div>
               </div>
