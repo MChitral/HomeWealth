@@ -424,12 +424,22 @@ export function ScenarioEditorFeature() {
     const monthlyPrepay = Math.max(0, monthlySurplus) * prepayPercent;
 
     // Convert draft prepayment events to API format
-    const apiPrepaymentEvents = prepaymentEvents.map(event => ({
-      type: event.eventType as 'annual' | 'one-time',
-      amount: Number(event.amount || 0),
-      startPaymentNumber: event.startPaymentNumber || 1,
-      recurrenceMonth: event.recurrenceMonth || undefined,
-    }));
+    const apiPrepaymentEvents = prepaymentEvents.map(event => {
+      // For one-time events, convert oneTimeYear to payment number
+      // Year N = payment ((N-1) * 12 + 1) for monthly payments
+      // E.g., Year 2 = payment 13 (start of 2nd year)
+      let startPaymentNumber = event.startPaymentNumber || 1;
+      if (event.eventType === 'one-time' && event.oneTimeYear) {
+        startPaymentNumber = (event.oneTimeYear - 1) * 12 + 1;
+      }
+      
+      return {
+        type: event.eventType as 'annual' | 'one-time',
+        amount: Number(event.amount || 0),
+        startPaymentNumber,
+        recurrenceMonth: event.recurrenceMonth || undefined,
+      };
+    });
 
     return {
       currentBalance: currentMortgageData.currentBalance,
