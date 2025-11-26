@@ -9,7 +9,8 @@ import {
 } from "@domain/models";
 import { requireUser } from "@api/utils/auth";
 import { 
-  generateAmortizationSchedule, 
+  generateAmortizationSchedule,
+  generateAmortizationScheduleWithPayment,
   calculatePayment,
   type PaymentFrequency,
   type PrepaymentEvent as CalcPrepaymentEvent,
@@ -249,6 +250,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
     annualRate: z.number().min(0).max(1), // As decimal, e.g., 0.0549 for 5.49%
     amortizationMonths: z.number().int().positive(),
     paymentFrequency: z.enum(['monthly', 'semi-monthly', 'biweekly', 'accelerated-biweekly', 'weekly', 'accelerated-weekly']).default('monthly'),
+    actualPaymentAmount: z.number().positive().optional(), // User's actual payment amount (use instead of recalculating)
     monthlyPrepayAmount: z.number().min(0).default(0),
     prepaymentEvents: z.array(z.object({
       type: z.enum(['annual', 'one-time', 'monthly-percent']),
@@ -271,8 +273,32 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       // Use rate override if provided, otherwise use the passed annualRate
       const effectiveRate = data.rateOverride ?? data.annualRate;
       
-      // Calculate base payment to determine monthly prepay percentage
-      const basePayment = calculatePayment(
+      // Fetch historical payments first to determine projection start date
+      let historicalPayments: any[] = [];
+      let lastPaymentDate: Date | null = null;
+      let lastPaymentBalance: number = data.currentBalance;
+      
+      if (data.mortgageId) {
+        historicalPayments = await services.mortgagePayments.listByMortgage(data.mortgageId, user.id) || [];
+        
+        if (historicalPayments.length > 0) {
+          // Sort by date to find the last payment
+          historicalPayments.sort((a, b) => 
+            new Date(a.paymentDate).getTime() - new Date(b.paymentDate).getTime()
+          );
+          const lastPayment = historicalPayments[historicalPayments.length - 1];
+          lastPaymentDate = new Date(lastPayment.paymentDate);
+          lastPaymentBalance = Number(lastPayment.remainingBalance || data.currentBalance);
+        }
+      }
+      
+      // Calculate projection start date: day after last payment, or today if no payments
+      const projectionStartDate = lastPaymentDate 
+        ? new Date(lastPaymentDate.getTime() + 30 * 24 * 60 * 60 * 1000) // ~30 days after last payment (next month)
+        : new Date();
+      
+      // Use actual payment amount if provided, otherwise calculate based on rate
+      const basePayment = data.actualPaymentAmount ?? calculatePayment(
         data.currentBalance,
         effectiveRate,
         data.amortizationMonths,
@@ -306,133 +332,141 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       }
 
       // Generate amortization schedule using the authoritative calculation engine
-      const schedule = generateAmortizationSchedule(
-        data.currentBalance,
+      // Start from the balance AFTER last payment, from projection start date
+      const schedule = generateAmortizationScheduleWithPayment(
+        lastPaymentBalance,
         effectiveRate,
         data.amortizationMonths,
         data.paymentFrequency as PaymentFrequency,
-        new Date(), // Start from today
+        projectionStartDate,
+        basePayment,
         prepayments,
         [], // No term renewals for projection
         360 // Max 30 years
       );
 
-      // Fetch historical payments if mortgageId is provided
-      const historicalYearlyData: Array<{
-        year: number;
-        totalPaid: number;
-        principalPaid: number;
-        interestPaid: number;
+      // Aggregate historical payments by year
+      const historicalYearlyMap = new Map<number, { 
+        totalPaid: number; 
+        principalPaid: number; 
+        interestPaid: number; 
         endingBalance: number;
-        isHistorical: boolean;
-      }> = [];
+        lastPaymentMonth: number;
+      }>();
 
-      if (data.mortgageId) {
-        const historicalPayments = await services.mortgagePayments.listByMortgage(data.mortgageId, user.id);
+      for (const payment of historicalPayments) {
+        const paymentDate = new Date(payment.paymentDate);
+        const year = paymentDate.getFullYear();
+        const month = paymentDate.getMonth();
         
-        if (historicalPayments && historicalPayments.length > 0) {
-          // Aggregate historical payments by year
-          const yearlyHistorical = new Map<number, { 
-            totalPaid: number; 
-            principalPaid: number; 
-            interestPaid: number; 
-            endingBalance: number;
-          }>();
+        const existing = historicalYearlyMap.get(year) || {
+          totalPaid: 0,
+          principalPaid: 0,
+          interestPaid: 0,
+          endingBalance: 0,
+          lastPaymentMonth: -1,
+        };
 
-          for (const payment of historicalPayments) {
-            const paymentDate = new Date(payment.paymentDate);
-            const year = paymentDate.getFullYear();
-            
-            const existing = yearlyHistorical.get(year) || {
-              totalPaid: 0,
-              principalPaid: 0,
-              interestPaid: 0,
-              endingBalance: 0,
-            };
-
-            existing.totalPaid += Number(payment.paymentAmount || 0);
-            existing.principalPaid += Number(payment.principalPaid || 0);
-            existing.interestPaid += Number(payment.interestPaid || 0);
-            existing.endingBalance = Number(payment.remainingBalance || 0); // Use last payment's balance
-            
-            yearlyHistorical.set(year, existing);
-          }
-
-          // Convert to array and sort by year
-          const sortedYears = Array.from(yearlyHistorical.keys()).sort((a, b) => a - b);
-          for (const year of sortedYears) {
-            const yearData = yearlyHistorical.get(year)!;
-            historicalYearlyData.push({
-              year,
-              totalPaid: Math.round(yearData.totalPaid),
-              principalPaid: Math.round(yearData.principalPaid),
-              interestPaid: Math.round(yearData.interestPaid),
-              endingBalance: Math.round(yearData.endingBalance),
-              isHistorical: true,
-            });
-          }
-        }
+        existing.totalPaid += Number(payment.paymentAmount || 0);
+        existing.principalPaid += Number(payment.principalPaid || 0);
+        existing.interestPaid += Number(payment.interestPaid || 0);
+        existing.endingBalance = Number(payment.remainingBalance || 0);
+        existing.lastPaymentMonth = Math.max(existing.lastPaymentMonth, month);
+        
+        historicalYearlyMap.set(year, existing);
       }
 
-      // Aggregate projected payments by year for the table
-      const projectedYearlyData: Array<{
-        year: number;
-        totalPaid: number;
-        principalPaid: number;
-        interestPaid: number;
+      // Find years that need projected data to complete them
+      const currentCalendarYear = new Date().getFullYear();
+      const yearsNeedingCompletion = new Set<number>();
+      
+      Array.from(historicalYearlyMap.entries()).forEach(([year, yearData]) => {
+        // If historical data doesn't cover the full year (month 11 = December), mark for completion
+        if (yearData.lastPaymentMonth < 11 && year >= currentCalendarYear) {
+          yearsNeedingCompletion.add(year);
+        }
+      });
+
+      // Aggregate projected payments by year
+      const projectedYearlyMap = new Map<number, { 
+        totalPaid: number; 
+        principalPaid: number; 
+        interestPaid: number; 
         endingBalance: number;
-        isHistorical: boolean;
-      }> = [];
-
-      let currentYear = new Date().getFullYear();
-      let yearlyPrincipal = 0;
-      let yearlyInterest = 0;
-      let lastBalance = data.currentBalance;
-
-      // Get the last year that has complete historical data
-      const lastHistoricalYear = historicalYearlyData.length > 0 
-        ? Math.max(...historicalYearlyData.map(d => d.year))
-        : 0;
+      }>();
 
       for (const payment of schedule.payments) {
         const paymentYear = payment.paymentDate.getFullYear();
         
-        if (paymentYear !== currentYear) {
-          // Save previous year's data (only if year is after last historical year)
-          if ((yearlyPrincipal > 0 || yearlyInterest > 0) && currentYear > lastHistoricalYear) {
-            projectedYearlyData.push({
-              year: currentYear,
-              totalPaid: Math.round(yearlyPrincipal + yearlyInterest),
-              principalPaid: Math.round(yearlyPrincipal),
-              interestPaid: Math.round(yearlyInterest),
-              endingBalance: Math.round(lastBalance),
-              isHistorical: false,
-            });
-          }
-          currentYear = paymentYear;
-          yearlyPrincipal = 0;
-          yearlyInterest = 0;
-        }
+        const existing = projectedYearlyMap.get(paymentYear) || {
+          totalPaid: 0,
+          principalPaid: 0,
+          interestPaid: 0,
+          endingBalance: 0,
+        };
 
-        yearlyPrincipal += payment.totalPrincipalPayment;
-        yearlyInterest += payment.interestPayment;
-        lastBalance = payment.remainingBalance;
+        existing.totalPaid += payment.paymentAmount + payment.extraPrepayment;
+        existing.principalPaid += payment.totalPrincipalPayment;
+        existing.interestPaid += payment.interestPayment;
+        existing.endingBalance = payment.remainingBalance;
+        
+        projectedYearlyMap.set(paymentYear, existing);
       }
 
-      // Add final year (only if year is after last historical year)
-      if ((yearlyPrincipal > 0 || yearlyInterest > 0) && currentYear > lastHistoricalYear) {
-        projectedYearlyData.push({
-          year: currentYear,
-          totalPaid: Math.round(yearlyPrincipal + yearlyInterest),
-          principalPaid: Math.round(yearlyPrincipal),
-          interestPaid: Math.round(yearlyInterest),
-          endingBalance: Math.round(lastBalance),
-          isHistorical: false,
-        });
-      }
+      // Build final yearly data, merging historical + projected for incomplete years
+      const yearlyData: Array<{
+        year: number;
+        totalPaid: number;
+        principalPaid: number;
+        interestPaid: number;
+        endingBalance: number;
+        isHistorical: boolean;
+      }> = [];
+
+      // Get all years we have data for
+      const allYearsArr = [
+        ...Array.from(historicalYearlyMap.keys()), 
+        ...Array.from(projectedYearlyMap.keys())
+      ];
+      const allYears = new Set(allYearsArr);
+      const sortedYears = Array.from(allYears).sort((a, b) => a - b);
       
-      // Merge historical and projected data (no duplicates possible now)
-      const yearlyData = [...historicalYearlyData, ...projectedYearlyData];
+      for (const year of sortedYears) {
+        const historical = historicalYearlyMap.get(year);
+        const projected = projectedYearlyMap.get(year);
+        
+        if (historical && yearsNeedingCompletion.has(year) && projected) {
+          // Merge historical + projected for this year
+          yearlyData.push({
+            year,
+            totalPaid: Math.round(historical.totalPaid + projected.totalPaid),
+            principalPaid: Math.round(historical.principalPaid + projected.principalPaid),
+            interestPaid: Math.round(historical.interestPaid + projected.interestPaid),
+            endingBalance: Math.round(projected.endingBalance), // Use projected end balance
+            isHistorical: true, // Mark as historical since it includes logged data
+          });
+        } else if (historical) {
+          // Pure historical year
+          yearlyData.push({
+            year,
+            totalPaid: Math.round(historical.totalPaid),
+            principalPaid: Math.round(historical.principalPaid),
+            interestPaid: Math.round(historical.interestPaid),
+            endingBalance: Math.round(historical.endingBalance),
+            isHistorical: true,
+          });
+        } else if (projected) {
+          // Pure projected year
+          yearlyData.push({
+            year,
+            totalPaid: Math.round(projected.totalPaid),
+            principalPaid: Math.round(projected.principalPaid),
+            interestPaid: Math.round(projected.interestPaid),
+            endingBalance: Math.round(projected.endingBalance),
+            isHistorical: false,
+          });
+        }
+      }
 
       // Generate chart data (every 2 years)
       const chartData: Array<{

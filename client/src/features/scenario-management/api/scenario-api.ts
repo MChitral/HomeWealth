@@ -20,6 +20,7 @@ export type ProjectionRequest = {
   annualRate: number; // As decimal, e.g., 0.0549 for 5.49%
   amortizationMonths: number;
   paymentFrequency?: 'monthly' | 'semi-monthly' | 'biweekly' | 'accelerated-biweekly' | 'weekly' | 'accelerated-weekly';
+  actualPaymentAmount?: number; // User's actual payment amount (use instead of recalculating)
   monthlyPrepayAmount?: number;
   prepaymentEvents?: Array<{
     type: 'annual' | 'one-time' | 'monthly-percent';

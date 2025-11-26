@@ -588,3 +588,214 @@ export function generateAmortizationSchedule(
     },
   };
 }
+
+/**
+ * Generate amortization schedule with a FIXED payment amount
+ * 
+ * This variant uses the user's actual payment amount instead of recalculating.
+ * Useful for projections where the mortgage payment is already known.
+ * 
+ * @param principal - Current loan balance (not original amount)
+ * @param annualRate - Annual nominal interest rate
+ * @param amortizationMonths - Remaining amortization period in months (used for prepayment calculations)
+ * @param frequency - Payment frequency
+ * @param startDate - Projection start date
+ * @param fixedPaymentAmount - The actual payment amount to use (not recalculated)
+ * @param prepayments - Array of prepayment events
+ * @param termRenewals - Array of term renewals (for VRM rate changes)
+ * @param maxPayments - Maximum number of payments to generate
+ * @returns Complete amortization schedule
+ */
+export function generateAmortizationScheduleWithPayment(
+  principal: number,
+  annualRate: number,
+  amortizationMonths: number,
+  frequency: PaymentFrequency,
+  startDate: Date,
+  fixedPaymentAmount: number,
+  prepayments: PrepaymentEvent[] = [],
+  termRenewals: TermRenewal[] = [],
+  maxPayments: number = 600
+): AmortizationSchedule {
+  const payments: AmortizationPayment[] = [];
+  const paymentsPerYear = getPaymentsPerYear(frequency);
+  
+  let remainingBalance = principal;
+  let currentRate = annualRate;
+  let currentPaymentAmount = fixedPaymentAmount;
+  
+  let cumulativePrincipal = 0;
+  let cumulativeInterest = 0;
+  let cumulativePrepayments = 0;
+  
+  let paymentNumber = 1;
+  let currentDate = new Date(startDate);
+  let totalRemainingAmortizationMonths = 0;
+  let triggerRatePaymentCount = 0;
+  
+  // Advance payment date using calendar-aware math
+  const advancePaymentDate = (date: Date): Date => {
+    const newDate = new Date(date);
+    switch (frequency) {
+      case 'monthly': {
+        const originalDay = newDate.getDate();
+        const originalMonth = newDate.getMonth();
+        const originalYear = newDate.getFullYear();
+        const targetMonth = (originalMonth + 1) % 12;
+        const targetYear = originalMonth === 11 ? originalYear + 1 : originalYear;
+        const lastDayOfTargetMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+        const clampedDay = Math.min(originalDay, lastDayOfTargetMonth);
+        return new Date(targetYear, targetMonth, clampedDay);
+      }
+      case 'semi-monthly':
+        newDate.setDate(newDate.getDate() + 15);
+        return newDate;
+      case 'biweekly':
+      case 'accelerated-biweekly':
+        newDate.setDate(newDate.getDate() + 14);
+        return newDate;
+      case 'weekly':
+      case 'accelerated-weekly':
+        newDate.setDate(newDate.getDate() + 7);
+        return newDate;
+    }
+  };
+  
+  while (remainingBalance > 0.01 && paymentNumber <= maxPayments) {
+    // Check for term renewal (rate change) - payment amount stays fixed
+    const renewal = termRenewals.find(r => r.startPaymentNumber === paymentNumber);
+    if (renewal) {
+      currentRate = renewal.newRate;
+      // For fixed payment projections, keep the payment amount the same unless explicitly changed
+      if (renewal.newPaymentAmount !== undefined) {
+        currentPaymentAmount = renewal.newPaymentAmount;
+      }
+    }
+    
+    // Calculate interest for this payment
+    const interestPayment = calculateInterestPayment(remainingBalance, currentRate, frequency);
+    
+    // Check if trigger rate hit (payment doesn't cover interest)
+    const triggerRateHit = currentPaymentAmount <= interestPayment;
+    
+    // Calculate principal payment
+    const principalPayment = Math.min(
+      calculatePrincipalPayment(currentPaymentAmount, interestPayment),
+      remainingBalance
+    );
+    
+    // Calculate prepayments for this payment
+    let extraPrepayment = 0;
+    
+    // Process monthly-percent prepayments
+    const monthlyPercentPrepayments = prepayments.filter(
+      p => p.type === 'monthly-percent' && paymentNumber >= p.startPaymentNumber
+    );
+    for (const prep of monthlyPercentPrepayments) {
+      if (prep.monthlyPercent) {
+        extraPrepayment += (currentPaymentAmount * prep.monthlyPercent) / 100;
+      }
+    }
+    
+    // Process one-time prepayments
+    const oneTimePrepayments = prepayments.filter(
+      p => p.type === 'one-time' && p.startPaymentNumber === paymentNumber
+    );
+    for (const prep of oneTimePrepayments) {
+      extraPrepayment += prep.amount;
+    }
+    
+    // Process annual prepayments
+    const currentMonth = currentDate.getMonth() + 1;
+    const annualPrepayments = prepayments.filter(
+      p => p.type === 'annual' && 
+          paymentNumber >= p.startPaymentNumber && 
+          p.recurrenceMonth === currentMonth
+    );
+    for (const prep of annualPrepayments) {
+      const yearsSinceStart = Math.floor((paymentNumber - prep.startPaymentNumber) / paymentsPerYear);
+      const expectedPaymentForThisYear = prep.startPaymentNumber + (yearsSinceStart * paymentsPerYear);
+      if (Math.abs(paymentNumber - expectedPaymentForThisYear) < paymentsPerYear / 12) {
+        extraPrepayment += prep.amount;
+      }
+    }
+    
+    // Cap prepayment to remaining balance
+    extraPrepayment = Math.min(extraPrepayment, remainingBalance - principalPayment);
+    
+    const totalPrincipalPayment = principalPayment + extraPrepayment;
+    
+    // Update balance
+    remainingBalance = calculateRemainingBalance(remainingBalance, principalPayment, extraPrepayment);
+    
+    // Update cumulative totals
+    cumulativePrincipal += totalPrincipalPayment;
+    cumulativeInterest += interestPayment;
+    cumulativePrepayments += extraPrepayment;
+    
+    // Calculate remaining amortization
+    let remainingAmortMonths = 0;
+    if (remainingBalance > 0.01) {
+      remainingAmortMonths = calculateRemainingAmortization(
+        remainingBalance,
+        currentPaymentAmount,
+        currentRate,
+        frequency
+      );
+      if (remainingAmortMonths < 0) {
+        triggerRatePaymentCount++;
+        remainingAmortMonths = -1;
+      } else {
+        totalRemainingAmortizationMonths += remainingAmortMonths;
+      }
+    }
+    
+    // Create payment entry
+    payments.push({
+      paymentNumber,
+      paymentDate: new Date(currentDate),
+      paymentAmount: currentPaymentAmount,
+      principalPayment,
+      interestPayment,
+      extraPrepayment,
+      totalPrincipalPayment,
+      remainingBalance: Math.max(0, remainingBalance),
+      remainingAmortizationMonths: remainingAmortMonths,
+      cumulativePrincipal,
+      cumulativeInterest,
+      cumulativePrepayments,
+      triggerRateHit,
+      effectiveRate: currentRate,
+    });
+    
+    // Move to next payment date
+    currentDate = advancePaymentDate(currentDate);
+    paymentNumber++;
+  }
+  
+  // Calculate summary
+  const lastPayment = payments[payments.length - 1];
+  const payoffDate = lastPayment && lastPayment.remainingBalance < 0.01 
+    ? lastPayment.paymentDate 
+    : null;
+  const payoffPaymentNumber = payoffDate ? lastPayment.paymentNumber : null;
+  
+  const validPaymentCount = payments.length - triggerRatePaymentCount;
+  const averageAmortizationMonths = validPaymentCount > 0 
+    ? totalRemainingAmortizationMonths / validPaymentCount
+    : 0;
+  
+  return {
+    payments,
+    summary: {
+      totalPayments: payments.length,
+      totalPrincipal: cumulativePrincipal,
+      totalInterest: cumulativeInterest,
+      totalPrepayments: cumulativePrepayments,
+      totalCost: cumulativePrincipal + cumulativeInterest,
+      payoffDate,
+      payoffPaymentNumber,
+      averageAmortizationMonths,
+    },
+  };
+}

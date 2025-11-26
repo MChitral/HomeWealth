@@ -436,6 +436,7 @@ export function ScenarioEditorFeature() {
       annualRate: currentMortgageData.currentRate / 100, // Convert to decimal
       amortizationMonths: Math.round(currentMortgageData.currentAmortization * 12),
       paymentFrequency: 'monthly',
+      actualPaymentAmount: currentMortgageData.monthlyPayment, // Use actual payment amount, not recalculated
       monthlyPrepayAmount: monthlyPrepay,
       prepaymentEvents: apiPrepaymentEvents,
       // Add rate override if user has set a different assumption
