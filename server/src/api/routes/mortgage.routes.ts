@@ -8,6 +8,13 @@ import {
   mortgagePaymentCreateSchema,
 } from "@domain/models";
 import { requireUser } from "@api/utils/auth";
+import { 
+  generateAmortizationSchedule, 
+  calculatePayment,
+  type PaymentFrequency,
+  type PrepaymentEvent as CalcPrepaymentEvent,
+} from "../../shared/calculations/mortgage";
+import { z } from "zod";
 
 export function registerMortgageRoutes(router: Router, services: ApplicationServices) {
   router.get("/mortgages", async (req, res) => {
@@ -234,6 +241,198 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       return;
     }
     res.json({ success: true });
+  });
+
+  // Amortization projection endpoint - uses the authoritative Canadian mortgage calculation engine
+  const projectionSchema = z.object({
+    currentBalance: z.number().positive(),
+    annualRate: z.number().min(0).max(1), // As decimal, e.g., 0.0549 for 5.49%
+    amortizationMonths: z.number().int().positive(),
+    paymentFrequency: z.enum(['monthly', 'semi-monthly', 'biweekly', 'accelerated-biweekly', 'weekly', 'accelerated-weekly']).default('monthly'),
+    monthlyPrepayAmount: z.number().min(0).default(0),
+    prepaymentEvents: z.array(z.object({
+      type: z.enum(['annual', 'one-time', 'monthly-percent']),
+      amount: z.number().min(0),
+      startPaymentNumber: z.number().int().min(1).default(1),
+      recurrenceMonth: z.number().int().min(1).max(12).optional(),
+      monthlyPercent: z.number().min(0).max(100).optional(),
+    })).default([]),
+  });
+
+  router.post("/mortgages/projection", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+
+    try {
+      const data = projectionSchema.parse(req.body);
+      
+      // Calculate base payment to determine monthly prepay percentage
+      const basePayment = calculatePayment(
+        data.currentBalance,
+        data.annualRate,
+        data.amortizationMonths,
+        data.paymentFrequency as PaymentFrequency
+      );
+      
+      // Convert prepayment events to calculation engine format
+      const prepayments: CalcPrepaymentEvent[] = [];
+      
+      // Add monthly prepayment as a percentage of the base payment
+      if (data.monthlyPrepayAmount > 0 && basePayment > 0) {
+        // Calculate what percentage of the base payment this represents
+        const monthlyPrepayPercent = (data.monthlyPrepayAmount / basePayment) * 100;
+        prepayments.push({
+          type: 'monthly-percent',
+          amount: 0, // Not used for monthly-percent type
+          startPaymentNumber: 1,
+          monthlyPercent: monthlyPrepayPercent,
+        });
+      }
+      
+      // Add configured prepayment events
+      for (const event of data.prepaymentEvents) {
+        prepayments.push({
+          type: event.type,
+          amount: event.amount,
+          startPaymentNumber: event.startPaymentNumber,
+          recurrenceMonth: event.recurrenceMonth,
+          monthlyPercent: event.monthlyPercent,
+        });
+      }
+
+      // Generate amortization schedule using the authoritative calculation engine
+      const schedule = generateAmortizationSchedule(
+        data.currentBalance,
+        data.annualRate,
+        data.amortizationMonths,
+        data.paymentFrequency as PaymentFrequency,
+        new Date(), // Start from today
+        prepayments,
+        [], // No term renewals for projection
+        360 // Max 30 years
+      );
+
+      // Aggregate payments by year for the table
+      const yearlyData: Array<{
+        year: number;
+        totalPaid: number;
+        principalPaid: number;
+        interestPaid: number;
+        endingBalance: number;
+      }> = [];
+
+      let currentYear = new Date().getFullYear();
+      let yearlyPrincipal = 0;
+      let yearlyInterest = 0;
+      let lastBalance = data.currentBalance;
+
+      for (const payment of schedule.payments) {
+        const paymentYear = payment.paymentDate.getFullYear();
+        
+        if (paymentYear !== currentYear) {
+          // Save previous year's data
+          if (yearlyPrincipal > 0 || yearlyInterest > 0) {
+            yearlyData.push({
+              year: currentYear,
+              totalPaid: Math.round(yearlyPrincipal + yearlyInterest),
+              principalPaid: Math.round(yearlyPrincipal),
+              interestPaid: Math.round(yearlyInterest),
+              endingBalance: Math.round(lastBalance),
+            });
+          }
+          currentYear = paymentYear;
+          yearlyPrincipal = 0;
+          yearlyInterest = 0;
+        }
+
+        yearlyPrincipal += payment.totalPrincipalPayment;
+        yearlyInterest += payment.interestPayment;
+        lastBalance = payment.remainingBalance;
+      }
+
+      // Add final year
+      if (yearlyPrincipal > 0 || yearlyInterest > 0) {
+        yearlyData.push({
+          year: currentYear,
+          totalPaid: Math.round(yearlyPrincipal + yearlyInterest),
+          principalPaid: Math.round(yearlyPrincipal),
+          interestPaid: Math.round(yearlyInterest),
+          endingBalance: Math.round(lastBalance),
+        });
+      }
+
+      // Generate chart data (every 2 years)
+      const chartData: Array<{
+        year: number;
+        balance: number;
+        principal: number;
+        interest: number;
+      }> = [];
+      
+      let cumulativePrincipal = 0;
+      let cumulativeInterest = 0;
+      
+      for (let i = 0; i < schedule.payments.length; i++) {
+        const payment = schedule.payments[i];
+        cumulativePrincipal += payment.totalPrincipalPayment;
+        cumulativeInterest += payment.interestPayment;
+        
+        // Add data point every 24 months (2 years)
+        if (i % 24 === 0) {
+          const yearsFromNow = Math.floor(i / 12);
+          chartData.push({
+            year: yearsFromNow,
+            balance: Math.round(payment.remainingBalance),
+            principal: Math.round(cumulativePrincipal),
+            interest: Math.round(cumulativeInterest),
+          });
+        }
+      }
+      
+      // Ensure final point
+      if (schedule.payments.length > 0) {
+        const lastPayment = schedule.payments[schedule.payments.length - 1];
+        const finalYears = Math.ceil(schedule.payments.length / 12);
+        if (chartData.length === 0 || chartData[chartData.length - 1].balance > 0) {
+          chartData.push({
+            year: finalYears,
+            balance: 0,
+            principal: Math.round(schedule.summary.totalPrincipal),
+            interest: Math.round(schedule.summary.totalInterest),
+          });
+        }
+      }
+
+      // Calculate baseline (no prepayments) for interest savings comparison
+      const baselineSchedule = generateAmortizationSchedule(
+        data.currentBalance,
+        data.annualRate,
+        data.amortizationMonths,
+        data.paymentFrequency as PaymentFrequency,
+        new Date(),
+        [], // No prepayments
+        [],
+        360
+      );
+
+      const interestSaved = Math.max(0, baselineSchedule.summary.totalInterest - schedule.summary.totalInterest);
+      const projectedPayoffYears = schedule.payments.length / 12;
+
+      res.json({
+        yearlyData,
+        chartData,
+        summary: {
+          projectedPayoff: Math.round(projectedPayoffYears * 10) / 10,
+          totalInterest: Math.round(schedule.summary.totalInterest),
+          totalPrincipal: Math.round(schedule.summary.totalPrincipal),
+          interestSaved: Math.round(interestSaved),
+          totalPayments: schedule.summary.totalPayments,
+          payoffDate: schedule.summary.payoffDate,
+        },
+      });
+    } catch (error) {
+      res.status(400).json({ error: "Invalid projection parameters", details: error });
+    }
   });
 }
 

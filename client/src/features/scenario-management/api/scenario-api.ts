@@ -15,6 +15,45 @@ export type ScenarioPayload = {
   efPriorityPercent: number;
 };
 
+export type ProjectionRequest = {
+  currentBalance: number;
+  annualRate: number; // As decimal, e.g., 0.0549 for 5.49%
+  amortizationMonths: number;
+  paymentFrequency?: 'monthly' | 'semi-monthly' | 'biweekly' | 'accelerated-biweekly' | 'weekly' | 'accelerated-weekly';
+  monthlyPrepayAmount?: number;
+  prepaymentEvents?: Array<{
+    type: 'annual' | 'one-time' | 'monthly-percent';
+    amount: number;
+    startPaymentNumber?: number;
+    recurrenceMonth?: number;
+    monthlyPercent?: number;
+  }>;
+};
+
+export type ProjectionResponse = {
+  yearlyData: Array<{
+    year: number;
+    totalPaid: number;
+    principalPaid: number;
+    interestPaid: number;
+    endingBalance: number;
+  }>;
+  chartData: Array<{
+    year: number;
+    balance: number;
+    principal: number;
+    interest: number;
+  }>;
+  summary: {
+    projectedPayoff: number;
+    totalInterest: number;
+    totalPrincipal: number;
+    interestSaved: number;
+    totalPayments: number;
+    payoffDate: string | null;
+  };
+};
+
 export const scenarioQueryKeys = {
   all: () => ["/api/scenarios"] as const,
   scenariosWithMetrics: () => ["/api/scenarios/with-projections"] as const,
@@ -38,5 +77,7 @@ export const scenarioApi = {
     apiRequest<PrepaymentEvent>("PATCH", `/api/prepayment-events/${eventId}`, payload),
   deletePrepaymentEvent: (eventId: string) =>
     apiRequest("DELETE", `/api/prepayment-events/${eventId}`, {}),
+  fetchProjection: (params: ProjectionRequest) =>
+    apiRequest<ProjectionResponse>("POST", "/api/mortgages/projection", params),
 };
 

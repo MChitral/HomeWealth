@@ -9,17 +9,18 @@ import { Switch } from "@/shared/ui/switch";
 import { Separator } from "@/shared/ui/separator";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { Badge } from "@/shared/ui/badge";
-import { Save, ArrowLeft, Info, Plus, Trash2, Edit2 } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/shared/ui/table";
+import { Save, ArrowLeft, Info, Plus, Trash2, Edit2, BarChart3, TableIcon } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
-import { useState, useEffect, useMemo } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/shared/hooks/use-toast";
 import { usePageTitle } from "@/shared/hooks/use-page-title";
 import { queryClient } from "@/shared/api/query-client";
 import { MortgageBalanceChart } from "@/widgets/charts/mortgage-balance-chart";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import type { Scenario, PrepaymentEvent, InsertPrepaymentEvent } from "@shared/schema";
-import { scenarioApi, scenarioQueryKeys, type ScenarioPayload } from "./api";
+import { scenarioApi, scenarioQueryKeys, type ScenarioPayload, type ProjectionRequest, type ProjectionResponse } from "./api";
 import { useScenarioDetail } from "./hooks";
 import { useMortgageData } from "@/features/mortgage-tracking/hooks";
 import { useCashFlowData } from "@/features/cash-flow/hooks";
@@ -412,82 +413,50 @@ export function ScenarioEditorFeature() {
     return Math.max(0, income - monthlyExpenses - mortgagePayment);
   }, [cashFlow, monthlyExpenses, currentMortgageData.monthlyPayment]);
 
-  // Calculate dynamic mortgage projection based on prepayment split
-  const { mortgageProjection, projectedPayoff, totalInterest, interestSaved } = useMemo(() => {
-    const balance = currentMortgageData.currentBalance;
-    const rate = currentMortgageData.currentRate / 100;
-    const monthlyRate = rate / 12;
-    const basePayment = currentMortgageData.monthlyPayment;
+  // Build projection request for API
+  const projectionRequest = useMemo((): ProjectionRequest | null => {
+    if (!currentMortgageData.currentBalance || currentMortgageData.currentBalance <= 0) {
+      return null;
+    }
+
     const prepayPercent = prepaymentSplit[0] / 100;
-    const monthlyPrepay = monthlySurplus * prepayPercent;
-    const totalMonthlyPayment = basePayment + monthlyPrepay;
+    const monthlyPrepay = Math.max(0, monthlySurplus) * prepayPercent;
 
-    // Calculate annual prepayment events total
-    const annualPrepayEvents = prepaymentEvents
-      .filter(e => e.eventType === "annual")
-      .reduce((sum, e) => sum + Number(e.amount || 0), 0);
-
-    // Generate projection data
-    const projection: { year: number; balance: number; principal: number; interest: number }[] = [];
-    let runningBalance = balance;
-    let totalPrincipal = 0;
-    let totalInterestCalc = 0;
-    let monthsToPayoff = 0;
-
-    for (let month = 0; month <= 360 && runningBalance > 0; month++) {
-      if (month % 24 === 0) { // Every 2 years
-        projection.push({
-          year: month / 12,
-          balance: Math.round(runningBalance),
-          principal: Math.round(totalPrincipal),
-          interest: Math.round(totalInterestCalc),
-        });
-      }
-
-      if (runningBalance <= 0) break;
-
-      const interestPayment = runningBalance * monthlyRate;
-      let principalPayment = totalMonthlyPayment - interestPayment;
-
-      // Add annual prepayment in month 3 (March)
-      if (month > 0 && month % 12 === 2) {
-        principalPayment += annualPrepayEvents;
-      }
-
-      principalPayment = Math.min(principalPayment, runningBalance);
-      runningBalance -= principalPayment;
-      totalPrincipal += principalPayment;
-      totalInterestCalc += interestPayment;
-      monthsToPayoff = month + 1;
-    }
-
-    // Ensure we have at least the final data point
-    if (projection.length === 0 || projection[projection.length - 1].balance > 0) {
-      projection.push({
-        year: Math.ceil(monthsToPayoff / 12),
-        balance: 0,
-        principal: Math.round(totalPrincipal),
-        interest: Math.round(totalInterestCalc),
-      });
-    }
-
-    // Calculate baseline (no prepayment) for comparison
-    let baselineInterest = 0;
-    let baselineBalance = balance;
-    for (let month = 0; month <= 360 && baselineBalance > 0; month++) {
-      const interestPayment = baselineBalance * monthlyRate;
-      const principalPayment = Math.min(basePayment - interestPayment, baselineBalance);
-      baselineBalance -= principalPayment;
-      baselineInterest += interestPayment;
-    }
+    // Convert draft prepayment events to API format
+    const apiPrepaymentEvents = prepaymentEvents.map(event => ({
+      type: event.eventType as 'annual' | 'one-time',
+      amount: Number(event.amount || 0),
+      startPaymentNumber: event.startPaymentNumber || 1,
+      recurrenceMonth: event.recurrenceMonth || undefined,
+    }));
 
     return {
-      mortgageProjection: projection,
-      projectedPayoff: Math.round(monthsToPayoff / 12 * 10) / 10,
-      totalInterest: Math.round(totalInterestCalc),
-      interestSaved: Math.round(baselineInterest - totalInterestCalc),
+      currentBalance: currentMortgageData.currentBalance,
+      annualRate: currentMortgageData.currentRate / 100, // Convert to decimal
+      amortizationMonths: Math.round(currentMortgageData.currentAmortization * 12),
+      paymentFrequency: 'monthly',
+      monthlyPrepayAmount: monthlyPrepay,
+      prepaymentEvents: apiPrepaymentEvents,
     };
   }, [currentMortgageData, prepaymentSplit, monthlySurplus, prepaymentEvents]);
+
+  // Fetch projection from backend using authoritative Canadian mortgage calculation engine
+  const { data: projectionData, isLoading: projectionLoading } = useQuery<ProjectionResponse>({
+    queryKey: ['mortgages', 'projection', projectionRequest],
+    queryFn: () => scenarioApi.fetchProjection(projectionRequest!),
+    enabled: !!projectionRequest,
+    staleTime: 5000, // Cache for 5 seconds to prevent excessive API calls
+  });
+
+  // Extract projection data with fallbacks for loading state
+  const mortgageProjection = projectionData?.chartData || [];
+  const yearlyAmortization = projectionData?.yearlyData || [];
+  const projectedPayoff = projectionData?.summary.projectedPayoff || 0;
+  const totalInterest = projectionData?.summary.totalInterest || 0;
+  const interestSaved = projectionData?.summary.interestSaved || 0;
+
+  // State for chart/table toggle
+  const [projectionView, setProjectionView] = useState<"chart" | "table">("chart");
 
   // Show loading skeleton when editing existing scenario or loading mortgage data
   if ((detailLoading && !isNewScenario) || mortgageLoading) {
@@ -950,11 +919,35 @@ export function ScenarioEditorFeature() {
 
           <Card className="border-primary">
             <CardHeader>
-              <CardTitle>Projected Mortgage Outcome</CardTitle>
-              <CardDescription>
-                Based on current prepayment strategy
-                {prepaymentEvents.length > 0 && ` (${prepaymentEvents.length} prepayment ${prepaymentEvents.length === 1 ? 'event' : 'events'})`}
-              </CardDescription>
+              <div className="flex items-start justify-between gap-4 flex-wrap">
+                <div>
+                  <CardTitle>Projected Mortgage Outcome</CardTitle>
+                  <CardDescription>
+                    Based on current prepayment strategy
+                    {prepaymentEvents.length > 0 && ` (${prepaymentEvents.length} prepayment ${prepaymentEvents.length === 1 ? 'event' : 'events'})`}
+                  </CardDescription>
+                </div>
+                <div className="flex gap-1 border rounded-md p-1">
+                  <Button 
+                    variant={projectionView === "chart" ? "secondary" : "ghost"} 
+                    size="sm"
+                    onClick={() => setProjectionView("chart")}
+                    data-testid="button-view-chart"
+                  >
+                    <BarChart3 className="h-4 w-4 mr-1" />
+                    Chart
+                  </Button>
+                  <Button 
+                    variant={projectionView === "table" ? "secondary" : "ghost"} 
+                    size="sm"
+                    onClick={() => setProjectionView("table")}
+                    data-testid="button-view-table"
+                  >
+                    <TableIcon className="h-4 w-4 mr-1" />
+                    Table
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-primary/10 rounded-md">
@@ -975,10 +968,59 @@ export function ScenarioEditorFeature() {
                 </div>
               </div>
               <Separator />
-              <div>
-                <p className="text-sm font-medium mb-3">Mortgage Balance Projection (from today)</p>
-                <MortgageBalanceChart data={mortgageProjection} />
-              </div>
+              
+              {projectionView === "chart" ? (
+                <div>
+                  <p className="text-sm font-medium mb-3">Mortgage Balance Projection (from today)</p>
+                  <MortgageBalanceChart data={mortgageProjection} />
+                </div>
+              ) : (
+                <div>
+                  <p className="text-sm font-medium mb-3">Yearly Amortization Schedule</p>
+                  <div className="border rounded-md overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/50">
+                          <TableHead className="font-semibold">Year</TableHead>
+                          <TableHead className="text-right font-semibold">Total Paid</TableHead>
+                          <TableHead className="text-right font-semibold">Principal</TableHead>
+                          <TableHead className="text-right font-semibold">Interest</TableHead>
+                          <TableHead className="text-right font-semibold">Balance</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {yearlyAmortization.map((row, index) => (
+                          <TableRow key={row.year} className={index % 2 === 0 ? "bg-background" : "bg-muted/30"}>
+                            <TableCell className="font-medium">{row.year}</TableCell>
+                            <TableCell className="text-right font-mono">${row.totalPaid.toLocaleString()}</TableCell>
+                            <TableCell className="text-right font-mono text-green-600">${row.principalPaid.toLocaleString()}</TableCell>
+                            <TableCell className="text-right font-mono text-blue-600">${row.interestPaid.toLocaleString()}</TableCell>
+                            <TableCell className="text-right font-mono">${row.endingBalance.toLocaleString()}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                      <TableFooter>
+                        <TableRow className="bg-muted font-semibold">
+                          <TableCell>Total</TableCell>
+                          <TableCell className="text-right font-mono">
+                            ${yearlyAmortization.reduce((sum, r) => sum + r.totalPaid, 0).toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-green-600">
+                            ${yearlyAmortization.reduce((sum, r) => sum + r.principalPaid, 0).toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-blue-600">
+                            ${yearlyAmortization.reduce((sum, r) => sum + r.interestPaid, 0).toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right font-mono">
+                            ${yearlyAmortization.length > 0 ? yearlyAmortization[yearlyAmortization.length - 1].endingBalance.toLocaleString() : '0'}
+                          </TableCell>
+                        </TableRow>
+                      </TableFooter>
+                    </Table>
+                  </div>
+                </div>
+              )}
+              
               <p className="text-sm text-muted-foreground italic">
                 Adjust prepayment settings above to see how they affect your mortgage payoff timeline
               </p>
