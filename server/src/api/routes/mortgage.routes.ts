@@ -257,6 +257,8 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       recurrenceMonth: z.number().int().min(1).max(12).optional(),
       monthlyPercent: z.number().min(0).max(100).optional(),
     })).default([]),
+    rateOverride: z.number().min(0).max(1).optional(), // Optional rate override for scenario modeling
+    mortgageId: z.string().optional(), // Optional: include historical payments
   });
 
   router.post("/mortgages/projection", async (req, res) => {
@@ -266,10 +268,13 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
     try {
       const data = projectionSchema.parse(req.body);
       
+      // Use rate override if provided, otherwise use the passed annualRate
+      const effectiveRate = data.rateOverride ?? data.annualRate;
+      
       // Calculate base payment to determine monthly prepay percentage
       const basePayment = calculatePayment(
         data.currentBalance,
-        data.annualRate,
+        effectiveRate,
         data.amortizationMonths,
         data.paymentFrequency as PaymentFrequency
       );
@@ -303,7 +308,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       // Generate amortization schedule using the authoritative calculation engine
       const schedule = generateAmortizationSchedule(
         data.currentBalance,
-        data.annualRate,
+        effectiveRate,
         data.amortizationMonths,
         data.paymentFrequency as PaymentFrequency,
         new Date(), // Start from today
@@ -312,13 +317,71 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         360 // Max 30 years
       );
 
-      // Aggregate payments by year for the table
-      const yearlyData: Array<{
+      // Fetch historical payments if mortgageId is provided
+      const historicalYearlyData: Array<{
         year: number;
         totalPaid: number;
         principalPaid: number;
         interestPaid: number;
         endingBalance: number;
+        isHistorical: boolean;
+      }> = [];
+
+      if (data.mortgageId) {
+        const historicalPayments = await services.mortgagePayments.listByMortgage(data.mortgageId, user.id);
+        
+        if (historicalPayments && historicalPayments.length > 0) {
+          // Aggregate historical payments by year
+          const yearlyHistorical = new Map<number, { 
+            totalPaid: number; 
+            principalPaid: number; 
+            interestPaid: number; 
+            endingBalance: number;
+          }>();
+
+          for (const payment of historicalPayments) {
+            const paymentDate = new Date(payment.paymentDate);
+            const year = paymentDate.getFullYear();
+            
+            const existing = yearlyHistorical.get(year) || {
+              totalPaid: 0,
+              principalPaid: 0,
+              interestPaid: 0,
+              endingBalance: 0,
+            };
+
+            existing.totalPaid += Number(payment.paymentAmount || 0);
+            existing.principalPaid += Number(payment.principalPaid || 0);
+            existing.interestPaid += Number(payment.interestPaid || 0);
+            existing.endingBalance = Number(payment.remainingBalance || 0); // Use last payment's balance
+            
+            yearlyHistorical.set(year, existing);
+          }
+
+          // Convert to array and sort by year
+          const sortedYears = Array.from(yearlyHistorical.keys()).sort((a, b) => a - b);
+          for (const year of sortedYears) {
+            const yearData = yearlyHistorical.get(year)!;
+            historicalYearlyData.push({
+              year,
+              totalPaid: Math.round(yearData.totalPaid),
+              principalPaid: Math.round(yearData.principalPaid),
+              interestPaid: Math.round(yearData.interestPaid),
+              endingBalance: Math.round(yearData.endingBalance),
+              isHistorical: true,
+            });
+          }
+        }
+      }
+
+      // Aggregate projected payments by year for the table
+      const projectedYearlyData: Array<{
+        year: number;
+        totalPaid: number;
+        principalPaid: number;
+        interestPaid: number;
+        endingBalance: number;
+        isHistorical: boolean;
       }> = [];
 
       let currentYear = new Date().getFullYear();
@@ -326,18 +389,24 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       let yearlyInterest = 0;
       let lastBalance = data.currentBalance;
 
+      // Get the last year that has complete historical data
+      const lastHistoricalYear = historicalYearlyData.length > 0 
+        ? Math.max(...historicalYearlyData.map(d => d.year))
+        : 0;
+
       for (const payment of schedule.payments) {
         const paymentYear = payment.paymentDate.getFullYear();
         
         if (paymentYear !== currentYear) {
-          // Save previous year's data
-          if (yearlyPrincipal > 0 || yearlyInterest > 0) {
-            yearlyData.push({
+          // Save previous year's data (only if year is after last historical year)
+          if ((yearlyPrincipal > 0 || yearlyInterest > 0) && currentYear > lastHistoricalYear) {
+            projectedYearlyData.push({
               year: currentYear,
               totalPaid: Math.round(yearlyPrincipal + yearlyInterest),
               principalPaid: Math.round(yearlyPrincipal),
               interestPaid: Math.round(yearlyInterest),
               endingBalance: Math.round(lastBalance),
+              isHistorical: false,
             });
           }
           currentYear = paymentYear;
@@ -350,16 +419,20 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         lastBalance = payment.remainingBalance;
       }
 
-      // Add final year
-      if (yearlyPrincipal > 0 || yearlyInterest > 0) {
-        yearlyData.push({
+      // Add final year (only if year is after last historical year)
+      if ((yearlyPrincipal > 0 || yearlyInterest > 0) && currentYear > lastHistoricalYear) {
+        projectedYearlyData.push({
           year: currentYear,
           totalPaid: Math.round(yearlyPrincipal + yearlyInterest),
           principalPaid: Math.round(yearlyPrincipal),
           interestPaid: Math.round(yearlyInterest),
           endingBalance: Math.round(lastBalance),
+          isHistorical: false,
         });
       }
+      
+      // Merge historical and projected data (no duplicates possible now)
+      const yearlyData = [...historicalYearlyData, ...projectedYearlyData];
 
       // Generate chart data (every 2 years)
       const chartData: Array<{
@@ -406,7 +479,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       // Calculate baseline (no prepayments) for interest savings comparison
       const baselineSchedule = generateAmortizationSchedule(
         data.currentBalance,
-        data.annualRate,
+        effectiveRate,
         data.amortizationMonths,
         data.paymentFrequency as PaymentFrequency,
         new Date(),
@@ -429,6 +502,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
           totalPayments: schedule.summary.totalPayments,
           payoffDate: schedule.summary.payoffDate,
         },
+        effectiveRate: effectiveRate * 100, // Return as percentage for display
       });
     } catch (error) {
       res.status(400).json({ error: "Invalid projection parameters", details: error });

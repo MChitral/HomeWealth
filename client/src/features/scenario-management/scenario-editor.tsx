@@ -59,6 +59,7 @@ export function ScenarioEditorFeature() {
   const [prepaymentSplit, setPrepaymentSplit] = useState([50]);
   const [expectedReturnRate, setExpectedReturnRate] = useState(6.0);
   const [efPriorityPercent, setEfPriorityPercent] = useState(0);
+  const [rateAssumption, setRateAssumption] = useState<number | null>(null); // null = use current rate
   
   // Prepayment events state
   const [prepaymentEvents, setPrepaymentEvents] = useState<DraftPrepaymentEvent[]>([]);
@@ -437,8 +438,12 @@ export function ScenarioEditorFeature() {
       paymentFrequency: 'monthly',
       monthlyPrepayAmount: monthlyPrepay,
       prepaymentEvents: apiPrepaymentEvents,
+      // Add rate override if user has set a different assumption
+      rateOverride: rateAssumption !== null ? rateAssumption / 100 : undefined,
+      // Include mortgage ID to fetch historical payments
+      mortgageId: mortgage?.id,
     };
-  }, [currentMortgageData, prepaymentSplit, monthlySurplus, prepaymentEvents]);
+  }, [currentMortgageData, prepaymentSplit, monthlySurplus, prepaymentEvents, rateAssumption, mortgage?.id]);
 
   // Fetch projection from backend using authoritative Canadian mortgage calculation engine
   const { data: projectionData, isLoading: projectionLoading } = useQuery<ProjectionResponse>({
@@ -622,43 +627,91 @@ export function ScenarioEditorFeature() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Future Rate Assumptions</CardTitle>
-              <CardDescription>Model how rates might change over the projection period</CardDescription>
+              <CardTitle>Rate Assumption for Projections</CardTitle>
+              <CardDescription>Model what happens if rates change (affects amortization timeline)</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="rate-scenario">Rate Change Scenario</Label>
-                <Select defaultValue="current">
-                  <SelectTrigger id="rate-scenario" data-testid="select-rate-scenario">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="current">Current rate stays constant</SelectItem>
-                    <SelectItem value="decrease-slow">Slow decrease (0.25% per year)</SelectItem>
-                    <SelectItem value="decrease-fast">Fast decrease (0.50% per year)</SelectItem>
-                    <SelectItem value="increase-slow">Slow increase (0.25% per year)</SelectItem>
-                    <SelectItem value="increase-fast">Fast increase (0.50% per year)</SelectItem>
-                    <SelectItem value="custom">Custom rate schedule</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>Projected Rate</Label>
+                  <Badge variant="outline" className="font-mono">
+                    {rateAssumption !== null 
+                      ? `${rateAssumption.toFixed(2)}%` 
+                      : `${currentMortgageData.currentRate.toFixed(2)}% (current)`}
+                  </Badge>
+                </div>
+                
+                <div className="space-y-2">
+                  <Slider
+                    value={[rateAssumption ?? currentMortgageData.currentRate]}
+                    onValueChange={(values) => setRateAssumption(values[0])}
+                    min={1.0}
+                    max={10.0}
+                    step={0.25}
+                    className="w-full"
+                    data-testid="slider-rate"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>1.00%</span>
+                    <span>Current: {currentMortgageData.currentRate.toFixed(2)}%</span>
+                    <span>10.00%</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 flex-wrap">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setRateAssumption(null)}
+                    className={rateAssumption === null ? "border-primary" : ""}
+                    data-testid="button-rate-current"
+                  >
+                    Use Current
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setRateAssumption(currentMortgageData.currentRate - 1)}
+                    data-testid="button-rate-down-1"
+                  >
+                    -1.00%
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setRateAssumption(currentMortgageData.currentRate - 0.5)}
+                    data-testid="button-rate-down-half"
+                  >
+                    -0.50%
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setRateAssumption(currentMortgageData.currentRate + 0.5)}
+                    data-testid="button-rate-up-half"
+                  >
+                    +0.50%
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setRateAssumption(currentMortgageData.currentRate + 1)}
+                    data-testid="button-rate-up-1"
+                  >
+                    +1.00%
+                  </Button>
+                </div>
+
                 <p className="text-sm text-muted-foreground">
-                  For variable mortgages, this affects Prime rate changes. Your spread ({currentMortgageData.lockedSpread}%) stays locked until term renewal.
+                  {rateAssumption !== null && rateAssumption < currentMortgageData.currentRate
+                    ? `If rates drop to ${rateAssumption.toFixed(2)}%, you'll pay off faster and save on interest.`
+                    : rateAssumption !== null && rateAssumption > currentMortgageData.currentRate
+                    ? `If rates rise to ${rateAssumption.toFixed(2)}%, your amortization will extend.`
+                    : "Using your current rate for projections."}
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="term-renewal">At Next Term Renewal (future)</Label>
-                <Select defaultValue="same">
-                  <SelectTrigger id="term-renewal">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="same">Keep same spread</SelectItem>
-                    <SelectItem value="better">Negotiate better spread (-0.10%)</SelectItem>
-                    <SelectItem value="worse">Worse spread (+0.10%)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <Separator />
 
               <div className="space-y-2">
                 <Label htmlFor="appreciation-rate">Property Appreciation Rate (% annual)</Label>
@@ -971,12 +1024,40 @@ export function ScenarioEditorFeature() {
               
               {projectionView === "chart" ? (
                 <div>
-                  <p className="text-sm font-medium mb-3">Mortgage Balance Projection (from today)</p>
+                  <p className="text-sm font-medium mb-3">
+                    Mortgage Balance Projection 
+                    {rateAssumption !== null && (
+                      <span className="text-muted-foreground ml-2">
+                        (at {rateAssumption.toFixed(2)}% rate)
+                      </span>
+                    )}
+                  </p>
                   <MortgageBalanceChart data={mortgageProjection} />
                 </div>
               ) : (
                 <div>
-                  <p className="text-sm font-medium mb-3">Yearly Amortization Schedule</p>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-sm font-medium">
+                      Yearly Amortization Schedule
+                      {rateAssumption !== null && (
+                        <span className="text-muted-foreground ml-2">
+                          (at {rateAssumption.toFixed(2)}% rate)
+                        </span>
+                      )}
+                    </p>
+                    {yearlyAmortization.some(r => r.isHistorical) && (
+                      <div className="flex items-center gap-4 text-xs">
+                        <span className="flex items-center gap-1">
+                          <span className="w-3 h-3 rounded bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700" />
+                          Logged Payments
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="w-3 h-3 rounded bg-background border" />
+                          Projected
+                        </span>
+                      </div>
+                    )}
+                  </div>
                   <div className="border rounded-md overflow-hidden">
                     <Table>
                       <TableHeader>
@@ -990,8 +1071,22 @@ export function ScenarioEditorFeature() {
                       </TableHeader>
                       <TableBody>
                         {yearlyAmortization.map((row, index) => (
-                          <TableRow key={row.year} className={index % 2 === 0 ? "bg-background" : "bg-muted/30"}>
-                            <TableCell className="font-medium">{row.year}</TableCell>
+                          <TableRow 
+                            key={row.year} 
+                            className={
+                              row.isHistorical 
+                                ? "bg-green-50 dark:bg-green-900/20 border-l-2 border-l-green-500" 
+                                : index % 2 === 0 ? "bg-background" : "bg-muted/30"
+                            }
+                          >
+                            <TableCell className="font-medium">
+                              {row.year}
+                              {row.isHistorical && (
+                                <Badge variant="outline" className="ml-2 text-xs py-0 text-green-700 dark:text-green-400 border-green-300 dark:border-green-700">
+                                  Logged
+                                </Badge>
+                              )}
+                            </TableCell>
                             <TableCell className="text-right font-mono">${row.totalPaid.toLocaleString()}</TableCell>
                             <TableCell className="text-right font-mono text-green-600">${row.principalPaid.toLocaleString()}</TableCell>
                             <TableCell className="text-right font-mono text-blue-600">${row.interestPaid.toLocaleString()}</TableCell>

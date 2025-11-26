@@ -28,16 +28,32 @@ export type ProjectionRequest = {
     recurrenceMonth?: number;
     monthlyPercent?: number;
   }>;
+  rateOverride?: number; // Optional rate override for scenario modeling (as decimal)
+  mortgageId?: string; // Optional: include historical payments from this mortgage
 };
 
+export type HistoricalYearData = {
+  year: number;
+  totalPaid: number;
+  principalPaid: number;
+  interestPaid: number;
+  endingBalance: number;
+  isHistorical: true;
+};
+
+export type ProjectedYearData = {
+  year: number;
+  totalPaid: number;
+  principalPaid: number;
+  interestPaid: number;
+  endingBalance: number;
+  isHistorical?: false;
+};
+
+export type YearlyData = HistoricalYearData | ProjectedYearData;
+
 export type ProjectionResponse = {
-  yearlyData: Array<{
-    year: number;
-    totalPaid: number;
-    principalPaid: number;
-    interestPaid: number;
-    endingBalance: number;
-  }>;
+  yearlyData: YearlyData[];
   chartData: Array<{
     year: number;
     balance: number;
@@ -52,6 +68,7 @@ export type ProjectionResponse = {
     totalPayments: number;
     payoffDate: string | null;
   };
+  effectiveRate: number; // The actual rate used (after any override)
 };
 
 export const scenarioQueryKeys = {
