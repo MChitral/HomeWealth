@@ -25,7 +25,7 @@ import { Plus, Download, AlertTriangle, RefreshCw, Info, Loader2, Trash2 } from 
 import { useState, useEffect } from "react";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Separator } from "@/shared/ui/separator";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/shared/api/query-client";
 import { useToast } from "@/shared/hooks/use-toast";
 import { usePageTitle } from "@/shared/hooks/use-page-title";
@@ -33,7 +33,7 @@ import type { Mortgage, MortgageTerm, MortgagePayment } from "@shared/schema";
 import { useMemo } from "react";
 import { InfoTooltip } from "@/shared/ui/info-tooltip";
 import { PageHeader } from "@/shared/ui/page-header";
-import { useMortgageData } from "./hooks";
+import { useMortgageData, usePrimeRate } from "./hooks";
 import { useAutoCreatePayment, useAutoRenewalPayment } from "./hooks/use-auto-payments";
 import { LogPaymentDialog } from "./components/log-payment-dialog";
 import type { UiTerm, UiPayment } from "./types";
@@ -44,7 +44,6 @@ import {
   type CreateTermPayload,
   type UpdateMortgagePayload,
   type UpdateTermPayload,
-  type PrimeRateResponse,
   type CreatePaymentPayload,
 } from "./api";
 import {
@@ -117,7 +116,6 @@ export default function MortgageFeature() {
   const [backfillStartDate, setBackfillStartDate] = useState("");
   const [backfillNumberOfPayments, setBackfillNumberOfPayments] = useState("12");
   const [backfillPaymentAmount, setBackfillPaymentAmount] = useState("");
-  const [primeRate, setPrimeRate] = useState("6.45");
   const [renewalTermType, setRenewalTermType] = useState("variable-fixed");
   const [renewalPaymentFrequency, setRenewalPaymentFrequency] = useState("monthly");
   const [renewalRate, setRenewalRate] = useState("");
@@ -190,6 +188,13 @@ export default function MortgageFeature() {
     && !propertyPriceError && !downPaymentError && !loanAmountError;
 
   const { mortgages, mortgage, terms, payments, isLoading } = useMortgageData(selectedMortgageId);
+  const {
+    primeRate,
+    setPrimeRate,
+    primeRateData,
+    isPrimeRateLoading,
+    refetchPrimeRate,
+  } = usePrimeRate();
   useEffect(() => {
     if (mortgages.length === 0) {
       setSelectedMortgageId(null);
@@ -199,13 +204,6 @@ export default function MortgageFeature() {
       setSelectedMortgageId(mortgages[0].id);
     }
   }, [mortgages, selectedMortgageId]);
-
-  // Fetch Bank of Canada prime rate
-  const { data: primeRateData, isLoading: isPrimeRateLoading, refetch: refetchPrimeRate } = useQuery<PrimeRateResponse>({
-    queryKey: mortgageQueryKeys.primeRate(),
-    queryFn: () => mortgageApi.fetchPrimeRate(),
-    staleTime: 1000 * 60 * 30, // Cache for 30 minutes
-  });
 
   // Auto-fill prime rate when data is fetched
   useEffect(() => {
@@ -220,7 +218,6 @@ export default function MortgageFeature() {
     if (isEditTermOpen && editTermType !== "fixed" && !editTermPrimeRate) {
       setEditTermPrimeRate(latestPrime);
     }
-    setPrimeRate(latestPrime);
   }, [
     primeRateData,
     isCreateMortgageOpen,
@@ -1211,9 +1208,6 @@ export default function MortgageFeature() {
     ? uiCurrentTerm.fixedRate
     : currentPrimeRateValue + (uiCurrentTerm.lockedSpread || 0);
 
-  const lastKnownBalance =
-    paymentHistory[paymentHistory.length - 1]?.remainingBalance ??
-    Number(mortgage?.currentBalance || 0);
   const previewBackfillEndDate = useMemo(() => {
     if (!backfillStartDate || !uiCurrentTerm) return "";
     const total = parseInt(backfillNumberOfPayments, 10);
@@ -1347,6 +1341,7 @@ export default function MortgageFeature() {
             <Button variant="outline" onClick={() => setIsEditMortgageOpen(false)}>
               Cancel
             </Button>
+            <Button
               onClick={() => {
                 editMortgageMutation.mutate({
                   propertyPrice: editPropertyPrice,
@@ -1377,7 +1372,7 @@ export default function MortgageFeature() {
         isSubmitting={createPaymentMutation.isPending}
       />
 
-      {uiCurrentTerm && (
+      {uiCurrentTerm ? (
         <BackfillPaymentsDialog
           open={isBackfillOpen}
           onOpenChange={setIsBackfillOpen}
@@ -1396,7 +1391,7 @@ export default function MortgageFeature() {
             isPending: backfillPaymentsMutation.isPending,
           }}
         />
-      )}
+      ) : null}
 
       <Card className="border-primary">
         <CardHeader>

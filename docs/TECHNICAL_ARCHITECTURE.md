@@ -1,8 +1,8 @@
 # Canadian Mortgage Strategy & Wealth Forecasting
 ## Technical Architecture & Implementation Documentation
 
-**Last Updated**: November 18, 2024  
-**Version**: MVP 1.0 (All Core Pages Complete)  
+**Last Updated**: November 29, 2025  
+**Version**: v1.1 (Phase 4 completed)  
 **Audience**: Developers, Technical Stakeholders
 
 ---
@@ -306,7 +306,7 @@ users
 
 **Purpose**: Core mortgage details
 **Cardinality**: 1:N with users (support future multi-mortgage)
-**Current**: App assumes one mortgage per user
+**Current**: UI supports multiple mortgages per user; selectors scope downstream data.
 
 #### 5. mortgage_terms
 ```typescript
@@ -850,7 +850,10 @@ const mutation = useMutation({
 
 ### 1. Canadian Mortgage Calculation Engine
 
-**Location**: `server/calculations/mortgage.ts`
+**Locations**:
+- **Server:** `server/calculations/mortgage.ts` (authoritative amortization + compliance checks)
+- **Shared Client Helper:** `client/src/features/mortgage-tracking/utils/mortgage-math.ts` (used by tracker, dashboard, scenario planner). Covered by `node --import tsx --test client/src/features/mortgage-tracking/utils/__tests__/mortgage-math.test.ts`.
+- **Prime Rate Service:** `server/src/shared/services/prime-rate.ts` + `client/src/features/mortgage-tracking/hooks/use-prime-rate.ts`
 
 **Core Functions**:
 

@@ -78,6 +78,7 @@
 ### Navigation
 **Top Bar:** Logo left, scenario dropdown center, user profile right, h-16, border-b, sticky
 **Sidebar:** w-64, Dashboard, Scenarios, Comparison, Cash Flow, Emergency Fund, Settings
+**Active Mortgage Selector:** Inline card above mortgage-specific pages showing property nickname + balance with a select dropdown; state propagates to dashboard/scenario planner.
 
 ### Data Display
 **Metric Cards:** Large value (text-4xl font-mono), label above, trend indicator, supporting info below, elevated shadow
@@ -116,7 +117,7 @@
 **Sticky Header:** Scenario name input, Save/Cancel buttons, last saved timestamp
 **Tabbed Sections:** Mortgage Details, Income & Expenses, Emergency Fund, Investments, Prepayment Strategy
 **Form Layout:** Logical grouping with collapsible advanced options
-**Live Preview Sidebar:** Right panel (desktop) showing calculated metrics updating as user types
+**Live Preview Sidebar:** Right panel (desktop) showing calculated metrics (next payment principal/interest, trigger warnings, payoff deltas) updating as user types
 
 ### Scenario Comparison
 **Scenario Selector:** Multi-select (2-4 scenarios), Clear All button
@@ -138,6 +139,7 @@
 **Amortization Table:** Year-by-year breakdown with principal, interest, balance
 **Payoff Timeline:** Visual timeline showing projected payoff date
 **Prepayment Impact:** Before/after comparison showing time and interest saved
+**Prime Snapshot Banner:** Read-only info bar displaying Bank of Canada rate, effective date, and a refresh CTA aligned with VRM inputs.
 
 ---
 

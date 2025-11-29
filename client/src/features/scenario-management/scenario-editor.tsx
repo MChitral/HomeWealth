@@ -24,6 +24,11 @@ import { scenarioApi, scenarioQueryKeys, type ScenarioPayload, type ProjectionRe
 import { useScenarioDetail } from "./hooks";
 import { useMortgageData } from "@/features/mortgage-tracking/hooks";
 import { useCashFlowData } from "@/features/cash-flow/hooks";
+import {
+  calculatePayment,
+  calculatePaymentBreakdown,
+  type PaymentFrequency,
+} from "@/features/mortgage-tracking/utils/mortgage-math";
 
 type DraftPrepaymentEvent = {
   id: string;
@@ -361,32 +366,91 @@ export function ScenarioEditorFeature() {
     ? (new Date().getTime() - new Date(firstPayment.paymentDate).getTime()) / (1000 * 60 * 60 * 24 * 365)
     : 0;
 
+  const scenarioPaymentFrequency: PaymentFrequency = "monthly";
+
   // Current mortgage data from database
-  const currentMortgageData = useMemo(() => ({
-    homeValue: Number(mortgage?.propertyPrice || 500000),
-    originalPrincipal: Number(mortgage?.originalAmount || 400000),
-    currentBalance: latestPayment 
-      ? Number(latestPayment.remainingBalance) 
-      : Number(mortgage?.currentBalance || 400000),
-    principalPaid: Math.round(totalPrincipalPaid * 100) / 100,
-    interestPaid: Math.round(totalInterestPaid * 100) / 100,
-    yearsIntoMortgage: Math.round(yearsIntoMortgage * 100) / 100,
-    currentRate: latestPayment 
-      ? Number(latestPayment.effectiveRate) 
-      : Number(latestTerm?.fixedRate || latestTerm?.lockedSpread || 5.0),
-    currentAmortization: latestPayment 
-      ? Math.round((Number(latestPayment.remainingAmortizationMonths) / 12) * 10) / 10
-      : Number(mortgage?.amortizationYears || 25),
-    monthlyPayment: latestPayment 
+  const currentMortgageData = useMemo(() => {
+    const homeValue = Number(mortgage?.propertyPrice || 500000);
+    const originalPrincipal = Number(mortgage?.originalAmount || 400000);
+
+    const balanceFromPayment = latestPayment ? Number(latestPayment.remainingBalance) : NaN;
+    const currentBalance =
+      Number.isFinite(balanceFromPayment) && balanceFromPayment > 0
+        ? balanceFromPayment
+        : Number(mortgage?.currentBalance || originalPrincipal);
+
+    const principalPaid = Math.round(totalPrincipalPaid * 100) / 100;
+    const interestPaid = Math.round(totalInterestPaid * 100) / 100;
+    const yearsInto = Math.round(yearsIntoMortgage * 100) / 100;
+
+    const termRate =
+      latestTerm?.termType === "fixed"
+        ? Number(latestTerm?.fixedRate ?? 0)
+        : Number(latestTerm?.primeRate ?? 0) + Number(latestTerm?.lockedSpread ?? 0);
+    const derivedRate = latestPayment ? Number(latestPayment.effectiveRate) : termRate;
+    const currentRate = Number.isFinite(derivedRate) && derivedRate > 0 ? derivedRate : 5;
+
+    const amortizationYears = latestPayment
+      ? Number(latestPayment.remainingAmortizationMonths ?? 0) / 12
+      : Number(mortgage?.amortizationYears || 25);
+    const amortizationMonths = Math.max(1, Math.round((amortizationYears || 0) * 12));
+
+    let paymentAmount = latestPayment
       ? Number(latestPayment.regularPaymentAmount)
-      : Number(latestTerm?.regularPaymentAmount || 2000),
-    termType: latestTerm?.termType === "fixed" 
-      ? "Fixed Rate" 
-      : latestTerm?.termType === "variable-fixed" 
-        ? "Variable-Fixed Payment" 
-        : "Variable-Changing Payment",
-    lockedSpread: Number(latestTerm?.lockedSpread || 0),
-  }), [mortgage, latestTerm, latestPayment, totalPrincipalPaid, totalInterestPaid, yearsIntoMortgage]);
+      : Number(latestTerm?.regularPaymentAmount || 0);
+    if ((!paymentAmount || paymentAmount <= 0) && currentBalance > 0 && amortizationMonths > 0 && currentRate > 0) {
+      paymentAmount = calculatePayment(
+        currentBalance,
+        currentRate / 100,
+        amortizationMonths,
+        scenarioPaymentFrequency,
+      );
+    }
+    paymentAmount = Math.round((paymentAmount || 0) * 100) / 100;
+
+    const termType =
+      latestTerm?.termType === "fixed"
+        ? "Fixed Rate"
+        : latestTerm?.termType === "variable-fixed"
+          ? "Variable-Fixed Payment"
+          : "Variable-Changing Payment";
+
+    return {
+      homeValue,
+      originalPrincipal,
+      currentBalance,
+      principalPaid,
+      interestPaid,
+      yearsIntoMortgage: yearsInto,
+      currentRate,
+      currentAmortization: Math.max(0, Math.round((amortizationMonths / 12) * 10) / 10),
+      monthlyPayment: paymentAmount,
+      termType,
+      lockedSpread: Number(latestTerm?.lockedSpread || 0),
+      paymentFrequency: scenarioPaymentFrequency,
+    };
+  }, [mortgage, latestTerm, latestPayment, totalPrincipalPaid, totalInterestPaid, yearsIntoMortgage]);
+
+  const rateUsedForPreview = typeof rateAssumption === "number" ? rateAssumption : currentMortgageData.currentRate;
+
+  const scenarioPaymentPreview = useMemo(() => {
+    if (!currentMortgageData.currentBalance || currentMortgageData.currentBalance <= 0) return null;
+    if (!currentMortgageData.monthlyPayment || currentMortgageData.monthlyPayment <= 0) return null;
+    if (!rateUsedForPreview || rateUsedForPreview <= 0) return null;
+
+    return calculatePaymentBreakdown({
+      balance: currentMortgageData.currentBalance,
+      paymentAmount: currentMortgageData.monthlyPayment,
+      regularPaymentAmount: currentMortgageData.monthlyPayment,
+      extraPrepaymentAmount: 0,
+      frequency: scenarioPaymentFrequency,
+      annualRate: rateUsedForPreview / 100,
+    });
+  }, [
+    currentMortgageData.currentBalance,
+    currentMortgageData.monthlyPayment,
+    rateUsedForPreview,
+  ]);
 
   // Calculate monthly expenses from all expense fields
   const monthlyExpenses = useMemo(() => {
@@ -622,6 +686,34 @@ export function ScenarioEditorFeature() {
                   <p className="text-base font-mono">${currentMortgageData.monthlyPayment.toLocaleString()}</p>
                 </div>
               </div>
+            {scenarioPaymentPreview && (
+              <div className="mt-4 space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Next Payment Principal</p>
+                    <p className="text-base font-mono text-green-600">
+                      ${scenarioPaymentPreview.principal.toFixed(2)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Next Payment Interest</p>
+                    <p className="text-base font-mono text-orange-600">
+                      ${scenarioPaymentPreview.interest.toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Using {rateUsedForPreview.toFixed(2)}% rate · Canadian semi-annual compounding
+                </p>
+                {scenarioPaymentPreview.triggerRateHit && (
+                  <Alert variant="destructive">
+                    <AlertDescription>
+                      Current payment is below the interest-only threshold. Increase the payment or adjust your strategy to avoid trigger-rate calls.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            )}
               <Separator className="my-4" />
               <div className="flex items-center justify-between">
                 <div>

@@ -45,7 +45,6 @@ export function LogPaymentDialog({
   open,
   onOpenChange,
   currentTerm,
-  paymentHistory,
   currentPrimeRate,
   currentEffectiveRate,
   lastKnownBalance,

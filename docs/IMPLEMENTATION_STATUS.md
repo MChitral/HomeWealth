@@ -1,6 +1,6 @@
 # Canadian Mortgage Strategy MVP - Implementation Status
 
-**Last Updated:** November 20, 2024
+**Last Updated:** November 29, 2025
 
 ## 🎯 MVP Completion Status: 100% Complete ✅
 
@@ -11,32 +11,33 @@
 ### 1. Core Pages (7/7 Complete)
 
 #### Dashboard Page ✅
-- **Status:** Production-ready, E2E tested
+- **Status:** Production-ready, E2E + shared-math unit tested
 - **Features:**
   - Current financial snapshot (home equity, EF balance, mortgage balance, monthly surplus)
-  - Scenario selection dropdown
+  - Scenario selection dropdown that stays in sync with the active mortgage selector
   - Horizon selector (10/20/30 years)
   - Horizon-aware metric cards (Net Worth, Mortgage Balance, Investments, Investment Returns)
   - 3 interactive charts: Net Worth, Mortgage Balance, Investment Growth
+  - “Next Payment Preview” card driven by the shared Canadian `mortgage-math` helpers (principal/interest split, trigger-rate warnings)
   - Empty states and loading skeletons
-- **API Integration:** `/api/mortgages`, `/api/scenarios/with-projections`, `/api/emergency-fund`, `/api/cash-flow`
+- **API Integration:** `/api/mortgages`, `/api/mortgages/:id/terms`, `/api/mortgages/:id/payments`, `/api/scenarios/with-projections`, `/api/emergency-fund`, `/api/cash-flow`
 
 #### Mortgage Tracking Page ✅
 - **Status:** Production-ready, E2E tested
 - **Features:**
-  - View/edit mortgage details (property value, current balance, payment frequency)
-  - Current term details with effective rate calculation
-  - Term renewal dialog (switch between Fixed/VRM types, negotiate new rates/spreads)
-  - Payment history table with principal/interest breakdown
+  - Multi-mortgage selector (address + balance) that scopes every downstream hook/mutation
+  - View/edit mortgage details (property value, current balance, payment frequency, prepayment limits)
+  - Current term details with effective rate calculation + Bank of Canada prime timestamp
+  - Term renewal dialog (switch between Fixed/VRM types, negotiate new rates/spreads) with auto-calculated payments via shared helpers
+  - Payment history table with principal/interest breakdown sourced from server-side validation
   - Year filtering
-  - Payment logging with regular + prepayment amounts
+  - Payment logging & backfill flows that preview real Canadian amortization math (semi-annual compounding + frequency-aware schedules) and enforce lender prepayment caps
   - Canadian mortgage education section
 - **VRM Support:**
   - Variable-Changing Payment (payment adjusts with Prime)
-  - Variable-Fixed Payment (payment stays constant, amortization extends)
-  - Prime + locked spread display
-  - Trigger rate detection and tracking
-- **API Integration:** `/api/mortgages`, `/api/mortgages/:id/terms`, `/api/mortgages/:mortgageId/payments`
+  - Variable-Fixed Payment (payment stays constant, amortization extends, trigger-rate monitoring)
+  - Prime + locked spread display (read-only BoC snapshots) and server-enforced effective-rate storage
+- **API Integration:** `/api/mortgages`, `/api/mortgages/:id/terms`, `/api/mortgages/:mortgageId/payments`, `/api/prime-rate`, `/api/prime-rate/history`
 
 #### Scenario Management Pages ✅
 **Scenario List Page:**
@@ -48,7 +49,7 @@
 **Scenario Editor Page:**
 - Create new scenarios or edit existing
 - Name, description, horizon selection
-- Prepayment strategy (monthly percentage slider)
+- Prepayment strategy (monthly percentage slider applied to cash-flow surplus)
 - Investment strategy (monthly percentage, expected return rate)
 - Emergency Fund priority percentage
 - **Prepayment Events CRUD:**
@@ -57,7 +58,7 @@
   - Add/Edit/Delete functionality
   - Event cards with badges and descriptions
 - Batch save for new scenarios, immediate save for edits
-- Full form validation
+- Full form validation + live payment preview (principal/interest split, trigger-rate warning)
 
 **API Integration:** `/api/scenarios`, `/api/scenarios/:id/prepayment-events`
 
@@ -106,31 +107,33 @@
 #### Database Layer
 - **PostgreSQL with Drizzle ORM:** Full persistence for all entities
 - **DBStorage Class:** Complete implementation of IStorage interface
-- **Tables:** users, cash_flow, emergency_fund, mortgages, mortgage_terms, mortgage_payments, scenarios, prepayment_events
+- **Tables:** users, cash_flow, emergency_fund, mortgages, mortgage_terms (with prime snapshots + VRM metadata), mortgage_payments (with compliance + trigger tracking), scenarios, prepayment_events
 - **Seed Script:** Demo data creation with proper foreign key handling
 
 #### API Endpoints (30+ Routes)
 - **Cash Flow:** GET, POST, PATCH
 - **Emergency Fund:** GET, POST, PATCH
 - **Mortgages:** GET, POST, PATCH, DELETE
-- **Mortgage Terms:** GET by mortgage, POST (renewal)
-- **Mortgage Payments:** GET by mortgage, POST
-- **Scenarios:** GET all, GET by ID, GET with projections, POST, PATCH, DELETE
+- **Mortgage Terms:** GET by mortgage, POST (renewal) – enforces fixed vs variable schema rules + prime snapshot persistence
+- **Mortgage Payments:** GET by mortgage, POST – server-side amortization recompute, trigger detection, annual prepayment limit enforcement, bulk backfill endpoint
+- **Scenarios:** GET all, GET by ID, GET with projections, POST, PATCH, DELETE – surplus-aware prepayment conversion
 - **Prepayment Events:** GET by scenario, POST, PATCH, DELETE
-- **Validation:** Comprehensive Zod schemas for all POST/PATCH endpoints
+- **Prime Rate:** `/api/prime-rate`, `/api/prime-rate/history`
+- **Validation:** Comprehensive Zod schemas + shared Canadian mortgage helpers
 
 #### Calculation Engines ✅
-**Mortgage Calculations (`server/mortgage-calculations.ts`):**
+**Mortgage Calculations (server + shared helpers):**
 - Canadian semi-annual compounding
 - Payment frequency conversions (6 types: monthly, biweekly, accelerated-biweekly, semi-monthly, weekly, accelerated-weekly)
-- Amortization schedule generation
-- Prepayment modeling (annual, one-time, lump sum)
+- Amortization schedule generation w/ term renewals + VRM spread snapshots
+- Prepayment modeling (annual, one-time, lump sum) with lender-cap enforcement
 - Trigger rate calculation and detection (VRM-Fixed Payment)
 - Effective rate calculation (Prime + spread for VRM)
+- Shared `mortgage-math` helpers consumed by tracker, dashboard, and scenario planner + dedicated unit tests
 
 **Net Worth Projections (`server/calculations/projections.ts`):**
 - 10/20/30 year forecasts
-- Integration of mortgage paydown, investments, EF, and expenses
+- Integration of mortgage paydown, investments, EF, expenses, and surplus-aware prepayments
 - Compound investment returns
 - Scenario comparison metrics
 - Payoff year calculation
@@ -141,7 +144,7 @@
 
 #### Term Structure
 - 3/5 year term locks with renewal capability
-- Term renewal UI with rate/spread negotiation
+- Term renewal UI with rate/spread negotiation + auto-calculated payments and BoC prime snapshots
 - Historical term tracking
 
 #### Variable Rate Mortgages (VRM)
@@ -177,22 +180,24 @@ Proper Canadian mortgage interest calculation (not monthly like US mortgages)
 - **Horizon Selection:** Consistent 10/20/30 year view across all pages
 - **Sidebar Navigation:** Easy navigation between all pages
 - **Educational Content:** Helpful explanations and Canadian mortgage education
+- **Active Mortgage Context:** Selector persists across tracker, dashboard, and scenario planner to avoid accidental edits
 
 ---
 
-## 🔧 MINOR POLISH NEEDED (5% Remaining)
+## 🔧 MINOR POLISH NEEDED (Remaining Wishlist)
 
-### 1. TypeScript Type Errors
-- **Issue:** 59 non-blocking req.user type errors in `server/routes.ts`
-- **Impact:** None - code works correctly, just TypeScript warnings
-- **Fix Needed:** Proper Express.User type augmentation
-
-### 2. Prime Rate Scenario Projections
+### 1. Prime Rate Scenario Projections
 - **Current State:** UI shows "Rate Scenario" dropdown in scenario editor
 - **Enhancement Needed:** 
   - Full implementation of optimistic/pessimistic/realistic Prime rate projections
   - Visual projection of Prime changes over 10-30 years
   - Impact on VRM-Fixed trigger rate warnings
+
+### 2. Mortgage/Scenario Artifact Export
+- **Current State:** Users view data online only
+- **Enhancement Needed:**
+  - Generate exportable PDF/CSV amortization schedules per mortgage
+  - Include compliance audit trail (prime snapshots, trigger events)
 
 ### 3. Design Polish
 - **Current State:** Functional UI with Shadcn components
@@ -203,12 +208,11 @@ Proper Canadian mortgage interest calculation (not monthly like US mortgages)
   - Tooltips explaining Canadian mortgage concepts
 
 ### 4. Testing Coverage
-- **Current State:** E2E tests for all 7 pages
+- **Current State:** E2E tests for all 7 pages + shared mortgage-math unit tests
 - **Enhancement Needed:**
-  - Unit tests for calculation engines
   - Unit tests for DBStorage methods
   - Edge case testing (zero balances, negative cash flow)
-  - VRM trigger rate scenarios
+  - VRM trigger rate integration scenarios
 
 ---
 
@@ -255,8 +259,8 @@ Proper Canadian mortgage interest calculation (not monthly like US mortgages)
 **Effort:** 2-3 hours  
 **Impact:** High - production readiness
 
-1. Add unit tests for calculation engines
-2. Test edge cases (zero balances, extreme rates)
+1. Expand DB/unit test coverage (storage layer, projections, compliance edge cases)
+2. Test edge cases (zero balances, extreme rates, bulk backfill imports)
 3. Security review (session management, data validation)
 4. Performance optimization
 5. Prepare for Replit deployment

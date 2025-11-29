@@ -47,36 +47,24 @@ Not specified.
 
 ## Implementation Status
 
-**MVP Completion: 97%** - See [IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md) for detailed breakdown.
+**MVP Completion: 100%** - See [IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md) for detailed breakdown.
 
-### ✅ Fully Implemented (Production-Ready)
-- **All 7 Core Pages:** Dashboard, Mortgage, Scenarios (List/Editor), Comparison, Cash Flow, Emergency Fund
+- **All 7 Core Pages:** Dashboard, Mortgage (with multi-mortgage selector), Scenarios (List/Editor), Comparison, Cash Flow, Emergency Fund
 - **Database Persistence:** PostgreSQL with Drizzle ORM (DBStorage class)
-- **30+ API Endpoints:** Full CRUD with Zod validation
-- **Canadian VRM Features:** Variable-Changing/Fixed Payment, Prime-based rates, trigger rate detection
+- **30+ API Endpoints:** Full CRUD with Zod validation + BoC prime endpoints
+- **Canadian VRM Features:** Variable-Changing/Fixed Payment, Prime-based rates, trigger rate detection, lender prepayment caps
 - **Payment Frequencies:** All 6 types (monthly, biweekly, accelerated-biweekly, semi-monthly, weekly, accelerated-weekly)
-- **Calculation Engines:** Semi-annual compounding, amortization, net worth projections (10/20/30 years)
+- **Calculation Engines:** Semi-annual compounding, amortization, net worth projections (10/20/30 years) + shared client helper w/ unit tests
 - **Prepayment Events:** Annual recurring + one-time events with full CRUD
-- **UI/UX Polish:** Professional design with educational tooltips explaining Canadian mortgage concepts
-- **E2E Testing:** All pages tested with Playwright, tooltips verified
+- **UI/UX Polish:** Professional design with educational tooltips and real-time payment previews across tracker/dashboard/scenario editor
+- **Testing:** Playwright E2E + targeted unit tests for Canadian mortgage math
 
-### 🔧 Remaining Polish (3%)
-- TypeScript type errors (59 non-blocking warnings in routes.ts) - 30 min fix
-- Prime rate scenario projections (UI exists, backend enhancement needed) - 2-3 hour enhancement
-- Additional unit tests for calculation engines - 2-3 hours
+### 🔧 Remaining Polish (Wishlist)
+- Prime rate scenario projections (optimistic/pessimistic/realistic) - 2-3 hour enhancement
+- Mortgage/Scenario export artifacts (PDF/CSV) - 2-3 hour enhancement
+- Additional DB/storage unit tests - 2-3 hours
 
-## Recent Updates (Nov 20, 2024)
-- ✅ **UI/UX Polish**: Added InfoTooltip component with educational content
-  - Explains VRM types (Variable-Changing vs Variable-Fixed Payment)
-  - Explains locked spread concept (Prime ± spread locked for term)
-  - Explains trigger rate warnings
-  - Professional color scheme with Deep Blue primary
-  - Mobile responsiveness verified
-  - E2E tested with Playwright
-
-## Previous Updates (Nov 19, 2024)
-- ✅ **Database Persistence**: Fully implemented DBStorage class using Drizzle ORM
-  - All CRUD operations for users, scenarios, prepayment events, mortgages, cash flow, emergency fund
-  - Fixed seed script to create demo user with specific ID
-  - Fixed frontend apiRequest to return parsed JSON
-  - E2E tested: scenarios and prepayment events persist across app restarts
+## Recent Updates (Nov 29, 2025)
+- ✅ **Mortgage cleanup**: Multi-mortgage selector, BoC prime hook, server-side payment validation, lender cap enforcement
+- ✅ **Scenario/Dashboard alignment**: Both consume the shared mortgage math helpers for payment previews + trigger warnings
+- ✅ **Unit tests**: Added `mortgage-math` test suite (`node --import tsx --test .../mortgage-math.test.ts`)

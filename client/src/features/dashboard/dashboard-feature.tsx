@@ -1,7 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "wouter";
 import { Home, TrendingUp, Wallet, AlertCircle, Plus } from "lucide-react";
 import { useDashboardData } from "./hooks/use-dashboard-data";
+import { useMortgageData } from "@/features/mortgage-tracking/hooks";
+import {
+  calculatePayment,
+  calculatePaymentBreakdown,
+  type PaymentFrequency,
+} from "@/features/mortgage-tracking/utils/mortgage-math";
 import type { ScenarioWithMetrics } from "@/entities";
 import { MetricCard } from "./components/metric-card";
 import { NetWorthChart } from "@/widgets/charts/net-worth-chart";
@@ -36,6 +42,15 @@ export function DashboardFeature() {
   usePageTitle("Dashboard | Mortgage Strategy");
 
   const { scenarios, emergencyFund, mortgage, cashFlow, isLoading } = useDashboardData();
+  const selectedMortgageId = mortgage?.id ?? null;
+  const {
+    mortgage: detailedMortgage,
+    terms,
+    payments,
+    isLoading: mortgageDataLoading,
+  } = useMortgageData(selectedMortgageId);
+  const activeMortgage = detailedMortgage ?? mortgage ?? null;
+  const dashboardPaymentFrequency: PaymentFrequency = "monthly";
   const newScenarioAction = (
     <Link href="/scenarios/new">
       <Button data-testid="button-new-scenario">
@@ -51,6 +66,72 @@ export function DashboardFeature() {
     }
   }, [scenarios, selectedScenarioId]);
 
+  const sortedDashboardTerms = useMemo(() => {
+    if (!terms?.length) return [];
+    return [...terms].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+  }, [terms]);
+  const latestDashboardTerm = sortedDashboardTerms[0] || null;
+
+  const sortedDashboardPayments = useMemo(() => {
+    if (!payments?.length) return [];
+    return [...payments].sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
+  }, [payments]);
+  const latestDashboardPayment = sortedDashboardPayments[0] || null;
+
+  const dashboardPaymentPreview = useMemo(() => {
+    if (!activeMortgage) return null;
+
+    const balance = latestDashboardPayment
+      ? Number(latestDashboardPayment.remainingBalance)
+      : Number(activeMortgage.currentBalance || activeMortgage.originalAmount || 0);
+    if (!balance || balance <= 0) {
+      return null;
+    }
+
+    const amortizationMonths = latestDashboardPayment
+      ? Number(latestDashboardPayment.remainingAmortizationMonths || 0)
+      : Math.max(1, Number(activeMortgage.amortizationYears || 25) * 12);
+
+    const termRate =
+      latestDashboardTerm?.termType === "fixed"
+        ? Number(latestDashboardTerm?.fixedRate ?? 0)
+        : Number(latestDashboardTerm?.primeRate ?? 0) + Number(latestDashboardTerm?.lockedSpread ?? 0);
+    const ratePercent = Number(latestDashboardPayment?.effectiveRate ?? termRate);
+    if (!ratePercent || ratePercent <= 0) {
+      return null;
+    }
+
+    let paymentAmount = latestDashboardPayment
+      ? Number(latestDashboardPayment.regularPaymentAmount)
+      : Number(latestDashboardTerm?.regularPaymentAmount || 0);
+    if ((!paymentAmount || paymentAmount <= 0) && amortizationMonths > 0) {
+      paymentAmount = calculatePayment(
+        balance,
+        ratePercent / 100,
+        amortizationMonths,
+        dashboardPaymentFrequency,
+      );
+    }
+
+    if (!paymentAmount || paymentAmount <= 0) {
+      return null;
+    }
+
+    const breakdown = calculatePaymentBreakdown({
+      balance,
+      paymentAmount,
+      regularPaymentAmount: paymentAmount,
+      extraPrepaymentAmount: 0,
+      frequency: dashboardPaymentFrequency,
+      annualRate: ratePercent / 100,
+    });
+
+    return {
+      breakdown,
+      ratePercent,
+    };
+  }, [activeMortgage, latestDashboardPayment, latestDashboardTerm, dashboardPaymentFrequency]);
+
   const selectedScenario = scenarios?.find((s) => s.id === selectedScenarioId);
   const getMetricForHorizon = (
     scenario: ScenarioWithMetrics | undefined,
@@ -61,9 +142,10 @@ export function DashboardFeature() {
     return Number(scenario.metrics[key] || 0);
   };
 
-  const homeValue = mortgage && mortgage.propertyPrice ? Number(mortgage.propertyPrice) : 0;
-  const mortgageBalance = mortgage && mortgage.currentBalance ? Number(mortgage.currentBalance) : 0;
-  const originalMortgageBalance = mortgage && mortgage.originalAmount ? Number(mortgage.originalAmount) : 0;
+  const homeValue = activeMortgage && activeMortgage.propertyPrice ? Number(activeMortgage.propertyPrice) : 0;
+  const mortgageBalance = activeMortgage && activeMortgage.currentBalance ? Number(activeMortgage.currentBalance) : 0;
+  const originalMortgageBalance =
+    activeMortgage && activeMortgage.originalAmount ? Number(activeMortgage.originalAmount) : 0;
   const efBalance = emergencyFund && emergencyFund.currentBalance ? Number(emergencyFund.currentBalance) : 0;
 
   const currentNetWorth = homeValue - mortgageBalance + efBalance;
@@ -91,7 +173,7 @@ export function DashboardFeature() {
 
   const getMortgageChartData = (balanceProjections: number[] | undefined) => {
     if (!balanceProjections || balanceProjections.length === 0) return [];
-    const initial = mortgage ? Number(mortgage.currentBalance) : 0;
+    const initial = activeMortgage ? Number(activeMortgage.currentBalance) : 0;
     return balanceProjections
       .map((balance, year) => ({
         year,
@@ -102,7 +184,7 @@ export function DashboardFeature() {
       .filter((_, index) => index % 2 === 0 || index === balanceProjections.length - 1);
   };
 
-  if (isLoading) {
+  if (isLoading || mortgageDataLoading) {
     return (
       <div className="space-y-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -178,16 +260,44 @@ export function DashboardFeature() {
             <CurrentStatusStat label="Mortgage Balance" value={`$${mortgageBalance.toLocaleString()}`} testId="text-mortgage-balance" />
           </div>
 
-          {mortgage && (
+          {activeMortgage && (
             <>
               <Separator />
               <div>
                 <h3 className="text-base font-semibold mb-4">Current Mortgage Details</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <CurrentStatusStat label="Original Amount" value={`$${Number(mortgage.originalAmount).toLocaleString()}`} />
-                  <CurrentStatusStat label="Down Payment" value={`$${Number(mortgage.downPayment).toLocaleString()}`} />
-                  <CurrentStatusStat label="Payment Frequency" value={mortgage.paymentFrequency} />
+                  <CurrentStatusStat
+                    label="Original Amount"
+                    value={`$${Number(activeMortgage.originalAmount).toLocaleString()}`}
+                  />
+                  <CurrentStatusStat
+                    label="Down Payment"
+                    value={`$${Number(activeMortgage.downPayment).toLocaleString()}`}
+                  />
+                  <CurrentStatusStat label="Payment Frequency" value={activeMortgage.paymentFrequency} />
                 </div>
+                {dashboardPaymentPreview?.breakdown && (
+                  <div className="mt-4 space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <CurrentStatusStat
+                        label="Next Payment Principal"
+                        value={`$${dashboardPaymentPreview.breakdown.principal.toFixed(2)}`}
+                      />
+                      <CurrentStatusStat
+                        label="Next Payment Interest"
+                        value={`$${dashboardPaymentPreview.breakdown.interest.toFixed(2)}`}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Using {dashboardPaymentPreview.ratePercent.toFixed(2)}% rate · Canadian semi-annual compounding
+                    </p>
+                    {dashboardPaymentPreview.breakdown.triggerRateHit && (
+                      <p className="text-xs font-medium text-destructive">
+                        Current payment is below the interest-only threshold. Consider increasing payments to avoid trigger-rate calls.
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             </>
           )}

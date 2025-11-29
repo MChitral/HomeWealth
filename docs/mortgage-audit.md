@@ -97,6 +97,17 @@ Each fix should ship with automated tests (unit for helpers, integration for API
 
 ---
 
+## Phase 4 Verification (Nov 29, 2025)
+- Scenario Planner + Dashboard now consume the shared `mortgage-math` helpers for payment previews, so every surface (mortgage tracker, scenario planner, dashboard) derives principal/interest splits, trigger-rate warnings, and accelerated cadence math from the same Canadian-calibrated functions.
+- Added `client/src/features/mortgage-tracking/utils/__tests__/mortgage-math.test.ts` covering:
+  - Accelerated cadence behaviour (monthly vs accelerated bi-weekly/weekly payments).
+  - Semi-annual compounding splits for a full payment.
+  - Trigger-rate detection (interest-only payments) halting amortization math.
+  - Direct application of extra prepayments against principal.
+- Test command: `node --import tsx --test client/src/features/mortgage-tracking/utils/__tests__/mortgage-math.test.ts`
+
+---
+
 ## Frontend UX Audit (Mortgage Feature)
 
 | ID | Severity | Area | Status |

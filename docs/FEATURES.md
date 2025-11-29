@@ -1,8 +1,8 @@
 # Canadian Mortgage Strategy & Wealth Forecasting
 ## Complete Features Documentation
 
-**Last Updated**: November 2024  
-**Version**: MVP 1.0  
+**Last Updated**: November 29, 2025  
+**Version**: v1.1 (Post-Phase 4 cleanup)  
 **Target Audience**: Canadian homeowners with mortgages
 
 ---
@@ -28,11 +28,12 @@ A comprehensive financial planning tool designed specifically for Canadian homeo
 ### Key Value Propositions
 
 **For the User:**
-- **Compare up to 4 strategies simultaneously** - See aggressive prepayment vs balanced vs investment-focused approaches side-by-side
-- **Long-term visibility** - Project your net worth 10, 20, or 30 years into the future
-- **Holistic financial picture** - Integrate mortgage, investments, emergency fund, and cash flow in one place
-- **Canadian-specific accuracy** - Built for Canadian mortgage rules (semi-annual compounding, term-based rates, variable rate types)
-- **Informed decision-making** - Understand trade-offs between mortgage freedom and wealth accumulation
+- **Manage multiple mortgages** – Quickly switch between properties while keeping payment history, terms, and projections scoped correctly.
+- **Compare up to 4 strategies simultaneously** – See aggressive prepayment vs balanced vs investment-focused approaches side-by-side.
+- **Long-term visibility** – Project your net worth 10, 20, or 30 years into the future.
+- **Holistic financial picture** – Integrate mortgage, investments, emergency fund, and cash flow in one place.
+- **Canadian-specific accuracy** – Built for Canadian mortgage rules (semi-annual compounding, prime + spread VRMs, trigger-rate detection).
+- **Informed decision-making** – Understand trade-offs between mortgage freedom and wealth accumulation.
 
 **Competitive Advantages:**
 - vs **Government Calculator**: Multi-scenario comparison, investment modeling, complete financial picture
@@ -47,12 +48,13 @@ A comprehensive financial planning tool designed specifically for Canadian homeo
 
 **Purpose**: Get a complete snapshot of your current financial position and projected future across all strategies.
 
-**What You Can Do:**
-- View **Current Financial Snapshot**:
+- **What You Can Do:**
+  - View **Current Financial Snapshot**:
   - Home equity (property value - mortgage balance)
   - Current mortgage balance
   - Emergency fund status
   - Monthly surplus available for prepayments/investments
+  - “Next Payment Preview” card showing real principal/interest split, remaining balance, and trigger-rate warnings using the Canadian `mortgage-math` helpers
 
 - See **Projected Future State** (10/20/30 year horizons):
   - Projected net worth
@@ -60,12 +62,11 @@ A comprehensive financial planning tool designed specifically for Canadian homeo
   - Investment portfolio value
   - Mortgage reduction amount
   - Emergency fund status
-
 - Compare **Different Strategies**:
   - Select from your created scenarios
+  - Share the active mortgage selection with the tracker so you never model the wrong property
   - Toggle between 10, 20, and 30-year views
   - See how different approaches impact your future
-
 - Visualize **Financial Trajectories**:
   - Net worth growth chart over time
   - Mortgage balance reduction timeline
@@ -107,6 +108,7 @@ A comprehensive financial planning tool designed specifically for Canadian homeo
 - Update property value as market changes
 - Adjust current balance after extra payments
 - Change payment frequency
+- Select the active mortgage (if multiple) and have all downstream pages respect that context
 - All changes automatically update projections
 
 #### 2.2 Term Management (Canadian Term-Based System)
@@ -125,6 +127,8 @@ A comprehensive financial planning tool designed specifically for Canadian homeo
 
 **Term Renewal:**
 - Create new term when current term expires
+- BoC prime rate auto-populated (read-only) with refresh + timestamp
+- Auto-calculate the regular payment using the same Canadian math as the backend (with optional overrides)
 - Set new rate or spread
 - Update payment frequency if needed
 - Track term history over mortgage lifetime
@@ -145,18 +149,19 @@ A comprehensive financial planning tool designed specifically for Canadian homeo
 - Trigger rate status (VRM-Fixed Payment only)
 - Remaining amortization
 
-**Enhanced Payment Tracking** (Nov 18, 2024):
+**Enhanced Payment Tracking** (2025 refresh):
 - Track regular payments separately from prepayments
 - Optional payment period labels for organization
-- Auto-calculated totals show full payment breakdown
+- Auto-calculated totals show full payment breakdown using shared `mortgage-math`
 - Expanded 12-column payment history table
-- Prepayments highlighted when > $0
+- Prepayments highlighted when > $0 and checked against lender caps
 
 **Canadian-Specific Calculations:**
 - Semi-annual compounding (not monthly like US)
-- Automatic principal/interest split
-- Effective rate calculation from Prime + spread
+- Automatic principal/interest split + remaining amortization projection
+- Effective rate calculation from Prime + spread (snapshotted per term)
 - Trigger rate tracking for fixed-payment VRMs
+- Server-side validation prevents inconsistent payloads (e.g., fake balances, mis-typed rates)
 
 #### 2.4 Payment Frequencies Supported ✅ (All 6 Implemented)
 
@@ -173,8 +178,9 @@ A comprehensive financial planning tool designed specifically for Canadian homeo
 - Results in extra payments per year
 - Pays off mortgage faster with no budget change
 
-**Implementation Note** (Nov 19, 2024):
-All 6 payment frequencies are now fully supported across Create Mortgage, Edit Mortgage, and Term Renewal dialogs.
+**Implementation Note (2025):**
+- All 6 payment frequencies are now fully supported across Create Mortgage, Edit Mortgage, and Term Renewal dialogs.
+- Variable-rate terms automatically capture the Bank of Canada prime rate snapshot during creation/renewal, and those snapshots flow through payment logging, backfill, dashboard previews, and scenarios.
 
 ---
 
@@ -247,8 +253,8 @@ All 6 payment frequencies are now fully supported across Create Mortgage, Edit M
 - **Scenario Name**: e.g., "Aggressive Prepayment", "Balanced Builder", "Investment Focus"
 - **Description**: Notes about strategy intent
 
-**Prepayment Strategy Configuration:**
-- **Monthly Prepayment %**: What percentage of surplus goes to extra mortgage payments (0-100%)
+- **Prepayment Strategy Configuration:**
+  - **Monthly Prepayment %**: What percentage of your **cash-flow surplus** goes to extra mortgage payments (0-100%). The app automatically converts that percentage into fixed extra dollars per payment based on the current mortgage frequency.
 - **Annual Lump Sum Events**: Model bonuses or tax refunds
   - Amount (e.g., $5,000)
   - Which month (e.g., March for tax refund)
@@ -271,6 +277,9 @@ All 6 payment frequencies are now fully supported across Create Mortgage, Edit M
 - Prepayment % + Investment % cannot exceed 100%
 - Respects lender's annual prepayment limits
 - All percentages work from your available surplus
+
+**Live Mortgage Preview:**
+- Right rail shows the latest mortgage payment amount, projected principal/interest split, remaining balance, and trigger-rate warnings using the shared Canadian mortgage helpers. Updates instantly as you change rates, surplus allocation, or payment frequency.
 
 #### 5.2 Scenario Management
 
