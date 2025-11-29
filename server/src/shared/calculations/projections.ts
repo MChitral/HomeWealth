@@ -11,6 +11,7 @@ import {
   type PrepaymentEvent,
   type PaymentFrequency,
   getPaymentsPerYear,
+  calculatePayment,
 } from "./mortgage";
 
 export interface ProjectionParams {
@@ -93,23 +94,33 @@ function calculateMonthlySurplus(cashFlow?: CashFlow): number {
  */
 function generatePrepayments(
   scenario: Scenario,
-  monthlySurplus: number
+  monthlySurplus: number,
+  basePaymentAmount: number,
+  frequency: PaymentFrequency
 ): PrepaymentEvent[] {
   const prepayments: PrepaymentEvent[] = [];
-  
-  // Calculate monthly prepayment percent
+
   const prepaymentPercent = scenario.prepaymentMonthlyPercent || 0;
-  
-  if (prepaymentPercent > 0) {
-    // Use monthly-percent type for ongoing prepayments
-    prepayments.push({
-      type: 'monthly-percent',
-      amount: monthlySurplus,
-      startPaymentNumber: 1,
-      monthlyPercent: prepaymentPercent
-    });
+  if (prepaymentPercent > 0 && monthlySurplus > 0 && basePaymentAmount > 0) {
+    const paymentsPerYear = getPaymentsPerYear(frequency);
+    const paymentsPerMonth = paymentsPerYear / 12;
+    const monthlyPrepayAmount = (monthlySurplus * prepaymentPercent) / 100;
+    const perPaymentExtra = paymentsPerMonth > 0
+      ? monthlyPrepayAmount / paymentsPerMonth
+      : 0;
+    const percentOfPayment = perPaymentExtra > 0
+      ? (perPaymentExtra / basePaymentAmount) * 100
+      : 0;
+    if (percentOfPayment > 0) {
+      prepayments.push({
+        type: 'monthly-percent',
+        amount: monthlySurplus,
+        startPaymentNumber: 1,
+        monthlyPercent: percentOfPayment,
+      });
+    }
   }
-  
+
   return prepayments;
 }
 
@@ -173,10 +184,21 @@ export function generateProjections(
   
   // Ensure non-negative surplus (avoid negative prepayments/investments)
   const monthlySurplus = Math.max(0, calculateMonthlySurplus(cashFlow));
-  const prepayments = generatePrepayments(scenario, monthlySurplus);
+  const amortizationMonths = (mortgage.amortizationYears * 12) + mortgage.amortizationMonths;
+  const basePaymentAmount = calculatePayment(
+    parseFloat(mortgage.currentBalance),
+    currentRate,
+    amortizationMonths,
+    mortgage.paymentFrequency as PaymentFrequency,
+  );
+  const prepayments = generatePrepayments(
+    scenario,
+    monthlySurplus,
+    basePaymentAmount,
+    mortgage.paymentFrequency as PaymentFrequency,
+  );
   
   // Generate mortgage schedule with actual rate
-  const amortizationMonths = (mortgage.amortizationYears * 12) + mortgage.amortizationMonths;
   const schedule = generateAmortizationSchedule(
     parseFloat(mortgage.currentBalance),
     currentRate, // Use actual mortgage rate from term
@@ -244,10 +266,21 @@ export function calculateScenarioMetrics(
   
   // Ensure non-negative surplus
   const monthlySurplus = Math.max(0, calculateMonthlySurplus(cashFlow));
-  const prepayments = generatePrepayments(scenario, monthlySurplus);
+  const amortizationMonths = (mortgage.amortizationYears * 12) + mortgage.amortizationMonths;
+  const basePaymentAmount = calculatePayment(
+    parseFloat(mortgage.currentBalance),
+    currentRate,
+    amortizationMonths,
+    mortgage.paymentFrequency as PaymentFrequency,
+  );
+  const prepayments = generatePrepayments(
+    scenario,
+    monthlySurplus,
+    basePaymentAmount,
+    mortgage.paymentFrequency as PaymentFrequency,
+  );
   
   // Generate schedule for summary metrics with actual rate
-  const amortizationMonths = (mortgage.amortizationYears * 12) + mortgage.amortizationMonths;
   const schedule = generateAmortizationSchedule(
     parseFloat(mortgage.currentBalance),
     currentRate, // Use actual mortgage rate

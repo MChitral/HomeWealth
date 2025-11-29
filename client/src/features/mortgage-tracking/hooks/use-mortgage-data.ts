@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { Mortgage, MortgageTerm, MortgagePayment } from "@shared/schema";
 import { mortgageApi, mortgageQueryKeys } from "../api";
 
-export function useMortgageData() {
+export function useMortgageData(selectedMortgageId?: string | null) {
   const {
     data: mortgages,
     isLoading: mortgagesLoading,
@@ -11,28 +11,32 @@ export function useMortgageData() {
     queryFn: mortgageApi.fetchMortgages,
   });
 
-  const mortgage = mortgages?.[0] ?? null;
+  const activeMortgage =
+    mortgages?.find((m) => m.id === selectedMortgageId) ??
+    mortgages?.[0] ??
+    null;
 
   const {
     data: terms,
     isLoading: termsLoading,
   } = useQuery<MortgageTerm[]>({
-    queryKey: mortgageQueryKeys.mortgageTerms(mortgage?.id ?? null),
-    queryFn: () => mortgageApi.fetchMortgageTerms(mortgage!.id),
-    enabled: Boolean(mortgage?.id),
+    queryKey: mortgageQueryKeys.mortgageTerms(activeMortgage?.id ?? null),
+    queryFn: () => mortgageApi.fetchMortgageTerms(activeMortgage!.id),
+    enabled: Boolean(activeMortgage?.id),
   });
 
   const {
     data: payments,
     isLoading: paymentsLoading,
   } = useQuery<MortgagePayment[]>({
-    queryKey: mortgageQueryKeys.mortgagePayments(mortgage?.id ?? null),
-    queryFn: () => mortgageApi.fetchMortgagePayments(mortgage!.id),
-    enabled: Boolean(mortgage?.id),
+    queryKey: mortgageQueryKeys.mortgagePayments(activeMortgage?.id ?? null),
+    queryFn: () => mortgageApi.fetchMortgagePayments(activeMortgage!.id),
+    enabled: Boolean(activeMortgage?.id),
   });
 
   return {
-    mortgage,
+    mortgages: mortgages ?? [],
+    mortgage: activeMortgage,
     terms,
     payments,
     isLoading: mortgagesLoading || termsLoading || paymentsLoading,

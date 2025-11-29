@@ -21,7 +21,19 @@ import {
   getTermEffectiveRate,
   shouldUpdatePaymentAmount,
 } from "@server-shared/calculations/term-helpers";
+import { fetchLatestPrimeRate } from "@server-shared/services/prime-rate";
 import { z } from "zod";
+async function ensurePrimeRate<T extends { termType?: string; primeRate?: string | number }>(payload: T): Promise<T> {
+  if (payload.termType && payload.termType.startsWith("variable") && (payload.primeRate == null || payload.primeRate === "")) {
+    try {
+      const { primeRate } = await fetchLatestPrimeRate();
+      return { ...payload, primeRate: primeRate.toFixed(3) };
+    } catch {
+      return { ...payload, primeRate: "6.450" };
+    }
+  }
+  return payload;
+}
 
 function advanceDateByFrequency(date: Date, frequency: PaymentFrequency): Date {
   const next = new Date(date);
@@ -174,10 +186,11 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
     if (!user) return;
 
     try {
-      const data = mortgageTermCreateSchema.parse({
+      const requestWithPrime = await ensurePrimeRate({
         ...req.body,
         mortgageId: req.params.mortgageId,
       });
+      const data = mortgageTermCreateSchema.parse(requestWithPrime);
       const { mortgageId, ...payload } = data;
       const term = await services.mortgageTerms.create(req.params.mortgageId, user.id, payload);
       if (!term) {
@@ -186,7 +199,8 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       }
       res.json(term);
     } catch (error) {
-      res.status(400).json({ error: "Invalid term data", details: error });
+      const message = error instanceof Error ? error.message : error;
+      res.status(400).json({ error: "Invalid term data", details: message });
     }
   });
 
@@ -195,7 +209,8 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
     if (!user) return;
 
     try {
-      const data = mortgageTermUpdateSchema.parse(req.body);
+      const requestWithPrime = await ensurePrimeRate(req.body);
+      const data = mortgageTermUpdateSchema.parse(requestWithPrime);
       const updated = await services.mortgageTerms.update(req.params.id, user.id, data);
       if (!updated) {
         res.status(404).json({ error: "Term not found" });
@@ -203,7 +218,8 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       }
       res.json(updated);
     } catch (error) {
-      res.status(400).json({ error: "Invalid update data", details: error });
+      const message = error instanceof Error ? error.message : error;
+      res.status(400).json({ error: "Invalid update data", details: message });
     }
   });
 
@@ -264,7 +280,8 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       }
       res.json(payment);
     } catch (error) {
-      res.status(400).json({ error: "Invalid payment data", details: error });
+      const message = error instanceof Error ? error.message : "Invalid payment data";
+      res.status(400).json({ error: "Invalid payment data", details: message });
     }
   });
 
@@ -304,7 +321,8 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
       res.json({ created: createdPayments.length, payments: createdPayments });
     } catch (error) {
-      res.status(400).json({ error: "Invalid payment data", details: error });
+      const message = error instanceof Error ? error.message : "Invalid payment data";
+      res.status(400).json({ error: "Invalid payment data", details: message });
     }
   });
 

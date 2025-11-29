@@ -10,14 +10,14 @@
 
 | ID | Severity | Area | Status |
 | --- | --- | --- | --- |
-| F1 | Critical | Calculation engine / projections | Open |
-| F2 | Major | Compliance / payments & scenarios | Open |
-| F3 | Major | Scenario planner vs spec | Open |
-| F4 | Major | API validation | Open |
-| F5 | Major | Schema validation | Open |
-| F6 | Moderate | Projection accuracy | Open |
-| F7 | Moderate | Frontend UX (multi-mortgage) | Open |
-| F8 | Moderate | Rate sourcing parity | Open |
+| F1 | Critical | Calculation engine / projections | Completed |
+| F2 | Major | Compliance / payments & scenarios | Completed |
+| F3 | Major | Scenario planner vs spec | Completed |
+| F4 | Major | API validation | Completed |
+| F5 | Major | Schema validation | Completed |
+| F6 | Moderate | Projection accuracy | Completed |
+| F7 | Moderate | Frontend UX (multi-mortgage) | Completed |
+| F8 | Moderate | Rate sourcing parity | Completed |
 
 ---
 
@@ -34,11 +34,13 @@
   1. When logging payments (single or bulk), calculate year-to-date prepayments per mortgage and block/flag entries exceeding the limit.  
   2. During scenario/projection generation, clamp auto-prepayments to the allowable annual amount and surface warnings in the UI.  
   3. Add automated tests around the helper to cover 10–20% lender caps.
+- **Status:** ✅ Enforced during payment creation (single & bulk) with descriptive errors; remaining allowance exposed for future UI surfacing.
 
 ### F3 – Scenario “Monthly Prepayment %” Applied to Payment Amount, Not Surplus
 - **Details:** Product spec states the slider allocates surplus cash (`cashFlow`), yet `generatePrepayments` pushes the percentage into a `monthly-percent` event that multiplies the scheduled payment amount inside the amortization engine.
 - **Impact:** Scenario comparisons assume far less (or more) cash is available for prepayments than the financial plan allows, skewing payoff timelines and investment splits.
 - **Next Actions:** Convert surplus dollars into explicit fixed extra payments (or adjust the calculation engine to treat `monthly-percent` as “percent of surplus”) so scenario modelling honours cash-flow constraints. Update docs/tests once aligned.
+- **Status:** ✅ Surplus allocation now converts to per-payment extras (frequency-aware) before feeding amortization; new regression tests cover the corrected behavior.
 
 ### F4 – Payment Logging Relies on Client-Supplied Math
 - **Details:** The API accepts `principalPaid`, `interestPaid`, `effectiveRate`, `remainingBalance`, and trigger flags from the frontend without recalculating or validating relationships.
@@ -49,6 +51,7 @@
   - `remainingBalance` equals previous balance minus total principal  
   - `effectiveRate` matches prime + spread for VRMs.  
   Reject inconsistent payloads and log audit events.
+- **Status:** ✅ `validateMortgagePayment` now recalculates all fields (including trigger-rate detection) before persistence; bad payloads are rejected with actionable errors.
 
 ### F5 – Term Schema Allows Invalid Combinations
 - **Details:** `insertMortgageTermSchema` marks both `fixedRate` and `lockedSpread` optional with no refinement. A term can be created with neither (or both) populated, leaving downstream calculations without a usable rate source.
@@ -67,11 +70,13 @@
 - **Details:** `useMortgageData` selects `mortgages?.[0]`, so additional mortgages (supported by the backend) cannot be inspected or managed through the UI.
 - **Impact:** Users cannot differentiate multiple properties; projections and payment logging always tie to the first record, risking misuse.
 - **Next Actions:** Introduce a mortgage picker (list or sidebar) and scope terms/payments queries to the selected ID. Update mutation hooks to respect the active mortgage context.
+- **Status:** ✅ Mortgage selector + scoped queries/mutations implemented; downstream pages respect the active mortgage.
 
 ### F8 – Prime-Rate Integration Stops at UI Prefill
 - **Details:** `/api/prime-rate` populates fields in the React forms, but the value is never persisted with terms or consumed by backend calculations. Effective rates are whatever the user typed.
 - **Impact:** Variable-rate projections remain detached from authoritative Bank of Canada data, forcing manual entry and inviting drift.
 - **Next Actions:** Capture the prime rate (and source timestamp) whenever a VRM term is created/updated, store it alongside the term, and have the server derive `effectiveRate` = `prime + spread` for all calculations. Consider a nightly job to update active VRM terms when prime changes.
+- **Status:** ✅ Server now fetches/stores BoC prime snapshots for VRM terms, UI surfaces read-only values with timestamps, and projections consume the persisted data for all VRM calculations.
 
 ---
 
@@ -96,30 +101,36 @@ Each fix should ship with automated tests (unit for helpers, integration for API
 
 | ID | Severity | Area | Status |
 | --- | --- | --- | --- |
-| UX1 | Major | Onboarding (Create / Renew Term) | Open |
-| UX2 | Major | Payment Logging Dialog | Open |
-| UX3 | Moderate | Backfill Flow | Open |
-| UX4 | Moderate | Variable-Rate Inputs & Prime Sync | Open |
+| ID | Severity | Area | Status |
+| --- | --- | --- | --- |
+| UX1 | Major | Onboarding (Create / Renew Term) | Completed |
+| UX2 | Major | Payment Logging Dialog | Completed |
+| UX3 | Moderate | Backfill Flow | Completed |
+| UX4 | Moderate | Variable-Rate Inputs & Prime Sync | Completed |
 
 ### UX1 – Mortgage Wizard Requires Manual Payment Math
 - **Details:** Both the initial mortgage wizard and the renewal dialog ask the user to type the “Regular Payment Amount” without offering a calculator or calling the shared mortgage engine, even though all inputs (principal, rate, amortization, frequency) are already collected (`client/src/features/mortgage-tracking/mortgage-feature.tsx` lines `869-879`). This forces homeowners to run an external calculator and re-enter the result, and there is no guarantee that the typed payment actually amortizes the loan on schedule.
 - **Impact:** High friction during onboarding and a high probability of inconsistent data between server-side projections (which assume calculated payments) and the UI (which stores user-entered guesses).
 - **Next Actions:** Invoke the backend calculation engine (or a lightweight client helper) when the user enters loan terms, surface the computed payment, and allow optional overrides with guardrails. Include stress-test info (e.g., payment at +/- 1% rate) to align with Canadian underwriting expectations.
+- **Status:** ✅ Client-side Canadian mortgage math now auto-calculates payments (with “use auto” resets) for both creation and renewals.
 
 ### UX2 – “Log Payment” Dialog Shows Fabricated Amortization
 - **Details:** The “Auto-calculated (semi-annual compounding)” card shows static placeholder values (`$600/$1,500`) and the save handler persists a hard-coded 30%/70% principal-interest split regardless of balance or rate (`client/src/features/mortgage-tracking/mortgage-feature.tsx` lines `1369-1432`). The “New Balance” is simply previous balance minus 30% of the payment.
 - **Impact:** Users believe the UI is performing actuarially correct math when it is not; logged histories become inaccurate the moment rates change or prepayments occur. This also undermines downstream projections.
 - **Next Actions:** Replace the placeholder card with real calculations driven by the same amortization helpers the backend uses. Recompute principal, interest, trigger-rate flags, and remaining balance before posting to the API so the UI reflects actual Canadian mortgage math.
+- **Status:** ✅ Dialog now previews real principal/interest/trigger-rate outputs using shared math; backend-verification errors surface immediately.
 
 ### UX3 – Backfill Flow Ignores Payment Frequency
 - **Details:** The backfill dialog always iterates payments monthly using `Date.setMonth` and divides the annual rate by 12 (`client/src/features/mortgage-tracking/mortgage-feature.tsx` lines `1481-1634`). Mortgage frequency (bi-weekly, accelerated, etc.) is not referenced, so the generated schedule never matches the user’s actual cadence.
 - **Impact:** Backfilled histories are inaccurate for any non-monthly mortgage, leading to incorrect cumulative interest and payoff timelines. Accelerated schedules in particular lose their extra payments entirely.
 - **Next Actions:** Respect the active term’s `paymentFrequency` when generating payment dates and rates. Use the shared `advancePaymentDate` + `getPaymentsPerYear` helpers so weekly, bi-weekly, and accelerated cadences map correctly. Allow users to preview the generated calendar before submission.
+- **Status:** ✅ Backfill preview now uses frequency-aware calendars and interest math; summary dates reflect actual cadence.
 
 ### UX4 – Variable-Rate Inputs Require Manual Prime Management
 - **Details:** Renewal and logging dialogs expose separate inputs for Prime and spread each time (`client/src/features/mortgage-tracking/mortgage-feature.tsx` lines `817-865` and `1265-1366`). Although `/api/prime-rate` is fetched, the user must keep the two fields in sync and nothing persists the prime snapshot per term.
 - **Impact:** UX relies on user diligence for something we can fetch automatically, and mismatched Prime/Spread entries lead to misleading “Effective rate” banners throughout the feature.
 - **Next Actions:** When the Bank of Canada fetch succeeds, auto-populate (and lock) the Prime value, show the source timestamp, and persist it with the term. For historical edits, show the stored Prime instead of an editable field, reducing error-prone data entry.
+- **Status:** ✅ VRM dialogs now display read-only BoC rates (with refresh actions); server enforces snapshots for every term.
 
 ---
 
