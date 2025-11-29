@@ -55,6 +55,7 @@ type UiTerm = {
   termYears: number;
   lockedSpread: number;
   fixedRate: number | null;
+  primeRate: number | null;
   paymentFrequency: "monthly" | "biweekly" | "accelerated-biweekly" | "semi-monthly" | "weekly" | "accelerated-weekly";
   regularPaymentAmount: number;
 };
@@ -91,6 +92,7 @@ function normalizeTerm(term: MortgageTerm | undefined): UiTerm | null {
     termYears: term.termYears,
     lockedSpread: Number(term.lockedSpread || 0),
     fixedRate: term.fixedRate ? Number(term.fixedRate) : null,
+    primeRate: term.primeRate ? Number(term.primeRate) : null,
     paymentFrequency: term.paymentFrequency as "monthly" | "biweekly" | "accelerated-biweekly" | "semi-monthly" | "weekly" | "accelerated-weekly",
     regularPaymentAmount: Number(term.regularPaymentAmount),
   };
@@ -349,6 +351,7 @@ export default function MortgageFeature() {
         termYears,
         fixedRate: createTermType === 'fixed' ? createFixedRate : undefined,
         lockedSpread: createTermType !== 'fixed' ? createSpread : "0",
+        primeRate: createTermType !== 'fixed' ? createPrimeRate : undefined,
         paymentFrequency: createFrequency,
         regularPaymentAmount: createPaymentAmount,
       });
@@ -552,10 +555,12 @@ export default function MortgageFeature() {
       } else {
         setEditTermFixedRate("");
         setEditTermSpread(currentTerm.lockedSpread || "");
-        // Set prime rate from fetched data for variable terms
-        if (primeRateData?.primeRate) {
-          setEditTermPrimeRate(primeRateData.primeRate.toString());
-        }
+        const primeSnapshot = currentTerm.primeRate
+          ? currentTerm.primeRate
+          : primeRateData?.primeRate
+            ? primeRateData.primeRate.toString()
+            : "";
+        setEditTermPrimeRate(primeSnapshot);
       }
       
       // Calculate term years from dates
@@ -586,6 +591,7 @@ export default function MortgageFeature() {
       termYears,
       fixedRate: renewalTermType === 'fixed' ? renewalRate : undefined,
       lockedSpread: renewalTermType.startsWith('variable') ? renewalSpread : undefined,
+      primeRate: renewalTermType.startsWith('variable') ? (renewalPrime || primeRate) : undefined,
       paymentFrequency: renewalPaymentFrequency,
       regularPaymentAmount: renewalPaymentAmount,
     });
@@ -1094,6 +1100,7 @@ export default function MortgageFeature() {
                     termYears,
                     lockedSpread: renewalTermType !== "fixed" ? renewalSpread : "0",
                     fixedRate: renewalTermType === "fixed" ? renewalRate : undefined,
+                    primeRate: renewalTermType !== "fixed" ? (renewalPrime || primeRate) : undefined,
                     paymentFrequency: renewalPaymentFrequency,
                     regularPaymentAmount: renewalPaymentAmount,
                   });
@@ -1113,6 +1120,7 @@ export default function MortgageFeature() {
 
   // Use real prime rate from Bank of Canada API, fallback to payment history, then to fetched primeRate state
   const currentPrimeRateValue = primeRateData?.primeRate 
+    ?? (uiCurrentTerm?.primeRate ?? null)
     ?? (paymentHistory[paymentHistory.length - 1]?.primeRate) 
     ?? parseFloat(primeRate) 
     ?? 0;
@@ -1856,11 +1864,18 @@ export default function MortgageFeature() {
                             regularPaymentAmount: editTermPaymentAmount,
                             fixedRate: editTermType === "fixed" ? editTermFixedRate : undefined,
                             lockedSpread: editTermType !== "fixed" ? editTermSpread : undefined,
+                          primeRate: editTermType !== "fixed" ? editTermPrimeRate : undefined,
                           },
                         });
                       }}
-                      disabled={updateTermMutation.isPending || !editTermPaymentAmount || !editTermStartDate ||
-                        (editTermType === "fixed" ? !editTermFixedRate : !editTermSpread)}
+                      disabled={
+                        updateTermMutation.isPending ||
+                        !editTermPaymentAmount ||
+                        !editTermStartDate ||
+                        (editTermType === "fixed"
+                          ? !editTermFixedRate
+                          : (!editTermSpread || !editTermPrimeRate))
+                      }
                       data-testid="button-save-edit-term"
                     >
                       {updateTermMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}

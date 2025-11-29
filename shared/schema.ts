@@ -195,6 +195,7 @@ export const mortgageTerms = pgTable("mortgage_terms", {
   
   // For variable rate terms
   lockedSpread: decimal("locked_spread", { precision: 5, scale: 3 }), // e.g., -0.800
+  primeRate: decimal("prime_rate", { precision: 5, scale: 3 }), // store BoC prime snapshot at term creation
   
   paymentFrequency: text("payment_frequency").notNull(), // monthly, biweekly, accelerated-biweekly, semi-monthly, weekly, accelerated-weekly
   regularPaymentAmount: decimal("regular_payment_amount", { precision: 10, scale: 2 }).notNull(),
@@ -202,7 +203,7 @@ export const mortgageTerms = pgTable("mortgage_terms", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertMortgageTermSchema = createInsertSchema(mortgageTerms)
+const mortgageTermBaseSchema = createInsertSchema(mortgageTerms)
   .omit({ id: true, createdAt: true })
   .extend({
     fixedRate: z.union([z.string(), z.number(), z.null(), z.undefined()]).transform((val) => 
@@ -211,13 +212,98 @@ export const insertMortgageTermSchema = createInsertSchema(mortgageTerms)
     lockedSpread: z.union([z.string(), z.number(), z.null(), z.undefined()]).transform((val) => 
       val == null ? null : (typeof val === 'number' ? val.toFixed(3) : val)
     ).optional(),
+    primeRate: z.union([z.string(), z.number(), z.null(), z.undefined()]).transform((val) => 
+      val == null ? null : (typeof val === 'number' ? val.toFixed(3) : val)
+    ).optional(),
     regularPaymentAmount: z.union([z.string(), z.number()]).transform((val) => 
       typeof val === 'number' ? val.toFixed(2) : val
     ),
   });
 
+export const insertMortgageTermSchema = mortgageTermBaseSchema.superRefine((data, ctx) => {
+    const type = data.termType;
+    const hasFixedRate = data.fixedRate != null && data.fixedRate !== "";
+    const hasSpread = data.lockedSpread != null && data.lockedSpread !== "";
+    const hasPrime = data.primeRate != null && data.primeRate !== "";
+
+    if (type === "fixed") {
+      if (!hasFixedRate) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Fixed terms require a fixedRate value",
+          path: ["fixedRate"],
+        });
+      }
+      if (hasSpread) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Fixed terms cannot include a locked spread",
+          path: ["lockedSpread"],
+        });
+      }
+    } else {
+      if (!hasSpread) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Variable terms require a locked spread",
+          path: ["lockedSpread"],
+        });
+      }
+      if (!hasPrime) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Variable terms require a prime rate snapshot",
+          path: ["primeRate"],
+        });
+      }
+      if (hasFixedRate) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Variable terms cannot include a fixedRate",
+          path: ["fixedRate"],
+        });
+      }
+    }
+  });
+
 // Update schema - omits mortgageId since we don't allow changing it
-export const updateMortgageTermSchema = insertMortgageTermSchema.omit({ mortgageId: true }).partial();
+export const updateMortgageTermSchema = mortgageTermBaseSchema
+  .omit({ mortgageId: true })
+  .partial()
+  .superRefine((data, ctx) => {
+    if (!data.termType) {
+      return;
+    }
+    const type = data.termType;
+    const hasFixedRate = data.fixedRate != null && data.fixedRate !== "";
+    const hasSpread = data.lockedSpread != null && data.lockedSpread !== "";
+    const hasPrime = data.primeRate != null && data.primeRate !== "";
+
+    if (type === "fixed") {
+      if (hasSpread) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Fixed terms cannot include a locked spread",
+          path: ["lockedSpread"],
+        });
+      }
+    } else {
+      if (hasFixedRate) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Variable terms cannot include a fixedRate",
+          path: ["fixedRate"],
+        });
+      }
+      if (!hasPrime && hasSpread) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Variable terms require a prime rate snapshot",
+          path: ["primeRate"],
+        });
+      }
+    }
+  });
 
 export type InsertMortgageTerm = z.infer<typeof insertMortgageTermSchema>;
 export type UpdateMortgageTerm = z.infer<typeof updateMortgageTermSchema>;

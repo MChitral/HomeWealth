@@ -26,6 +26,7 @@ export type CreateTermPayload = {
   regularPaymentAmount: string;
   fixedRate?: string;
   lockedSpread?: string;
+  primeRate?: string;
 };
 
 export type UpdateTermPayload = Partial<CreateTermPayload>;

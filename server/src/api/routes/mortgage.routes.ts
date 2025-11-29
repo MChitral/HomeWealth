@@ -8,14 +8,90 @@ import {
   mortgagePaymentCreateSchema,
 } from "@domain/models";
 import { requireUser } from "@api/utils/auth";
-import { 
+import {
   generateAmortizationSchedule,
   generateAmortizationScheduleWithPayment,
   calculatePayment,
   type PaymentFrequency,
   type PrepaymentEvent as CalcPrepaymentEvent,
+  type TermRenewal,
 } from "../../shared/calculations/mortgage";
+import type { MortgageTerm } from "@shared/schema";
+import {
+  getTermEffectiveRate,
+  shouldUpdatePaymentAmount,
+} from "@server-shared/calculations/term-helpers";
 import { z } from "zod";
+
+function advanceDateByFrequency(date: Date, frequency: PaymentFrequency): Date {
+  const next = new Date(date);
+  switch (frequency) {
+    case "monthly": {
+      const day = next.getDate();
+      next.setMonth(next.getMonth() + 1);
+      const lastDay = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
+      next.setDate(Math.min(day, lastDay));
+      return next;
+    }
+    case "semi-monthly":
+      next.setDate(next.getDate() + 15);
+      return next;
+    case "biweekly":
+    case "accelerated-biweekly":
+      next.setDate(next.getDate() + 14);
+      return next;
+    case "weekly":
+    case "accelerated-weekly":
+      next.setDate(next.getDate() + 7);
+      return next;
+    default:
+      return next;
+  }
+}
+
+function getActiveTermForDate(terms: MortgageTerm[], targetDate: Date): MortgageTerm | undefined {
+  return [...terms]
+    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+    .find((term) => new Date(term.startDate) <= targetDate);
+}
+
+function calculatePaymentNumberFromDates(
+  startDate: Date,
+  targetDate: Date,
+  frequency: PaymentFrequency,
+): number {
+  if (targetDate <= startDate) {
+    return 1;
+  }
+  let paymentNumber = 1;
+  let cursor = new Date(startDate);
+  while (cursor < targetDate && paymentNumber < 10000) {
+    cursor = advanceDateByFrequency(cursor, frequency);
+    paymentNumber += 1;
+  }
+  return paymentNumber;
+}
+
+function buildTermRenewalsRelativeToProjection(
+  terms: MortgageTerm[],
+  projectionStartDate: Date,
+  frequency: PaymentFrequency,
+): TermRenewal[] {
+  return terms
+    .filter((term) => new Date(term.startDate) > projectionStartDate)
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+    .map((term) => ({
+      startPaymentNumber: calculatePaymentNumberFromDates(
+        projectionStartDate,
+        new Date(term.startDate),
+        frequency,
+      ),
+      newRate: getTermEffectiveRate(term),
+      newPaymentAmount: shouldUpdatePaymentAmount(term)
+        ? Number(term.regularPaymentAmount)
+        : undefined,
+    }));
+}
 
 export function registerMortgageRoutes(router: Router, services: ApplicationServices) {
   router.get("/mortgages", async (req, res) => {
@@ -271,7 +347,11 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       const data = projectionSchema.parse(req.body);
       
       // Use rate override if provided, otherwise use the passed annualRate
-      const effectiveRate = data.rateOverride ?? data.annualRate;
+      let effectiveRate = data.rateOverride ?? data.annualRate;
+      let projectionFrequency = data.paymentFrequency as PaymentFrequency;
+      let basePaymentOverride = data.actualPaymentAmount;
+      let termRenewals: TermRenewal[] = [];
+      let mortgageTerms: MortgageTerm[] = [];
       
       // Fetch historical payments first to determine projection start date
       let historicalPayments: any[] = [];
@@ -279,6 +359,14 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       let lastPaymentBalance: number = data.currentBalance;
       
       if (data.mortgageId) {
+        const mortgageRecord = await services.mortgages.getByIdForUser(data.mortgageId, user.id);
+        if (!mortgageRecord) {
+          res.status(404).json({ error: "Mortgage not found" });
+          return;
+        }
+
+        mortgageTerms = (await services.mortgageTerms.listForMortgage(data.mortgageId, user.id)) ?? [];
+
         historicalPayments = await services.mortgagePayments.listByMortgage(data.mortgageId, user.id) || [];
         
         if (historicalPayments.length > 0) {
@@ -290,19 +378,51 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
           lastPaymentDate = new Date(lastPayment.paymentDate);
           lastPaymentBalance = Number(lastPayment.remainingBalance || data.currentBalance);
         }
+
+        if (mortgageTerms.length > 0) {
+          const sortedTerms = [...mortgageTerms].sort(
+            (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+          );
+          const referenceDate = lastPaymentDate ?? new Date();
+          const frequencyTerm =
+            getActiveTermForDate(sortedTerms, referenceDate) ?? sortedTerms[sortedTerms.length - 1];
+          if (frequencyTerm) {
+            projectionFrequency = frequencyTerm.paymentFrequency as PaymentFrequency;
+          }
+        }
       }
       
       // Calculate projection start date: day after last payment, or today if no payments
       const projectionStartDate = lastPaymentDate 
-        ? new Date(lastPaymentDate.getTime() + 30 * 24 * 60 * 60 * 1000) // ~30 days after last payment (next month)
+        ? advanceDateByFrequency(lastPaymentDate, projectionFrequency)
         : new Date();
+
+      if (mortgageTerms.length > 0) {
+        const sortedTerms = [...mortgageTerms].sort(
+          (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+        );
+        const activeTerm = getActiveTermForDate(sortedTerms, projectionStartDate) ?? sortedTerms[sortedTerms.length - 1];
+        if (activeTerm) {
+          if (!data.rateOverride) {
+            effectiveRate = getTermEffectiveRate(activeTerm);
+          }
+          if (!data.actualPaymentAmount) {
+            basePaymentOverride = Number(activeTerm.regularPaymentAmount);
+          }
+          termRenewals = buildTermRenewalsRelativeToProjection(
+            sortedTerms,
+            projectionStartDate,
+            projectionFrequency,
+          );
+        }
+      }
       
       // Use actual payment amount if provided, otherwise calculate based on rate
-      const basePayment = data.actualPaymentAmount ?? calculatePayment(
+      const basePayment = basePaymentOverride ?? calculatePayment(
         data.currentBalance,
         effectiveRate,
         data.amortizationMonths,
-        data.paymentFrequency as PaymentFrequency
+        projectionFrequency
       );
       
       // Convert prepayment events to calculation engine format
@@ -337,11 +457,11 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         lastPaymentBalance,
         effectiveRate,
         data.amortizationMonths,
-        data.paymentFrequency as PaymentFrequency,
+        projectionFrequency,
         projectionStartDate,
         basePayment,
         prepayments,
-        [], // No term renewals for projection
+        termRenewals,
         360 // Max 30 years
       );
 
@@ -515,7 +635,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         data.currentBalance,
         effectiveRate,
         data.amortizationMonths,
-        data.paymentFrequency as PaymentFrequency,
+        projectionFrequency,
         new Date(),
         [], // No prepayments
         [],

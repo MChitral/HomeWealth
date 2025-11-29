@@ -11,6 +11,7 @@ import {
   type ScenarioMetrics,
   type YearlyProjection,
 } from "@server-shared/calculations/projections";
+import { getTermEffectiveRate } from "@server-shared/calculations/term-helpers";
 
 export interface ScenarioWithAnalytics extends Scenario {
   metrics: ScenarioMetrics | null;
@@ -45,8 +46,8 @@ export class ScenarioProjectionService {
         (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime(),
       )[0];
 
-    const currentRate = currentTerm?.fixedRate
-      ? parseFloat(currentTerm.fixedRate) / 100
+    const currentRate = currentTerm
+      ? getTermEffectiveRate(currentTerm)
       : 0.0549;
 
     return scenarios.map((scenario) => {
