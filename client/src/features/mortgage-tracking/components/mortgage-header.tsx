@@ -1,10 +1,9 @@
 import { Button } from "@/shared/ui/button";
-import { Label } from "@/shared/ui/label";
 import { PageHeader } from "@/shared/ui/page-header";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import type { Mortgage } from "@shared/schema";
-import { Download, Plus } from "lucide-react";
+import { Download, Plus, Pencil, History } from "lucide-react";
 import type { ReactNode } from "react";
+import { MortgageSelector } from "./mortgage-selector";
 
 interface MortgageHeaderProps {
   mortgages: Mortgage[];
@@ -38,59 +37,67 @@ export function MortgageHeader({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <PageHeader
-        title="Mortgage"
-        description="Track your actual mortgage payments (Canadian term-based mortgages)"
-        actions={
-          <div className="flex flex-wrap gap-2 items-center">
-            <div className="flex items-center gap-2">
-              <Label className="text-sm text-muted-foreground">Mortgage</Label>
-              <Select value={selectedMortgageId ?? ""} onValueChange={handleSelect}>
-                <SelectTrigger className="w-[220px]" data-testid="select-mortgage">
-                  <SelectValue placeholder="Select mortgage" />
-                </SelectTrigger>
-                <SelectContent>
-                  {mortgages.map((mortgage) => (
-                    <SelectItem key={mortgage.id} value={mortgage.id}>
-                      {mortgage.propertyPrice
-                        ? `$${Number(mortgage.propertyPrice).toLocaleString()}`
-                        : "Mortgage"}{" "}
-                      · Balance ${Number(mortgage.currentBalance).toLocaleString()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button variant="outline" data-testid="button-export" onClick={onExport} disabled={!onExport}>
-              <Download className="h-4 w-4 mr-2" />
-              Export
+        title="Mortgage Tracking"
+        description="Track your actual mortgage payments with Canadian term-based calculations"
+      />
+
+      <div className="flex flex-col lg:flex-row lg:items-start gap-4">
+        <div className="lg:w-[340px] flex-shrink-0">
+          <MortgageSelector
+            mortgages={mortgages}
+            selectedMortgageId={selectedMortgageId}
+            onSelectMortgage={handleSelect}
+            onCreateNew={onOpenCreateMortgage ?? (() => {})}
+          />
+        </div>
+
+        {mortgages.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 lg:ml-auto">
+            <Button
+              data-testid="button-add-payment"
+              onClick={onLogPayment}
+              disabled={!canCreateTerm}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Log Payment
             </Button>
-            <Button variant="outline" data-testid="button-edit-mortgage" onClick={onEditMortgage}>
-              Edit Details
-            </Button>
+            
             <Button
               variant="outline"
               data-testid="button-backfill-payments"
               onClick={onBackfillPayments}
               disabled={!canCreateTerm}
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Backfill Payments
+              <History className="h-4 w-4 mr-2" />
+              Backfill
             </Button>
-            <Button data-testid="button-add-payment" onClick={onLogPayment} disabled={!canCreateTerm}>
-              <Plus className="h-4 w-4 mr-2" />
-              Log Payment
+            
+            <Button
+              variant="outline"
+              data-testid="button-edit-mortgage"
+              onClick={onEditMortgage}
+            >
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit
             </Button>
-            {onOpenCreateMortgage && (
-              <Button variant="ghost" onClick={onOpenCreateMortgage}>
-                New Mortgage
-              </Button>
-            )}
+            
+            <Button
+              variant="ghost"
+              data-testid="button-export"
+              onClick={onExport}
+              disabled={!onExport}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+            
             {actionsExtra}
           </div>
-        }
-      />
+        )}
+      </div>
+
       {primeBanner}
     </div>
   );
