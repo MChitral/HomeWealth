@@ -1,0 +1,153 @@
+import { Button } from "@/shared/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Label } from "@/shared/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/shared/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
+import { Badge } from "@/shared/ui/badge";
+import { Trash2 } from "lucide-react";
+import type { UiPayment } from "../types";
+import type { UseMutationResult } from "@tanstack/react-query";
+
+interface PaymentHistorySectionProps {
+  filteredPayments: UiPayment[];
+  availableYears: number[];
+  filterYear: string;
+  onFilterYearChange: (year: string) => void;
+  formatAmortization: (years: number) => string;
+  deletePaymentMutation: UseMutationResult<{ success: boolean }, Error, string, unknown>;
+}
+
+export function PaymentHistorySection({
+  filteredPayments,
+  availableYears,
+  filterYear,
+  onFilterYearChange,
+  formatAmortization,
+  deletePaymentMutation,
+}: PaymentHistorySectionProps) {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <CardTitle className="text-xl font-semibold">Payment History</CardTitle>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="year-filter" className="text-sm">
+              Filter by year:
+            </Label>
+            <Select value={filterYear} onValueChange={onFilterYearChange}>
+              <SelectTrigger className="w-[140px]" id="year-filter" data-testid="select-year-filter">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Years</SelectItem>
+                {availableYears.map((year) => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="rounded-md border overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Period</TableHead>
+                <TableHead className="text-right">Prime</TableHead>
+                <TableHead className="text-right">Spread</TableHead>
+                <TableHead className="text-right">Eff. Rate</TableHead>
+                <TableHead className="text-right">Regular</TableHead>
+                <TableHead className="text-right">Prepayment</TableHead>
+                <TableHead className="text-right">Total Paid</TableHead>
+                <TableHead className="text-right">Principal</TableHead>
+                <TableHead className="text-right">Interest</TableHead>
+                <TableHead className="text-right">Balance</TableHead>
+                <TableHead className="text-right">Amort.</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredPayments.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={13} className="text-center text-muted-foreground py-8">
+                    No payments recorded yet. Click "Log Payment" to add your first payment.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredPayments.map((payment) => (
+                  <TableRow key={payment.id} data-testid={`row-payment-${payment.id}`} className={payment.triggerHit ? "bg-destructive/10" : ""}>
+                    <TableCell className="font-medium">
+                      {payment.date}
+                      {payment.triggerHit && (
+                        <Badge variant="destructive" className="ml-2 text-xs">Trigger</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground max-w-[120px] truncate">
+                      {payment.paymentPeriodLabel || "-"}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm">
+                      {payment.primeRate ? `${payment.primeRate}%` : "-"}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm">
+                      {payment.termSpread !== undefined ? `${payment.termSpread >= 0 ? '+' : ''}${payment.termSpread}%` : "-"}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm">{payment.effectiveRate}%</TableCell>
+                    <TableCell className="text-right font-mono text-sm">
+                      ${payment.regularPaymentAmount.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm">
+                      {payment.prepaymentAmount > 0 ? (
+                        <span className="text-primary font-medium">+${payment.prepaymentAmount.toLocaleString()}</span>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right font-mono font-medium">
+                      ${payment.paymentAmount.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-green-600">
+                      ${payment.principal.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-orange-600">
+                      ${payment.interest.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-right font-mono font-medium">
+                      ${payment.remainingBalance.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm">
+                      {formatAmortization(payment.amortizationYears)}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                        onClick={() => deletePaymentMutation.mutate(payment.id)}
+                        disabled={deletePaymentMutation.isPending}
+                        data-testid={`button-delete-payment-${payment.id}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+

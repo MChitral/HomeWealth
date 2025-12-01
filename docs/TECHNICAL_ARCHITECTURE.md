@@ -720,6 +720,67 @@ const mutation = useMutation({
 - React Context for theme/auth (future)
 - Props/hooks for component communication
 
+### Feature-Based Architecture (Mortgage Tracking)
+
+The mortgage tracking feature follows a modular, component-based architecture:
+
+```
+client/src/features/mortgage-tracking/
+├── components/              # UI Components (14 components)
+│   ├── backfill-payments-dialog.tsx
+│   ├── create-mortgage-dialog.tsx
+│   ├── edit-mortgage-dialog.tsx
+│   ├── edit-term-dialog.tsx
+│   ├── education-sidebar.tsx
+│   ├── log-payment-dialog.tsx
+│   ├── mortgage-empty-state.tsx
+│   ├── mortgage-header.tsx
+│   ├── mortgage-layout.tsx
+│   ├── mortgage-prime-banner.tsx
+│   ├── mortgage-summary-panels.tsx
+│   ├── payment-history-section.tsx
+│   ├── term-details-section.tsx
+│   └── term-renewal-dialog.tsx
+├── hooks/                   # Custom Hooks (4 hooks)
+│   ├── use-auto-payments.ts      # Auto-calculate payment amounts
+│   ├── use-mortgage-data.ts      # Fetch mortgage/term/payment data
+│   ├── use-mortgage-tracking-state.ts  # Centralized state management
+│   └── use-prime-rate.ts          # Bank of Canada prime rate
+├── utils/                   # Utility Functions
+│   ├── mortgage-math.ts          # Canadian mortgage calculations
+│   ├── normalize.ts             # Data normalization
+│   └── __tests__/
+│       └── mortgage-math.test.ts # Unit tests
+├── api/                     # API Layer
+│   ├── mortgage-api.ts          # API functions
+│   └── index.ts
+├── types.ts                 # TypeScript types
+└── mortgage-feature.tsx     # Main feature component (~555 lines)
+```
+
+**Architecture Principles**:
+1. **Separation of Concerns**: Each component has a single responsibility
+2. **State Management**: `useMortgageTrackingState` centralizes all state, queries, and mutations
+3. **Reusability**: Dialog components can be reused (e.g., `TermRenewalDialog` for both renewal and first-term creation)
+4. **Testability**: Components can be tested in isolation
+5. **Maintainability**: Clear component hierarchy makes it easy to locate and modify code
+
+**Component Categories**:
+- **Layout Components**: `MortgageLayout`, `MortgageHeader` - Page structure
+- **Content Components**: `TermDetailsSection`, `MortgageSummaryPanels`, `PaymentHistorySection` - Data display
+- **Dialog Components**: `EditMortgageDialog`, `EditTermDialog`, `TermRenewalDialog` - User interactions
+- **Utility Components**: `MortgagePrimeBanner`, `EducationSidebar` - Supporting UI
+
+**State Flow**:
+```
+mortgage-feature.tsx
+  └── useMortgageTrackingState (hook)
+      ├── useMortgageData (data fetching)
+      ├── usePrimeRate (prime rate fetching)
+      ├── useAutoPayments (payment calculations)
+      └── mutations (create/update/delete operations)
+```
+
 ### Routing
 
 **Wouter Router**:
