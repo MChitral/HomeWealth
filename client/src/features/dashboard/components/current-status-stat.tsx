@@ -1,3 +1,5 @@
+import { StatDisplay } from "@/shared/components";
+
 interface CurrentStatusStatProps {
   label: string;
   value: string;
@@ -7,13 +9,9 @@ interface CurrentStatusStatProps {
 
 export function CurrentStatusStat({ label, value, testId, children }: CurrentStatusStatProps) {
   return (
-    <div>
-      <p className="text-sm text-muted-foreground uppercase tracking-wide mb-2">{label}</p>
-      <p className="text-2xl font-bold font-mono" data-testid={testId}>
-        {value}
-      </p>
+    <StatDisplay label={label} value={value} testId={testId} size="md">
       {children}
-    </div>
+    </StatDisplay>
   );
 }
 

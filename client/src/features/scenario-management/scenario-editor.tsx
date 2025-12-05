@@ -1,10 +1,11 @@
 import { Link, useParams, useLocation } from "wouter";
-import { useState } from "react";
 import { usePageTitle } from "@/shared/hooks/use-page-title";
 import { Card, CardContent } from "@/shared/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Info } from "lucide-react";
+import { useMortgageSelection } from "@/shared/contexts/mortgage-selection-context";
+import { MortgageSelector } from "@/features/mortgage-tracking/components/mortgage-selector";
 import type { PaymentFrequency } from "@/features/mortgage-tracking/utils/mortgage-math";
 import { useScenarioDetail, useScenarioEditorState, useScenarioEditorCalculations, useScenarioEditorProjections } from "./hooks";
 import { useMortgageData } from "@/features/mortgage-tracking/hooks";
@@ -35,8 +36,11 @@ export function ScenarioEditorFeature() {
     isLoading: detailLoading,
   } = useScenarioDetail(scenarioId);
 
+  // Use global mortgage selection
+  const { selectedMortgageId, setSelectedMortgageId, mortgages, selectedMortgage } = useMortgageSelection();
+  
   // Fetch real mortgage data from the database
-  const { mortgage, terms, payments, isLoading: mortgageLoading } = useMortgageData();
+  const { mortgage, terms, payments, isLoading: mortgageLoading } = useMortgageData(selectedMortgageId);
   const { cashFlow } = useCashFlowData();
 
   const pageTitle = isNewScenario ? "New Scenario | Mortgage Strategy" : "Edit Scenario | Mortgage Strategy";
@@ -69,24 +73,6 @@ export function ScenarioEditorFeature() {
     mortgageId: mortgage?.id,
   });
 
-  // Initialize form when editing existing scenario
-  useEffect(() => {
-    if (scenario && !isNewScenario) {
-      setName(scenario.name);
-      setDescription(scenario.description || "");
-      setPrepaymentSplit([scenario.prepaymentMonthlyPercent]);
-      setExpectedReturnRate(parseFloat(scenario.expectedReturnRate));
-      setEfPriorityPercent(scenario.efPriorityPercent);
-    }
-  }, [scenario, isNewScenario]);
-
-  // Load prepayment events
-  useEffect(() => {
-    if (fetchedEvents) {
-      setPrepaymentEvents(fetchedEvents.map(toDraftEvent));
-    }
-  }, [fetchedEvents]);
-
   // Show loading skeleton when editing existing scenario or loading mortgage data
   if ((detailLoading && !isNewScenario) || mortgageLoading) {
     return <ScenarioEditorSkeleton />;
@@ -99,6 +85,17 @@ export function ScenarioEditorFeature() {
         onSave={state.handleSave}
         isSaving={state.saveMutation.isPending}
       />
+
+      {mortgages.length > 0 && (
+        <div className="lg:w-[340px]">
+          <MortgageSelector
+            mortgages={mortgages}
+            selectedMortgageId={selectedMortgageId}
+            onSelectMortgage={(id) => setSelectedMortgageId(id)}
+            onCreateNew={() => {}}
+          />
+        </div>
+      )}
 
       <Alert>
         <Info className="h-4 w-4" />

@@ -22,27 +22,16 @@ export function useDashboardData(): DashboardData {
     queryFn: dashboardApi.fetchEmergencyFund,
   });
 
-  const {
-    data: mortgages,
-    isLoading: mortgageLoading,
-  } = useQuery({
-    queryKey: dashboardQueryKeys.mortgages(),
-    queryFn: dashboardApi.fetchMortgages,
-  });
-
   const { data: cashFlow, isLoading: cashFlowLoading } = useQuery({
     queryKey: dashboardQueryKeys.cashFlow(),
     queryFn: dashboardApi.fetchCashFlow,
   });
 
-  const mortgage = mortgages && mortgages.length > 0 ? mortgages[0] : null;
-
   return {
     scenarios,
     emergencyFund,
-    mortgage,
     cashFlow,
-    isLoading: scenariosLoading || efLoading || mortgageLoading || cashFlowLoading,
+    isLoading: scenariosLoading || efLoading || cashFlowLoading,
   };
 }
 

@@ -6,7 +6,6 @@ export type { ScenarioWithMetrics } from "@/entities";
 export type DashboardData = {
   scenarios: ScenarioWithMetrics[] | undefined;
   emergencyFund: EmergencyFund | null | undefined;
-  mortgage: Mortgage | null;
   cashFlow: CashFlow | null | undefined;
   isLoading: boolean;
 };

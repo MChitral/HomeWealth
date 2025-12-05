@@ -5,6 +5,8 @@ import { Button } from "@/shared/ui/button";
 import { PageHeader } from "@/shared/ui/page-header";
 import { usePageTitle } from "@/shared/hooks/use-page-title";
 import { Separator } from "@/shared/ui/separator";
+import { useMortgageSelection } from "@/shared/contexts/mortgage-selection-context";
+import { MortgageSelector } from "@/features/mortgage-tracking/components/mortgage-selector";
 import { useDashboardData, useDashboardCalculations, useDashboardCharts } from "./hooks";
 import { useMortgageData } from "@/features/mortgage-tracking/hooks";
 import type { PaymentFrequency } from "@/features/mortgage-tracking/utils/mortgage-math";
@@ -30,15 +32,15 @@ export function DashboardFeature() {
 
   usePageTitle("Dashboard | Mortgage Strategy");
 
-  const { scenarios, emergencyFund, mortgage, cashFlow, isLoading } = useDashboardData();
-  const selectedMortgageId = mortgage?.id ?? null;
+  const { selectedMortgageId, setSelectedMortgageId, mortgages, selectedMortgage } = useMortgageSelection();
+  const { scenarios, emergencyFund, cashFlow, isLoading } = useDashboardData();
   const {
     mortgage: detailedMortgage,
     terms,
     payments,
     isLoading: mortgageDataLoading,
   } = useMortgageData(selectedMortgageId);
-  const activeMortgage = detailedMortgage ?? mortgage ?? null;
+  const activeMortgage = detailedMortgage ?? selectedMortgage ?? null;
   const dashboardPaymentFrequency: PaymentFrequency = "monthly";
 
   const newScenarioAction = (
@@ -121,6 +123,17 @@ export function DashboardFeature() {
   return (
     <div className="space-y-8">
       <PageHeader title="Dashboard" description="Your financial overview and projections" actions={newScenarioAction} />
+
+      {mortgages.length > 0 && (
+        <div className="lg:w-[340px]">
+          <MortgageSelector
+            mortgages={mortgages}
+            selectedMortgageId={selectedMortgageId}
+            onSelectMortgage={(id) => setSelectedMortgageId(id)}
+            onCreateNew={() => {}}
+          />
+        </div>
+      )}
 
       <CurrentFinancialStatusCard
         homeValue={homeValue}

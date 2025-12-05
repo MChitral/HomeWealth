@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/shared/api/query-client";
 import { useToast } from "@/shared/hooks/use-toast";
+import { useMortgageSelection } from "@/shared/contexts/mortgage-selection-context";
 import {
   mortgageApi,
   mortgageQueryKeys,
@@ -19,8 +20,7 @@ import type { UiTerm } from "../types";
 
 export function useMortgageTrackingState() {
   const { toast } = useToast();
-
-  const [selectedMortgageId, setSelectedMortgageId] = useState<string | null>(null);
+  const { selectedMortgageId, setSelectedMortgageId, mortgages: contextMortgages } = useMortgageSelection();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isTermRenewalOpen, setIsTermRenewalOpen] = useState(false);
   const [isBackfillOpen, setIsBackfillOpen] = useState(false);
@@ -103,18 +103,11 @@ export function useMortgageTrackingState() {
     !downPaymentError &&
     !loanAmountError;
 
-  const { mortgages, mortgage, terms, payments, isLoading } = useMortgageData(selectedMortgageId);
+  const { mortgage, terms, payments, isLoading } = useMortgageData(selectedMortgageId);
   const { primeRate, setPrimeRate, primeRateData, isPrimeRateLoading, refetchPrimeRate } = usePrimeRate();
-
-  useEffect(() => {
-    if (mortgages.length === 0) {
-      setSelectedMortgageId(null);
-      return;
-    }
-    if (!selectedMortgageId || !mortgages.some((m) => m.id === selectedMortgageId)) {
-      setSelectedMortgageId(mortgages[0].id);
-    }
-  }, [mortgages, selectedMortgageId]);
+  
+  // Use mortgages from context instead of fetching again
+  const mortgages = contextMortgages;
 
   useEffect(() => {
     if (!primeRateData?.primeRate) return;
@@ -296,6 +289,10 @@ export function useMortgageTrackingState() {
       });
 
       queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.mortgages() });
+      // Auto-select the newly created mortgage
+      if (newMortgageId) {
+        setSelectedMortgageId(newMortgageId);
+      }
       toast({
         title: "Mortgage created",
         description: "Your mortgage and initial term have been set up successfully",
