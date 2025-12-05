@@ -2,6 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import type { DashboardData } from "../types";
 import { dashboardApi, dashboardQueryKeys } from "../api/dashboard-api";
 
+export * from "./use-dashboard-calculations";
+export * from "./use-dashboard-charts";
+
 export function useDashboardData(): DashboardData {
   const {
     data: scenarios,

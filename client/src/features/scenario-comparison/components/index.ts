@@ -4,3 +4,6 @@ export { ComparisonMetrics } from "./comparison-metrics";
 export { ComparisonCharts } from "./comparison-charts";
 export { ComparisonTable } from "./comparison-table";
 export { EmptyState } from "./empty-state";
+export { ScenarioComparisonSkeleton } from "./scenario-comparison-skeleton";
+export { TimeHorizonSelector } from "./time-horizon-selector";
+export { ComparisonTabs } from "./comparison-tabs";
