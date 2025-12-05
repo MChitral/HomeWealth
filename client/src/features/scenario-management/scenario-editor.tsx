@@ -1,53 +1,34 @@
-import { Button } from "@/shared/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
-import { Input } from "@/shared/ui/input";
-import { Label } from "@/shared/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
-import { Slider } from "@/shared/ui/slider";
-import { Switch } from "@/shared/ui/switch";
-import { Separator } from "@/shared/ui/separator";
-import { Skeleton } from "@/shared/ui/skeleton";
-import { Badge } from "@/shared/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/shared/ui/table";
-import { Save, ArrowLeft, Info, Plus, Trash2, Edit2, BarChart3, TableIcon } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useToast } from "@/shared/hooks/use-toast";
+import { useState } from "react";
 import { usePageTitle } from "@/shared/hooks/use-page-title";
-import { queryClient } from "@/shared/api/query-client";
-import { MortgageBalanceChart } from "@/widgets/charts/mortgage-balance-chart";
+import { Card, CardContent } from "@/shared/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
-import type { Scenario, PrepaymentEvent, InsertPrepaymentEvent } from "@shared/schema";
-import { scenarioApi, scenarioQueryKeys, type ScenarioPayload, type ProjectionRequest, type ProjectionResponse } from "./api";
-import { useScenarioDetail } from "./hooks";
+import { Info } from "lucide-react";
+import type { PaymentFrequency } from "@/features/mortgage-tracking/utils/mortgage-math";
+import { useScenarioDetail, useScenarioEditorState, useScenarioEditorCalculations, useScenarioEditorProjections } from "./hooks";
 import { useMortgageData } from "@/features/mortgage-tracking/hooks";
 import { useCashFlowData } from "@/features/cash-flow/hooks";
 import {
-  calculatePayment,
-  calculatePaymentBreakdown,
-  type PaymentFrequency,
-} from "@/features/mortgage-tracking/utils/mortgage-math";
-
-type DraftPrepaymentEvent = {
-  id: string;
-  scenarioId: string;
-  eventType: "annual" | "one-time";
-  amount: string;
-  startPaymentNumber: number;
-  description: string | null;
-  recurrenceMonth: number | null;
-  oneTimeYear: number | null;
-};
+  ScenarioEditorSkeleton,
+  ScenarioEditorHeader,
+  ScenarioBasicInfoForm,
+  CurrentMortgagePositionCard,
+  RateAssumptionCard,
+  PrepaymentEventsCard,
+  SurplusAllocationCard,
+  ProjectedMortgageOutcomeCard,
+  EmergencyFundStrategyCard,
+  InvestmentStrategyCard,
+} from "./components";
 
 export function ScenarioEditorFeature() {
-  const { toast } = useToast();
   const params = useParams<{ id?: string }>();
   const [, navigate] = useLocation();
   const rawScenarioId = params.id;
   const isNewScenario = rawScenarioId === "new" || !rawScenarioId;
   const scenarioId = !isNewScenario && rawScenarioId ? rawScenarioId : null;
+
   const {
     scenario,
     prepaymentEvents: fetchedEvents,
@@ -56,30 +37,37 @@ export function ScenarioEditorFeature() {
 
   // Fetch real mortgage data from the database
   const { mortgage, terms, payments, isLoading: mortgageLoading } = useMortgageData();
-  const { cashFlow, isLoading: cashFlowLoading } = useCashFlowData();
-
-  // Form state
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [prepaymentSplit, setPrepaymentSplit] = useState([50]);
-  const [expectedReturnRate, setExpectedReturnRate] = useState(6.0);
-  const [efPriorityPercent, setEfPriorityPercent] = useState(0);
-  const [rateAssumption, setRateAssumption] = useState<number | null>(null); // null = use current rate
-  
-  // Prepayment events state
-  const [prepaymentEvents, setPrepaymentEvents] = useState<DraftPrepaymentEvent[]>([]);
-  const [editingEvent, setEditingEvent] = useState<DraftPrepaymentEvent | null>(null);
-  const [isAddingEvent, setIsAddingEvent] = useState(false);
-  
-  // Event form state
-  const [eventType, setEventType] = useState<"annual" | "one-time">("annual");
-  const [eventAmount, setEventAmount] = useState("");
-  const [eventDescription, setEventDescription] = useState("");
-  const [recurrenceMonth, setRecurrenceMonth] = useState("3"); // March for tax refund
-  const [oneTimeYear, setOneTimeYear] = useState("1");
+  const { cashFlow } = useCashFlowData();
 
   const pageTitle = isNewScenario ? "New Scenario | Mortgage Strategy" : "Edit Scenario | Mortgage Strategy";
   usePageTitle(pageTitle);
+
+  const scenarioPaymentFrequency: PaymentFrequency = "monthly";
+
+  // Use centralized state management hook
+  const state = useScenarioEditorState(scenario, fetchedEvents, isNewScenario, scenarioId, () => {
+    navigate("/scenarios");
+  });
+
+  // Use calculations hook
+  const calculations = useScenarioEditorCalculations({
+    mortgage,
+    terms,
+    payments,
+    cashFlow,
+    rateAssumption: state.rateAssumption,
+    paymentFrequency: scenarioPaymentFrequency,
+  });
+
+  // Use projections hook
+  const projections = useScenarioEditorProjections({
+    currentMortgageData: calculations.currentMortgageData,
+    prepaymentSplit: state.prepaymentSplit,
+    monthlySurplus: calculations.monthlySurplus,
+    prepaymentEvents: state.prepaymentEvents,
+    rateAssumption: state.rateAssumption,
+    mortgageId: mortgage?.id,
+  });
 
   // Initialize form when editing existing scenario
   useEffect(() => {
@@ -99,484 +87,18 @@ export function ScenarioEditorFeature() {
     }
   }, [fetchedEvents]);
 
-  const buildScenarioPayload = (): ScenarioPayload => {
-    const prepaymentPercent = prepaymentSplit?.[0] ?? 50;
-    return {
-      name: name.trim(),
-      description: description.trim() || null,
-      prepaymentMonthlyPercent: prepaymentPercent,
-      investmentMonthlyPercent: 100 - prepaymentPercent,
-      expectedReturnRate: Number(parseFloat(expectedReturnRate.toString()).toFixed(3)),
-      efPriorityPercent: Math.max(0, Math.min(100, efPriorityPercent)),
-    };
-  };
-
-  const buildEventPayload = (
-    event: DraftPrepaymentEvent,
-    scenarioIdValue: string,
-  ): InsertPrepaymentEvent => ({
-    scenarioId: scenarioIdValue,
-    eventType: event.eventType,
-    amount: event.amount ?? "0",
-    startPaymentNumber: event.startPaymentNumber ?? 1,
-    recurrenceMonth: event.eventType === "annual" ? event.recurrenceMonth ?? null : null,
-    oneTimeYear: event.eventType === "one-time" ? event.oneTimeYear ?? null : null,
-    description: event.description ?? null,
-  });
-
-  const toDraftEvent = (event: PrepaymentEvent): DraftPrepaymentEvent => ({
-    id: event.id,
-    scenarioId: event.scenarioId,
-    eventType: event.eventType as "annual" | "one-time",
-    amount: event.amount,
-    startPaymentNumber: event.startPaymentNumber ?? 1,
-    description: event.description ?? null,
-    recurrenceMonth: event.recurrenceMonth ?? null,
-    oneTimeYear: event.oneTimeYear ?? null,
-  });
-
-  // Save mutation
-  const saveMutation = useMutation({
-    mutationFn: async () => {
-      const payload = buildScenarioPayload();
-      const savedScenario = isNewScenario
-        ? await scenarioApi.createScenario(payload)
-        : await scenarioApi.updateScenario(scenarioId!, payload);
-
-      if (isNewScenario && savedScenario?.id && prepaymentEvents.length > 0) {
-        await Promise.all(
-          prepaymentEvents.map((event) =>
-            scenarioApi.createPrepaymentEvent(savedScenario.id!, buildEventPayload(event, savedScenario.id!)),
-          ),
-        );
-      }
-
-      return savedScenario;
-    },
-    onSuccess: (savedScenario: Scenario) => {
-      queryClient.invalidateQueries({ queryKey: scenarioQueryKeys.scenariosWithMetrics() });
-      queryClient.invalidateQueries({ queryKey: scenarioQueryKeys.all() });
-      const id = savedScenario?.id ?? scenarioId;
-      if (id) {
-        queryClient.invalidateQueries({ queryKey: scenarioQueryKeys.scenario(id) });
-        queryClient.invalidateQueries({ queryKey: scenarioQueryKeys.scenarioEvents(id) });
-      }
-      toast({
-        title: isNewScenario ? "Scenario created" : "Scenario saved",
-        description: isNewScenario ? "Your new scenario has been created." : "Your scenario has been updated.",
-      });
-      
-      // Navigate to scenarios list after saving
-      navigate("/scenarios");
-    },
-    onError: () => {
-      toast({
-        title: "Error saving scenario",
-        description: "Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleSave = () => {
-    if (!name.trim()) {
-      toast({
-        title: "Name required",
-        description: "Please enter a scenario name.",
-        variant: "destructive",
-      });
-      return;
-    }
-    saveMutation.mutate();
-  };
-
-  // Prepayment event management
-  const handleAddEvent = async () => {
-    if (!eventAmount || parseFloat(eventAmount) <= 0) {
-      toast({
-        title: "Invalid amount",
-        description: "Please enter a valid prepayment amount.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const eventData: DraftPrepaymentEvent = {
-      id: `temp-${Date.now()}`,
-      scenarioId: scenarioId || "",
-      eventType,
-      amount: parseFloat(eventAmount).toFixed(2),
-      startPaymentNumber: 1,
-      description: eventDescription || null,
-      recurrenceMonth: eventType === "annual" ? parseInt(recurrenceMonth) : null,
-      oneTimeYear: eventType === "one-time" ? parseInt(oneTimeYear) : null,
-    };
-
-    // For existing scenarios, save to API immediately
-    if (!isNewScenario && scenarioId) {
-      try {
-        const savedEvent = await scenarioApi.createPrepaymentEvent(
-          scenarioId,
-          buildEventPayload(eventData, scenarioId),
-        );
-        setPrepaymentEvents([...prepaymentEvents, toDraftEvent(savedEvent)]);
-        queryClient.invalidateQueries({ queryKey: scenarioQueryKeys.scenarioEvents(scenarioId) });
-        toast({
-          title: "Event added",
-          description: "Prepayment event has been saved.",
-        });
-      } catch (error) {
-        toast({
-          title: "Error adding event",
-          description: "Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-    } else {
-      // For new scenarios, just add to local state (will be saved when scenario is created)
-      setPrepaymentEvents([...prepaymentEvents, eventData]);
-    }
-
-    setIsAddingEvent(false);
-    resetEventForm();
-  };
-
-  const handleEditEvent = (event: DraftPrepaymentEvent) => {
-    setEditingEvent(event);
-    setEventType(event.eventType as "annual" | "one-time");
-    setEventAmount(event.amount);
-    setEventDescription(event.description || "");
-    if (event.eventType === "annual" && event.recurrenceMonth) {
-      setRecurrenceMonth(event.recurrenceMonth.toString());
-    } else if (event.eventType === "one-time" && event.oneTimeYear) {
-      setOneTimeYear(event.oneTimeYear.toString());
-    }
-    setIsAddingEvent(true);
-  };
-
-  const handleUpdateEvent = async () => {
-    if (!editingEvent || !eventAmount || parseFloat(eventAmount) <= 0) {
-      toast({
-        title: "Invalid amount",
-        description: "Please enter a valid prepayment amount.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const updatedEvent: DraftPrepaymentEvent = {
-      ...editingEvent,
-      eventType,
-      amount: parseFloat(eventAmount).toFixed(2),
-      description: eventDescription || null,
-      recurrenceMonth: eventType === "annual" ? parseInt(recurrenceMonth) : null,
-      oneTimeYear: eventType === "one-time" ? parseInt(oneTimeYear) : null,
-    };
-
-    // For existing scenarios with real event IDs, update via API
-    if (!isNewScenario && scenarioId && !editingEvent.id.startsWith("temp-")) {
-      try {
-        await scenarioApi.updatePrepaymentEvent(
-          editingEvent.id,
-          buildEventPayload(updatedEvent, scenarioId),
-        );
-        queryClient.invalidateQueries({ queryKey: scenarioQueryKeys.scenarioEvents(scenarioId) });
-        toast({
-          title: "Event updated",
-          description: "Prepayment event has been saved.",
-        });
-      } catch (error) {
-        toast({
-          title: "Error updating event",
-          description: "Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
-    setPrepaymentEvents(
-      prepaymentEvents.map((e) => (e.id === editingEvent.id ? updatedEvent : e))
-    );
-    setIsAddingEvent(false);
-    setEditingEvent(null);
-    resetEventForm();
-  };
-
-  const handleDeleteEvent = async (eventId: string) => {
-    // For existing scenarios with real event IDs, delete via API
-    if (!isNewScenario && scenarioId && !eventId.startsWith("temp-")) {
-      try {
-        await scenarioApi.deletePrepaymentEvent(eventId);
-        queryClient.invalidateQueries({ queryKey: scenarioQueryKeys.scenarioEvents(scenarioId) });
-        toast({
-          title: "Event deleted",
-          description: "Prepayment event has been removed.",
-        });
-      } catch (error) {
-        toast({
-          title: "Error deleting event",
-          description: "Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
-    setPrepaymentEvents(prepaymentEvents.filter((e) => e.id !== eventId));
-  };
-
-  const resetEventForm = () => {
-    setEventType("annual");
-    setEventAmount("");
-    setEventDescription("");
-    setRecurrenceMonth("3");
-    setOneTimeYear("1");
-  };
-
-  const getMonthName = (month: number) => {
-    const months = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
-    ];
-    return months[month - 1] || "";
-  };
-
-  // Get latest term and latest payment for current mortgage position (sorted by date)
-  const sortedTerms = useMemo(() => {
-    if (!terms?.length) return [];
-    return [...terms].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
-  }, [terms]);
-  const latestTerm = sortedTerms[0] || null;
-
-  const sortedPayments = useMemo(() => {
-    if (!payments?.length) return [];
-    return [...payments].sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
-  }, [payments]);
-  const latestPayment = sortedPayments[0] || null;
-  const firstPayment = sortedPayments[sortedPayments.length - 1] || null;
-
-  // Calculate totals from payment history
-  const totalPrincipalPaid = payments?.reduce((sum, p) => sum + Number(p.principalPaid || 0), 0) || 0;
-  const totalInterestPaid = payments?.reduce((sum, p) => sum + Number(p.interestPaid || 0), 0) || 0;
-
-  // Calculate years into mortgage from first payment
-  const yearsIntoMortgage = firstPayment 
-    ? (new Date().getTime() - new Date(firstPayment.paymentDate).getTime()) / (1000 * 60 * 60 * 24 * 365)
-    : 0;
-
-  const scenarioPaymentFrequency: PaymentFrequency = "monthly";
-
-  // Current mortgage data from database
-  const currentMortgageData = useMemo(() => {
-    const homeValue = Number(mortgage?.propertyPrice || 500000);
-    const originalPrincipal = Number(mortgage?.originalAmount || 400000);
-
-    const balanceFromPayment = latestPayment ? Number(latestPayment.remainingBalance) : NaN;
-    const currentBalance =
-      Number.isFinite(balanceFromPayment) && balanceFromPayment > 0
-        ? balanceFromPayment
-        : Number(mortgage?.currentBalance || originalPrincipal);
-
-    const principalPaid = Math.round(totalPrincipalPaid * 100) / 100;
-    const interestPaid = Math.round(totalInterestPaid * 100) / 100;
-    const yearsInto = Math.round(yearsIntoMortgage * 100) / 100;
-
-    const termRate =
-      latestTerm?.termType === "fixed"
-        ? Number(latestTerm?.fixedRate ?? 0)
-        : Number(latestTerm?.primeRate ?? 0) + Number(latestTerm?.lockedSpread ?? 0);
-    const derivedRate = latestPayment ? Number(latestPayment.effectiveRate) : termRate;
-    const currentRate = Number.isFinite(derivedRate) && derivedRate > 0 ? derivedRate : 5;
-
-    const amortizationYears = latestPayment
-      ? Number(latestPayment.remainingAmortizationMonths ?? 0) / 12
-      : Number(mortgage?.amortizationYears || 25);
-    const amortizationMonths = Math.max(1, Math.round((amortizationYears || 0) * 12));
-
-    let paymentAmount = latestPayment
-      ? Number(latestPayment.regularPaymentAmount)
-      : Number(latestTerm?.regularPaymentAmount || 0);
-    if ((!paymentAmount || paymentAmount <= 0) && currentBalance > 0 && amortizationMonths > 0 && currentRate > 0) {
-      paymentAmount = calculatePayment(
-        currentBalance,
-        currentRate / 100,
-        amortizationMonths,
-        scenarioPaymentFrequency,
-      );
-    }
-    paymentAmount = Math.round((paymentAmount || 0) * 100) / 100;
-
-    const termType =
-      latestTerm?.termType === "fixed"
-        ? "Fixed Rate"
-        : latestTerm?.termType === "variable-fixed"
-          ? "Variable-Fixed Payment"
-          : "Variable-Changing Payment";
-
-    return {
-      homeValue,
-      originalPrincipal,
-      currentBalance,
-      principalPaid,
-      interestPaid,
-      yearsIntoMortgage: yearsInto,
-      currentRate,
-      currentAmortization: Math.max(0, Math.round((amortizationMonths / 12) * 10) / 10),
-      monthlyPayment: paymentAmount,
-      termType,
-      lockedSpread: Number(latestTerm?.lockedSpread || 0),
-      paymentFrequency: scenarioPaymentFrequency,
-    };
-  }, [mortgage, latestTerm, latestPayment, totalPrincipalPaid, totalInterestPaid, yearsIntoMortgage]);
-
-  const rateUsedForPreview = typeof rateAssumption === "number" ? rateAssumption : currentMortgageData.currentRate;
-
-  const scenarioPaymentPreview = useMemo(() => {
-    if (!currentMortgageData.currentBalance || currentMortgageData.currentBalance <= 0) return null;
-    if (!currentMortgageData.monthlyPayment || currentMortgageData.monthlyPayment <= 0) return null;
-    if (!rateUsedForPreview || rateUsedForPreview <= 0) return null;
-
-    return calculatePaymentBreakdown({
-      balance: currentMortgageData.currentBalance,
-      paymentAmount: currentMortgageData.monthlyPayment,
-      regularPaymentAmount: currentMortgageData.monthlyPayment,
-      extraPrepaymentAmount: 0,
-      frequency: scenarioPaymentFrequency,
-      annualRate: rateUsedForPreview / 100,
-    });
-  }, [
-    currentMortgageData.currentBalance,
-    currentMortgageData.monthlyPayment,
-    rateUsedForPreview,
-  ]);
-
-  // Calculate monthly expenses from all expense fields
-  const monthlyExpenses = useMemo(() => {
-    if (!cashFlow) return 0;
-    return (
-      Number(cashFlow.propertyTax || 0) +
-      Number(cashFlow.homeInsurance || 0) +
-      Number(cashFlow.condoFees || 0) +
-      Number(cashFlow.utilities || 0) +
-      Number(cashFlow.groceries || 0) +
-      Number(cashFlow.dining || 0) +
-      Number(cashFlow.transportation || 0) +
-      Number(cashFlow.entertainment || 0) +
-      Number(cashFlow.carLoan || 0) +
-      Number(cashFlow.studentLoan || 0) +
-      Number(cashFlow.creditCard || 0)
-    );
-  }, [cashFlow]);
-
-  // Calculate surplus cash from cash flow
-  const monthlySurplus = useMemo(() => {
-    if (!cashFlow) return 0;
-    const income = Number(cashFlow.monthlyIncome || 0);
-    const mortgagePayment = currentMortgageData.monthlyPayment;
-    return Math.max(0, income - monthlyExpenses - mortgagePayment);
-  }, [cashFlow, monthlyExpenses, currentMortgageData.monthlyPayment]);
-
-  // Build projection request for API
-  const projectionRequest = useMemo((): ProjectionRequest | null => {
-    if (!currentMortgageData.currentBalance || currentMortgageData.currentBalance <= 0) {
-      return null;
-    }
-
-    const prepayPercent = prepaymentSplit[0] / 100;
-    const monthlyPrepay = Math.max(0, monthlySurplus) * prepayPercent;
-
-    // Convert draft prepayment events to API format
-    const apiPrepaymentEvents = prepaymentEvents.map(event => {
-      // For one-time events, convert oneTimeYear to payment number
-      // Year N = payment ((N-1) * 12 + 1) for monthly payments
-      // E.g., Year 2 = payment 13 (start of 2nd year)
-      let startPaymentNumber = event.startPaymentNumber || 1;
-      if (event.eventType === 'one-time' && event.oneTimeYear) {
-        startPaymentNumber = (event.oneTimeYear - 1) * 12 + 1;
-      }
-      
-      return {
-        type: event.eventType as 'annual' | 'one-time',
-        amount: Number(event.amount || 0),
-        startPaymentNumber,
-        recurrenceMonth: event.recurrenceMonth || undefined,
-      };
-    });
-
-    return {
-      currentBalance: currentMortgageData.currentBalance,
-      annualRate: currentMortgageData.currentRate / 100, // Convert to decimal
-      amortizationMonths: Math.round(currentMortgageData.currentAmortization * 12),
-      paymentFrequency: 'monthly',
-      actualPaymentAmount: currentMortgageData.monthlyPayment, // Use actual payment amount, not recalculated
-      monthlyPrepayAmount: monthlyPrepay,
-      prepaymentEvents: apiPrepaymentEvents,
-      // Add rate override if user has set a different assumption
-      rateOverride: rateAssumption !== null ? rateAssumption / 100 : undefined,
-      // Include mortgage ID to fetch historical payments
-      mortgageId: mortgage?.id,
-    };
-  }, [currentMortgageData, prepaymentSplit, monthlySurplus, prepaymentEvents, rateAssumption, mortgage?.id]);
-
-  // Fetch projection from backend using authoritative Canadian mortgage calculation engine
-  const { data: projectionData, isLoading: projectionLoading } = useQuery<ProjectionResponse>({
-    queryKey: ['mortgages', 'projection', projectionRequest],
-    queryFn: () => scenarioApi.fetchProjection(projectionRequest!),
-    enabled: !!projectionRequest,
-    staleTime: 5000, // Cache for 5 seconds to prevent excessive API calls
-  });
-
-  // Extract projection data with fallbacks for loading state
-  const mortgageProjection = projectionData?.chartData || [];
-  const yearlyAmortization = projectionData?.yearlyData || [];
-  const projectedPayoff = projectionData?.summary.projectedPayoff || 0;
-  const totalInterest = projectionData?.summary.totalInterest || 0;
-  const interestSaved = projectionData?.summary.interestSaved || 0;
-
-  // State for chart/table toggle
-  const [projectionView, setProjectionView] = useState<"chart" | "table">("chart");
-
   // Show loading skeleton when editing existing scenario or loading mortgage data
   if ((detailLoading && !isNewScenario) || mortgageLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Skeleton className="h-10 w-10" />
-          <div className="flex-1">
-            <Skeleton className="h-10 w-60 mb-2" />
-            <Skeleton className="h-4 w-96" />
-          </div>
-          <Skeleton className="h-10 w-32" />
-        </div>
-        <Skeleton className="h-96 w-full" />
-        <Skeleton className="h-80 w-full" />
-      </div>
-    );
+    return <ScenarioEditorSkeleton />;
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4 sticky top-0 bg-background z-10 py-4 -mt-4">
-        <Link href="/scenarios">
-          <Button variant="ghost" size="icon" data-testid="button-back">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <div className="flex-1">
-          <h1 className="text-3xl font-semibold">{isNewScenario ? "New Scenario" : "Edit Scenario"}</h1>
-          <p className="text-muted-foreground">Build a strategy from your current mortgage position</p>
-        </div>
-        <Button 
-          onClick={handleSave} 
-          disabled={saveMutation.isPending}
-          data-testid="button-save"
-        >
-          <Save className="h-4 w-4 mr-2" />
-          {saveMutation.isPending ? "Saving..." : "Save Scenario"}
-        </Button>
-      </div>
+      <ScenarioEditorHeader
+        isNewScenario={isNewScenario}
+        onSave={state.handleSave}
+        isSaving={state.saveMutation.isPending}
+      />
 
       <Alert>
         <Info className="h-4 w-4" />
@@ -585,43 +107,12 @@ export function ScenarioEditorFeature() {
         </AlertDescription>
       </Alert>
 
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="scenario-name">Scenario Name</Label>
-          <Input
-            id="scenario-name"
-            placeholder="e.g., Balanced Strategy"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            data-testid="input-scenario-name"
-          />
-        </div>
-        <div>
-          <Label htmlFor="scenario-description">Description (Optional)</Label>
-          <Input
-            id="scenario-description"
-            placeholder="Brief description of this strategy"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            data-testid="input-scenario-description"
-          />
-        </div>
-        <div>
-          <Label htmlFor="horizon">Projection Horizon (years)</Label>
-          <Select defaultValue="10">
-            <SelectTrigger id="horizon" data-testid="select-horizon">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">10 Years</SelectItem>
-              <SelectItem value="15">15 Years</SelectItem>
-              <SelectItem value="20">20 Years</SelectItem>
-              <SelectItem value="25">25 Years</SelectItem>
-              <SelectItem value="30">30 Years</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <ScenarioBasicInfoForm
+        name={state.name}
+        setName={state.setName}
+        description={state.description}
+        setDescription={state.setDescription}
+      />
 
       <Card className="bg-muted/50">
         <CardContent className="p-4">
@@ -643,715 +134,75 @@ export function ScenarioEditorFeature() {
         </TabsList>
 
         <TabsContent value="mortgage" className="space-y-6">
-          <Card className="bg-accent/50">
-            <CardHeader>
-              <CardTitle>Current Mortgage Position</CardTitle>
-              <CardDescription>Loaded from your Mortgage History (as of latest payment)</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Home Value</p>
-                  <p className="text-lg font-mono font-semibold">${currentMortgageData.homeValue.toLocaleString()}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Current Balance</p>
-                  <p className="text-lg font-mono font-semibold">${currentMortgageData.currentBalance.toLocaleString()}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Years Into Mortgage</p>
-                  <p className="text-lg font-mono font-semibold">{currentMortgageData.yearsIntoMortgage} years</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Current Rate</p>
-                  <p className="text-lg font-mono font-semibold">{currentMortgageData.currentRate}%</p>
-                </div>
-              </div>
-              <Separator className="my-4" />
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Principal Paid So Far</p>
-                  <p className="text-base font-mono text-green-600">${currentMortgageData.principalPaid.toLocaleString()}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Interest Paid So Far</p>
-                  <p className="text-base font-mono text-orange-600">${currentMortgageData.interestPaid.toLocaleString()}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Current Amortization</p>
-                  <p className="text-base font-mono">{currentMortgageData.currentAmortization} years</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Monthly Payment</p>
-                  <p className="text-base font-mono">${currentMortgageData.monthlyPayment.toLocaleString()}</p>
-                </div>
-              </div>
-            {scenarioPaymentPreview && (
-              <div className="mt-4 space-y-3">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Next Payment Principal</p>
-                    <p className="text-base font-mono text-green-600">
-                      ${scenarioPaymentPreview.principal.toFixed(2)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Next Payment Interest</p>
-                    <p className="text-base font-mono text-orange-600">
-                      ${scenarioPaymentPreview.interest.toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Using {rateUsedForPreview.toFixed(2)}% rate · Canadian semi-annual compounding
-                </p>
-                {scenarioPaymentPreview.triggerRateHit && (
-                  <Alert variant="destructive">
-                    <AlertDescription>
-                      Current payment is below the interest-only threshold. Increase the payment or adjust your strategy to avoid trigger-rate calls.
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </div>
-            )}
-              <Separator className="my-4" />
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Current Term Type</p>
-                  <p className="text-base font-medium">{currentMortgageData.termType}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-muted-foreground mb-1">Locked Spread</p>
-                  <p className="text-base font-mono">Prime {currentMortgageData.lockedSpread >= 0 ? '+' : ''}{currentMortgageData.lockedSpread}%</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <CurrentMortgagePositionCard
+            currentMortgageData={calculations.currentMortgageData}
+            paymentPreview={calculations.scenarioPaymentPreview}
+            rateUsedForPreview={calculations.rateUsedForPreview}
+          />
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Rate Assumption for Projections</CardTitle>
-              <CardDescription>Model what happens if rates change (affects amortization timeline)</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label>Projected Rate</Label>
-                  <Badge variant="outline" className="font-mono">
-                    {rateAssumption !== null 
-                      ? `${rateAssumption.toFixed(2)}%` 
-                      : `${currentMortgageData.currentRate.toFixed(2)}% (current)`}
-                  </Badge>
-                </div>
-                
-                <div className="space-y-2">
-                  <Slider
-                    value={[rateAssumption ?? currentMortgageData.currentRate]}
-                    onValueChange={(values) => setRateAssumption(values[0])}
-                    min={1.0}
-                    max={10.0}
-                    step={0.25}
-                    className="w-full"
-                    data-testid="slider-rate"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>1.00%</span>
-                    <span>Current: {currentMortgageData.currentRate.toFixed(2)}%</span>
-                    <span>10.00%</span>
-                  </div>
-                </div>
+          <RateAssumptionCard
+            currentRate={calculations.currentMortgageData.currentRate}
+            rateAssumption={state.rateAssumption}
+            setRateAssumption={state.setRateAssumption}
+          />
 
-                <div className="flex gap-2 flex-wrap">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setRateAssumption(null)}
-                    className={rateAssumption === null ? "border-primary" : ""}
-                    data-testid="button-rate-current"
-                  >
-                    Use Current
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setRateAssumption(currentMortgageData.currentRate - 1)}
-                    data-testid="button-rate-down-1"
-                  >
-                    -1.00%
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setRateAssumption(currentMortgageData.currentRate - 0.5)}
-                    data-testid="button-rate-down-half"
-                  >
-                    -0.50%
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setRateAssumption(currentMortgageData.currentRate + 0.5)}
-                    data-testid="button-rate-up-half"
-                  >
-                    +0.50%
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setRateAssumption(currentMortgageData.currentRate + 1)}
-                    data-testid="button-rate-up-1"
-                  >
-                    +1.00%
-                  </Button>
-                </div>
+          <PrepaymentEventsCard
+            prepaymentEvents={state.prepaymentEvents}
+            isAddingEvent={state.isAddingEvent}
+            editingEvent={state.editingEvent}
+            eventType={state.eventType}
+            setEventType={state.setEventType}
+            eventAmount={state.eventAmount}
+            setEventAmount={state.setEventAmount}
+            eventDescription={state.eventDescription}
+            setEventDescription={state.setEventDescription}
+            recurrenceMonth={state.recurrenceMonth}
+            setRecurrenceMonth={state.setRecurrenceMonth}
+            oneTimeYear={state.oneTimeYear}
+            setOneTimeYear={state.setOneTimeYear}
+            onAddEvent={state.handleAddEvent}
+            onEditEvent={state.handleEditEvent}
+            onUpdateEvent={state.handleUpdateEvent}
+            onDeleteEvent={state.handleDeleteEvent}
+            onCancelEvent={() => {
+              state.setIsAddingEvent(false);
+              state.setEditingEvent(null);
+              state.resetEventForm();
+            }}
+            onStartAddingEvent={() => {
+              state.resetEventForm();
+              state.setIsAddingEvent(true);
+              state.setEditingEvent(null);
+            }}
+          />
 
-                <p className="text-sm text-muted-foreground">
-                  {rateAssumption !== null && rateAssumption < currentMortgageData.currentRate
-                    ? `If rates drop to ${rateAssumption.toFixed(2)}%, you'll pay off faster and save on interest.`
-                    : rateAssumption !== null && rateAssumption > currentMortgageData.currentRate
-                    ? `If rates rise to ${rateAssumption.toFixed(2)}%, your amortization will extend.`
-                    : "Using your current rate for projections."}
-                </p>
-              </div>
+          <SurplusAllocationCard
+            monthlySurplus={calculations.monthlySurplus}
+            prepaymentSplit={state.prepaymentSplit}
+            setPrepaymentSplit={state.setPrepaymentSplit}
+            hasCashFlow={!!cashFlow}
+          />
 
-              <Separator />
-
-              <div className="space-y-2">
-                <Label htmlFor="appreciation-rate">Property Appreciation Rate (% annual)</Label>
-                <Input id="appreciation-rate" type="number" step="0.1" defaultValue="2.0" data-testid="input-appreciation-rate" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Prepayment Events</CardTitle>
-                  <CardDescription>Annual lump sums (bonuses, tax refunds) and one-time prepayments</CardDescription>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    resetEventForm();
-                    setIsAddingEvent(true);
-                    setEditingEvent(null);
-                  }}
-                  data-testid="button-add-event"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Event
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* List of existing prepayment events */}
-              {prepaymentEvents.length === 0 && !isAddingEvent && (
-                <Alert>
-                  <Info className="h-4 w-4" />
-                  <AlertDescription>
-                    No prepayment events configured. Add annual lump sums (like tax refunds) or one-time prepayments (like inheritances).
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {prepaymentEvents.length > 0 && (
-                <div className="space-y-3">
-                  {prepaymentEvents.map((event) => (
-                    <div
-                      key={event.id}
-                      className="flex items-start justify-between gap-4 p-4 rounded-lg border bg-muted/30"
-                      data-testid={`event-${event.id}`}
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge variant="outline" data-testid={`badge-${event.eventType}`}>
-                            {event.eventType === "annual" ? "Annual" : "One-Time"}
-                          </Badge>
-                          <span className="font-mono font-semibold text-lg">
-                            ${parseFloat(event.amount).toLocaleString()}
-                          </span>
-                        </div>
-                        {event.eventType === "annual" && event.recurrenceMonth && (
-                          <p className="text-sm text-muted-foreground">
-                            Every {getMonthName(event.recurrenceMonth)}
-                          </p>
-                        )}
-                        {event.eventType === "one-time" && event.oneTimeYear && (
-                          <p className="text-sm text-muted-foreground">
-                            Year {event.oneTimeYear} from mortgage start
-                          </p>
-                        )}
-                        {event.description && (
-                          <p className="text-sm mt-1">{event.description}</p>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEditEvent(event)}
-                          data-testid={`button-edit-${event.id}`}
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteEvent(event.id)}
-                          data-testid={`button-delete-${event.id}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Add/Edit Event Form */}
-              {isAddingEvent && (
-                <Card className="border-primary">
-                  <CardHeader>
-                    <CardTitle className="text-base">
-                      {editingEvent ? "Edit Prepayment Event" : "Add Prepayment Event"}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="event-type">Event Type</Label>
-                      <Select
-                        value={eventType}
-                        onValueChange={(value) => setEventType(value as "annual" | "one-time")}
-                      >
-                        <SelectTrigger id="event-type" data-testid="select-event-type">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="annual">Annual (recurring every year)</SelectItem>
-                          <SelectItem value="one-time">One-Time</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="event-amount">Amount ($)</Label>
-                      <Input
-                        id="event-amount"
-                        type="number"
-                        placeholder="5000"
-                        value={eventAmount}
-                        onChange={(e) => setEventAmount(e.target.value)}
-                        data-testid="input-event-amount"
-                      />
-                    </div>
-
-                    {eventType === "annual" && (
-                      <div className="space-y-2">
-                        <Label htmlFor="recurrence-month">Which Month?</Label>
-                        <Select
-                          value={recurrenceMonth}
-                          onValueChange={setRecurrenceMonth}
-                        >
-                          <SelectTrigger id="recurrence-month" data-testid="select-recurrence-month">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1">January</SelectItem>
-                            <SelectItem value="2">February</SelectItem>
-                            <SelectItem value="3">March (Tax Refund)</SelectItem>
-                            <SelectItem value="4">April</SelectItem>
-                            <SelectItem value="5">May</SelectItem>
-                            <SelectItem value="6">June</SelectItem>
-                            <SelectItem value="7">July</SelectItem>
-                            <SelectItem value="8">August</SelectItem>
-                            <SelectItem value="9">September</SelectItem>
-                            <SelectItem value="10">October</SelectItem>
-                            <SelectItem value="11">November</SelectItem>
-                            <SelectItem value="12">December (Bonus)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <p className="text-sm text-muted-foreground">
-                          Common: March for tax refunds, December for year-end bonuses
-                        </p>
-                      </div>
-                    )}
-
-                    {eventType === "one-time" && (
-                      <div className="space-y-2">
-                        <Label htmlFor="one-time-year">Which Year? (from mortgage start)</Label>
-                        <Input
-                          id="one-time-year"
-                          type="number"
-                          min="1"
-                          placeholder="1"
-                          value={oneTimeYear}
-                          onChange={(e) => setOneTimeYear(e.target.value)}
-                          data-testid="input-one-time-year"
-                        />
-                        <p className="text-sm text-muted-foreground">
-                          E.g., "5" means 5 years from when your mortgage started
-                        </p>
-                      </div>
-                    )}
-
-                    <div className="space-y-2">
-                      <Label htmlFor="event-description">Description (Optional)</Label>
-                      <Input
-                        id="event-description"
-                        placeholder="e.g., Annual bonus, Tax refund, Inheritance"
-                        value={eventDescription}
-                        onChange={(e) => setEventDescription(e.target.value)}
-                        data-testid="input-event-description"
-                      />
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={editingEvent ? handleUpdateEvent : handleAddEvent}
-                        data-testid="button-save-event"
-                      >
-                        {editingEvent ? "Update Event" : "Add Event"}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setIsAddingEvent(false);
-                          setEditingEvent(null);
-                          resetEventForm();
-                        }}
-                        data-testid="button-cancel-event"
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              <Separator />
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <Label htmlFor="split-slider">Surplus Cash Allocation</Label>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Monthly surplus: <span className="font-mono font-medium text-foreground">${monthlySurplus.toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
-                        {!cashFlow && <span className="text-orange-500 ml-2">(Set up Cash Flow to calculate)</span>}
-                      </p>
-                    </div>
-                    <span className="text-sm font-mono text-muted-foreground">
-                      {prepaymentSplit[0]}% / {100 - prepaymentSplit[0]}%
-                    </span>
-                  </div>
-                  <Slider
-                    id="split-slider"
-                    min={0}
-                    max={100}
-                    step={5}
-                    value={prepaymentSplit}
-                    onValueChange={setPrepaymentSplit}
-                    data-testid="slider-split"
-                  />
-                  <div className="flex justify-between text-sm">
-                    <div className="space-y-1">
-                      <p className="font-medium text-primary">Mortgage Prepay</p>
-                      <p className="font-mono text-lg">${Math.round(monthlySurplus * prepaymentSplit[0] / 100).toLocaleString()}<span className="text-muted-foreground text-sm">/mo</span></p>
-                    </div>
-                    <div className="space-y-1 text-right">
-                      <p className="font-medium text-chart-2">Investments</p>
-                      <p className="font-mono text-lg">${Math.round(monthlySurplus * (100 - prepaymentSplit[0]) / 100).toLocaleString()}<span className="text-muted-foreground text-sm">/mo</span></p>
-                    </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    How to split surplus cash (after EF is full) between mortgage prepayment and investments
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-primary">
-            <CardHeader>
-              <div className="flex items-start justify-between gap-4 flex-wrap">
-                <div>
-                  <CardTitle>Projected Mortgage Outcome</CardTitle>
-                  <CardDescription>
-                    Based on current prepayment strategy
-                    {prepaymentEvents.length > 0 && ` (${prepaymentEvents.length} prepayment ${prepaymentEvents.length === 1 ? 'event' : 'events'})`}
-                  </CardDescription>
-                </div>
-                <div className="flex gap-1 border rounded-md p-1">
-                  <Button 
-                    variant={projectionView === "chart" ? "secondary" : "ghost"} 
-                    size="sm"
-                    onClick={() => setProjectionView("chart")}
-                    data-testid="button-view-chart"
-                  >
-                    <BarChart3 className="h-4 w-4 mr-1" />
-                    Chart
-                  </Button>
-                  <Button 
-                    variant={projectionView === "table" ? "secondary" : "ghost"} 
-                    size="sm"
-                    onClick={() => setProjectionView("table")}
-                    data-testid="button-view-table"
-                  >
-                    <TableIcon className="h-4 w-4 mr-1" />
-                    Table
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-primary/10 rounded-md">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Projected Payoff</p>
-                  <p className="text-2xl font-bold font-mono">{projectedPayoff} years</p>
-                  <p className="text-xs text-muted-foreground">from today</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Total Interest (future)</p>
-                  <p className="text-2xl font-bold font-mono">${totalInterest.toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground">from today forward</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Interest Saved</p>
-                  <p className="text-2xl font-bold font-mono text-green-600">${interestSaved.toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground">vs minimum payments</p>
-                </div>
-              </div>
-              <Separator />
-              
-              {projectionView === "chart" ? (
-                <div>
-                  <p className="text-sm font-medium mb-3">
-                    Mortgage Balance Projection 
-                    {rateAssumption !== null && (
-                      <span className="text-muted-foreground ml-2">
-                        (at {rateAssumption.toFixed(2)}% rate)
-                      </span>
-                    )}
-                  </p>
-                  <MortgageBalanceChart data={mortgageProjection} />
-                </div>
-              ) : (
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="text-sm font-medium">
-                      Yearly Amortization Schedule
-                      {rateAssumption !== null && (
-                        <span className="text-muted-foreground ml-2">
-                          (at {rateAssumption.toFixed(2)}% rate)
-                        </span>
-                      )}
-                    </p>
-                    {yearlyAmortization.some(r => r.isHistorical) && (
-                      <div className="flex items-center gap-4 text-xs">
-                        <span className="flex items-center gap-1">
-                          <span className="w-3 h-3 rounded bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700" />
-                          Logged Payments
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <span className="w-3 h-3 rounded bg-background border" />
-                          Projected
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="border rounded-md overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/50">
-                          <TableHead className="font-semibold">Year</TableHead>
-                          <TableHead className="text-right font-semibold">Total Paid</TableHead>
-                          <TableHead className="text-right font-semibold">Principal</TableHead>
-                          <TableHead className="text-right font-semibold">Interest</TableHead>
-                          <TableHead className="text-right font-semibold">Balance</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {yearlyAmortization.map((row, index) => (
-                          <TableRow 
-                            key={row.year} 
-                            className={
-                              row.isHistorical 
-                                ? "bg-green-50 dark:bg-green-900/20 border-l-2 border-l-green-500" 
-                                : index % 2 === 0 ? "bg-background" : "bg-muted/30"
-                            }
-                          >
-                            <TableCell className="font-medium">
-                              {row.year}
-                              {row.isHistorical && (
-                                <Badge variant="outline" className="ml-2 text-xs py-0 text-green-700 dark:text-green-400 border-green-300 dark:border-green-700">
-                                  Logged
-                                </Badge>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-right font-mono">${row.totalPaid.toLocaleString()}</TableCell>
-                            <TableCell className="text-right font-mono text-green-600">${row.principalPaid.toLocaleString()}</TableCell>
-                            <TableCell className="text-right font-mono text-blue-600">${row.interestPaid.toLocaleString()}</TableCell>
-                            <TableCell className="text-right font-mono">${row.endingBalance.toLocaleString()}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                      <TableFooter>
-                        <TableRow className="bg-muted font-semibold">
-                          <TableCell>Total</TableCell>
-                          <TableCell className="text-right font-mono">
-                            ${yearlyAmortization.reduce((sum, r) => sum + r.totalPaid, 0).toLocaleString()}
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-green-600">
-                            ${yearlyAmortization.reduce((sum, r) => sum + r.principalPaid, 0).toLocaleString()}
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-blue-600">
-                            ${yearlyAmortization.reduce((sum, r) => sum + r.interestPaid, 0).toLocaleString()}
-                          </TableCell>
-                          <TableCell className="text-right font-mono">
-                            ${yearlyAmortization.length > 0 ? yearlyAmortization[yearlyAmortization.length - 1].endingBalance.toLocaleString() : '0'}
-                          </TableCell>
-                        </TableRow>
-                      </TableFooter>
-                    </Table>
-                  </div>
-                </div>
-              )}
-              
-              <p className="text-sm text-muted-foreground italic">
-                Adjust prepayment settings above to see how they affect your mortgage payoff timeline
-              </p>
-            </CardContent>
-          </Card>
+          <ProjectedMortgageOutcomeCard
+            prepaymentEvents={state.prepaymentEvents}
+            rateAssumption={state.rateAssumption}
+            projectedPayoff={projections.projectedPayoff}
+            totalInterest={projections.totalInterest}
+            interestSaved={projections.interestSaved}
+            mortgageProjection={projections.mortgageProjection}
+            yearlyAmortization={projections.yearlyAmortization}
+          />
         </TabsContent>
 
         <TabsContent value="ef" className="space-y-6">
-          <Card className="bg-accent/50">
-            <CardHeader>
-              <CardTitle>Emergency Fund Target</CardTitle>
-              <CardDescription>Configured on Emergency Fund page (applies to all scenarios)</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="p-4 bg-background rounded-md">
-                <p className="text-sm text-muted-foreground mb-1">Current Target</p>
-                <p className="text-2xl font-mono font-bold mb-2">$30,000</p>
-                <p className="text-sm text-muted-foreground">
-                  = 6 months of expenses
-                </p>
-                <Link href="/emergency-fund">
-                  <Button variant="outline" size="sm" className="mt-3" data-testid="button-edit-ef-target">
-                    Edit Target
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Emergency Fund Strategy</CardTitle>
-              <CardDescription>Configure how this scenario fills the emergency fund</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="ef-contribution">Monthly Contribution</Label>
-                <Input 
-                  id="ef-contribution" 
-                  type="number" 
-                  placeholder="500" 
-                  defaultValue="500"
-                  data-testid="input-ef-contribution" 
-                />
-                <p className="text-sm text-muted-foreground">
-                  How much to contribute each month until target is reached
-                </p>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <Label htmlFor="ef-reroute">After Target is Reached, Redirect To:</Label>
-                <Select defaultValue="split">
-                  <SelectTrigger id="ef-reroute" data-testid="select-ef-reroute">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="split">Split per Surplus Allocation (recommended)</SelectItem>
-                    <SelectItem value="investments">100% to Investments</SelectItem>
-                    <SelectItem value="prepay">100% to Mortgage Prepayment</SelectItem>
-                    <SelectItem value="none">None (save as cash)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-sm text-muted-foreground">
-                  "Split" option uses the Surplus Allocation slider from Mortgage tab
-                </p>
-              </div>
-
-              <Separator />
-
-              <div className="p-4 bg-muted/50 rounded-md">
-                <p className="text-sm font-medium mb-2">Timeline Estimate</p>
-                <p className="text-sm text-muted-foreground">
-                  At $500/month contribution, emergency fund will be fully funded in <span className="font-mono font-semibold">60 months (5 years)</span>.
-                  After that, this $500/month will be redirected according to your selection above.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <EmergencyFundStrategyCard />
         </TabsContent>
 
         <TabsContent value="investments" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Investment Configuration</CardTitle>
-              <CardDescription>Plan your investment growth (TFSA, RRSP, non-registered)</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="base-contribution">Base Monthly Contribution</Label>
-                <Input id="base-contribution" type="number" placeholder="1000" data-testid="input-base-contribution" />
-                <p className="text-sm text-muted-foreground">Fixed amount invested each month</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="annual-return">Expected Annual Return (%)</Label>
-                <Input 
-                  id="annual-return" 
-                  type="number" 
-                  step="0.1" 
-                  value={expectedReturnRate}
-                  onChange={(e) => setExpectedReturnRate(parseFloat(e.target.value) || 0)}
-                  placeholder="6.0" 
-                  data-testid="input-annual-return" 
-                />
-                <p className="text-sm text-muted-foreground">Historical average: 6-8% for balanced portfolio</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="compounding">Compounding Frequency</Label>
-                <Select defaultValue="monthly">
-                  <SelectTrigger id="compounding" data-testid="select-compounding">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="annual">Annual</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Separator />
-
-              <div className="p-4 bg-muted/50 rounded-md">
-                <p className="text-sm font-medium mb-2">Additional Investment Sources</p>
-                <p className="text-sm text-muted-foreground">
-                  After Emergency Fund is full, surplus cash is split between investments and mortgage prepayment 
-                  based on the allocation slider in the Mortgage tab.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <InvestmentStrategyCard
+            expectedReturnRate={state.expectedReturnRate}
+            setExpectedReturnRate={state.setExpectedReturnRate}
+          />
         </TabsContent>
       </Tabs>
     </div>
