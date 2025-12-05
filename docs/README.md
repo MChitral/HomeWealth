@@ -85,13 +85,15 @@ The steps above already cover local development (run Docker for Postgres, push t
 
 ## Features
 
-- 🏠 Mortgage tracking with Canadian-specific calculations (multi-mortgage selector + BoC prime snapshots)
-- 📊 Multi-scenario comparison (up to 4 simultaneous) tied to the real mortgage + surplus math
-- 💰 Investment alternative modeling
-- 📈 10-30 year net worth projections
-- 🎯 Emergency fund planning
-- 💸 Cash flow management
-- 🔄 Shared Canadian amortization helper consumed by tracker, dashboard, and scenario planner + compliance checks for prepayment limits
+- 🏠 **Mortgage Tracking** - Canadian-specific calculations with multi-mortgage support, BoC prime snapshots, and term-based tracking
+- 📊 **Scenario Comparison** - Compare up to 4 financial strategies side-by-side with 10-30 year projections
+- 💰 **Investment Modeling** - Model investment alternatives with compound growth calculations
+- 📈 **Net Worth Projections** - 10-30 year forecasts integrating mortgage, investments, and emergency fund
+- 🎯 **Emergency Fund Planning** - Target-based planning with progress tracking
+- 💸 **Cash Flow Management** - Track income, expenses, and calculate monthly surplus
+- 🔄 **Shared Calculation Engine** - Canadian amortization helpers with semi-annual compounding and compliance checks
+- 🎨 **Consistent UI** - Shared component library for consistent user experience
+- 🔐 **Global State** - Mortgage selection persists across all features
 
 ## Architecture Overview
 
@@ -103,10 +105,15 @@ The steps above already cover local development (run Docker for Postgres, push t
 - Dependency flow is strictly one-directional: `api → application → domain/infrastructure`.
 
 ### Frontend (feature-first)
-- `client/src/app`: App shell, global providers, router, and layout scaffolding.
-- `client/src/features`: Each slice (dashboard, mortgage-tracking, cash-flow, etc) owns UI + hooks + API helpers.
+- `client/src/app`: App shell, global providers (including MortgageSelectionProvider), router, and layout scaffolding.
+- `client/src/features`: Each slice (dashboard, mortgage-tracking, cash-flow, etc) owns UI + hooks + API helpers. All features are fully modularized with reusable components.
 - `client/src/widgets`: Larger reusable compositions (navigation, charts).
-- `client/src/shared`: Design system primitives (`ui/`), hooks (`use-page-title`, `use-toast`), and API utilities.
+- `client/src/shared`: 
+  - **Components**: Reusable UI components (`StatDisplay`, `PageSkeleton`, `EmptyState`, `FormSection`, `FormField`)
+  - **Contexts**: Global state management (`MortgageSelectionContext`)
+  - **Hooks**: Custom hooks (`use-form-validation`, `use-page-title`, `use-toast`)
+  - **Utils**: Validation utilities and helpers
+  - **UI**: Design system primitives (Shadcn UI components)
 - `client/src/entities`: Cross-feature types (`ScenarioWithMetrics`, etc).
 - Pages in `client/src/pages` are now thin wrappers that render a feature.
 
