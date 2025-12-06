@@ -6,9 +6,9 @@ import { RefreshCw } from "lucide-react";
 import { EditTermDialog } from "./edit-term-dialog";
 import { TermRenewalDialog } from "./term-renewal-dialog";
 import type { UiTerm } from "../types";
-import type { MortgageTerm } from "@shared/schema";
-import type { PrimeRateResponse } from "../api";
-import type { UseMutationResult } from "@tanstack/react-query";
+import type { UseFormReturn } from "react-hook-form";
+import type { EditTermFormData } from "../hooks/use-edit-term-form";
+import type { TermRenewalFormData } from "../hooks/use-term-renewal-form";
 
 interface TermDetailsSectionProps {
   currentTerm: UiTerm;
@@ -17,51 +17,26 @@ interface TermDetailsSectionProps {
     currentPrimeRate: number;
     currentRate: number;
   };
-  // Edit term dialog state
+  // Edit term form
   isEditTermOpen: boolean;
   setIsEditTermOpen: (open: boolean) => void;
-  editTermType: string;
-  setEditTermType: (value: string) => void;
-  editTermStartDate: string;
-  setEditTermStartDate: (value: string) => void;
-  editTermEndDate: string;
-  setEditTermEndDate: (value: string) => void;
-  editTermYears: string;
-  setEditTermYears: (value: string) => void;
-  editTermPaymentFrequency: string;
-  setEditTermPaymentFrequency: (value: string) => void;
-  editTermPaymentAmount: string;
-  setEditTermPaymentAmount: (value: string) => void;
-  editTermFixedRate: string;
-  setEditTermFixedRate: (value: string) => void;
-  editTermPrimeRate: string;
-  setEditTermPrimeRate: (value: string) => void;
-  editTermSpread: string;
-  setEditTermSpread: (value: string) => void;
-  // Renewal dialog state
+  editTermForm: UseFormReturn<EditTermFormData>;
+  editTermOnSubmit: () => void;
+  editTermIsSubmitting: boolean;
+  editTermIsValid: boolean;
+  // Renewal form (for existing term renewal)
   isTermRenewalOpen: boolean;
   setIsTermRenewalOpen: (open: boolean) => void;
-  renewalTermType: string;
-  setRenewalTermType: (value: string) => void;
-  renewalPaymentFrequency: string;
-  setRenewalPaymentFrequency: (value: string) => void;
-  renewalRate: string;
-  setRenewalRate: (value: string) => void;
-  renewalSpread: string;
-  setRenewalSpread: (value: string) => void;
-  renewalPrime: string;
-  setRenewalPrime: (value: string) => void;
-  renewalTermYears: string;
-  setRenewalTermYears: (value: string) => void;
-  renewalStartDate: string;
-  setRenewalStartDate: (value: string) => void;
-  renewalPaymentAmount: string;
-  setRenewalPaymentAmount: (value: string) => void;
-  // Mutations and helpers
-  updateTermMutation: UseMutationResult<any, Error, { termId: string; updates: any }, unknown>;
-  handleTermRenewal: () => void;
-  terms?: MortgageTerm[];
-  primeRateData?: PrimeRateResponse;
+  renewalForm: UseFormReturn<TermRenewalFormData>;
+  renewalOnSubmit: () => void;
+  renewalIsSubmitting: boolean;
+  renewalIsValid: boolean;
+  renewalAutoPaymentAmount?: string;
+  renewalPaymentEdited?: boolean;
+  renewalOnPaymentAmountChange?: (value: string) => void;
+  renewalOnUseAutoPayment?: () => void;
+  // Prime rate
+  primeRateData?: import("../api").PrimeRateResponse;
   isPrimeRateLoading: boolean;
   refetchPrimeRate: () => Promise<any>;
 }
@@ -72,45 +47,23 @@ export function TermDetailsSection({
   summaryStats,
   isEditTermOpen,
   setIsEditTermOpen,
-  editTermType,
-  setEditTermType,
-  editTermStartDate,
-  setEditTermStartDate,
-  editTermEndDate,
-  setEditTermEndDate,
-  editTermYears,
-  setEditTermYears,
-  editTermPaymentFrequency,
-  setEditTermPaymentFrequency,
-  editTermPaymentAmount,
-  setEditTermPaymentAmount,
-  editTermFixedRate,
-  setEditTermFixedRate,
-  editTermPrimeRate,
-  setEditTermPrimeRate,
-  editTermSpread,
-  setEditTermSpread,
+  editTermForm,
+  editTermOnSubmit,
+  editTermIsSubmitting,
+  editTermIsValid,
+  editTermPrimeRateData,
+  editTermIsPrimeRateLoading,
+  editTermRefetchPrimeRate,
   isTermRenewalOpen,
   setIsTermRenewalOpen,
-  renewalTermType,
-  setRenewalTermType,
-  renewalPaymentFrequency,
-  setRenewalPaymentFrequency,
-  renewalRate,
-  setRenewalRate,
-  renewalSpread,
-  setRenewalSpread,
-  renewalPrime,
-  setRenewalPrime,
-  renewalTermYears,
-  setRenewalTermYears,
-  renewalStartDate,
-  setRenewalStartDate,
-  renewalPaymentAmount,
-  setRenewalPaymentAmount,
-  updateTermMutation,
-  handleTermRenewal,
-  terms,
+  renewalForm,
+  renewalOnSubmit,
+  renewalIsSubmitting,
+  renewalIsValid,
+  renewalAutoPaymentAmount,
+  renewalPaymentEdited,
+  renewalOnPaymentAmountChange,
+  renewalOnUseAutoPayment,
   primeRateData,
   isPrimeRateLoading,
   refetchPrimeRate,
@@ -132,29 +85,13 @@ export function TermDetailsSection({
                   Edit Term
                 </Button>
               }
-              editTermType={editTermType}
-              setEditTermType={setEditTermType}
-              editTermStartDate={editTermStartDate}
-              setEditTermStartDate={setEditTermStartDate}
-              editTermEndDate={editTermEndDate}
-              setEditTermEndDate={setEditTermEndDate}
-              editTermYears={editTermYears}
-              setEditTermYears={setEditTermYears}
-              editTermPaymentFrequency={editTermPaymentFrequency}
-              setEditTermPaymentFrequency={setEditTermPaymentFrequency}
-              editTermPaymentAmount={editTermPaymentAmount}
-              setEditTermPaymentAmount={setEditTermPaymentAmount}
-              editTermFixedRate={editTermFixedRate}
-              setEditTermFixedRate={setEditTermFixedRate}
-              editTermPrimeRate={editTermPrimeRate}
-              setEditTermPrimeRate={setEditTermPrimeRate}
-              editTermSpread={editTermSpread}
-              setEditTermSpread={setEditTermSpread}
-              terms={terms}
-              updateTermMutation={updateTermMutation}
-              primeRateData={primeRateData}
-              isPrimeRateLoading={isPrimeRateLoading}
-              refetchPrimeRate={refetchPrimeRate}
+              form={editTermForm}
+              onSubmit={editTermOnSubmit}
+              isSubmitting={editTermIsSubmitting}
+              isValid={editTermIsValid}
+              primeRateData={editTermPrimeRateData || primeRateData}
+              isPrimeRateLoading={editTermIsPrimeRateLoading ?? isPrimeRateLoading}
+              refetchPrimeRate={editTermRefetchPrimeRate || refetchPrimeRate}
             />
             <TermRenewalDialog
               open={isTermRenewalOpen}
@@ -165,25 +102,18 @@ export function TermDetailsSection({
                   Renew Term
                 </Button>
               }
-              termType={renewalTermType}
-              setTermType={setRenewalTermType}
-              paymentFrequency={renewalPaymentFrequency}
-              setPaymentFrequency={setRenewalPaymentFrequency}
-              termYears={renewalTermYears}
-              setTermYears={setRenewalTermYears}
-              startDate={renewalStartDate}
-              setStartDate={setRenewalStartDate}
-              fixedRate={renewalRate}
-              setFixedRate={setRenewalRate}
-              spread={renewalSpread}
-              setSpread={setRenewalSpread}
-              primeRate={renewalPrime}
-              setPrimeRate={setRenewalPrime}
-              paymentAmount={renewalPaymentAmount}
-              setPaymentAmount={setRenewalPaymentAmount}
-              onSubmit={handleTermRenewal}
-              isSubmitting={false}
+              form={renewalForm}
+              onSubmit={renewalOnSubmit}
+              isSubmitting={renewalIsSubmitting}
+              isValid={renewalIsValid}
+              autoPaymentAmount={renewalAutoPaymentAmount}
+              paymentEdited={renewalPaymentEdited}
+              onPaymentAmountChange={renewalOnPaymentAmountChange}
+              onUseAutoPayment={renewalOnUseAutoPayment}
               currentTerm={currentTerm}
+              primeRateData={primeRateData}
+              onRefreshPrime={refetchPrimeRate}
+              isPrimeRateLoading={isPrimeRateLoading}
             />
           </div>
         </div>

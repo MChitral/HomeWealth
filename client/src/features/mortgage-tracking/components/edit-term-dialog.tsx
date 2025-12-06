@@ -8,116 +8,92 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/shared/ui/dialog";
-import { Input } from "@/shared/ui/input";
-import { Label } from "@/shared/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { Loader2, RefreshCw } from "lucide-react";
-import type { UseMutationResult } from "@tanstack/react-query";
-import type { MortgageTerm } from "@shared/schema";
-import type { PrimeRateResponse, UpdateTermPayload } from "../api";
+import { FormProvider, useFormContext } from "react-hook-form";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/shared/ui/form";
+import { Input } from "@/shared/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
+import type { UseFormReturn } from "react-hook-form";
+import type { EditTermFormData } from "../hooks/use-edit-term-form";
+import type { PrimeRateResponse } from "../api";
 
 interface EditTermDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   triggerButton?: React.ReactNode;
-  // Form state
-  editTermType: string;
-  setEditTermType: (value: string) => void;
-  editTermStartDate: string;
-  setEditTermStartDate: (value: string) => void;
-  editTermEndDate: string;
-  setEditTermEndDate: (value: string) => void;
-  editTermYears: string;
-  setEditTermYears: (value: string) => void;
-  editTermPaymentFrequency: string;
-  setEditTermPaymentFrequency: (value: string) => void;
-  editTermPaymentAmount: string;
-  setEditTermPaymentAmount: (value: string) => void;
-  editTermFixedRate: string;
-  setEditTermFixedRate: (value: string) => void;
-  editTermPrimeRate: string;
-  setEditTermPrimeRate: (value: string) => void;
-  editTermSpread: string;
-  setEditTermSpread: (value: string) => void;
-  // Mutations and helpers
-  terms?: MortgageTerm[];
-  updateTermMutation: UseMutationResult<any, Error, { termId: string; updates: UpdateTermPayload }, unknown>;
+  form: UseFormReturn<EditTermFormData>;
+  onSubmit: () => void;
+  isSubmitting: boolean;
+  isValid: boolean;
   primeRateData?: PrimeRateResponse;
   isPrimeRateLoading: boolean;
   refetchPrimeRate: () => Promise<any>;
 }
 
-export function EditTermDialog({
-  open,
-  onOpenChange,
-  triggerButton,
-  editTermType,
-  setEditTermType,
-  editTermStartDate,
-  setEditTermStartDate,
-  editTermEndDate,
-  setEditTermEndDate,
-  editTermYears,
-  setEditTermYears,
-  editTermPaymentFrequency,
-  setEditTermPaymentFrequency,
-  editTermPaymentAmount,
-  setEditTermPaymentAmount,
-  editTermFixedRate,
-  setEditTermFixedRate,
-  editTermPrimeRate,
-  setEditTermPrimeRate,
-  editTermSpread,
-  setEditTermSpread,
-  terms,
-  updateTermMutation,
+/**
+ * Edit Term Form Fields Component
+ */
+function EditTermFormFields({
   primeRateData,
   isPrimeRateLoading,
   refetchPrimeRate,
-}: EditTermDialogProps) {
+}: {
+  primeRateData?: PrimeRateResponse;
+  isPrimeRateLoading: boolean;
+  refetchPrimeRate: () => Promise<any>;
+}) {
+  const { control, watch, setValue } = useFormContext<EditTermFormData>();
+  const termType = watch("termType");
+  const startDate = watch("startDate");
+  const termYears = watch("termYears");
+  const primeRate = watch("primeRate");
+  const spread = watch("spread");
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      {triggerButton && <DialogTrigger asChild>{triggerButton}</DialogTrigger>}
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Edit Current Term</DialogTitle>
-          <DialogDescription>Update the details of your current mortgage term</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-term-start">Start Date</Label>
-              <Input
-                id="edit-term-start"
-                type="date"
-                value={editTermStartDate}
-                onChange={(e) => {
-                  setEditTermStartDate(e.target.value);
-                  if (editTermYears) {
-                    const start = new Date(e.target.value);
-                    start.setFullYear(start.getFullYear() + parseInt(editTermYears));
-                    setEditTermEndDate(start.toISOString().split("T")[0]);
-                  }
-                }}
-                data-testid="input-edit-term-start"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-term-years">Term Length (Years)</Label>
+    <div className="space-y-4 py-4">
+      <div className="grid grid-cols-2 gap-4">
+        <FormField
+          control={control}
+          name="startDate"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="edit-term-start">Start Date</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  id="edit-term-start"
+                  type="date"
+                  data-testid="input-edit-term-start"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name="termYears"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="edit-term-years">Term Length (Years)</FormLabel>
               <Select
-                value={editTermYears}
+                value={field.value}
                 onValueChange={(value) => {
-                  setEditTermYears(value);
-                  if (editTermStartDate) {
-                    const start = new Date(editTermStartDate);
-                    start.setFullYear(start.getFullYear() + parseInt(value));
-                    setEditTermEndDate(start.toISOString().split("T")[0]);
-                  }
+                  field.onChange(value);
+                  // End date will be calculated on submit
                 }}
               >
-                <SelectTrigger id="edit-term-years" data-testid="select-edit-term-years">
-                  <SelectValue />
-                </SelectTrigger>
+                <FormControl>
+                  <SelectTrigger id="edit-term-years" data-testid="select-edit-term-years">
+                    <SelectValue />
+                  </SelectTrigger>
+                </FormControl>
                 <SelectContent>
                   <SelectItem value="1">1 year</SelectItem>
                   <SelectItem value="2">2 years</SelectItem>
@@ -128,41 +104,65 @@ export function EditTermDialog({
                   <SelectItem value="10">10 years</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-          </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="edit-term-type">Mortgage Type</Label>
-            <Select value={editTermType} onValueChange={setEditTermType}>
-              <SelectTrigger id="edit-term-type" data-testid="select-edit-term-type">
-                <SelectValue />
-              </SelectTrigger>
+      <FormField
+        control={control}
+        name="termType"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel htmlFor="edit-term-type">Mortgage Type</FormLabel>
+            <Select value={field.value} onValueChange={field.onChange}>
+              <FormControl>
+                <SelectTrigger id="edit-term-type" data-testid="select-edit-term-type">
+                  <SelectValue />
+                </SelectTrigger>
+              </FormControl>
               <SelectContent>
                 <SelectItem value="fixed">Fixed Rate</SelectItem>
                 <SelectItem value="variable-changing">Variable Rate (Changing Payment)</SelectItem>
                 <SelectItem value="variable-fixed">Variable Rate (Fixed Payment)</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
-          {editTermType === "fixed" ? (
-            <div className="space-y-2">
-              <Label htmlFor="edit-fixed-rate">Fixed Interest Rate (%)</Label>
-              <Input
-                id="edit-fixed-rate"
-                type="number"
-                step="0.01"
-                placeholder="4.99"
-                value={editTermFixedRate}
-                onChange={(e) => setEditTermFixedRate(e.target.value)}
-                data-testid="input-edit-fixed-rate"
-              />
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+      {termType === "fixed" ? (
+        <FormField
+          control={control}
+          name="fixedRate"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="edit-fixed-rate">Fixed Interest Rate (%)</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  id="edit-fixed-rate"
+                  type="number"
+                  step="0.01"
+                  placeholder="4.99"
+                  data-testid="input-edit-fixed-rate"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      ) : (
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={control}
+            name="primeRate"
+            render={({ field }) => (
+              <FormItem>
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="edit-prime-rate">Current Prime Rate (%)</Label>
+                  <FormLabel htmlFor="edit-prime-rate">Current Prime Rate (%)</FormLabel>
                   <Button
                     type="button"
                     variant="ghost"
@@ -171,7 +171,7 @@ export function EditTermDialog({
                     onClick={async () => {
                       const result = await refetchPrimeRate();
                       if (result.data?.primeRate) {
-                        setEditTermPrimeRate(result.data.primeRate.toString());
+                        setValue("primeRate", result.data.primeRate.toString());
                       }
                     }}
                     disabled={isPrimeRateLoading}
@@ -185,46 +185,65 @@ export function EditTermDialog({
                     <span className="ml-1">Refresh</span>
                   </Button>
                 </div>
-                <Input
-                  id="edit-prime-rate"
-                  type="number"
-                  step="0.01"
-                  placeholder="4.45"
-                  value={editTermPrimeRate}
-                  readOnly
-                  data-testid="input-edit-prime-rate"
-                />
+                <FormControl>
+                  <Input
+                    {...field}
+                    id="edit-prime-rate"
+                    type="number"
+                    step="0.01"
+                    placeholder="4.45"
+                    readOnly
+                    data-testid="input-edit-prime-rate"
+                  />
+                </FormControl>
                 {primeRateData && (
                   <p className="text-xs text-muted-foreground">
                     Bank of Canada rate as of {new Date(primeRateData.effectiveDate).toLocaleDateString()}
                   </p>
                 )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-spread">Your Spread (+/- from Prime)</Label>
-                <Input
-                  id="edit-spread"
-                  type="number"
-                  step="0.01"
-                  placeholder="-0.80"
-                  value={editTermSpread}
-                  onChange={(e) => setEditTermSpread(e.target.value)}
-                  data-testid="input-edit-spread"
-                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name="spread"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel htmlFor="edit-spread">Your Spread (+/- from Prime)</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    id="edit-spread"
+                    type="number"
+                    step="0.01"
+                    placeholder="-0.80"
+                    data-testid="input-edit-spread"
+                  />
+                </FormControl>
                 <p className="text-xs text-muted-foreground">
                   Effective rate:{" "}
-                  {(parseFloat(editTermPrimeRate || "0") + parseFloat(editTermSpread || "0")).toFixed(2)}%
+                  {(parseFloat(primeRate || "0") + parseFloat(spread || "0")).toFixed(2)}%
                 </p>
-              </div>
-            </div>
-          )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+      )}
 
-          <div className="space-y-2">
-            <Label htmlFor="edit-payment-frequency">Payment Frequency</Label>
-            <Select value={editTermPaymentFrequency} onValueChange={setEditTermPaymentFrequency}>
-              <SelectTrigger id="edit-payment-frequency" data-testid="select-edit-payment-frequency">
-                <SelectValue />
-              </SelectTrigger>
+      <FormField
+        control={control}
+        name="paymentFrequency"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel htmlFor="edit-payment-frequency">Payment Frequency</FormLabel>
+            <Select value={field.value} onValueChange={field.onChange}>
+              <FormControl>
+                <SelectTrigger id="edit-payment-frequency" data-testid="select-edit-payment-frequency">
+                  <SelectValue />
+                </SelectTrigger>
+              </FormControl>
               <SelectContent>
                 <SelectItem value="monthly">Monthly (12 payments/year)</SelectItem>
                 <SelectItem value="biweekly">Bi-weekly (26 payments/year)</SelectItem>
@@ -234,58 +253,76 @@ export function EditTermDialog({
                 <SelectItem value="accelerated-weekly">Accelerated Weekly</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
-          <div className="space-y-2">
-            <Label htmlFor="edit-payment-amount">Regular Payment Amount ($)</Label>
-            <Input
-              id="edit-payment-amount"
-              type="number"
-              step="0.01"
-              placeholder="2500.00"
-              value={editTermPaymentAmount}
-              onChange={(e) => setEditTermPaymentAmount(e.target.value)}
-              data-testid="input-edit-payment-amount"
-            />
-          </div>
-        </div>
+      <FormField
+        control={control}
+        name="paymentAmount"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel htmlFor="edit-payment-amount">Regular Payment Amount ($)</FormLabel>
+            <FormControl>
+              <Input
+                {...field}
+                id="edit-payment-amount"
+                type="number"
+                step="0.01"
+                placeholder="2500.00"
+                data-testid="input-edit-payment-amount"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </div>
+  );
+}
+
+/**
+ * Edit Term Dialog Component
+ * Uses React Hook Form for form management and validation
+ */
+export function EditTermDialog({
+  open,
+  onOpenChange,
+  triggerButton,
+  form,
+  onSubmit,
+  isSubmitting,
+  isValid,
+  primeRateData,
+  isPrimeRateLoading,
+  refetchPrimeRate,
+}: EditTermDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {triggerButton && <DialogTrigger asChild>{triggerButton}</DialogTrigger>}
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Current Term</DialogTitle>
+          <DialogDescription>Update the details of your current mortgage term</DialogDescription>
+        </DialogHeader>
+        <FormProvider {...form}>
+          <EditTermFormFields
+            primeRateData={primeRateData}
+            isPrimeRateLoading={isPrimeRateLoading}
+            refetchPrimeRate={refetchPrimeRate}
+          />
+        </FormProvider>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button
-            onClick={() => {
-              const currentTerm = terms?.[terms.length - 1];
-              if (!currentTerm) return;
-
-              const termYearsNum = parseInt(editTermYears) || 5;
-
-              updateTermMutation.mutate({
-                termId: currentTerm.id,
-                updates: {
-                  termType: editTermType,
-                  startDate: editTermStartDate,
-                  endDate: editTermEndDate,
-                  termYears: termYearsNum,
-                  paymentFrequency: editTermPaymentFrequency,
-                  regularPaymentAmount: editTermPaymentAmount,
-                  fixedRate: editTermType === "fixed" ? editTermFixedRate : undefined,
-                  lockedSpread: editTermType !== "fixed" ? editTermSpread : undefined,
-                  primeRate: editTermType !== "fixed" ? editTermPrimeRate : undefined,
-                },
-              });
-            }}
-            disabled={
-              updateTermMutation.isPending ||
-              !editTermPaymentAmount ||
-              !editTermStartDate ||
-              (editTermType === "fixed"
-                ? !editTermFixedRate
-                : !editTermSpread || !editTermPrimeRate)
-            }
+            onClick={onSubmit}
+            disabled={isSubmitting || !isValid}
             data-testid="button-save-edit-term"
           >
-            {updateTermMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Save Changes
           </Button>
         </DialogFooter>

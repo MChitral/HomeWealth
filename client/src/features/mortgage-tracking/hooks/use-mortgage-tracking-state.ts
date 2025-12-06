@@ -1,29 +1,38 @@
 import { useEffect, useMemo, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/shared/api/query-client";
 import { useToast } from "@/shared/hooks/use-toast";
 import { useMortgageSelection } from "@/shared/contexts/mortgage-selection-context";
 import {
   mortgageApi,
   mortgageQueryKeys,
-  type CreatePaymentPayload,
-  type CreateTermPayload,
-  type UpdateMortgagePayload,
-  type UpdateTermPayload,
 } from "../api";
 import { useMortgageData } from "./use-mortgage-data";
 import { usePrimeRate } from "./use-prime-rate";
 import { useAutoCreatePayment, useAutoRenewalPayment } from "./use-auto-payments";
 import { advancePaymentDate, type PaymentFrequency } from "../utils/mortgage-math";
-import { normalizePayments, normalizeTerm } from "../utils/normalize";
+import { useMortgageDialogs } from "./use-mortgage-dialogs";
+import { useMortgageComputed } from "./use-mortgage-computed";
+import { useMortgageMutations } from "./use-mortgage-mutations";
 import type { UiTerm } from "../types";
 
 export function useMortgageTrackingState() {
-  const { toast } = useToast();
   const { selectedMortgageId, setSelectedMortgageId, mortgages: contextMortgages } = useMortgageSelection();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isTermRenewalOpen, setIsTermRenewalOpen] = useState(false);
-  const [isBackfillOpen, setIsBackfillOpen] = useState(false);
+  
+  // Use extracted dialog hook
+  const dialogs = useMortgageDialogs();
+  const {
+    isDialogOpen,
+    setIsDialogOpen,
+    isTermRenewalOpen,
+    setIsTermRenewalOpen,
+    isBackfillOpen,
+    setIsBackfillOpen,
+    isEditMortgageOpen,
+    setIsEditMortgageOpen,
+    isEditTermOpen,
+    setIsEditTermOpen,
+  } = dialogs;
+
   const [filterYear, setFilterYear] = useState("all");
 
   const [backfillStartDate, setBackfillStartDate] = useState("");
@@ -55,12 +64,9 @@ export function useMortgageTrackingState() {
   const [createPaymentAmount, setCreatePaymentAmount] = useState("");
   const [isCreatingMortgage, setIsCreatingMortgage] = useState(false);
 
-  const [isEditMortgageOpen, setIsEditMortgageOpen] = useState(false);
   const [editPropertyPrice, setEditPropertyPrice] = useState("");
   const [editCurrentBalance, setEditCurrentBalance] = useState("");
   const [editPaymentFrequency, setEditPaymentFrequency] = useState("");
-
-  const [isEditTermOpen, setIsEditTermOpen] = useState(false);
   const [editTermType, setEditTermType] = useState("");
   const [editTermStartDate, setEditTermStartDate] = useState("");
   const [editTermEndDate, setEditTermEndDate] = useState("");
@@ -109,6 +115,29 @@ export function useMortgageTrackingState() {
   // Use mortgages from context instead of fetching again
   const mortgages = contextMortgages;
 
+  // Use extracted computed hook
+  const computed = useMortgageComputed({
+    mortgage,
+    terms,
+    payments,
+    primeRateData,
+    primeRate,
+    filterYear,
+  });
+  const {
+    uiCurrentTerm,
+    paymentHistory,
+    lastKnownBalance,
+    lastKnownAmortizationMonths,
+    currentPrimeRateValue,
+    currentEffectiveRate,
+    summaryStats,
+    filteredPayments,
+    availableYears,
+    effectiveRate,
+    monthsRemainingInTerm,
+  } = computed;
+
   useEffect(() => {
     if (!primeRateData?.primeRate) return;
     const latestPrime = primeRateData.primeRate.toString();
@@ -131,14 +160,6 @@ export function useMortgageTrackingState() {
     editTermType,
     editTermPrimeRate,
   ]);
-
-  const uiCurrentTerm = useMemo(() => normalizeTerm(terms ? terms[terms.length - 1] : undefined), [terms]);
-  const paymentHistory = useMemo(() => normalizePayments(payments, terms), [payments, terms]);
-
-  const lastKnownBalance =
-    paymentHistory[paymentHistory.length - 1]?.remainingBalance ?? Number(mortgage?.currentBalance || 0);
-  const lastKnownAmortizationMonths =
-    paymentHistory[paymentHistory.length - 1]?.remainingAmortizationMonths ?? (mortgage ? mortgage.amortizationYears * 12 : 0);
 
   const autoCreatePayment = useAutoCreatePayment({
     loanAmount,
@@ -184,54 +205,32 @@ export function useMortgageTrackingState() {
     }
   }, [isTermRenewalOpen]);
 
-  const createPaymentMutation = useMutation({
-    mutationFn: async (payment: {
-      paymentDate: string;
-      paymentPeriodLabel?: string | null;
-      regularPaymentAmount: number;
-      prepaymentAmount: number;
-      paymentAmount: number;
-      principalPaid: number;
-      interestPaid: number;
-      remainingBalance: number;
-      primeRate?: number;
-      effectiveRate: number;
-      triggerRateHit: number;
-      remainingAmortizationMonths: number;
-    }) => {
-      if (!mortgage?.id || !uiCurrentTerm?.id) throw new Error("No mortgage or term selected");
-      return mortgageApi.createPayment(mortgage.id, {
-        termId: uiCurrentTerm.id,
-        paymentDate: payment.paymentDate,
-        paymentPeriodLabel: payment.paymentPeriodLabel || undefined,
-        regularPaymentAmount: payment.regularPaymentAmount.toString(),
-        prepaymentAmount: payment.prepaymentAmount.toString(),
-        paymentAmount: payment.paymentAmount.toString(),
-        principalPaid: payment.principalPaid.toFixed(2),
-        interestPaid: payment.interestPaid.toFixed(2),
-        remainingBalance: payment.remainingBalance.toFixed(2),
-        primeRate: payment.primeRate ? payment.primeRate.toString() : undefined,
-        effectiveRate: payment.effectiveRate.toString(),
-        triggerRateHit: payment.triggerRateHit,
-        remainingAmortizationMonths: payment.remainingAmortizationMonths,
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.mortgagePayments(mortgage?.id ?? null) });
-      toast({
-        title: "Payment logged",
-        description: "Mortgage payment has been recorded successfully",
-      });
-      setIsDialogOpen(false);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to log payment",
-        variant: "destructive",
-      });
-    },
+  // Set up callbacks for mutations hook
+  const handleBackfillReset = () => {
+    setBackfillStartDate("");
+    setBackfillNumberOfPayments("12");
+    setBackfillPaymentAmount("");
+  };
+
+  // Use extracted mutations hook
+  const mutations = useMortgageMutations({
+    mortgage,
+    uiCurrentTerm,
+    onDialogClose: () => setIsDialogOpen(false),
+    onTermRenewalDialogClose: () => setIsTermRenewalOpen(false),
+    onBackfillDialogClose: () => setIsBackfillOpen(false),
+    onBackfillReset: handleBackfillReset,
+    onEditMortgageDialogClose: () => setIsEditMortgageOpen(false),
+    onEditTermDialogClose: () => setIsEditTermOpen(false),
   });
+  const {
+    createPaymentMutation,
+    createTermMutation,
+    backfillPaymentsMutation,
+    deletePaymentMutation,
+    editMortgageMutation,
+    updateTermMutation,
+  } = mutations;
 
   const isStep2Valid = () => {
     const paymentValid = Boolean(createPaymentAmount) && parseFloat(createPaymentAmount) > 0;
@@ -332,71 +331,6 @@ export function useMortgageTrackingState() {
     }
   };
 
-  const createTermMutation = useMutation({
-    mutationFn: (term: CreateTermPayload) => {
-      if (!mortgage?.id) throw new Error("No mortgage selected");
-      return mortgageApi.createTerm(mortgage.id, term);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.mortgageTerms(mortgage?.id ?? null) });
-      toast({
-        title: "Term renewed",
-        description: "New mortgage term has been created successfully",
-      });
-      setIsTermRenewalOpen(false);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to renew term",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const backfillPaymentsMutation = useMutation({
-    mutationFn: (paymentsPayload: CreatePaymentPayload[]) => {
-      if (!mortgage?.id) throw new Error("No mortgage selected");
-      return mortgageApi.createBulkPayments(mortgage.id, paymentsPayload);
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.mortgagePayments(mortgage?.id ?? null) });
-      toast({
-        title: "Payments backfilled",
-        description: `Successfully created ${data.created} payments`,
-      });
-      setIsBackfillOpen(false);
-      setBackfillStartDate("");
-      setBackfillNumberOfPayments("12");
-      setBackfillPaymentAmount("");
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to backfill payments",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const deletePaymentMutation = useMutation({
-    mutationFn: (paymentId: string) => mortgageApi.deletePayment(paymentId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.mortgagePayments(mortgage?.id ?? null) });
-      toast({
-        title: "Payment deleted",
-        description: "The payment has been removed from your records",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete payment",
-        variant: "destructive",
-      });
-    },
-  });
-
   const formatAmortization = (years: number): string => {
     const wholeYears = Math.floor(years);
     const months = Math.round((years - wholeYears) * 12);
@@ -408,49 +342,6 @@ export function useMortgageTrackingState() {
     }
     return `${wholeYears} yr ${months} mo`;
   };
-
-  const editMortgageMutation = useMutation({
-    mutationFn: (updates: UpdateMortgagePayload) => {
-      if (!mortgage?.id) throw new Error("No mortgage selected");
-      return mortgageApi.updateMortgage(mortgage.id, updates);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.mortgages() });
-      toast({
-        title: "Mortgage updated",
-        description: "Your mortgage details have been updated successfully",
-      });
-      setIsEditMortgageOpen(false);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update mortgage",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateTermMutation = useMutation({
-    mutationFn: ({ termId, updates }: { termId: string; updates: UpdateTermPayload }) => {
-      return mortgageApi.updateTerm(termId, updates);
-    },
-    onSuccess: async () => {
-      await queryClient.refetchQueries({ queryKey: mortgageQueryKeys.mortgageTerms(mortgage?.id ?? null) });
-      toast({
-        title: "Term updated",
-        description: "Your mortgage term has been updated successfully",
-      });
-      setIsEditTermOpen(false);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update term",
-        variant: "destructive",
-      });
-    },
-  });
 
   useEffect(() => {
     if (isEditMortgageOpen && mortgage) {
@@ -516,19 +407,6 @@ export function useMortgageTrackingState() {
     });
   };
 
-  const currentPrimeRateValue =
-    primeRateData?.primeRate ??
-    (uiCurrentTerm?.primeRate ?? null) ??
-    paymentHistory[paymentHistory.length - 1]?.primeRate ??
-    parseFloat(primeRate) ??
-    0;
-
-  const currentEffectiveRate = uiCurrentTerm
-    ? uiCurrentTerm.termType === "fixed" && uiCurrentTerm.fixedRate
-      ? uiCurrentTerm.fixedRate
-      : currentPrimeRateValue + (uiCurrentTerm.lockedSpread || 0)
-    : 0;
-
   const previewBackfillEndDate = useMemo(() => {
     if (!backfillStartDate || !uiCurrentTerm) return "";
     const total = parseInt(backfillNumberOfPayments, 10);
@@ -539,33 +417,6 @@ export function useMortgageTrackingState() {
     }
     return date.toISOString().split("T")[0];
   }, [backfillStartDate, backfillNumberOfPayments, uiCurrentTerm]);
-
-  const summaryStats = {
-    totalPayments: paymentHistory.length,
-    totalPaid: paymentHistory.reduce((sum, p) => sum + p.paymentAmount, 0),
-    totalPrincipal: paymentHistory.reduce((sum, p) => sum + p.principal, 0),
-    totalInterest: paymentHistory.reduce((sum, p) => sum + p.interest, 0),
-    currentBalance: mortgage ? Number(mortgage.currentBalance) : paymentHistory[paymentHistory.length - 1]?.remainingBalance || 0,
-    currentRate: currentEffectiveRate,
-    currentPrimeRate: currentPrimeRateValue,
-    amortizationYears: mortgage ? mortgage.amortizationYears : paymentHistory[paymentHistory.length - 1]?.amortizationYears || 30,
-    triggerHitCount: paymentHistory.filter((p) => p.triggerHit).length,
-  };
-
-  const filteredPayments =
-    filterYear === "all" ? paymentHistory : paymentHistory.filter((p) => p.year.toString() === filterYear);
-
-  const availableYears = Array.from(new Set(paymentHistory.map((p) => p.year))).sort((a, b) => b - a);
-
-  const effectiveRate = uiCurrentTerm
-    ? uiCurrentTerm.termType === "fixed" && uiCurrentTerm.fixedRate
-      ? uiCurrentTerm.fixedRate.toFixed(2)
-      : (parseFloat(primeRate) + uiCurrentTerm.lockedSpread).toFixed(2)
-    : "0.00";
-
-  const monthsRemainingInTerm = uiCurrentTerm
-    ? Math.round((new Date(uiCurrentTerm.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))
-    : 0;
 
   return {
     selectedMortgageId,
