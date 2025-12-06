@@ -47,11 +47,26 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      // ✅ Reasonable stale time: data considered fresh for 5 minutes
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      // ✅ Keep data in cache for 10 minutes after it's no longer used
+      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+      // ✅ Smart retry logic: retry on network errors, but not on client errors (4xx)
+      retry: (failureCount, error) => {
+        // Don't retry on 4xx errors (client errors like validation, not found, etc.)
+        if (error instanceof Error && error.message.includes("4")) {
+          return false;
+        }
+        // Retry up to 3 times for network errors (5xx, network failures)
+        return failureCount < 3;
+      },
+      // ✅ Exponential backoff: 1s, 2s, 4s, max 30s
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     },
     mutations: {
-      retry: false,
+      // ✅ Retry mutations once on network errors
+      retry: 1,
+      retryDelay: 1000,
     },
   },
 });

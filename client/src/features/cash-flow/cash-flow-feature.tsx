@@ -4,7 +4,8 @@ import { Skeleton } from "@/shared/ui/skeleton";
 import { PageHeader } from "@/shared/ui/page-header";
 import { usePageTitle } from "@/shared/hooks/use-page-title";
 import { Card, CardContent, CardHeader } from "@/shared/ui/card";
-import { useCashFlowData, useCashFlowState, useCashFlowCalculations } from "./hooks";
+import { Form } from "@/shared/ui/form";
+import { useCashFlowData, useCashFlowFormState, useCashFlowCalculations } from "./hooks";
 import {
   IncomeSection,
   FixedExpensesSection,
@@ -49,7 +50,8 @@ export default function CashFlowFeature() {
     setCreditCard,
     handleSave,
     saveMutation,
-  } = useCashFlowState({ cashFlow });
+    form,
+  } = useCashFlowFormState({ cashFlow });
 
   const {
     extraPaychequesMonthly,
@@ -114,33 +116,34 @@ export default function CashFlowFeature() {
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Cash Flow Settings"
-        description="Configure your income and expenses (applies to all scenarios)"
-        actions={
-          <Button
-            data-testid="button-save"
-            onClick={handleSave}
-            disabled={saveMutation.isPending || isLoading}
-            className="sticky top-4 z-10"
-          >
-            {saveMutation.isPending ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4 mr-2" />
-                Save Changes
-              </>
-            )}
-          </Button>
-        }
-      />
+    <Form {...form}>
+      <div className="space-y-6">
+        <PageHeader
+          title="Cash Flow Settings"
+          description="Configure your income and expenses (applies to all scenarios)"
+          actions={
+            <Button
+              data-testid="button-save"
+              onClick={handleSave}
+              disabled={saveMutation.isPending || isLoading}
+              className="sticky top-4 z-10"
+            >
+              {saveMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Changes
+                </>
+              )}
+            </Button>
+          }
+        />
 
-      <IncomeSection
+        <IncomeSection
         monthlyIncome={monthlyIncome}
         setMonthlyIncome={setMonthlyIncome}
         extraPaycheques={extraPaycheques}
@@ -196,7 +199,8 @@ export default function CashFlowFeature() {
         monthlySurplus={monthlySurplus}
         runwayMonths={runwayMonths}
       />
-    </div>
+      </div>
+    </Form>
   );
 }
 

@@ -1,58 +1,86 @@
+import { FormProvider } from "react-hook-form";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/shared/ui/form";
 import { Input } from "@/shared/ui/input";
-import { Label } from "@/shared/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
+import type { UseFormReturn } from "react-hook-form";
+import type { ScenarioBasicInfoFormData } from "../hooks/use-scenario-basic-info-form";
 
 interface ScenarioBasicInfoFormProps {
-  name: string;
-  setName: (name: string) => void;
-  description: string;
-  setDescription: (description: string) => void;
+  form: UseFormReturn<ScenarioBasicInfoFormData>;
 }
 
-export function ScenarioBasicInfoForm({
-  name,
-  setName,
-  description,
-  setDescription,
-}: ScenarioBasicInfoFormProps) {
+/**
+ * Scenario Basic Info Form Component
+ * Uses React Hook Form for form management and validation
+ */
+export function ScenarioBasicInfoForm({ form }: ScenarioBasicInfoFormProps) {
   return (
-    <div className="space-y-4">
-      <div>
-        <Label htmlFor="scenario-name">Scenario Name</Label>
-        <Input
-          id="scenario-name"
-          placeholder="e.g., Balanced Strategy"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          data-testid="input-scenario-name"
+    <FormProvider {...form}>
+      <div className="space-y-4">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="scenario-name">Scenario Name</FormLabel>
+              <FormControl>
+                <Input
+                  id="scenario-name"
+                  placeholder="e.g., Balanced Strategy"
+                  {...field}
+                  data-testid="input-scenario-name"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      <div>
-        <Label htmlFor="scenario-description">Description (Optional)</Label>
-        <Input
-          id="scenario-description"
-          placeholder="Brief description of this strategy"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          data-testid="input-scenario-description"
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="scenario-description">Description (Optional)</FormLabel>
+              <FormControl>
+                <Input
+                  id="scenario-description"
+                  placeholder="Brief description of this strategy"
+                  {...field}
+                  value={field.value || ""}
+                  data-testid="input-scenario-description"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
+        <div>
+          <label htmlFor="horizon" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            Projection Horizon (years)
+          </label>
+          <Select defaultValue="10">
+            <SelectTrigger id="horizon" data-testid="select-horizon">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="10">10 Years</SelectItem>
+              <SelectItem value="15">15 Years</SelectItem>
+              <SelectItem value="20">20 Years</SelectItem>
+              <SelectItem value="25">25 Years</SelectItem>
+              <SelectItem value="30">30 Years</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-sm text-muted-foreground mt-1">
+            Note: Horizon selection is not yet connected to projections
+          </p>
+        </div>
       </div>
-      <div>
-        <Label htmlFor="horizon">Projection Horizon (years)</Label>
-        <Select defaultValue="10">
-          <SelectTrigger id="horizon" data-testid="select-horizon">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="10">10 Years</SelectItem>
-            <SelectItem value="15">15 Years</SelectItem>
-            <SelectItem value="20">20 Years</SelectItem>
-            <SelectItem value="25">25 Years</SelectItem>
-            <SelectItem value="30">30 Years</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
+    </FormProvider>
   );
 }
-

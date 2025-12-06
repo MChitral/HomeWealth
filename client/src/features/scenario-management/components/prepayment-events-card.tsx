@@ -2,50 +2,194 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Button } from "@/shared/ui/button";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Badge } from "@/shared/ui/badge";
-import { Separator } from "@/shared/ui/separator";
 import { Plus, Edit2, Trash2 } from "lucide-react";
-import { Input } from "@/shared/ui/input";
-import { Label } from "@/shared/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import type { DraftPrepaymentEvent } from "../hooks/use-scenario-editor-state";
 import { getMonthName } from "../utils";
+import { FormProvider, useFormContext } from "react-hook-form";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/shared/ui/form";
+import { Input } from "@/shared/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/ui/select";
+import type { UseFormReturn } from "react-hook-form";
+import type { PrepaymentEventFormData } from "../hooks/use-prepayment-event-form";
 
 interface PrepaymentEventsCardProps {
   prepaymentEvents: DraftPrepaymentEvent[];
   isAddingEvent: boolean;
   editingEvent: DraftPrepaymentEvent | null;
-  eventType: "annual" | "one-time";
-  setEventType: (type: "annual" | "one-time") => void;
-  eventAmount: string;
-  setEventAmount: (amount: string) => void;
-  eventDescription: string;
-  setEventDescription: (description: string) => void;
-  recurrenceMonth: string;
-  setRecurrenceMonth: (month: string) => void;
-  oneTimeYear: string;
-  setOneTimeYear: (year: string) => void;
-  onAddEvent: () => void;
+  form: UseFormReturn<PrepaymentEventFormData>;
+  onAddEvent: (data: PrepaymentEventFormData) => void;
   onEditEvent: (event: DraftPrepaymentEvent) => void;
-  onUpdateEvent: () => void;
+  onUpdateEvent: (data: PrepaymentEventFormData) => void;
   onDeleteEvent: (eventId: string) => void;
   onCancelEvent: () => void;
   onStartAddingEvent: () => void;
 }
 
+/**
+ * Prepayment Event Form Fields Component
+ */
+function PrepaymentEventFormFields() {
+  const { control, watch } = useFormContext<PrepaymentEventFormData>();
+  const eventType = watch("eventType");
+
+  return (
+    <div className="space-y-4">
+      <FormField
+        control={control}
+        name="eventType"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel htmlFor="event-type">Event Type</FormLabel>
+            <Select
+              value={field.value}
+              onValueChange={field.onChange}
+              data-testid="select-event-type"
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="annual">Annual (recurring every year)</SelectItem>
+                <SelectItem value="one-time">One-Time</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={control}
+        name="amount"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel htmlFor="event-amount">Amount ($)</FormLabel>
+            <FormControl>
+              <Input
+                id="event-amount"
+                type="number"
+                placeholder="5000"
+                {...field}
+                data-testid="input-event-amount"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {eventType === "annual" && (
+        <FormField
+          control={control}
+          name="recurrenceMonth"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="recurrence-month">Which Month?</FormLabel>
+              <Select
+                value={field.value || "3"}
+                onValueChange={field.onChange}
+                data-testid="select-recurrence-month"
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="1">January</SelectItem>
+                  <SelectItem value="2">February</SelectItem>
+                  <SelectItem value="3">March (Tax Refund)</SelectItem>
+                  <SelectItem value="4">April</SelectItem>
+                  <SelectItem value="5">May</SelectItem>
+                  <SelectItem value="6">June</SelectItem>
+                  <SelectItem value="7">July</SelectItem>
+                  <SelectItem value="8">August</SelectItem>
+                  <SelectItem value="9">September</SelectItem>
+                  <SelectItem value="10">October</SelectItem>
+                  <SelectItem value="11">November</SelectItem>
+                  <SelectItem value="12">December (Bonus)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">
+                Common: March for tax refunds, December for year-end bonuses
+              </p>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
+
+      {eventType === "one-time" && (
+        <FormField
+          control={control}
+          name="oneTimeYear"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="one-time-year">Which Year? (from mortgage start)</FormLabel>
+              <FormControl>
+                <Input
+                  id="one-time-year"
+                  type="number"
+                  min="1"
+                  placeholder="1"
+                  {...field}
+                  data-testid="input-one-time-year"
+                />
+              </FormControl>
+              <p className="text-sm text-muted-foreground">
+                E.g., "5" means 5 years from when your mortgage started
+              </p>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
+
+      <FormField
+        control={control}
+        name="description"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel htmlFor="event-description">Description (Optional)</FormLabel>
+            <FormControl>
+              <Input
+                id="event-description"
+                placeholder="e.g., Annual bonus, Tax refund, Inheritance"
+                {...field}
+                data-testid="input-event-description"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </div>
+  );
+}
+
+/**
+ * Prepayment Events Card Component
+ * Uses React Hook Form for form management and validation
+ */
 export function PrepaymentEventsCard({
   prepaymentEvents,
   isAddingEvent,
   editingEvent,
-  eventType,
-  setEventType,
-  eventAmount,
-  setEventAmount,
-  eventDescription,
-  setEventDescription,
-  recurrenceMonth,
-  setRecurrenceMonth,
-  oneTimeYear,
-  setOneTimeYear,
+  form,
   onAddEvent,
   onEditEvent,
   onUpdateEvent,
@@ -53,6 +197,14 @@ export function PrepaymentEventsCard({
   onCancelEvent,
   onStartAddingEvent,
 }: PrepaymentEventsCardProps) {
+  const onSubmit = form.handleSubmit((data) => {
+    if (editingEvent) {
+      onUpdateEvent(data);
+    } else {
+      onAddEvent(data);
+    }
+  });
+
   return (
     <Card>
       <CardHeader>
@@ -122,107 +274,29 @@ export function PrepaymentEventsCard({
         {/* Add/Edit Event Form */}
         {isAddingEvent && (
           <Card className="border-primary">
-            <CardHeader>
-              <CardTitle className="text-base">
-                {editingEvent ? "Edit Prepayment Event" : "Add Prepayment Event"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="event-type">Event Type</Label>
-                <Select value={eventType} onValueChange={(value) => setEventType(value as "annual" | "one-time")}>
-                  <SelectTrigger id="event-type" data-testid="select-event-type">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="annual">Annual (recurring every year)</SelectItem>
-                    <SelectItem value="one-time">One-Time</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="event-amount">Amount ($)</Label>
-                <Input
-                  id="event-amount"
-                  type="number"
-                  placeholder="5000"
-                  value={eventAmount}
-                  onChange={(e) => setEventAmount(e.target.value)}
-                  data-testid="input-event-amount"
-                />
-              </div>
-
-              {eventType === "annual" && (
-                <div className="space-y-2">
-                  <Label htmlFor="recurrence-month">Which Month?</Label>
-                  <Select value={recurrenceMonth} onValueChange={setRecurrenceMonth}>
-                    <SelectTrigger id="recurrence-month" data-testid="select-recurrence-month">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">January</SelectItem>
-                      <SelectItem value="2">February</SelectItem>
-                      <SelectItem value="3">March (Tax Refund)</SelectItem>
-                      <SelectItem value="4">April</SelectItem>
-                      <SelectItem value="5">May</SelectItem>
-                      <SelectItem value="6">June</SelectItem>
-                      <SelectItem value="7">July</SelectItem>
-                      <SelectItem value="8">August</SelectItem>
-                      <SelectItem value="9">September</SelectItem>
-                      <SelectItem value="10">October</SelectItem>
-                      <SelectItem value="11">November</SelectItem>
-                      <SelectItem value="12">December (Bonus)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-muted-foreground">
-                    Common: March for tax refunds, December for year-end bonuses
-                  </p>
-                </div>
-              )}
-
-              {eventType === "one-time" && (
-                <div className="space-y-2">
-                  <Label htmlFor="one-time-year">Which Year? (from mortgage start)</Label>
-                  <Input
-                    id="one-time-year"
-                    type="number"
-                    min="1"
-                    placeholder="1"
-                    value={oneTimeYear}
-                    onChange={(e) => setOneTimeYear(e.target.value)}
-                    data-testid="input-one-time-year"
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    E.g., "5" means 5 years from when your mortgage started
-                  </p>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="event-description">Description (Optional)</Label>
-                <Input
-                  id="event-description"
-                  placeholder="e.g., Annual bonus, Tax refund, Inheritance"
-                  value={eventDescription}
-                  onChange={(e) => setEventDescription(e.target.value)}
-                  data-testid="input-event-description"
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <Button onClick={editingEvent ? onUpdateEvent : onAddEvent} data-testid="button-save-event">
-                  {editingEvent ? "Update Event" : "Add Event"}
-                </Button>
-                <Button variant="outline" onClick={onCancelEvent} data-testid="button-cancel-event">
-                  Cancel
-                </Button>
-              </div>
-            </CardContent>
+            <FormProvider {...form}>
+              <CardHeader>
+                <CardTitle className="text-base">
+                  {editingEvent ? "Edit Prepayment Event" : "Add Prepayment Event"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={onSubmit}>
+                  <PrepaymentEventFormFields />
+                  <div className="flex gap-2 mt-4">
+                    <Button type="submit" data-testid="button-save-event">
+                      {editingEvent ? "Update Event" : "Add Event"}
+                    </Button>
+                    <Button type="button" variant="outline" onClick={onCancelEvent} data-testid="button-cancel-event">
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </FormProvider>
           </Card>
         )}
       </CardContent>
     </Card>
   );
 }
-

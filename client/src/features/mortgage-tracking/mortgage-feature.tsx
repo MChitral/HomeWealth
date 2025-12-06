@@ -40,11 +40,17 @@ import { PaymentHistorySection } from "./components/payment-history-section";
 import { EducationSidebar } from "./components/education-sidebar";
 import { EditMortgageDialog } from "./components/edit-mortgage-dialog";
 import { TermRenewalDialog } from "./components/term-renewal-dialog";
+import { useEffect, useState } from "react";
 import { useMortgageTrackingState } from "./hooks/use-mortgage-tracking-state";
+import { useCreateMortgageFormState } from "./hooks/use-create-mortgage-form-state";
+import { useEditMortgageForm } from "./hooks/use-edit-mortgage-form";
+import { useTermRenewalFormState } from "./hooks/use-term-renewal-form-state";
 
 export default function MortgageFeature() {
   const { toast } = useToast();
   usePageTitle("Mortgage Tracking | Mortgage Strategy");
+
+  const [isCreateMortgageOpen, setIsCreateMortgageOpen] = useState(false);
 
   const {
     selectedMortgageId,
@@ -85,41 +91,8 @@ export default function MortgageFeature() {
     setCreatePaymentEdited,
     renewalPaymentEdited,
     setRenewalPaymentEdited,
-    isCreateMortgageOpen,
-    setIsCreateMortgageOpen,
-    wizardStep,
-    setWizardStep,
-    createPropertyPrice,
-    setCreatePropertyPrice,
-    createDownPayment,
-    setCreateDownPayment,
-    createStartDate,
-    setCreateStartDate,
-    createAmortization,
-    setCreateAmortization,
-    createFrequency,
-    setCreateFrequency,
-    createTermType,
-    setCreateTermType,
-    createTermYears,
-    setCreateTermYears,
-    createFixedRate,
-    setCreateFixedRate,
-    createPrimeRate,
-    setCreatePrimeRate,
-    createSpread,
-    setCreateSpread,
-    createPaymentAmount,
-    setCreatePaymentAmount,
-    isCreatingMortgage,
     isEditMortgageOpen,
     setIsEditMortgageOpen,
-    editPropertyPrice,
-    setEditPropertyPrice,
-    editCurrentBalance,
-    setEditCurrentBalance,
-    editPaymentFrequency,
-    setEditPaymentFrequency,
     isEditTermOpen,
     setIsEditTermOpen,
     editTermType,
@@ -140,13 +113,6 @@ export default function MortgageFeature() {
     setEditTermPrimeRate,
     editTermSpread,
     setEditTermSpread,
-    propertyPrice,
-    downPayment,
-    propertyPriceError,
-    downPaymentError,
-    loanAmount,
-    loanAmountError,
-    isFormValid,
     mortgages,
     mortgage,
     terms,
@@ -159,7 +125,6 @@ export default function MortgageFeature() {
     paymentHistory,
     lastKnownBalance,
     lastKnownAmortizationMonths,
-    autoCreatePayment,
     autoRenewalPayment,
     createPaymentMutation,
     createTermMutation,
@@ -169,8 +134,6 @@ export default function MortgageFeature() {
     editMortgageMutation,
     updateTermMutation,
     handleTermRenewal,
-    createMortgageWithTerm,
-    isStep2Valid,
     currentPrimeRateValue,
     currentEffectiveRate,
     previewBackfillEndDate,
@@ -181,78 +144,93 @@ export default function MortgageFeature() {
     monthsRemainingInTerm,
   } = useMortgageTrackingState();
 
+  // New React Hook Form state for mortgage creation
+  const createMortgageForm = useCreateMortgageFormState({
+    primeRateData,
+    defaultPrimeRate: primeRate,
+    onSuccess: (mortgageId) => {
+      setSelectedMortgageId(mortgageId);
+      setIsCreateMortgageOpen(false);
+    },
+    onPrimeRateUpdate: (newPrimeRate) => {
+      setPrimeRate(newPrimeRate);
+    },
+  });
+
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!isCreateMortgageOpen) {
+      createMortgageForm.reset();
+    }
+  }, [isCreateMortgageOpen, createMortgageForm]);
+
+  // Edit Mortgage Form Hook
+  const editMortgageForm = useEditMortgageForm({
+    initialPropertyPrice: mortgage?.propertyPrice || undefined,
+    initialCurrentBalance: mortgage?.currentBalance || undefined,
+    initialPaymentFrequency: mortgage?.paymentFrequency || undefined,
+  });
+
+  // Sync form when mortgage changes and dialog opens
+  useEffect(() => {
+    if (isEditMortgageOpen && mortgage) {
+      editMortgageForm.reset({
+        propertyPrice: mortgage.propertyPrice || "",
+        currentBalance: mortgage.currentBalance || "",
+        paymentFrequency: (mortgage.paymentFrequency || "monthly") as "monthly" | "biweekly" | "accelerated-biweekly" | "weekly" | "accelerated-weekly" | "semi-monthly",
+      });
+    }
+  }, [isEditMortgageOpen, mortgage, editMortgageForm]);
+
+  // Handle dialog close with form reset
+  const handleEditMortgageDialogOpenChange = (open: boolean) => {
+    setIsEditMortgageOpen(open);
+    if (!open) {
+      // Reset form when dialog closes
+      editMortgageForm.reset();
+    }
+  };
+
   const handleCreateDialogOpenChange = (open: boolean) => {
     setIsCreateMortgageOpen(open);
+  };
+
+  // Term Renewal Form Hook for first term creation
+  const firstTermFormState = useTermRenewalFormState({
+    mortgage,
+    currentTerm: null, // No existing term for first term creation
+    paymentHistory: [],
+    lastKnownBalance: Number(mortgage?.currentBalance || 0),
+    lastKnownAmortizationMonths: (mortgage?.amortizationYears || 25) * 12,
+    primeRateData,
+    defaultPrimeRate: primeRate,
+    defaultStartDate: mortgage?.startDate,
+    onSuccess: () => {
+      setIsTermRenewalOpen(false);
+    },
+    onPrimeRateUpdate: (newPrimeRate) => {
+      setPrimeRate(newPrimeRate);
+    },
+  });
+
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!isTermRenewalOpen) {
+      firstTermFormState.reset();
+    }
+  }, [isTermRenewalOpen, firstTermFormState]);
+
+  // Handle dialog open/close for term renewal
+  const handleTermRenewalDialogOpenChange = (open: boolean) => {
+    setIsTermRenewalOpen(open);
     if (!open) {
-      setWizardStep(1);
+      firstTermFormState.reset();
     }
-  };
-
-  const handleNextWizardStep = () => {
-    if (!isFormValid) {
-      toast({
-        title: "Validation Error",
-        description:
-          propertyPriceError ||
-          downPaymentError ||
-          loanAmountError ||
-          "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-    setWizardStep(2);
-  };
-
-  const handleCreatePaymentAmountChange = (value: string) => {
-    setCreatePaymentAmount(value);
-    setCreatePaymentEdited(true);
-  };
-
-  const handleUseAutoPayment = () => {
-    if (!autoCreatePayment) return;
-    setCreatePaymentEdited(false);
-    setCreatePaymentAmount(autoCreatePayment);
   };
 
   const emptyState = (
     <MortgageEmptyState onOpenCreateMortgage={() => setIsCreateMortgageOpen(true)} />
   );
-
-  const createDialogFormValues = {
-    propertyPrice: createPropertyPrice,
-    downPayment: createDownPayment,
-    startDate: createStartDate,
-    amortization: createAmortization,
-    frequency: createFrequency,
-    termType: createTermType,
-    termYears: createTermYears,
-    fixedRate: createFixedRate,
-    primeRate: createPrimeRate,
-    spread: createSpread,
-    paymentAmount: createPaymentAmount,
-  };
-
-  const createDialogFormSetters = {
-    setPropertyPrice: setCreatePropertyPrice,
-    setDownPayment: setCreateDownPayment,
-    setStartDate: setCreateStartDate,
-    setAmortization: setCreateAmortization,
-    setFrequency: setCreateFrequency,
-    setTermType: setCreateTermType,
-    setTermYears: setCreateTermYears,
-    setFixedRate: setCreateFixedRate,
-    setPrimeRate: setCreatePrimeRate,
-    setSpread: setCreateSpread,
-  };
-
-  const createDialogValidation = {
-    propertyPriceError,
-    downPaymentError,
-    loanAmountError,
-    isFormValid: Boolean(isFormValid),
-    isStep2Valid,
-  };
 
   const primeBanner = mortgage ? (
     <MortgagePrimeBanner
@@ -270,27 +248,6 @@ export default function MortgageFeature() {
     });
   };
   
-  const handleCreateFirstTerm = () => {
-    if (!mortgage) return;
-    const defaultStartDate = mortgage.startDate || new Date().toISOString().split("T")[0];
-    const startDate = renewalStartDate || defaultStartDate;
-    const termYears = Number(renewalTermYears) || 5;
-    const endDate = new Date(startDate);
-    endDate.setFullYear(endDate.getFullYear() + termYears);
-
-    createTermMutation.mutate({
-      termType: renewalTermType,
-      startDate,
-      endDate: endDate.toISOString().split("T")[0],
-      termYears,
-      lockedSpread: renewalTermType !== "fixed" ? renewalSpread : "0",
-      fixedRate: renewalTermType === "fixed" ? renewalRate : undefined,
-      primeRate: renewalTermType !== "fixed" ? (renewalPrime || primeRate) : undefined,
-      paymentFrequency: renewalPaymentFrequency,
-      regularPaymentAmount: renewalPaymentAmount,
-    });
-  };
-
   const renderNoTermState = () => {
     if (!mortgage) return null;
     const defaultStartDate = mortgage.startDate || new Date().toISOString().split("T")[0];
@@ -306,7 +263,7 @@ export default function MortgageFeature() {
 
         <TermRenewalDialog
           open={isTermRenewalOpen}
-          onOpenChange={setIsTermRenewalOpen}
+          onOpenChange={handleTermRenewalDialogOpenChange}
           title="Create Mortgage Term"
           description="Set up your initial mortgage term with interest rate and payment details"
           showAlert={false}
@@ -317,31 +274,17 @@ export default function MortgageFeature() {
               Create First Term
             </Button>
           }
-          termType={renewalTermType}
-          setTermType={setRenewalTermType}
-          paymentFrequency={renewalPaymentFrequency}
-          setPaymentFrequency={setRenewalPaymentFrequency}
-          termYears={renewalTermYears}
-          setTermYears={setRenewalTermYears}
-          startDate={renewalStartDate}
-          setStartDate={setRenewalStartDate}
-          fixedRate={renewalRate}
-          setFixedRate={setRenewalRate}
-          spread={renewalSpread}
-          setSpread={setRenewalSpread}
-          primeRate={renewalPrime || primeRate}
-          setPrimeRate={setRenewalPrime}
-          paymentAmount={renewalPaymentAmount}
-          setPaymentAmount={setRenewalPaymentAmount}
-          autoPaymentAmount={autoRenewalPayment}
-          paymentEdited={renewalPaymentEdited}
-          setPaymentEdited={setRenewalPaymentEdited}
-          onSubmit={handleCreateFirstTerm}
-          isSubmitting={createTermMutation.isPending}
-          isSubmitDisabled={
-            !renewalPaymentAmount ||
-            (renewalTermType === "fixed" ? !renewalRate : !renewalSpread)
-          }
+          form={firstTermFormState.form}
+          isValid={firstTermFormState.isValid}
+          autoPaymentAmount={firstTermFormState.autoPayment}
+          paymentEdited={firstTermFormState.paymentEdited}
+          onPaymentAmountChange={firstTermFormState.handlePaymentAmountChange}
+          onUseAutoPayment={firstTermFormState.useAutoPayment}
+          onSubmit={firstTermFormState.handleSubmit}
+          isSubmitting={firstTermFormState.createTermMutation.isPending}
+          primeRateData={primeRateData}
+          onRefreshPrime={() => refetchPrimeRate()}
+          isPrimeRateLoading={isPrimeRateLoading}
         />
       </div>
     );
@@ -382,13 +325,8 @@ export default function MortgageFeature() {
 
       <EditMortgageDialog
         open={isEditMortgageOpen}
-        onOpenChange={setIsEditMortgageOpen}
-        propertyPrice={editPropertyPrice}
-        setPropertyPrice={setEditPropertyPrice}
-        currentBalance={editCurrentBalance}
-        setCurrentBalance={setEditCurrentBalance}
-        paymentFrequency={editPaymentFrequency}
-        setPaymentFrequency={setEditPaymentFrequency}
+        onOpenChange={handleEditMortgageDialogOpenChange}
+        form={editMortgageForm}
         editMortgageMutation={editMortgageMutation}
       />
 
@@ -526,18 +464,19 @@ export default function MortgageFeature() {
       <CreateMortgageDialog
         open={isCreateMortgageOpen}
         onOpenChange={handleCreateDialogOpenChange}
-        wizardStep={wizardStep}
-        setWizardStep={setWizardStep}
-        onNextStep={handleNextWizardStep}
-        onSubmit={createMortgageWithTerm}
-        isCreatingMortgage={isCreatingMortgage}
-        formValues={createDialogFormValues}
-        formSetters={createDialogFormSetters}
-        validation={createDialogValidation}
-        autoCreatePayment={autoCreatePayment}
-        createPaymentEdited={createPaymentEdited}
-        onCreatePaymentChange={handleCreatePaymentAmountChange}
-        onUseAutoPayment={handleUseAutoPayment}
+        form={createMortgageForm.form}
+        loanAmount={createMortgageForm.loanAmount}
+        wizardStep={createMortgageForm.wizardStep}
+        setWizardStep={createMortgageForm.setWizardStep}
+        onNextStep={createMortgageForm.handleNextStep}
+        onSubmit={createMortgageForm.handleSubmit}
+        isCreatingMortgage={createMortgageForm.createMortgageMutation.isPending}
+        isStep1Valid={createMortgageForm.isStep1Valid}
+        isStep2Valid={createMortgageForm.isStep2Valid}
+        autoPayment={createMortgageForm.autoPayment}
+        paymentEdited={createMortgageForm.paymentEdited}
+        onPaymentAmountChange={createMortgageForm.handlePaymentAmountChange}
+        onUseAutoPayment={createMortgageForm.useAutoPayment}
         primeRateData={primeRateData}
         onRefreshPrime={() => refetchPrimeRate()}
         isPrimeRateLoading={isPrimeRateLoading}

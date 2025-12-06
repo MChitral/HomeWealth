@@ -4,6 +4,8 @@ import { useToast } from "@/shared/hooks/use-toast";
 import { queryClient } from "@/shared/api/query-client";
 import { scenarioApi, scenarioQueryKeys, type ScenarioPayload, type InsertPrepaymentEvent } from "../api";
 import type { Scenario, PrepaymentEvent } from "@shared/schema";
+import { useScenarioBasicInfoForm } from "./use-scenario-basic-info-form";
+import { usePrepaymentEventForm, type PrepaymentEventFormData } from "./use-prepayment-event-form";
 
 export type DraftPrepaymentEvent = {
   id: string;
@@ -25,9 +27,17 @@ export function useScenarioEditorState(
 ) {
   const { toast } = useToast();
 
-  // Form state
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+  // React Hook Form for basic info (name, description)
+  const basicInfoForm = useScenarioBasicInfoForm({
+    initialName: scenario?.name,
+    initialDescription: scenario?.description,
+  });
+
+  // Watch form values to sync with existing state logic
+  const name = basicInfoForm.watch("name");
+  const description = basicInfoForm.watch("description");
+
+  // Other form state (not yet migrated to React Hook Form)
   const [prepaymentSplit, setPrepaymentSplit] = useState([50]);
   const [expectedReturnRate, setExpectedReturnRate] = useState(6.0);
   const [efPriorityPercent, setEfPriorityPercent] = useState(0);
@@ -38,18 +48,14 @@ export function useScenarioEditorState(
   const [editingEvent, setEditingEvent] = useState<DraftPrepaymentEvent | null>(null);
   const [isAddingEvent, setIsAddingEvent] = useState(false);
 
-  // Event form state
-  const [eventType, setEventType] = useState<"annual" | "one-time">("annual");
-  const [eventAmount, setEventAmount] = useState("");
-  const [eventDescription, setEventDescription] = useState("");
-  const [recurrenceMonth, setRecurrenceMonth] = useState("3");
-  const [oneTimeYear, setOneTimeYear] = useState("1");
+  // React Hook Form for prepayment event
+  const prepaymentEventForm = usePrepaymentEventForm({
+    initialEvent: editingEvent,
+  });
 
-  // Initialize form when editing existing scenario
+  // Initialize other form state when editing existing scenario
   useEffect(() => {
     if (scenario && !isNewScenario) {
-      setName(scenario.name);
-      setDescription(scenario.description || "");
       setPrepaymentSplit([scenario.prepaymentMonthlyPercent]);
       setExpectedReturnRate(parseFloat(scenario.expectedReturnRate));
       setEfPriorityPercent(scenario.efPriorityPercent);
@@ -62,6 +68,19 @@ export function useScenarioEditorState(
       setPrepaymentEvents(fetchedEvents.map(toDraftEvent));
     }
   }, [fetchedEvents]);
+
+  // Sync form when editingEvent changes
+  useEffect(() => {
+    if (editingEvent) {
+      prepaymentEventForm.reset({
+        eventType: editingEvent.eventType,
+        amount: editingEvent.amount || "",
+        description: editingEvent.description || "",
+        recurrenceMonth: editingEvent.recurrenceMonth?.toString() || "3",
+        oneTimeYear: editingEvent.oneTimeYear?.toString() || "1",
+      });
+    }
+  }, [editingEvent, prepaymentEventForm]);
 
   const toDraftEvent = (event: PrepaymentEvent): DraftPrepaymentEvent => ({
     id: event.id,
@@ -138,44 +157,36 @@ export function useScenarioEditorState(
   });
 
   const handleSave = () => {
-    if (!name.trim()) {
-      toast({
-        title: "Name required",
-        description: "Please enter a scenario name.",
-        variant: "destructive",
-      });
-      return;
-    }
-    saveMutation.mutate();
+    // Validate using React Hook Form
+    basicInfoForm.handleSubmit(
+      () => {
+        saveMutation.mutate();
+      },
+      (errors) => {
+        // Form validation errors are handled by React Hook Form automatically
+        toast({
+          title: "Validation Error",
+          description: "Please fix the form errors before saving.",
+          variant: "destructive",
+        });
+      }
+    )();
   };
 
   const resetEventForm = () => {
-    setEventType("annual");
-    setEventAmount("");
-    setEventDescription("");
-    setRecurrenceMonth("3");
-    setOneTimeYear("1");
+    prepaymentEventForm.reset();
   };
 
-  const handleAddEvent = async () => {
-    if (!eventAmount || parseFloat(eventAmount) <= 0) {
-      toast({
-        title: "Invalid amount",
-        description: "Please enter a valid prepayment amount.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleAddEvent = async (formData: PrepaymentEventFormData) => {
     const eventData: DraftPrepaymentEvent = {
       id: `temp-${Date.now()}`,
       scenarioId: scenarioId || "",
-      eventType,
-      amount: parseFloat(eventAmount).toFixed(2),
+      eventType: formData.eventType,
+      amount: parseFloat(formData.amount).toFixed(2),
       startPaymentNumber: 1,
-      description: eventDescription || null,
-      recurrenceMonth: eventType === "annual" ? parseInt(recurrenceMonth) : null,
-      oneTimeYear: eventType === "one-time" ? parseInt(oneTimeYear) : null,
+      description: formData.description || null,
+      recurrenceMonth: formData.eventType === "annual" ? parseInt(formData.recurrenceMonth || "3") : null,
+      oneTimeYear: formData.eventType === "one-time" ? parseInt(formData.oneTimeYear || "1") : null,
     };
 
     // For existing scenarios, save to API immediately
@@ -207,22 +218,14 @@ export function useScenarioEditorState(
 
   const handleEditEvent = (event: DraftPrepaymentEvent) => {
     setEditingEvent(event);
-    setEventType(event.eventType as "annual" | "one-time");
-    setEventAmount(event.amount);
-    setEventDescription(event.description || "");
-    if (event.eventType === "annual" && event.recurrenceMonth) {
-      setRecurrenceMonth(event.recurrenceMonth.toString());
-    } else if (event.eventType === "one-time" && event.oneTimeYear) {
-      setOneTimeYear(event.oneTimeYear.toString());
-    }
     setIsAddingEvent(true);
   };
 
-  const handleUpdateEvent = async () => {
-    if (!editingEvent || !eventAmount || parseFloat(eventAmount) <= 0) {
+  const handleUpdateEvent = async (formData: PrepaymentEventFormData) => {
+    if (!editingEvent) {
       toast({
-        title: "Invalid amount",
-        description: "Please enter a valid prepayment amount.",
+        title: "Error",
+        description: "No event selected for editing.",
         variant: "destructive",
       });
       return;
@@ -230,11 +233,11 @@ export function useScenarioEditorState(
 
     const updatedEvent: DraftPrepaymentEvent = {
       ...editingEvent,
-      eventType,
-      amount: parseFloat(eventAmount).toFixed(2),
-      description: eventDescription || null,
-      recurrenceMonth: eventType === "annual" ? parseInt(recurrenceMonth) : null,
-      oneTimeYear: eventType === "one-time" ? parseInt(oneTimeYear) : null,
+      eventType: formData.eventType,
+      amount: parseFloat(formData.amount).toFixed(2),
+      description: formData.description || null,
+      recurrenceMonth: formData.eventType === "annual" ? parseInt(formData.recurrenceMonth || "3") : null,
+      oneTimeYear: formData.eventType === "one-time" ? parseInt(formData.oneTimeYear || "1") : null,
     };
 
     // For existing scenarios with real event IDs, update via API
@@ -286,11 +289,14 @@ export function useScenarioEditorState(
   };
 
   return {
-    // Form state
+    // React Hook Form for basic info
+    basicInfoForm,
+    // Form state (synced from React Hook Form for backward compatibility)
     name,
-    setName,
-    description,
-    setDescription,
+    setName: (value: string) => basicInfoForm.setValue("name", value),
+    description: description || "",
+    setDescription: (value: string) => basicInfoForm.setValue("description", value || undefined),
+    // Other form state
     prepaymentSplit,
     setPrepaymentSplit,
     expectedReturnRate,
@@ -305,17 +311,8 @@ export function useScenarioEditorState(
     isAddingEvent,
     setIsAddingEvent,
     setEditingEvent,
-    // Event form state
-    eventType,
-    setEventType,
-    eventAmount,
-    setEventAmount,
-    eventDescription,
-    setEventDescription,
-    recurrenceMonth,
-    setRecurrenceMonth,
-    oneTimeYear,
-    setOneTimeYear,
+    // React Hook Form for prepayment event
+    prepaymentEventForm,
     // Actions
     handleSave,
     saveMutation,

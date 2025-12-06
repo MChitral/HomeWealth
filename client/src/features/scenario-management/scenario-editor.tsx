@@ -104,12 +104,7 @@ export function ScenarioEditorFeature() {
         </AlertDescription>
       </Alert>
 
-      <ScenarioBasicInfoForm
-        name={state.name}
-        setName={state.setName}
-        description={state.description}
-        setDescription={state.setDescription}
-      />
+      <ScenarioBasicInfoForm form={state.basicInfoForm} />
 
       <Card className="bg-muted/50">
         <CardContent className="p-4">
@@ -147,16 +142,7 @@ export function ScenarioEditorFeature() {
             prepaymentEvents={state.prepaymentEvents}
             isAddingEvent={state.isAddingEvent}
             editingEvent={state.editingEvent}
-            eventType={state.eventType}
-            setEventType={state.setEventType}
-            eventAmount={state.eventAmount}
-            setEventAmount={state.setEventAmount}
-            eventDescription={state.eventDescription}
-            setEventDescription={state.setEventDescription}
-            recurrenceMonth={state.recurrenceMonth}
-            setRecurrenceMonth={state.setRecurrenceMonth}
-            oneTimeYear={state.oneTimeYear}
-            setOneTimeYear={state.setOneTimeYear}
+            form={state.prepaymentEventForm}
             onAddEvent={state.handleAddEvent}
             onEditEvent={state.handleEditEvent}
             onUpdateEvent={state.handleUpdateEvent}
