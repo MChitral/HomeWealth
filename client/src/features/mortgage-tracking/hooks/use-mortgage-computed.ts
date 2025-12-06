@@ -1,0 +1,106 @@
+import { useMemo } from "react";
+import { normalizePayments, normalizeTerm } from "../utils/normalize";
+import type { Mortgage } from "@shared/schema";
+import type { MortgageTerm } from "@shared/schema";
+import type { UiPayment, UiTerm } from "../types";
+import type { PrimeRateResponse } from "../api";
+
+interface UseMortgageComputedProps {
+  mortgage: Mortgage | null;
+  terms: MortgageTerm[] | undefined;
+  payments: any[] | undefined;
+  primeRateData?: PrimeRateResponse;
+  primeRate: string;
+  filterYear: string;
+}
+
+/**
+ * Hook for computing derived values from mortgage data
+ * Extracted from use-mortgage-tracking-state.ts for better organization
+ */
+export function useMortgageComputed({
+  mortgage,
+  terms,
+  payments,
+  primeRateData,
+  primeRate,
+  filterYear,
+}: UseMortgageComputedProps) {
+  const uiCurrentTerm = useMemo(() => normalizeTerm(terms ? terms[terms.length - 1] : undefined), [terms]);
+  const paymentHistory = useMemo(() => normalizePayments(payments, terms), [payments, terms]);
+
+  const lastKnownBalance =
+    paymentHistory[paymentHistory.length - 1]?.remainingBalance ?? Number(mortgage?.currentBalance || 0);
+  const lastKnownAmortizationMonths =
+    paymentHistory[paymentHistory.length - 1]?.remainingAmortizationMonths ?? (mortgage ? mortgage.amortizationYears * 12 : 0);
+
+  const currentPrimeRateValue =
+    primeRateData?.primeRate ??
+    (uiCurrentTerm?.primeRate ?? null) ??
+    paymentHistory[paymentHistory.length - 1]?.primeRate ??
+    parseFloat(primeRate) ??
+    0;
+
+  const currentEffectiveRate = uiCurrentTerm
+    ? uiCurrentTerm.termType === "fixed" && uiCurrentTerm.fixedRate
+      ? uiCurrentTerm.fixedRate
+      : currentPrimeRateValue + (uiCurrentTerm.lockedSpread || 0)
+    : 0;
+
+  const summaryStats = useMemo(
+    () => ({
+      totalPayments: paymentHistory.length,
+      totalPaid: paymentHistory.reduce((sum, p) => sum + p.paymentAmount, 0),
+      totalPrincipal: paymentHistory.reduce((sum, p) => sum + p.principal, 0),
+      totalInterest: paymentHistory.reduce((sum, p) => sum + p.interest, 0),
+      currentBalance: mortgage
+        ? Number(mortgage.currentBalance)
+        : paymentHistory[paymentHistory.length - 1]?.remainingBalance || 0,
+      currentRate: currentEffectiveRate,
+      currentPrimeRate: currentPrimeRateValue,
+      amortizationYears: mortgage
+        ? mortgage.amortizationYears
+        : paymentHistory[paymentHistory.length - 1]?.amortizationYears || 30,
+      triggerHitCount: paymentHistory.filter((p) => p.triggerHit).length,
+    }),
+    [paymentHistory, mortgage, currentEffectiveRate, currentPrimeRateValue]
+  );
+
+  const filteredPayments = useMemo(
+    () => (filterYear === "all" ? paymentHistory : paymentHistory.filter((p) => p.year.toString() === filterYear)),
+    [paymentHistory, filterYear]
+  );
+
+  const availableYears = useMemo(
+    () => Array.from(new Set(paymentHistory.map((p) => p.year))).sort((a, b) => b - a),
+    [paymentHistory]
+  );
+
+  const effectiveRate = useMemo(() => {
+    if (!uiCurrentTerm) return "0.00";
+    if (uiCurrentTerm.termType === "fixed" && uiCurrentTerm.fixedRate) {
+      return uiCurrentTerm.fixedRate.toFixed(2);
+    }
+    return (parseFloat(primeRate) + uiCurrentTerm.lockedSpread).toFixed(2);
+  }, [uiCurrentTerm, primeRate]);
+
+  const monthsRemainingInTerm = useMemo(() => {
+    if (!uiCurrentTerm) return 0;
+    return Math.round((new Date(uiCurrentTerm.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30));
+  }, [uiCurrentTerm]);
+
+  return {
+    uiCurrentTerm,
+    paymentHistory,
+    lastKnownBalance,
+    lastKnownAmortizationMonths,
+    currentPrimeRateValue,
+    currentEffectiveRate,
+    summaryStats,
+    filteredPayments,
+    availableYears,
+    effectiveRate,
+    monthsRemainingInTerm,
+  };
+}
+
