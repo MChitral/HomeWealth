@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createMortgageFormSchema, type CreateMortgageFormData } from "./use-create-mortgage-form";
@@ -63,6 +63,16 @@ export function useCreateMortgageFormWithAutoPayment({
     }
   }, [primeRateData, defaultPrimeRate, watchedValues.termType, form, onPrimeRateUpdate]);
 
+  // Memoize setPaymentAmount callback to prevent infinite loops
+  const handleSetPaymentAmount = useCallback(
+    (value: string) => {
+      if (!paymentEdited) {
+        form.setValue("paymentAmount", value, { shouldValidate: true });
+      }
+    },
+    [paymentEdited, form]
+  );
+
   // Auto-payment calculation
   const autoPayment = useAutoCreatePayment({
     loanAmount,
@@ -75,11 +85,7 @@ export function useCreateMortgageFormWithAutoPayment({
     fallbackPrime: defaultPrimeRate,
     startDate: watchedValues.startDate || defaultValues.startDate,
     paymentEdited,
-    setPaymentAmount: (value: string) => {
-      if (!paymentEdited) {
-        form.setValue("paymentAmount", value, { shouldValidate: true });
-      }
-    },
+    setPaymentAmount: handleSetPaymentAmount,
   });
 
   // Auto-set payment amount if not edited
