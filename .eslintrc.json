@@ -10,7 +10,8 @@
     "plugin:@typescript-eslint/recommended",
     "plugin:react/recommended",
     "plugin:react-hooks/recommended",
-    "plugin:jsx-a11y/recommended"
+    "plugin:jsx-a11y/recommended",
+    "prettier"
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
@@ -25,7 +26,8 @@
     "react",
     "@typescript-eslint",
     "react-hooks",
-    "jsx-a11y"
+    "jsx-a11y",
+    "prettier"
   ],
   "settings": {
     "react": {
@@ -54,7 +56,8 @@
       {
         "allow": ["warn", "error"]
       }
-    ]
+    ],
+    "prettier/prettier": "error"
   },
   "ignorePatterns": [
     "dist",

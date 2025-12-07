@@ -1,24 +1,25 @@
-import { useEffect, useMemo, useState } from "react";
-import { queryClient } from "@/shared/api/query-client";
-import { useToast } from "@/shared/hooks/use-toast";
+import { useState } from "react";
 import { useMortgageSelection } from "@/shared/contexts/mortgage-selection-context";
-import {
-  mortgageApi,
-  mortgageQueryKeys,
-} from "../api";
 import { useMortgageData } from "./use-mortgage-data";
 import { usePrimeRate } from "./use-prime-rate";
-import { useAutoCreatePayment, useAutoRenewalPayment } from "./use-auto-payments";
-import { advancePaymentDate, type PaymentFrequency } from "../utils/mortgage-math";
 import { useMortgageDialogs } from "./use-mortgage-dialogs";
 import { useMortgageComputed } from "./use-mortgage-computed";
 import { useMortgageMutations } from "./use-mortgage-mutations";
-import type { UiTerm } from "../types";
 
+/**
+ * Core hook for mortgage tracking state management.
+ * Manages only essential state - all form state is handled by form hooks.
+ * 
+ * This hook was refactored from 558 lines to ~150 lines by:
+ * - Removing all legacy form state (now in React Hook Form hooks)
+ * - Removing business logic functions (moved to form hooks)
+ * - Removing unused computed values and effects
+ * - Keeping only core state management
+ */
 export function useMortgageTrackingState() {
   const { selectedMortgageId, setSelectedMortgageId, mortgages: contextMortgages } = useMortgageSelection();
   
-  // Use extracted dialog hook
+  // Dialog state (extracted hook)
   const dialogs = useMortgageDialogs();
   const {
     isDialogOpen,
@@ -33,89 +34,17 @@ export function useMortgageTrackingState() {
     setIsEditTermOpen,
   } = dialogs;
 
+  // Payment history filter
   const [filterYear, setFilterYear] = useState("all");
 
-  const [backfillStartDate, setBackfillStartDate] = useState("");
-  const [backfillNumberOfPayments, setBackfillNumberOfPayments] = useState("12");
-  const [backfillPaymentAmount, setBackfillPaymentAmount] = useState("");
-  const [renewalTermType, setRenewalTermType] = useState("variable-fixed");
-  const [renewalPaymentFrequency, setRenewalPaymentFrequency] = useState("monthly");
-  const [renewalRate, setRenewalRate] = useState("");
-  const [renewalSpread, setRenewalSpread] = useState("");
-  const [renewalPrime, setRenewalPrime] = useState("");
-  const [renewalTermYears, setRenewalTermYears] = useState("5");
-  const [renewalStartDate, setRenewalStartDate] = useState("");
-  const [renewalPaymentAmount, setRenewalPaymentAmount] = useState("");
-  const [createPaymentEdited, setCreatePaymentEdited] = useState(false);
-  const [renewalPaymentEdited, setRenewalPaymentEdited] = useState(false);
-
-  const [isCreateMortgageOpen, setIsCreateMortgageOpen] = useState(false);
-  const [wizardStep, setWizardStep] = useState(1);
-  const [createPropertyPrice, setCreatePropertyPrice] = useState("");
-  const [createDownPayment, setCreateDownPayment] = useState("");
-  const [createStartDate, setCreateStartDate] = useState("");
-  const [createAmortization, setCreateAmortization] = useState("25");
-  const [createFrequency, setCreateFrequency] = useState("monthly");
-  const [createTermType, setCreateTermType] = useState("variable-fixed");
-  const [createTermYears, setCreateTermYears] = useState("5");
-  const [createFixedRate, setCreateFixedRate] = useState("");
-  const [createPrimeRate, setCreatePrimeRate] = useState("6.45");
-  const [createSpread, setCreateSpread] = useState("-0.80");
-  const [createPaymentAmount, setCreatePaymentAmount] = useState("");
-  const [isCreatingMortgage, setIsCreatingMortgage] = useState(false);
-
-  const [editPropertyPrice, setEditPropertyPrice] = useState("");
-  const [editCurrentBalance, setEditCurrentBalance] = useState("");
-  const [editPaymentFrequency, setEditPaymentFrequency] = useState("");
-  const [editTermType, setEditTermType] = useState("");
-  const [editTermStartDate, setEditTermStartDate] = useState("");
-  const [editTermEndDate, setEditTermEndDate] = useState("");
-  const [editTermYears, setEditTermYears] = useState("");
-  const [editTermPaymentFrequency, setEditTermPaymentFrequency] = useState("");
-  const [editTermPaymentAmount, setEditTermPaymentAmount] = useState("");
-  const [editTermFixedRate, setEditTermFixedRate] = useState("");
-  const [editTermPrimeRate, setEditTermPrimeRate] = useState("");
-  const [editTermSpread, setEditTermSpread] = useState("");
-
-  const propertyPrice = parseFloat(createPropertyPrice);
-  const downPayment = parseFloat(createDownPayment);
-  const propertyPriceError =
-    !Number.isFinite(propertyPrice) || propertyPrice <= 0
-      ? "Property price must be a valid number greater than zero"
-      : "";
-
-  const downPaymentError =
-    !propertyPriceError && (!Number.isFinite(downPayment) || downPayment < 0)
-      ? "Down payment must be a valid number (zero or more)"
-      : !propertyPriceError && Number.isFinite(downPayment) && downPayment > propertyPrice
-        ? "Down payment cannot exceed property price"
-        : "";
-
-  const loanAmount = propertyPrice - downPayment;
-  const loanAmountError =
-    !propertyPriceError && !downPaymentError && (!Number.isFinite(loanAmount) || loanAmount <= 0)
-      ? "Loan amount must be greater than zero"
-      : "";
-
-  const isFormValid =
-    createPropertyPrice &&
-    createDownPayment &&
-    createStartDate &&
-    createAmortization &&
-    Number.isFinite(propertyPrice) &&
-    Number.isFinite(downPayment) &&
-    Number.isFinite(loanAmount) &&
-    !propertyPriceError &&
-    !downPaymentError &&
-    !loanAmountError;
-
+  // Core data hooks
   const { mortgage, terms, payments, isLoading } = useMortgageData(selectedMortgageId);
   const { primeRate, setPrimeRate, primeRateData, isPrimeRateLoading, refetchPrimeRate } = usePrimeRate();
   
-  // Use mortgages from context instead of fetching again
+  // Use mortgages from context
   const mortgages = contextMortgages;
 
-  // Use extracted computed hook
+  // Computed values (extracted hook)
   const computed = useMortgageComputed({
     mortgage,
     terms,
@@ -138,88 +67,16 @@ export function useMortgageTrackingState() {
     monthsRemainingInTerm,
   } = computed;
 
-  useEffect(() => {
-    if (!primeRateData?.primeRate) return;
-    const latestPrime = primeRateData.primeRate.toString();
-    if (isCreateMortgageOpen && createTermType !== "fixed") {
-      setCreatePrimeRate(latestPrime);
-    }
-    if (isTermRenewalOpen && renewalTermType !== "fixed") {
-      setRenewalPrime(latestPrime);
-    }
-    if (isEditTermOpen && editTermType !== "fixed" && !editTermPrimeRate) {
-      setEditTermPrimeRate(latestPrime);
-    }
-  }, [
-    primeRateData,
-    isCreateMortgageOpen,
-    isTermRenewalOpen,
-    isEditTermOpen,
-    createTermType,
-    renewalTermType,
-    editTermType,
-    editTermPrimeRate,
-  ]);
-
-  const autoCreatePayment = useAutoCreatePayment({
-    loanAmount,
-    amortizationYears: createAmortization,
-    frequency: createFrequency as PaymentFrequency,
-    termType: createTermType as UiTerm["termType"],
-    fixedRateInput: createFixedRate,
-    spreadInput: createSpread,
-    primeInput: createPrimeRate,
-    fallbackPrime: primeRate,
-    startDate: createStartDate,
-    paymentEdited: createPaymentEdited,
-    setPaymentAmount: setCreatePaymentAmount,
-  });
-
-  const autoRenewalPayment = useAutoRenewalPayment({
-    mortgage,
-    currentTerm: uiCurrentTerm,
-    paymentHistory,
-    lastKnownBalance,
-    lastKnownAmortizationMonths,
-    termType: renewalTermType as UiTerm["termType"],
-    renewalRateInput: renewalRate,
-    renewalPrimeInput: renewalPrime,
-    renewalSpreadInput: renewalSpread,
-    fallbackPrime: primeRate,
-    fallbackSpread: uiCurrentTerm?.lockedSpread ?? null,
-    fallbackFixedRate: uiCurrentTerm?.fixedRate ?? null,
-    frequency: renewalPaymentFrequency as PaymentFrequency,
-    paymentEdited: renewalPaymentEdited,
-    setPaymentAmount: setRenewalPaymentAmount,
-  });
-
-  useEffect(() => {
-    if (!isCreateMortgageOpen) {
-      setCreatePaymentEdited(false);
-    }
-  }, [isCreateMortgageOpen]);
-
-  useEffect(() => {
-    if (!isTermRenewalOpen) {
-      setRenewalPaymentEdited(false);
-    }
-  }, [isTermRenewalOpen]);
-
-  // Set up callbacks for mutations hook
-  const handleBackfillReset = () => {
-    setBackfillStartDate("");
-    setBackfillNumberOfPayments("12");
-    setBackfillPaymentAmount("");
-  };
-
-  // Use extracted mutations hook
+  // Mutations (extracted hook)
   const mutations = useMortgageMutations({
     mortgage,
     uiCurrentTerm,
     onDialogClose: () => setIsDialogOpen(false),
     onTermRenewalDialogClose: () => setIsTermRenewalOpen(false),
     onBackfillDialogClose: () => setIsBackfillOpen(false),
-    onBackfillReset: handleBackfillReset,
+    onBackfillReset: () => {
+      // Reset handled by form hook
+    },
     onEditMortgageDialogClose: () => setIsEditMortgageOpen(false),
     onEditTermDialogClose: () => setIsEditTermOpen(false),
   });
@@ -232,326 +89,61 @@ export function useMortgageTrackingState() {
     updateTermMutation,
   } = mutations;
 
-  const isStep2Valid = () => {
-    const paymentValid = Boolean(createPaymentAmount) && parseFloat(createPaymentAmount) > 0;
-    if (createTermType === "fixed") {
-      const fixedRateValid = Boolean(createFixedRate) && parseFloat(createFixedRate) > 0;
-      return paymentValid && fixedRateValid;
-    }
-    const spreadProvided = createSpread.trim() !== "";
-    return paymentValid && spreadProvided;
-  };
-
-  const createMortgageWithTerm = async () => {
-    if (!isStep2Valid()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in all required term details",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsCreatingMortgage(true);
-    let newMortgageId: string | null = null;
-
-    try {
-      const originalAmount = loanAmount;
-      const termYears = Number(createTermYears) || 5;
-      const termStartDate = createStartDate;
-      const termEndDate = new Date(termStartDate);
-      termEndDate.setFullYear(termEndDate.getFullYear() + termYears);
-
-      const newMortgage = await mortgageApi.createMortgage({
-        propertyPrice: propertyPrice.toString(),
-        downPayment: downPayment.toString(),
-        originalAmount: originalAmount.toString(),
-        currentBalance: originalAmount.toString(),
-        startDate: createStartDate,
-        amortizationYears: parseInt(createAmortization),
-        amortizationMonths: 0,
-        paymentFrequency: createFrequency,
-        annualPrepaymentLimitPercent: 20,
-      });
-      newMortgageId = newMortgage.id;
-
-      await mortgageApi.createTerm(newMortgage.id, {
-        termType: createTermType,
-        startDate: termStartDate,
-        endDate: termEndDate.toISOString().split("T")[0],
-        termYears,
-        fixedRate: createTermType === "fixed" ? createFixedRate : undefined,
-        lockedSpread: createTermType !== "fixed" ? createSpread : "0",
-        primeRate: createTermType !== "fixed" ? createPrimeRate : undefined,
-        paymentFrequency: createFrequency,
-        regularPaymentAmount: createPaymentAmount,
-      });
-
-      queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.mortgages() });
-      // Auto-select the newly created mortgage
-      if (newMortgageId) {
-        setSelectedMortgageId(newMortgageId);
-      }
-      toast({
-        title: "Mortgage created",
-        description: "Your mortgage and initial term have been set up successfully",
-      });
-
-      setIsCreateMortgageOpen(false);
-      setWizardStep(1);
-      setCreatePropertyPrice("");
-      setCreateDownPayment("");
-      setCreateStartDate("");
-      setCreateAmortization("25");
-      setCreateFrequency("monthly");
-      setCreateTermType("variable-fixed");
-      setCreateTermYears("5");
-      setCreateFixedRate("");
-      setCreateSpread("-0.80");
-      setCreatePaymentAmount("");
-    } catch (error: any) {
-      if (newMortgageId) {
-        queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.mortgages() });
-        toast({
-          title: "Term creation failed",
-          description: "Mortgage was created but term setup failed. Please create a term manually.",
-          variant: "destructive",
-        });
-        setIsCreateMortgageOpen(false);
-        setWizardStep(1);
-      } else {
-        toast({
-          title: "Error",
-          description: error.message || "Failed to create mortgage",
-          variant: "destructive",
-        });
-      }
-    } finally {
-      setIsCreatingMortgage(false);
-    }
-  };
-
-  const formatAmortization = (years: number): string => {
-    const wholeYears = Math.floor(years);
-    const months = Math.round((years - wholeYears) * 12);
-    if (months === 0) {
-      return `${wholeYears} yr`;
-    }
-    if (wholeYears === 0) {
-      return `${months} mo`;
-    }
-    return `${wholeYears} yr ${months} mo`;
-  };
-
-  useEffect(() => {
-    if (isEditMortgageOpen && mortgage) {
-      setEditPropertyPrice(mortgage.propertyPrice || "");
-      setEditCurrentBalance(mortgage.currentBalance || "");
-      setEditPaymentFrequency(mortgage.paymentFrequency || "");
-    }
-  }, [isEditMortgageOpen, mortgage]);
-
-  useEffect(() => {
-    if (isEditTermOpen && terms && terms.length > 0) {
-      const currentTerm = terms[terms.length - 1];
-      setEditTermType(currentTerm.termType || "");
-      setEditTermStartDate(currentTerm.startDate || "");
-      setEditTermEndDate(currentTerm.endDate || "");
-      setEditTermPaymentFrequency(currentTerm.paymentFrequency || "");
-      setEditTermPaymentAmount(currentTerm.regularPaymentAmount || "");
-
-      if (currentTerm.termType === "fixed") {
-        setEditTermFixedRate(currentTerm.fixedRate || "");
-        setEditTermSpread("");
-        setEditTermPrimeRate("");
-      } else {
-        setEditTermFixedRate("");
-        setEditTermSpread(currentTerm.lockedSpread || "");
-        const primeSnapshot = currentTerm.primeRate
-          ? currentTerm.primeRate
-          : primeRateData?.primeRate
-            ? primeRateData.primeRate.toString()
-            : "";
-        setEditTermPrimeRate(primeSnapshot);
-      }
-
-      if (currentTerm.startDate && currentTerm.endDate) {
-        const start = new Date(currentTerm.startDate);
-        const end = new Date(currentTerm.endDate);
-        const years = Math.round((end.getTime() - start.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
-        setEditTermYears(years.toString());
-      }
-    }
-  }, [isEditTermOpen, terms, primeRateData]);
-
-  const handleTermRenewal = () => {
-    const termYears = Number(renewalTermYears) || 5;
-    const startDate = renewalStartDate || uiCurrentTerm?.endDate || new Date().toISOString().split("T")[0];
-    const endDate = new Date(startDate);
-    endDate.setFullYear(endDate.getFullYear() + termYears);
-
-    if (renewalTermType.startsWith("variable") && renewalPrime) {
-      setPrimeRate(renewalPrime);
-    }
-
-    createTermMutation.mutate({
-      termType: renewalTermType,
-      startDate,
-      endDate: endDate.toISOString().split("T")[0],
-      termYears,
-      fixedRate: renewalTermType === "fixed" ? renewalRate : undefined,
-      lockedSpread: renewalTermType.startsWith("variable") ? renewalSpread : undefined,
-      primeRate: renewalTermType.startsWith("variable") ? (renewalPrime || primeRate) : undefined,
-      paymentFrequency: renewalPaymentFrequency,
-      regularPaymentAmount: renewalPaymentAmount,
-    });
-  };
-
-  const previewBackfillEndDate = useMemo(() => {
-    if (!backfillStartDate || !uiCurrentTerm) return "";
-    const total = parseInt(backfillNumberOfPayments, 10);
-    if (!total || total <= 0) return "";
-    let date = new Date(backfillStartDate);
-    for (let i = 1; i < total; i++) {
-      date = advancePaymentDate(date, uiCurrentTerm.paymentFrequency as PaymentFrequency);
-    }
-    return date.toISOString().split("T")[0];
-  }, [backfillStartDate, backfillNumberOfPayments, uiCurrentTerm]);
-
   return {
+    // Mortgage selection
     selectedMortgageId,
     setSelectedMortgageId,
+    
+    // Dialog states
     isDialogOpen,
     setIsDialogOpen,
     isTermRenewalOpen,
     setIsTermRenewalOpen,
     isBackfillOpen,
     setIsBackfillOpen,
-    filterYear,
-    setFilterYear,
-    backfillStartDate,
-    setBackfillStartDate,
-    backfillNumberOfPayments,
-    setBackfillNumberOfPayments,
-    backfillPaymentAmount,
-    setBackfillPaymentAmount,
-    renewalTermType,
-    setRenewalTermType,
-    renewalPaymentFrequency,
-    setRenewalPaymentFrequency,
-    renewalRate,
-    setRenewalRate,
-    renewalSpread,
-    setRenewalSpread,
-    renewalPrime,
-    setRenewalPrime,
-    renewalTermYears,
-    setRenewalTermYears,
-    renewalStartDate,
-    setRenewalStartDate,
-    renewalPaymentAmount,
-    setRenewalPaymentAmount,
-    createPaymentEdited,
-    setCreatePaymentEdited,
-    renewalPaymentEdited,
-    setRenewalPaymentEdited,
-    isCreateMortgageOpen,
-    setIsCreateMortgageOpen,
-    wizardStep,
-    setWizardStep,
-    createPropertyPrice,
-    setCreatePropertyPrice,
-    createDownPayment,
-    setCreateDownPayment,
-    createStartDate,
-    setCreateStartDate,
-    createAmortization,
-    setCreateAmortization,
-    createFrequency,
-    setCreateFrequency,
-    createTermType,
-    setCreateTermType,
-    createTermYears,
-    setCreateTermYears,
-    createFixedRate,
-    setCreateFixedRate,
-    createPrimeRate,
-    setCreatePrimeRate,
-    createSpread,
-    setCreateSpread,
-    createPaymentAmount,
-    setCreatePaymentAmount,
-    isCreatingMortgage,
-    setIsCreatingMortgage,
     isEditMortgageOpen,
     setIsEditMortgageOpen,
-    editPropertyPrice,
-    setEditPropertyPrice,
-    editCurrentBalance,
-    setEditCurrentBalance,
-    editPaymentFrequency,
-    setEditPaymentFrequency,
     isEditTermOpen,
     setIsEditTermOpen,
-    editTermType,
-    setEditTermType,
-    editTermStartDate,
-    setEditTermStartDate,
-    editTermEndDate,
-    setEditTermEndDate,
-    editTermYears,
-    setEditTermYears,
-    editTermPaymentFrequency,
-    setEditTermPaymentFrequency,
-    editTermPaymentAmount,
-    setEditTermPaymentAmount,
-    editTermFixedRate,
-    setEditTermFixedRate,
-    editTermPrimeRate,
-    setEditTermPrimeRate,
-    editTermSpread,
-    setEditTermSpread,
-    propertyPrice,
-    downPayment,
-    propertyPriceError,
-    downPaymentError,
-    loanAmount,
-    loanAmountError,
-    isFormValid,
+    
+    // Payment history filter
+    filterYear,
+    setFilterYear,
+    
+    // Core data
     mortgages,
     mortgage,
     terms,
     payments,
     isLoading,
+    
+    // Prime rate
     primeRate,
     setPrimeRate,
     primeRateData,
     isPrimeRateLoading,
     refetchPrimeRate,
+    
+    // Computed values
     uiCurrentTerm,
     paymentHistory,
     lastKnownBalance,
     lastKnownAmortizationMonths,
-    autoCreatePayment,
-    autoRenewalPayment,
-    createPaymentMutation,
-    createTermMutation,
-    backfillPaymentsMutation,
-    deletePaymentMutation,
-    formatAmortization,
-    editMortgageMutation,
-    updateTermMutation,
-    handleTermRenewal,
-    createMortgageWithTerm,
-    isStep2Valid,
     currentPrimeRateValue,
     currentEffectiveRate,
-    previewBackfillEndDate,
     summaryStats,
     filteredPayments,
     availableYears,
     effectiveRate,
     monthsRemainingInTerm,
+    
+    // Mutations
+    createPaymentMutation,
+    createTermMutation,
+    backfillPaymentsMutation,
+    deletePaymentMutation,
+    editMortgageMutation,
+    updateTermMutation,
   };
 }
 
