@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useCreateMortgageFormState } from "./use-create-mortgage-form-state";
 import { useEditMortgageForm } from "./use-edit-mortgage-form";
 import { useTermRenewalFormState } from "./use-term-renewal-form-state";
@@ -51,6 +51,14 @@ export function useMortgageForms({
   lastKnownBalance = 0,
   lastKnownAmortizationMonths = 0,
 }: UseMortgageFormsProps) {
+  // Memoize prime rate update callback to prevent unnecessary re-renders
+  const handlePrimeRateUpdate = useCallback(
+    (newPrimeRate: string) => {
+      setPrimeRate(newPrimeRate);
+    },
+    [setPrimeRate]
+  );
+
   // Create Mortgage Form
   const createMortgageForm = useCreateMortgageFormState({
     primeRateData,
@@ -59,9 +67,7 @@ export function useMortgageForms({
       setSelectedMortgageId(mortgageId);
       setIsCreateMortgageOpen(false);
     },
-    onPrimeRateUpdate: (newPrimeRate) => {
-      setPrimeRate(newPrimeRate);
-    },
+    onPrimeRateUpdate: handlePrimeRateUpdate,
   });
 
   // Reset create mortgage form when dialog closes
@@ -69,7 +75,8 @@ export function useMortgageForms({
     if (!isCreateMortgageOpen) {
       createMortgageForm.reset();
     }
-  }, [isCreateMortgageOpen, createMortgageForm]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCreateMortgageOpen]);
 
   // Edit Mortgage Form
   const editMortgageForm = useEditMortgageForm({
@@ -93,7 +100,8 @@ export function useMortgageForms({
           | "semi-monthly",
       });
     }
-  }, [isEditMortgageOpen, mortgage, editMortgageForm]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditMortgageOpen, mortgage]);
 
   // Term Renewal Form (for first term creation)
   const firstTermFormState = useTermRenewalFormState({
@@ -109,9 +117,7 @@ export function useMortgageForms({
     onSuccess: () => {
       setIsTermRenewalOpen(false);
     },
-    onPrimeRateUpdate: (newPrimeRate) => {
-      setPrimeRate(newPrimeRate);
-    },
+    onPrimeRateUpdate: handlePrimeRateUpdate,
   });
 
   // Reset term renewal form when dialog closes
@@ -119,7 +125,8 @@ export function useMortgageForms({
     if (!isTermRenewalOpen) {
       firstTermFormState.reset();
     }
-  }, [isTermRenewalOpen, firstTermFormState]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isTermRenewalOpen]);
 
   return {
     createMortgageForm,

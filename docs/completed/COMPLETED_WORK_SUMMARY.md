@@ -45,7 +45,7 @@ Large hooks broken down into focused, reusable pieces.
 - **`use-mortgage-dialog-handlers.ts`** - Dialog handlers
 
 **Result:**
-- `use-mortgage-tracking-state.ts`: 707 → 520 lines (26% reduction)
+- `use-mortgage-tracking-state.ts`: 558 → 149 lines (73% reduction)
 - Better organization and maintainability
 - Improved testability (smaller, focused hooks)
 
@@ -58,7 +58,8 @@ Large components simplified by extracting concerns.
 ### Refactored Components
 
 - **`mortgage-feature.tsx`** - Extracted forms, handlers, and components
-  - Before: 494 lines → After: 369 lines (25% reduction)
+  - Before: 364 lines → After: 221 lines (39% reduction)
+- **`MortgageContent` component** - Extracted main content rendering (281 lines)
 - **`no-term-state.tsx`** - Extracted "No Term" state component
 
 **Benefits:**
@@ -88,10 +89,10 @@ Large components simplified by extracting concerns.
 ## 📊 Overall Impact
 
 ### Code Reduction
-- **Hooks:** ~330 lines extracted into focused hooks
-- **Components:** ~125 lines removed from main component
+- **Hooks:** 409 lines removed from `use-mortgage-tracking-state.ts` (73% reduction)
+- **Components:** 143 lines removed from `mortgage-feature.tsx` (39% reduction)
 - **Forms:** ~50+ useState calls replaced with React Hook Form
-- **Total:** ~455+ lines of code reorganized
+- **Total:** ~550+ lines of code reorganized and simplified
 
 ### Quality Improvements
 - ✅ Consistent form handling (React Hook Form + Zod)

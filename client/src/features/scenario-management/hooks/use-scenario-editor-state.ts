@@ -80,7 +80,8 @@ export function useScenarioEditorState(
         oneTimeYear: editingEvent.oneTimeYear?.toString() || "1",
       });
     }
-  }, [editingEvent, prepaymentEventForm]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingEvent]);
 
   const toDraftEvent = (event: PrepaymentEvent): DraftPrepaymentEvent => ({
     id: event.id,

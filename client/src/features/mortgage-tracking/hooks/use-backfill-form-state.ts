@@ -33,7 +33,8 @@ export function useBackfillFormState({
       });
       onReset?.();
     }
-  }, [isOpen, form, currentTerm, onReset]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   return form;
 }

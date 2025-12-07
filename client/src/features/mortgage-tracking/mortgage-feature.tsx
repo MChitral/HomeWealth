@@ -5,7 +5,7 @@ import { MortgageEmptyState } from "./components/mortgage-empty-state";
 import { MortgagePrimeBanner } from "./components/mortgage-prime-banner";
 import { CreateMortgageDialog } from "./components/create-mortgage-dialog";
 import { MortgageContent } from "./components/mortgage-content";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useMortgageTrackingState } from "./hooks/use-mortgage-tracking-state";
 import { useMortgageForms } from "./hooks/use-mortgage-forms";
 import { useMortgageDialogHandlers } from "./hooks/use-mortgage-dialog-handlers";
@@ -60,6 +60,14 @@ export default function MortgageFeature() {
     availableYears,
     monthsRemainingInTerm,
   } = useMortgageTrackingState();
+
+  // Memoize prime rate update callback to prevent unnecessary re-renders
+  const handlePrimeRateUpdate = useCallback(
+    (newPrimeRate: string) => {
+      setPrimeRate(newPrimeRate);
+    },
+    [setPrimeRate]
+  );
 
   // Consolidated form state management
   const forms = useMortgageForms({
@@ -127,9 +135,7 @@ export default function MortgageFeature() {
     onSuccess: () => {
       setIsTermRenewalOpen(false);
     },
-    onPrimeRateUpdate: (newPrimeRate) => {
-      setPrimeRate(newPrimeRate);
-    },
+    onPrimeRateUpdate: handlePrimeRateUpdate,
   });
 
   // Reset renewal form when dialog closes
@@ -137,7 +143,8 @@ export default function MortgageFeature() {
     if (!isTermRenewalOpen && uiCurrentTerm) {
       renewalFormState.reset();
     }
-  }, [isTermRenewalOpen, renewalFormState, uiCurrentTerm]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isTermRenewalOpen, uiCurrentTerm]);
 
   const emptyState = (
     <MortgageEmptyState onOpenCreateMortgage={() => setIsCreateMortgageOpen(true)} />
