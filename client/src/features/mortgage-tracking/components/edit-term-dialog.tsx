@@ -33,7 +33,7 @@ interface EditTermDialogProps {
   isValid: boolean;
   primeRateData?: PrimeRateResponse;
   isPrimeRateLoading: boolean;
-  refetchPrimeRate: () => Promise<any>;
+  refetchPrimeRate: () => Promise<any> | void;
 }
 
 /**
@@ -46,7 +46,7 @@ function EditTermFormFields({
 }: {
   primeRateData?: PrimeRateResponse;
   isPrimeRateLoading: boolean;
-  refetchPrimeRate: () => Promise<any>;
+  refetchPrimeRate: () => Promise<any> | void;
 }) {
   const { control, watch, setValue } = useFormContext<EditTermFormData>();
   const termType = watch("termType");

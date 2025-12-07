@@ -21,7 +21,7 @@ interface MortgageContentProps {
   mortgage: Mortgage | null;
   mortgages: Mortgage[];
   selectedMortgageId: string | null;
-  setSelectedMortgageId: (id: string) => void;
+  setSelectedMortgageId: (id: string | null) => void;
   uiCurrentTerm: UiTerm | null;
   primeBanner: React.ReactNode;
   handleExport: () => void;
@@ -69,7 +69,7 @@ interface MortgageContentProps {
   // Data
   primeRateData?: PrimeRateResponse;
   isPrimeRateLoading: boolean;
-  refetchPrimeRate: () => void;
+  refetchPrimeRate: () => Promise<any> | void;
   currentPrimeRateValue: number;
   currentEffectiveRate: number;
   monthsRemainingInTerm: number;
@@ -243,7 +243,7 @@ export function MortgageContent({
         editTermIsSubmitting={editTermFormState.updateTermMutation.isPending}
         editTermIsValid={editTermFormState.isValid}
         isTermRenewalOpen={isTermRenewalOpen}
-        setIsTermRenewalOpen={setIsTermRenewalOpen}
+        setIsTermRenewalOpen={onTermRenewalDialogOpenChange}
         renewalForm={renewalFormState.form}
         renewalOnSubmit={renewalFormState.handleSubmit}
         renewalIsSubmitting={renewalFormState.createTermMutation.isPending}

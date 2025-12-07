@@ -6,42 +6,40 @@ import type { CashFlow } from "@shared/schema";
 
 /**
  * Zod schema for cash flow form validation
+ * Helper to transform string/number inputs to numbers with min(0) validation
  */
-/**
- * Helper to transform string/number inputs to numbers
- */
-const numberField = z
-  .union([
-    z.number().min(0),
-    z
-      .string()
-      .transform((val) => (val === "" || val === undefined ? 0 : Number(val)))
-      .refine((val) => !isNaN(val), "Must be a valid number"),
-  ])
-  .transform((val) => (typeof val === "string" ? Number(val) : val));
+const numberField = (errorMessage: string) =>
+  z
+    .union([
+      z.number(),
+      z
+        .string()
+        .transform((val) => (val === "" || val === undefined ? 0 : Number(val))),
+    ])
+    .pipe(z.number().min(0, errorMessage));
 
 export const cashFlowFormSchema = z.object({
   // Income
-  monthlyIncome: numberField.min(0, "Monthly income must be zero or more"),
+  monthlyIncome: numberField("Monthly income must be zero or more"),
   extraPaycheques: z.number().int().min(0).max(12),
-  annualBonus: numberField.min(0, "Annual bonus must be zero or more"),
+  annualBonus: numberField("Annual bonus must be zero or more"),
 
   // Fixed Expenses
-  propertyTax: numberField.min(0, "Property tax must be zero or more"),
-  insurance: numberField.min(0, "Insurance must be zero or more"),
-  condoFees: numberField.min(0, "Condo fees must be zero or more"),
-  utilities: numberField.min(0, "Utilities must be zero or more"),
+  propertyTax: numberField("Property tax must be zero or more"),
+  insurance: numberField("Insurance must be zero or more"),
+  condoFees: numberField("Condo fees must be zero or more"),
+  utilities: numberField("Utilities must be zero or more"),
 
   // Variable Expenses
-  groceries: numberField.min(0, "Groceries must be zero or more"),
-  dining: numberField.min(0, "Dining must be zero or more"),
-  transportation: numberField.min(0, "Transportation must be zero or more"),
-  entertainment: numberField.min(0, "Entertainment must be zero or more"),
+  groceries: numberField("Groceries must be zero or more"),
+  dining: numberField("Dining must be zero or more"),
+  transportation: numberField("Transportation must be zero or more"),
+  entertainment: numberField("Entertainment must be zero or more"),
 
   // Debt
-  carLoan: numberField.min(0, "Car loan must be zero or more"),
-  studentLoan: numberField.min(0, "Student loan must be zero or more"),
-  creditCard: numberField.min(0, "Credit card must be zero or more"),
+  carLoan: numberField("Car loan must be zero or more"),
+  studentLoan: numberField("Student loan must be zero or more"),
+  creditCard: numberField("Credit card must be zero or more"),
 });
 
 export type CashFlowFormData = z.infer<typeof cashFlowFormSchema>;

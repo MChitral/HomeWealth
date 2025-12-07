@@ -38,7 +38,7 @@ interface TermDetailsSectionProps {
   // Prime rate
   primeRateData?: import("../api").PrimeRateResponse;
   isPrimeRateLoading: boolean;
-  refetchPrimeRate: () => Promise<any>;
+  refetchPrimeRate: () => Promise<any> | void;
 }
 
 export function TermDetailsSection({
@@ -51,9 +51,6 @@ export function TermDetailsSection({
   editTermOnSubmit,
   editTermIsSubmitting,
   editTermIsValid,
-  editTermPrimeRateData,
-  editTermIsPrimeRateLoading,
-  editTermRefetchPrimeRate,
   isTermRenewalOpen,
   setIsTermRenewalOpen,
   renewalForm,
@@ -89,9 +86,9 @@ export function TermDetailsSection({
               onSubmit={editTermOnSubmit}
               isSubmitting={editTermIsSubmitting}
               isValid={editTermIsValid}
-              primeRateData={editTermPrimeRateData || primeRateData}
-              isPrimeRateLoading={editTermIsPrimeRateLoading ?? isPrimeRateLoading}
-              refetchPrimeRate={editTermRefetchPrimeRate || refetchPrimeRate}
+              primeRateData={primeRateData}
+              isPrimeRateLoading={isPrimeRateLoading}
+              refetchPrimeRate={refetchPrimeRate}
             />
             <TermRenewalDialog
               open={isTermRenewalOpen}

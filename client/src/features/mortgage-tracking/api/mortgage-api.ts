@@ -73,7 +73,7 @@ export type HistoricalPrimeRatesResponse = {
 export const mortgageQueryKeys = {
   // Base keys
   all: ["mortgages"] as const,
-  primeRate: ["prime-rate"] as const,
+  primeRate: () => ["prime-rate"] as const,
   
   // List queries
   lists: () => [...mortgageQueryKeys.all, "list"] as const,
