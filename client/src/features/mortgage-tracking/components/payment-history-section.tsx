@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Label } from "@/shared/ui/label";
@@ -11,6 +12,16 @@ import {
 } from "@/shared/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { Badge } from "@/shared/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
 import type { UiPayment } from "../types";
 import type { UseMutationResult } from "@tanstack/react-query";
@@ -32,6 +43,16 @@ export function PaymentHistorySection({
   formatAmortization,
   deletePaymentMutation,
 }: PaymentHistorySectionProps) {
+  const [paymentToDelete, setPaymentToDelete] = useState<{ id: string; date: string } | null>(null);
+
+  const handleDeleteConfirm = () => {
+    if (paymentToDelete) {
+      const idToDelete = paymentToDelete.id;
+      setPaymentToDelete(null);
+      deletePaymentMutation.mutate(idToDelete);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -133,7 +154,7 @@ export function PaymentHistorySection({
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                        onClick={() => deletePaymentMutation.mutate(payment.id)}
+                        onClick={() => setPaymentToDelete({ id: payment.id, date: payment.date })}
                         disabled={deletePaymentMutation.isPending}
                         data-testid={`button-delete-payment-${payment.id}`}
                       >
@@ -146,6 +167,28 @@ export function PaymentHistorySection({
             </TableBody>
           </Table>
         </div>
+
+        <AlertDialog open={!!paymentToDelete} onOpenChange={(open) => !open && setPaymentToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Payment</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this payment from {paymentToDelete?.date}?
+                This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                data-testid="button-confirm-delete"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardContent>
     </Card>
   );

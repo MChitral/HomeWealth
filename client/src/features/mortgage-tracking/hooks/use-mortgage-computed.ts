@@ -43,8 +43,8 @@ export function useMortgageComputed({
 
   const currentEffectiveRate = uiCurrentTerm
     ? uiCurrentTerm.termType === "fixed" && uiCurrentTerm.fixedRate
-      ? uiCurrentTerm.fixedRate
-      : currentPrimeRateValue + (uiCurrentTerm.lockedSpread || 0)
+      ? Math.round(uiCurrentTerm.fixedRate * 100) / 100
+      : Math.round((currentPrimeRateValue + (uiCurrentTerm.lockedSpread || 0)) * 100) / 100
     : 0;
 
   const summaryStats = useMemo(

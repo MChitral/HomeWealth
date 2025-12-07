@@ -15,10 +15,13 @@ export function sendError(
   
   if (error) {
     const sanitized = sanitizeError(error, isDevelopment);
-    res.status(status).json({
+    const response: { error: string; details?: unknown } = {
       error: sanitized.message || message,
-      ...(sanitized.details && { details: sanitized.details }),
-    });
+    };
+    if (sanitized.details) {
+      response.details = sanitized.details;
+    }
+    res.status(status).json(response);
   } else {
     res.status(status).json({ error: message });
   }
