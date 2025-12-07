@@ -72,7 +72,7 @@ export function useScenarioEditorState(
   // Sync form when editingEvent changes
   useEffect(() => {
     if (editingEvent) {
-      prepaymentEventForm.reset({
+      prepaymentEventForm.form.reset({
         eventType: editingEvent.eventType,
         amount: editingEvent.amount || "",
         description: editingEvent.description || "",
@@ -97,7 +97,7 @@ export function useScenarioEditorState(
     const prepaymentPercent = prepaymentSplit?.[0] ?? 50;
     return {
       name: name.trim(),
-      description: description.trim() || null,
+      description: description?.trim() || null,
       prepaymentMonthlyPercent: prepaymentPercent,
       investmentMonthlyPercent: 100 - prepaymentPercent,
       expectedReturnRate: Number(parseFloat(expectedReturnRate.toString()).toFixed(3)),
@@ -312,7 +312,7 @@ export function useScenarioEditorState(
     setIsAddingEvent,
     setEditingEvent,
     // React Hook Form for prepayment event
-    prepaymentEventForm,
+    prepaymentEventForm: prepaymentEventForm.form,
     // Actions
     handleSave,
     saveMutation,

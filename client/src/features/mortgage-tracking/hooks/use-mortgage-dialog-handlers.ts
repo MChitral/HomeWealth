@@ -1,11 +1,13 @@
 import type { UseFormReturn } from "react-hook-form";
+import type { EditMortgageFormData } from "./use-edit-mortgage-form";
+import type { CreateMortgageFormData } from "./use-create-mortgage-form";
 
 interface UseMortgageDialogHandlersProps {
   setIsCreateMortgageOpen: (open: boolean) => void;
   setIsEditMortgageOpen: (open: boolean) => void;
   setIsTermRenewalOpen: (open: boolean) => void;
-  editMortgageForm: UseFormReturn<any>;
-  createMortgageForm: UseFormReturn<any>;
+  editMortgageForm: UseFormReturn<EditMortgageFormData>;
+  createMortgageForm: UseFormReturn<CreateMortgageFormData>;
   firstTermFormState: {
     reset: () => void;
   };

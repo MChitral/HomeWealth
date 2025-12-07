@@ -6,6 +6,8 @@ import type {
 import type { ScenarioWithMetrics } from "@/entities";
 import { apiRequest } from "@/shared/api/query-client";
 
+export type { InsertPrepaymentEvent };
+
 export type ScenarioPayload = {
   name: string;
   description: string | null;

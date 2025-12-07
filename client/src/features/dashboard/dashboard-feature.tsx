@@ -5,7 +5,7 @@ import { Button } from "@/shared/ui/button";
 import { PageHeader } from "@/shared/ui/page-header";
 import { usePageTitle } from "@/shared/hooks/use-page-title";
 import { Separator } from "@/shared/ui/separator";
-import { useMortgageSelection } from "@/shared/contexts/mortgage-selection-context";
+import { useMortgageSelection } from "@/features/mortgage-tracking";
 import { MortgageSelector } from "@/features/mortgage-tracking/components/mortgage-selector";
 import { useDashboardData, useDashboardCalculations, useDashboardCharts } from "./hooks";
 import { useMortgageData } from "@/features/mortgage-tracking/hooks";

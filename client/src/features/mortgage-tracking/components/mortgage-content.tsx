@@ -6,6 +6,10 @@ import type { UseMutationResult } from "@tanstack/react-query";
 import type { PrimeRateResponse } from "../api";
 import type { UiTerm, UiPayment } from "../types";
 import type { EditMortgageFormData } from "../hooks/use-edit-mortgage-form";
+import type { CreateMortgageFormData } from "../hooks/use-create-mortgage-form";
+import type { BackfillFormData } from "../hooks/use-backfill-form";
+import type { EditTermFormData } from "../hooks/use-edit-term-form";
+import type { TermRenewalFormData } from "../hooks/use-term-renewal-form";
 import { MortgageHeader } from "./mortgage-header";
 import { NoTermState } from "./no-term-state";
 import { EditMortgageDialog } from "./edit-mortgage-dialog";
@@ -40,7 +44,7 @@ interface MortgageContentProps {
   // Form states
   editMortgageForm: UseFormReturn<EditMortgageFormData>;
   firstTermFormState: {
-    form: UseFormReturn<any>;
+    form: UseFormReturn<CreateMortgageFormData>;
     isValid: boolean;
     autoPayment: string;
     paymentEdited: boolean;
@@ -49,15 +53,15 @@ interface MortgageContentProps {
     handleSubmit: () => void;
     createTermMutation: UseMutationResult<any, Error, any, unknown>;
   };
-  backfillForm: UseFormReturn<any>;
+  backfillForm: UseFormReturn<BackfillFormData>;
   editTermFormState: {
-    form: UseFormReturn<any>;
+    form: UseFormReturn<EditTermFormData>;
     handleSubmit: () => void;
     updateTermMutation: UseMutationResult<any, Error, any, unknown>;
     isValid: boolean;
   };
   renewalFormState: {
-    form: UseFormReturn<any>;
+    form: UseFormReturn<TermRenewalFormData>;
     handleSubmit: () => void;
     createTermMutation: UseMutationResult<any, Error, any, unknown>;
     isValid: boolean;
@@ -90,7 +94,7 @@ interface MortgageContentProps {
   availableYears: number[];
   filterYear: string;
   onFilterYearChange: (year: string) => void;
-  // Mutations
+  // Mutations - keeping any for complex prop-drilled mutations
   createPaymentMutation: UseMutationResult<any, Error, any, unknown>;
   backfillPaymentsMutation: UseMutationResult<any, Error, any, unknown>;
   deletePaymentMutation: UseMutationResult<any, Error, any, unknown>;

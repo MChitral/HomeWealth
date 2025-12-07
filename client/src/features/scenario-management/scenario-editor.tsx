@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/shared/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Info } from "lucide-react";
-import { useMortgageSelection } from "@/shared/contexts/mortgage-selection-context";
+import { useMortgageSelection } from "@/features/mortgage-tracking";
 import { MortgageSelector } from "@/features/mortgage-tracking/components/mortgage-selector";
 import type { PaymentFrequency } from "@/features/mortgage-tracking/utils/mortgage-math";
 import { useScenarioDetail, useScenarioEditorState, useScenarioEditorCalculations, useScenarioEditorProjections } from "./hooks";

@@ -67,28 +67,23 @@ export type HistoricalPrimeRatesResponse = {
 };
 
 /**
- * ✅ Hierarchical query keys for better cache invalidation
- * Enables invalidating all mortgage-related queries at once
+ * Query keys for mortgage-related queries
+ * Uses hierarchical structure for proper cache invalidation
  */
 export const mortgageQueryKeys = {
-  // Base keys
-  all: ["mortgages"] as const,
+  // Base key for all mortgage queries
+  all: ["/api/mortgages"] as const,
+  
+  // Prime rate key (separate from mortgage hierarchy)
   primeRate: () => ["prime-rate"] as const,
   
-  // List queries
-  lists: () => [...mortgageQueryKeys.all, "list"] as const,
-  
-  // Detail queries
-  details: () => [...mortgageQueryKeys.all, "detail"] as const,
-  detail: (id: string | null) => [...mortgageQueryKeys.details(), id] as const,
-  
-  // Related data queries
-  terms: (id: string | null) => [...mortgageQueryKeys.detail(id), "terms"] as const,
-  payments: (id: string | null) => [...mortgageQueryKeys.detail(id), "payments"] as const,
-  
-  // Legacy keys for backward compatibility (can be removed after migration)
+  // List of all mortgages
   mortgages: () => ["/api/mortgages"] as const,
+  
+  // Terms for a specific mortgage
   mortgageTerms: (mortgageId: string | null) => ["/api/mortgages", mortgageId, "terms"] as const,
+  
+  // Payments for a specific mortgage
   mortgagePayments: (mortgageId: string | null) => ["/api/mortgages", mortgageId, "payments"] as const,
 };
 

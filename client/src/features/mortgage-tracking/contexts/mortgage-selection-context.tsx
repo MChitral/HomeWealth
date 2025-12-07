@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Mortgage } from "@shared/schema";
-import { mortgageApi, mortgageQueryKeys } from "@/features/mortgage-tracking/api";
+import { mortgageApi, mortgageQueryKeys } from "../api";
 
 const STORAGE_KEY = "selectedMortgageId";
 
@@ -17,7 +17,6 @@ const MortgageSelectionContext = createContext<MortgageSelectionContextValue | u
 
 export function MortgageSelectionProvider({ children }: { children: React.ReactNode }) {
   const [selectedMortgageId, setSelectedMortgageIdState] = useState<string | null>(() => {
-    // Initialize from localStorage
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem(STORAGE_KEY);
       return stored || null;
@@ -33,7 +32,6 @@ export function MortgageSelectionProvider({ children }: { children: React.ReactN
     queryFn: mortgageApi.fetchMortgages,
   });
 
-  // Persist to localStorage whenever selection changes
   useEffect(() => {
     if (selectedMortgageId) {
       localStorage.setItem(STORAGE_KEY, selectedMortgageId);
@@ -42,14 +40,12 @@ export function MortgageSelectionProvider({ children }: { children: React.ReactN
     }
   }, [selectedMortgageId]);
 
-  // Auto-select first mortgage if none selected and mortgages are available
   useEffect(() => {
     if (mortgages.length === 0) {
       setSelectedMortgageIdState(null);
       return;
     }
 
-    // If no selection or selected mortgage doesn't exist, select first
     if (!selectedMortgageId || !mortgages.some((m) => m.id === selectedMortgageId)) {
       setSelectedMortgageIdState(mortgages[0].id);
     }
@@ -83,4 +79,3 @@ export function useMortgageSelection() {
   }
   return context;
 }
-
