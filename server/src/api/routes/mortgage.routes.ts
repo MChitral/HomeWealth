@@ -8,10 +8,12 @@ import {
   mortgagePaymentCreateSchema,
 } from "@domain/models";
 import { requireUser } from "@api/utils/auth";
+import { sendError } from "@server-shared/utils/api-response";
 import {
   generateAmortizationSchedule,
   generateAmortizationScheduleWithPayment,
   calculatePayment,
+  getPaymentsPerYear,
   type PaymentFrequency,
   type PrepaymentEvent as CalcPrepaymentEvent,
   type TermRenewal,
@@ -120,7 +122,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
     const mortgage = await services.mortgages.getByIdForUser(req.params.id, user.id);
     if (!mortgage) {
-      res.status(404).json({ error: "Mortgage not found" });
+      sendError(res, 404, "Mortgage not found");
       return;
     }
     res.json(mortgage);
@@ -136,7 +138,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       const created = await services.mortgages.create(user.id, payload);
       res.json(created);
     } catch (error) {
-      res.status(400).json({ error: "Invalid mortgage data", details: error });
+      sendError(res, 400, "Invalid mortgage data", error);
     }
   });
 
@@ -148,12 +150,12 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       const data = mortgageUpdateSchema.parse(req.body);
       const updated = await services.mortgages.update(req.params.id, user.id, data);
       if (!updated) {
-        res.status(404).json({ error: "Mortgage not found" });
+        sendError(res, 404, "Mortgage not found");
         return;
       }
       res.json(updated);
     } catch (error) {
-      res.status(400).json({ error: "Invalid update data", details: error });
+      sendError(res, 400, "Invalid update data", error);
     }
   });
 
@@ -163,7 +165,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
     const deleted = await services.mortgages.delete(req.params.id, user.id);
     if (!deleted) {
-      res.status(404).json({ error: "Mortgage not found" });
+      sendError(res, 404, "Mortgage not found");
       return;
     }
     res.json({ success: true });
@@ -175,7 +177,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
     const terms = await services.mortgageTerms.listForMortgage(req.params.mortgageId, user.id);
     if (!terms) {
-      res.status(404).json({ error: "Mortgage not found" });
+      sendError(res, 404, "Mortgage not found");
       return;
     }
     res.json(terms);
@@ -194,13 +196,12 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       const { mortgageId, ...payload } = data;
       const term = await services.mortgageTerms.create(req.params.mortgageId, user.id, payload);
       if (!term) {
-        res.status(404).json({ error: "Mortgage not found" });
+        sendError(res, 404, "Mortgage not found");
         return;
       }
       res.json(term);
     } catch (error) {
-      const message = error instanceof Error ? error.message : error;
-      res.status(400).json({ error: "Invalid term data", details: message });
+      sendError(res, 400, "Invalid term data", error);
     }
   });
 
@@ -213,13 +214,12 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       const data = mortgageTermUpdateSchema.parse(requestWithPrime);
       const updated = await services.mortgageTerms.update(req.params.id, user.id, data);
       if (!updated) {
-        res.status(404).json({ error: "Term not found" });
+        sendError(res, 404, "Term not found");
         return;
       }
       res.json(updated);
     } catch (error) {
-      const message = error instanceof Error ? error.message : error;
-      res.status(400).json({ error: "Invalid update data", details: message });
+      sendError(res, 400, "Invalid update data", error);
     }
   });
 
@@ -229,7 +229,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
     const deleted = await services.mortgageTerms.delete(req.params.id, user.id);
     if (!deleted) {
-      res.status(404).json({ error: "Term not found" });
+      sendError(res, 404, "Term not found");
       return;
     }
     res.json({ success: true });
@@ -241,7 +241,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
     const payments = await services.mortgagePayments.listByMortgage(req.params.mortgageId, user.id);
     if (!payments) {
-      res.status(404).json({ error: "Mortgage not found" });
+      sendError(res, 404, "Mortgage not found");
       return;
     }
     res.json(payments);
@@ -253,7 +253,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
     const payments = await services.mortgagePayments.listByTerm(req.params.termId, user.id);
     if (!payments) {
-      res.status(404).json({ error: "Term not found" });
+      sendError(res, 404, "Term not found");
       return;
     }
     res.json(payments);
@@ -275,13 +275,12 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         payload,
       );
       if (!payment) {
-        res.status(403).json({ error: "Forbidden" });
+        sendError(res, 403, "Forbidden");
         return;
       }
       res.json(payment);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Invalid payment data";
-      res.status(400).json({ error: "Invalid payment data", details: message });
+      sendError(res, 400, "Invalid payment data", error);
     }
   });
 
@@ -293,36 +292,36 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       const { payments } = req.body as { payments: Array<Record<string, unknown>> };
       
       if (!Array.isArray(payments) || payments.length === 0) {
-        res.status(400).json({ error: "Payments array is required" });
+        sendError(res, 400, "Payments array is required");
         return;
       }
 
       if (payments.length > 60) {
-        res.status(400).json({ error: "Maximum 60 payments can be created at once" });
+        sendError(res, 400, "Maximum 60 payments can be created at once");
         return;
       }
 
-      const createdPayments = [];
+      // Validate all payments first (before creating any)
+      const validatedPayments = [];
       for (const paymentData of payments) {
         const data = mortgagePaymentCreateSchema.parse({
           ...paymentData,
           mortgageId: req.params.mortgageId,
         });
         const { mortgageId, ...payload } = data;
-        const payment = await services.mortgagePayments.create(
-          req.params.mortgageId,
-          user.id,
-          payload,
-        );
-        if (payment) {
-          createdPayments.push(payment);
-        }
+        validatedPayments.push(payload);
       }
 
-      res.json({ created: createdPayments.length, payments: createdPayments });
+      // Create all payments in a transaction (all-or-nothing)
+      const result = await services.mortgagePayments.createBulk(
+        req.params.mortgageId,
+        user.id,
+        validatedPayments,
+      );
+
+      res.json(result);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Invalid payment data";
-      res.status(400).json({ error: "Invalid payment data", details: message });
+      sendError(res, 400, "Invalid payment data", error);
     }
   });
 
@@ -332,7 +331,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
     const deleted = await services.mortgagePayments.delete(req.params.paymentId, user.id);
     if (!deleted) {
-      res.status(404).json({ error: "Payment not found or not authorized" });
+      sendError(res, 404, "Payment not found or not authorized");
       return;
     }
     res.json({ success: true });
@@ -379,7 +378,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       if (data.mortgageId) {
         const mortgageRecord = await services.mortgages.getByIdForUser(data.mortgageId, user.id);
         if (!mortgageRecord) {
-          res.status(404).json({ error: "Mortgage not found" });
+          sendError(res, 404, "Mortgage not found");
           return;
         }
 
@@ -614,6 +613,10 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         interest: number;
       }> = [];
       
+      // Calculate payments per 2 years based on actual payment frequency
+      const paymentsPerYear = getPaymentsPerYear(projectionFrequency);
+      const paymentsPerTwoYears = paymentsPerYear * 2;
+      
       let cumulativePrincipal = 0;
       let cumulativeInterest = 0;
       
@@ -622,11 +625,11 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         cumulativePrincipal += payment.totalPrincipalPayment;
         cumulativeInterest += payment.interestPayment;
         
-        // Add data point every 24 months (2 years)
-        if (i % 24 === 0) {
-          const yearsFromNow = Math.floor(i / 12);
+        // Add data point every 2 years worth of payments (based on actual frequency)
+        if (i % paymentsPerTwoYears === 0) {
+          const yearsFromNow = i / paymentsPerYear;
           chartData.push({
-            year: yearsFromNow,
+            year: Math.round(yearsFromNow * 10) / 10, // Round to 1 decimal place
             balance: Math.round(payment.remainingBalance),
             principal: Math.round(cumulativePrincipal),
             interest: Math.round(cumulativeInterest),
@@ -634,13 +637,23 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         }
       }
       
-      // Ensure final point
+      // Ensure final point is included
       if (schedule.payments.length > 0) {
         const lastPayment = schedule.payments[schedule.payments.length - 1];
-        const finalYears = Math.ceil(schedule.payments.length / 12);
-        if (chartData.length === 0 || chartData[chartData.length - 1].balance > 0) {
+        const finalYears = schedule.payments.length / paymentsPerYear;
+        const finalYearsRounded = Math.round(finalYears * 10) / 10;
+        
+        // Only add final point if it's different from the last point or if chart is empty
+        const lastChartPoint = chartData[chartData.length - 1];
+        if (
+          chartData.length === 0 ||
+          (lastChartPoint && (
+            lastChartPoint.balance > 0 ||
+            Math.abs(lastChartPoint.year - finalYearsRounded) > 0.1
+          ))
+        ) {
           chartData.push({
-            year: finalYears,
+            year: finalYearsRounded,
             balance: 0,
             principal: Math.round(schedule.summary.totalPrincipal),
             interest: Math.round(schedule.summary.totalInterest),
@@ -649,12 +662,13 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       }
 
       // Calculate baseline (no prepayments) for interest savings comparison
+      // Use lastPaymentBalance to match the main projection, ensuring accurate interest savings calculation
       const baselineSchedule = generateAmortizationSchedule(
-        data.currentBalance,
+        lastPaymentBalance,
         effectiveRate,
         data.amortizationMonths,
         projectionFrequency,
-        new Date(),
+        projectionStartDate,
         [], // No prepayments
         [],
         360
@@ -677,7 +691,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         effectiveRate: effectiveRate * 100, // Return as percentage for display
       });
     } catch (error) {
-      res.status(400).json({ error: "Invalid projection parameters", details: error });
+      sendError(res, 400, "Invalid projection parameters", error);
     }
   });
 }

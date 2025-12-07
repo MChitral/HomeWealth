@@ -5,6 +5,7 @@ import {
   MortgagePaymentsRepository,
 } from "@infrastructure/repositories";
 import type { MortgageCreateInput, MortgageUpdateInput } from "@domain/models";
+import { db } from "@infrastructure/db/connection";
 
 export class MortgageService {
   constructor(
@@ -50,10 +51,22 @@ export class MortgageService {
       return false;
     }
 
-    await this.mortgagePayments.deleteByMortgageId(id);
-    await this.mortgageTerms.deleteByMortgageId(id);
+    // Use transaction to ensure all-or-nothing deletion
+    // If any deletion fails, all changes are rolled back
+    return await db.transaction(async (tx) => {
+      // Delete child records first (payments, then terms)
+      await this.mortgagePayments.deleteByMortgageId(id, tx);
+      await this.mortgageTerms.deleteByMortgageId(id, tx);
 
-    return this.mortgages.delete(id);
+      // Finally delete the mortgage itself
+      const deleted = await this.mortgages.delete(id, tx);
+      
+      if (!deleted) {
+        throw new Error("Failed to delete mortgage");
+      }
+
+      return true;
+    });
   }
 }
 

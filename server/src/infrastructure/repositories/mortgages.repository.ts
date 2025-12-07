@@ -1,5 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "@infrastructure/db/connection";
+import type { NeonDatabase, NodePgDatabase } from "drizzle-orm";
+import type * as schema from "@shared/schema";
 import {
   mortgages,
   type Mortgage as MortgageRecord,
@@ -7,8 +9,10 @@ import {
   type UpdateMortgage,
 } from "@shared/schema";
 
+type Database = NeonDatabase<typeof schema> | NodePgDatabase<typeof schema>;
+
 export class MortgagesRepository {
-  constructor(private readonly database = db) {}
+  constructor(private readonly database: Database = db) {}
 
   async findById(id: string): Promise<MortgageRecord | undefined> {
     const result = await this.database.select().from(mortgages).where(eq(mortgages.id, id));
@@ -37,8 +41,9 @@ export class MortgagesRepository {
     return updated;
   }
 
-  async delete(id: string): Promise<boolean> {
-    const result = await this.database.delete(mortgages).where(eq(mortgages.id, id));
+  async delete(id: string, tx?: Database): Promise<boolean> {
+    const db = tx || this.database;
+    const result = await db.delete(mortgages).where(eq(mortgages.id, id));
     return Boolean(result.rowCount && result.rowCount > 0);
   }
 }

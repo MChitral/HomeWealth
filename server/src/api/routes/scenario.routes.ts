@@ -2,6 +2,7 @@ import { Router } from "express";
 import type { ApplicationServices } from "@application/services";
 import { scenarioCreateSchema } from "@domain/models";
 import { requireUser } from "@api/utils/auth";
+import { sendError } from "@server-shared/utils/api-response";
 
 const scenarioUpdateSchema = scenarioCreateSchema.omit({ userId: true }).partial();
 
@@ -29,7 +30,7 @@ export function registerScenarioRoutes(router: Router, services: ApplicationServ
 
     const scenario = await services.scenarios.getByIdForUser(req.params.id, user.id);
     if (!scenario) {
-      res.status(404).json({ error: "Scenario not found" });
+      sendError(res, 404, "Scenario not found");
       return;
     }
     res.json(scenario);
@@ -45,7 +46,7 @@ export function registerScenarioRoutes(router: Router, services: ApplicationServ
       const scenario = await services.scenarios.create(user.id, payload);
       res.json(scenario);
     } catch (error) {
-      res.status(400).json({ error: "Invalid scenario data", details: error });
+      sendError(res, 400, "Invalid scenario data", error);
     }
   });
 
@@ -57,12 +58,12 @@ export function registerScenarioRoutes(router: Router, services: ApplicationServ
       const data = scenarioUpdateSchema.parse(req.body);
       const updated = await services.scenarios.update(req.params.id, user.id, data);
       if (!updated) {
-        res.status(404).json({ error: "Scenario not found" });
+        sendError(res, 404, "Scenario not found");
         return;
       }
       res.json(updated);
     } catch (error) {
-      res.status(400).json({ error: "Invalid update data", details: error });
+      sendError(res, 400, "Invalid update data", error);
     }
   });
 
@@ -72,7 +73,7 @@ export function registerScenarioRoutes(router: Router, services: ApplicationServ
 
     const deleted = await services.scenarios.delete(req.params.id, user.id);
     if (!deleted) {
-      res.status(404).json({ error: "Scenario not found" });
+      sendError(res, 404, "Scenario not found");
       return;
     }
     res.json({ success: true });

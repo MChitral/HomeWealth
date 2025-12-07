@@ -8,6 +8,7 @@ import type { MortgagePaymentCreateInput } from "@domain/models";
 import { validateMortgagePayment } from "@server-shared/calculations/payment-validation";
 import { getTermEffectiveRate } from "@server-shared/calculations/term-helpers";
 import { isWithinPrepaymentLimit } from "@server-shared/calculations/mortgage";
+import { db } from "@infrastructure/db/connection";
 
 class PrepaymentLimitError extends Error {
   constructor(message: string) {
@@ -57,6 +58,9 @@ export class MortgagePaymentService {
 
   private async getPreviousPayment(termId: string): Promise<MortgagePayment | undefined> {
     const payments = await this.mortgagePayments.findByTermId(termId);
+    if (payments.length === 0) {
+      return undefined;
+    }
     return payments.sort(
       (a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime(),
     )[0];
@@ -120,10 +124,8 @@ export class MortgagePaymentService {
       remainingBalance: validation.expectedBalance.toFixed(2),
       triggerRateHit: validation.triggerRateHit ? 1 : 0,
       remainingAmortizationMonths: validation.remainingAmortizationMonths,
-      effectiveRate: (validation.triggerRateHit
-        ? getTermEffectiveRate(term)
-        : getTermEffectiveRate(term)
-      ).toFixed(3),
+      // Convert from decimal (0.0549) to percentage (5.490) for storage
+      effectiveRate: (getTermEffectiveRate(term) * 100).toFixed(3),
     };
   }
 
@@ -158,6 +160,85 @@ export class MortgagePaymentService {
     return this.mortgagePayments.create({
       ...normalizedPayload,
       mortgageId,
+    });
+  }
+
+  async createBulk(
+    mortgageId: string,
+    userId: string,
+    payments: Array<Omit<MortgagePaymentCreateInput, "mortgageId">>,
+  ): Promise<{ created: number; payments: MortgagePayment[] }> {
+    // Authorize mortgage first
+    const mortgage = await this.authorizeMortgage(mortgageId, userId);
+    if (!mortgage) {
+      throw new Error("Mortgage not found or not authorized");
+    }
+
+    // Validate all payments BEFORE creating any (fail fast)
+    // Track cumulative prepayments by year to properly enforce limits within the batch
+    const yearToDatePrepayments = new Map<number, number>();
+    const validatedPayments: Array<{
+      payload: Omit<MortgagePaymentCreateInput, "mortgageId">;
+      normalized: Omit<MortgagePaymentCreateInput, "mortgageId">;
+    }> = [];
+
+    for (const payload of payments) {
+      // Validate term belongs to mortgage
+      const term = await this.mortgageTerms.findById(payload.termId);
+      if (!term || term.mortgageId !== mortgageId) {
+        throw new Error(`Invalid term ID ${payload.termId} for mortgage ${mortgageId}`);
+      }
+
+      // Get previous payment for validation
+      const previousPayment = await this.getPreviousPayment(payload.termId);
+
+      // Validate and normalize payment
+      const normalized = this.validateAndNormalizePayment(
+        mortgage,
+        term,
+        payload,
+        previousPayment,
+      );
+
+      // Check prepayment limits - account for prepayments in this batch
+      const paymentYear = new Date(payload.paymentDate).getFullYear();
+      const existingYearToDate = await this.getYearToDatePrepayments(mortgageId, paymentYear);
+      const batchYearToDate = yearToDatePrepayments.get(paymentYear) || 0;
+      const totalYearToDate = existingYearToDate + batchYearToDate;
+      
+      const prepaymentAmount = Number(normalized.prepaymentAmount || 0);
+      this.enforcePrepaymentLimit(
+        mortgage,
+        payload.paymentDate,
+        prepaymentAmount,
+        totalYearToDate,
+      );
+
+      // Update cumulative prepayments for this year in the batch
+      yearToDatePrepayments.set(paymentYear, batchYearToDate + prepaymentAmount);
+
+      validatedPayments.push({ payload, normalized });
+    }
+
+    // Create all payments in a single transaction (all-or-nothing)
+    return await db.transaction(async (tx) => {
+      const created: MortgagePayment[] = [];
+
+      for (const { normalized } of validatedPayments) {
+        const payment = await this.mortgagePayments.create(
+          {
+            ...normalized,
+            mortgageId,
+          },
+          tx,
+        );
+        created.push(payment);
+      }
+
+      return {
+        created: created.length,
+        payments: created,
+      };
     });
   }
 

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { sendError } from "@server-shared/utils/api-response";
 
 const BOC_PRIME_RATE_API = "https://www.bankofcanada.ca/valet/observations/V121796/json?recent=1";
 
@@ -44,11 +45,7 @@ export function registerPrimeRateRoutes(router: Router) {
       });
     } catch (error: any) {
       console.error("Error fetching prime rate:", error);
-      res.status(500).json({
-        error: "Failed to fetch prime rate",
-        message: error.message,
-        fallbackRate: 6.45,
-      });
+      sendError(res, 500, "Failed to fetch prime rate", error);
     }
   });
 
@@ -57,7 +54,8 @@ export function registerPrimeRateRoutes(router: Router) {
       const { start_date, end_date } = req.query;
       
       if (!start_date || !end_date) {
-        return res.status(400).json({ error: "start_date and end_date query parameters are required" });
+        sendError(res, 400, "start_date and end_date query parameters are required");
+        return;
       }
       
       const url = `https://www.bankofcanada.ca/valet/observations/V121796/json?start_date=${start_date}&end_date=${end_date}`;
@@ -86,10 +84,7 @@ export function registerPrimeRateRoutes(router: Router) {
       });
     } catch (error: any) {
       console.error("Error fetching historical prime rates:", error);
-      res.status(500).json({
-        error: "Failed to fetch historical prime rates",
-        message: error.message,
-      });
+      sendError(res, 500, "Failed to fetch historical prime rates", error);
     }
   });
 }

@@ -2,6 +2,7 @@ import { Router } from "express";
 import type { ApplicationServices } from "@application/services";
 import { prepaymentEventCreateSchema } from "@domain/models";
 import { requireUser } from "@api/utils/auth";
+import { sendError } from "@server-shared/utils/api-response";
 
 const prepaymentEventUpdateSchema = prepaymentEventCreateSchema.omit({ scenarioId: true }).partial();
 
@@ -12,7 +13,7 @@ export function registerPrepaymentEventRoutes(router: Router, services: Applicat
 
     const events = await services.prepaymentEvents.list(req.params.scenarioId, user.id);
     if (!events) {
-      res.status(404).json({ error: "Scenario not found" });
+      sendError(res, 404, "Scenario not found");
       return;
     }
     res.json(events);
@@ -34,12 +35,12 @@ export function registerPrepaymentEventRoutes(router: Router, services: Applicat
         payload,
       );
       if (!event) {
-        res.status(404).json({ error: "Scenario not found" });
+        sendError(res, 404, "Scenario not found");
         return;
       }
       res.json(event);
     } catch (error) {
-      res.status(400).json({ error: "Invalid event data", details: error });
+      sendError(res, 400, "Invalid event data", error);
     }
   });
 
@@ -51,12 +52,12 @@ export function registerPrepaymentEventRoutes(router: Router, services: Applicat
       const data = prepaymentEventUpdateSchema.parse(req.body);
       const updated = await services.prepaymentEvents.update(req.params.id, user.id, data);
       if (!updated) {
-        res.status(404).json({ error: "Event not found" });
+        sendError(res, 404, "Event not found");
         return;
       }
       res.json(updated);
     } catch (error) {
-      res.status(400).json({ error: "Invalid update data", details: error });
+      sendError(res, 400, "Invalid update data", error);
     }
   });
 
@@ -66,7 +67,7 @@ export function registerPrepaymentEventRoutes(router: Router, services: Applicat
 
     const deleted = await services.prepaymentEvents.delete(req.params.id, user.id);
     if (!deleted) {
-      res.status(404).json({ error: "Event not found" });
+      sendError(res, 404, "Event not found");
       return;
     }
     res.json({ success: true });

@@ -2,6 +2,7 @@ import { Router } from "express";
 import type { ApplicationServices } from "@application/services";
 import { emergencyFundCreateSchema, emergencyFundUpdateSchema } from "@domain/models";
 import { requireUser } from "@api/utils/auth";
+import { sendError } from "@server-shared/utils/api-response";
 
 export function registerEmergencyFundRoutes(router: Router, services: ApplicationServices) {
   router.get("/emergency-fund", async (req, res) => {
@@ -22,7 +23,7 @@ export function registerEmergencyFundRoutes(router: Router, services: Applicatio
       const created = await services.emergencyFunds.create(user.id, payload);
       res.json(created);
     } catch (error) {
-      res.status(400).json({ error: "Invalid emergency fund data", details: error });
+      sendError(res, 400, "Invalid emergency fund data", error);
     }
   });
 
@@ -34,12 +35,12 @@ export function registerEmergencyFundRoutes(router: Router, services: Applicatio
       const data = emergencyFundUpdateSchema.parse(req.body);
       const updated = await services.emergencyFunds.update(user.id, req.params.id, data);
       if (!updated) {
-        res.status(404).json({ error: "Emergency fund not found" });
+        sendError(res, 404, "Emergency fund not found");
         return;
       }
       res.json(updated);
     } catch (error) {
-      res.status(400).json({ error: "Invalid update data", details: error });
+      sendError(res, 400, "Invalid update data", error);
     }
   });
 }
