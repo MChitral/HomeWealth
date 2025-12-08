@@ -36,10 +36,23 @@ export function CurrentMortgagePositionCard({
         <CardDescription>Loaded from your Mortgage History (as of latest payment)</CardDescription>
       </CardHeader>
       <CardContent>
+        {currentMortgageData.homeValue === 0 && (
+          <Alert className="mb-4">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              <span className="font-semibold">Property Price Not Set:</span> Home value calculations require the property price. 
+              Please set the property price in your mortgage details for accurate net worth projections.
+            </AlertDescription>
+          </Alert>
+        )}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div>
             <p className="text-sm text-muted-foreground mb-1">Home Value</p>
-            <p className="text-lg font-mono font-semibold">${currentMortgageData.homeValue.toLocaleString()}</p>
+            <p className="text-lg font-mono font-semibold">
+              {currentMortgageData.homeValue > 0 
+                ? `$${currentMortgageData.homeValue.toLocaleString()}` 
+                : <span className="text-muted-foreground">Not Set</span>}
+            </p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground mb-1">Current Balance</p>

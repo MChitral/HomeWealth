@@ -15,6 +15,7 @@ export type DraftPrepaymentEvent = {
   startPaymentNumber: number;
   description: string | null;
   recurrenceMonth: number | null;
+  startYear: number | null; // Start year for annual events
   oneTimeYear: number | null;
 };
 
@@ -72,27 +73,45 @@ export function useScenarioEditorState(
   // Sync form when editingEvent changes
   useEffect(() => {
     if (editingEvent) {
+      // Calculate startYear from startPaymentNumber for annual events
+      let startYear = "1";
+      if (editingEvent.eventType === "annual" && editingEvent.startPaymentNumber) {
+        // Estimate start year: startPaymentNumber / 12 (assuming monthly)
+        startYear = Math.max(1, Math.ceil(editingEvent.startPaymentNumber / 12)).toString();
+      }
+      
       prepaymentEventForm.form.reset({
         eventType: editingEvent.eventType,
         amount: editingEvent.amount || "",
         description: editingEvent.description || "",
         recurrenceMonth: editingEvent.recurrenceMonth?.toString() || "3",
+        startYear: editingEvent.eventType === "annual" ? (editingEvent.startYear?.toString() || startYear) : undefined,
         oneTimeYear: editingEvent.oneTimeYear?.toString() || "1",
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingEvent]);
 
-  const toDraftEvent = (event: PrepaymentEvent): DraftPrepaymentEvent => ({
-    id: event.id,
-    scenarioId: event.scenarioId,
-    eventType: event.eventType as "annual" | "one-time",
-    amount: event.amount,
-    startPaymentNumber: event.startPaymentNumber ?? 1,
-    description: event.description ?? null,
-    recurrenceMonth: event.recurrenceMonth ?? null,
-    oneTimeYear: event.oneTimeYear ?? null,
-  });
+  const toDraftEvent = (event: PrepaymentEvent): DraftPrepaymentEvent => {
+    // Calculate startYear from startPaymentNumber for annual events
+    let startYear: number | null = null;
+    if (event.eventType === "annual" && event.startPaymentNumber) {
+      // Estimate start year: startPaymentNumber / 12 (assuming monthly)
+      startYear = Math.max(1, Math.ceil(event.startPaymentNumber / 12));
+    }
+    
+    return {
+      id: event.id,
+      scenarioId: event.scenarioId,
+      eventType: event.eventType as "annual" | "one-time",
+      amount: event.amount,
+      startPaymentNumber: event.startPaymentNumber ?? 1,
+      description: event.description ?? null,
+      recurrenceMonth: event.recurrenceMonth ?? null,
+      startYear,
+      oneTimeYear: event.oneTimeYear ?? null,
+    };
+  };
 
   const buildScenarioPayload = (): ScenarioPayload => {
     const prepaymentPercent = prepaymentSplit?.[0] ?? 50;
@@ -184,9 +203,10 @@ export function useScenarioEditorState(
       scenarioId: scenarioId || "",
       eventType: formData.eventType,
       amount: parseFloat(formData.amount).toFixed(2),
-      startPaymentNumber: 1,
+      startPaymentNumber: 1, // Will be calculated from startYear/oneTimeYear in projections
       description: formData.description || null,
       recurrenceMonth: formData.eventType === "annual" ? parseInt(formData.recurrenceMonth || "3") : null,
+      startYear: formData.eventType === "annual" ? parseInt(formData.startYear || "1") : null,
       oneTimeYear: formData.eventType === "one-time" ? parseInt(formData.oneTimeYear || "1") : null,
     };
 
@@ -238,6 +258,7 @@ export function useScenarioEditorState(
       amount: parseFloat(formData.amount).toFixed(2),
       description: formData.description || null,
       recurrenceMonth: formData.eventType === "annual" ? parseInt(formData.recurrenceMonth || "3") : null,
+      startYear: formData.eventType === "annual" ? parseInt(formData.startYear || "1") : null,
       oneTimeYear: formData.eventType === "one-time" ? parseInt(formData.oneTimeYear || "1") : null,
     };
 

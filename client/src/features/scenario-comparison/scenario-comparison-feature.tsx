@@ -1,23 +1,40 @@
 import { PageHeader } from "@/shared/ui/page-header";
 import { usePageTitle } from "@/shared/hooks/use-page-title";
+import { useMortgageSelection } from "@/features/mortgage-tracking";
 import { useScenarioComparison } from "./hooks";
 import {
   ScenarioSelector,
   WinnerCard,
   ComparisonMetrics,
   EmptyState,
+  ComparisonNoMortgageState,
   ScenarioComparisonSkeleton,
   TimeHorizonSelector,
   ComparisonTabs,
 } from "./components";
 
 export function ScenarioComparisonFeature() {
+  const { mortgages, isLoading: mortgagesLoading } = useMortgageSelection();
   const comparison = useScenarioComparison();
 
   usePageTitle("Scenario Comparison | Mortgage Strategy");
 
-  if (comparison.isLoading) {
+  if (comparison.isLoading || mortgagesLoading) {
     return <ScenarioComparisonSkeleton />;
+  }
+
+  // Product Logic: Mortgage must exist before scenarios can be created
+  // Scenario comparison requires scenarios, which require mortgage data
+  if (!mortgages || mortgages.length === 0) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Scenario Comparison"
+          description="Compare different financial strategies side-by-side"
+        />
+        <ComparisonNoMortgageState />
+      </div>
+    );
   }
 
   if (comparison.selectedScenarios.length === 0) {

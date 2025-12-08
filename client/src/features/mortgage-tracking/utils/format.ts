@@ -3,9 +3,23 @@
  * @param years - The amortization period in years (can be a decimal)
  * @returns Formatted string like "25 yr", "10 mo", or "25 yr 6 mo"
  */
-export function formatAmortization(years: number): string {
-  const wholeYears = Math.floor(years);
-  const months = Math.round((years - wholeYears) * 12);
+export function formatAmortization(years: number | string | null | undefined): string {
+  // Handle invalid inputs
+  if (years == null || years === undefined || years === "") {
+    return "-";
+  }
+  
+  // Convert to number if string
+  const yearsNum = typeof years === "string" ? parseFloat(years) : years;
+  
+  // Validate it's a valid number
+  if (!Number.isFinite(yearsNum) || yearsNum < 0) {
+    return "-";
+  }
+  
+  const wholeYears = Math.floor(yearsNum);
+  const months = Math.round((yearsNum - wholeYears) * 12);
+  
   if (months === 0) {
     return `${wholeYears} yr`;
   }

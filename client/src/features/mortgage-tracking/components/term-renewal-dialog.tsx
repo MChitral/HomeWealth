@@ -294,7 +294,7 @@ function TermRenewalFormFields({
                     data-testid="input-current-prime"
                   />
                 </FormControl>
-                {primeRateData && (
+                {primeRateData?.effectiveDate && (
                   <p className="text-xs text-muted-foreground">
                     Bank of Canada rate as of {new Date(primeRateData.effectiveDate).toLocaleDateString()}
                   </p>

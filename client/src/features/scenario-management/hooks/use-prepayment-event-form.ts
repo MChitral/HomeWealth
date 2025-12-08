@@ -24,6 +24,7 @@ export const prepaymentEventFormSchema = z
       ),
     description: z.string().optional(),
     recurrenceMonth: z.string().optional(),
+    startYear: z.string().optional(), // Start year for annual events
     oneTimeYear: z.string().optional(),
   })
   .refine(
@@ -37,6 +38,32 @@ export const prepaymentEventFormSchema = z
     {
       message: "Recurrence month is required for annual events",
       path: ["recurrenceMonth"],
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.eventType === "annual") {
+        const year = data.startYear?.trim();
+        return year !== undefined && year !== "";
+      }
+      return true;
+    },
+    {
+      message: "Start year is required for annual events",
+      path: ["startYear"],
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.eventType === "annual") {
+        const year = Number(data.startYear);
+        return Number.isFinite(year) && year >= 1;
+      }
+      return true;
+    },
+    {
+      message: "Start year must be 1 or greater",
+      path: ["startYear"],
     }
   )
   .refine(
@@ -77,6 +104,7 @@ const defaultValues: PrepaymentEventFormData = {
   amount: "",
   description: "",
   recurrenceMonth: "3", // March (Tax Refund)
+  startYear: "1", // Start from Year 1 by default
   oneTimeYear: "1",
 };
 
@@ -94,11 +122,20 @@ export function usePrepaymentEventForm({ initialEvent }: UsePrepaymentEventFormP
   // Sync form with initial event data when editing
   useEffect(() => {
     if (initialEvent) {
+      // Calculate startYear from startPaymentNumber for annual events
+      let startYear = "1";
+      if (initialEvent.eventType === "annual" && initialEvent.startPaymentNumber) {
+        // Estimate start year: startPaymentNumber / 12 (assuming monthly)
+        // This is approximate, but better than defaulting to 1
+        startYear = Math.max(1, Math.ceil(initialEvent.startPaymentNumber / 12)).toString();
+      }
+      
       form.reset({
         eventType: initialEvent.eventType,
         amount: initialEvent.amount || "",
         description: initialEvent.description || "",
         recurrenceMonth: initialEvent.recurrenceMonth?.toString() || "3",
+        startYear: initialEvent.eventType === "annual" ? startYear : undefined,
         oneTimeYear: initialEvent.oneTimeYear?.toString() || "1",
       });
     } else {

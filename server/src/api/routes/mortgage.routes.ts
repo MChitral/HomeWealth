@@ -25,12 +25,73 @@ import {
 } from "@server-shared/calculations/term-helpers";
 import { fetchLatestPrimeRate } from "@server-shared/services/prime-rate";
 import { z } from "zod";
-async function ensurePrimeRate<T extends { termType?: string; primeRate?: string | number }>(payload: T): Promise<T> {
+async function ensurePrimeRate<T extends { termType?: string; primeRate?: string | number; startDate?: string }>(payload: T): Promise<T> {
   if (payload.termType && payload.termType.startsWith("variable") && (payload.primeRate == null || payload.primeRate === "")) {
     try {
+      // If startDate is provided, fetch historical rate for that date
+      // Otherwise, use current rate
+      if (payload.startDate) {
+        const startDate = new Date(payload.startDate);
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + 1); // Add 1 day to ensure we get the rate
+        
+        const url = `https://www.bankofcanada.ca/valet/observations/V121796/json?start_date=${startDate.toISOString().split("T")[0]}&end_date=${endDate.toISOString().split("T")[0]}`;
+        const response = await fetch(url);
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.observations && data.observations.length > 0) {
+            // Get the most recent rate on or before startDate
+            const rates = data.observations
+              .map((obs: any) => ({ date: obs.d, rate: parseFloat(obs.V121796.v) }))
+              .filter((r: any) => r.date <= payload.startDate)
+              .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            
+            if (rates.length > 0) {
+              console.log(`[ensurePrimeRate] Using historical rate ${rates[0].rate}% for startDate ${payload.startDate}`);
+              return { ...payload, primeRate: rates[0].rate.toFixed(3) };
+            }
+          }
+        }
+        
+        // If historical fetch failed, try fetching a wider range (3 months before)
+        const queryStartDate = new Date(startDate);
+        queryStartDate.setMonth(queryStartDate.getMonth() - 3);
+        const wideUrl = `https://www.bankofcanada.ca/valet/observations/V121796/json?start_date=${queryStartDate.toISOString().split("T")[0]}&end_date=${endDate.toISOString().split("T")[0]}`;
+        const wideResponse = await fetch(wideUrl);
+        
+        if (wideResponse.ok) {
+          const wideData = await wideResponse.json();
+          if (wideData.observations && wideData.observations.length > 0) {
+            const rates = wideData.observations
+              .map((obs: any) => ({ date: obs.d, rate: parseFloat(obs.V121796.v) }))
+              .filter((r: any) => r.date <= payload.startDate)
+              .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            
+            if (rates.length > 0) {
+              console.log(`[ensurePrimeRate] Using historical rate ${rates[0].rate}% for startDate ${payload.startDate} (from wider range)`);
+              return { ...payload, primeRate: rates[0].rate.toFixed(3) };
+            }
+          }
+        }
+      }
+      
+      // Fallback to current rate if no startDate or historical fetch failed
       const { primeRate } = await fetchLatestPrimeRate();
+      console.log(`[ensurePrimeRate] Using current rate ${primeRate}% (no startDate or historical fetch failed)`);
       return { ...payload, primeRate: primeRate.toFixed(3) };
-    } catch {
+    } catch (error) {
+      console.error(`[ensurePrimeRate] Error fetching prime rate:`, error);
+      // Fallback to a reasonable default based on startDate if available
+      if (payload.startDate) {
+        const startDate = new Date(payload.startDate);
+        // If startDate is in 2025, use 5.45% (Jan 2025 rate)
+        // If startDate is in 2024, use 6.45% (Sep 2024 rate)
+        const year = startDate.getFullYear();
+        const fallbackRate = year >= 2025 ? "5.450" : "6.450";
+        console.log(`[ensurePrimeRate] Using fallback rate ${fallbackRate}% for startDate ${payload.startDate}`);
+        return { ...payload, primeRate: fallbackRate };
+      }
       return { ...payload, primeRate: "6.450" };
     }
   }
@@ -569,6 +630,11 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       // Convert prepayment events to calculation engine format
       const prepayments: CalcPrepaymentEvent[] = [];
       
+      // Calculate how many payments have been made historically
+      // This is needed to adjust startPaymentNumber relative to projection start
+      const historicalPaymentCount = historicalPayments.length;
+      const paymentsPerYear = getPaymentsPerYear(projectionFrequency);
+      
       // Add monthly prepayment as a percentage of the base payment
       if (data.monthlyPrepayAmount > 0 && basePayment > 0) {
         // Calculate what percentage of the base payment this represents
@@ -576,17 +642,45 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         prepayments.push({
           type: 'monthly-percent',
           amount: 0, // Not used for monthly-percent type
-          startPaymentNumber: 1,
+          startPaymentNumber: 1, // Always starts from projection start
           monthlyPercent: monthlyPrepayPercent,
         });
       }
       
       // Add configured prepayment events
       for (const event of data.prepaymentEvents) {
+        // Adjust startPaymentNumber relative to projection start
+        // startPaymentNumber is relative to mortgage start, but projection paymentNumber starts at 1
+        // So we subtract historicalPaymentCount to get the relative payment number in the projection
+        let adjustedStartPaymentNumber = event.startPaymentNumber;
+        
+        if (event.startPaymentNumber > historicalPaymentCount) {
+          // Prepayment hasn't occurred yet, adjust relative to projection start
+          adjustedStartPaymentNumber = event.startPaymentNumber - historicalPaymentCount;
+        } else {
+          // Prepayment already occurred in historical payments, skip it
+          // For annual events, we might want to apply it in future years
+          // For now, skip if it already occurred
+          if (event.type === 'annual') {
+            // For annual events, calculate when the next occurrence should be
+            // Find the next year when this prepayment should occur
+            const yearsSinceStart = Math.floor((historicalPaymentCount - event.startPaymentNumber) / paymentsPerYear);
+            const nextOccurrenceYear = yearsSinceStart + 1;
+            adjustedStartPaymentNumber = (nextOccurrenceYear * paymentsPerYear) - historicalPaymentCount + 1;
+            // Ensure it's positive
+            if (adjustedStartPaymentNumber <= 0) {
+              adjustedStartPaymentNumber = 1; // Apply in first payment of projection
+            }
+          } else {
+            // One-time event already occurred, skip it
+            continue;
+          }
+        }
+        
         prepayments.push({
           type: event.type,
           amount: event.amount,
-          startPaymentNumber: event.startPaymentNumber,
+          startPaymentNumber: adjustedStartPaymentNumber,
           recurrenceMonth: event.recurrenceMonth,
           monthlyPercent: event.monthlyPercent,
         });
@@ -641,9 +735,18 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       const currentCalendarYear = new Date().getFullYear();
       const yearsNeedingCompletion = new Set<number>();
       
+      // Check if there are any prepayment events configured
+      const hasPrepaymentEvents = data.prepaymentEvents && data.prepaymentEvents.length > 0;
+      
       Array.from(historicalYearlyMap.entries()).forEach(([year, yearData]) => {
         // If historical data doesn't cover the full year (month 11 = December), mark for completion
         if (yearData.lastPaymentMonth < 11 && year >= currentCalendarYear) {
+          yearsNeedingCompletion.add(year);
+        }
+        // If prepayment events are configured, we need to re-project historical years
+        // to include prepayment events in the scenario projection
+        // This ensures scenario projections show "what if" prepayment events were applied
+        if (hasPrepaymentEvents && year >= currentCalendarYear) {
           yearsNeedingCompletion.add(year);
         }
       });
@@ -706,8 +809,20 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
             endingBalance: Math.round(projected.endingBalance), // Use projected end balance
             isHistorical: true, // Mark as historical since it includes logged data
           });
+        } else if (historical && projected && hasPrepaymentEvents) {
+          // For scenario projections with prepayment events, merge historical + projected
+          // even for complete historical years, so prepayment events are included
+          // This shows "what if" prepayment events were applied to historical years
+          yearlyData.push({
+            year,
+            totalPaid: Math.round(historical.totalPaid + projected.totalPaid),
+            principalPaid: Math.round(historical.principalPaid + projected.principalPaid),
+            interestPaid: Math.round(historical.interestPaid + projected.interestPaid),
+            endingBalance: Math.round(projected.endingBalance), // Use projected end balance
+            isHistorical: true, // Mark as historical since it includes logged data
+          });
         } else if (historical) {
-          // Pure historical year
+          // Pure historical year (no prepayment events or no projected data)
           yearlyData.push({
             year,
             totalPaid: Math.round(historical.totalPaid),

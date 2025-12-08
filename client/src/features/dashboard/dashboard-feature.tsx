@@ -14,6 +14,7 @@ import type { ScenarioWithMetrics } from "@/entities";
 import {
   DashboardSkeleton,
   DashboardEmptyState,
+  DashboardNoMortgageState,
   CurrentFinancialStatusCard,
   ProjectionsHeader,
   ScenarioMetricsCards,
@@ -105,6 +106,20 @@ export function DashboardFeature() {
 
   if (isLoading || mortgageDataLoading) {
     return <DashboardSkeleton />;
+  }
+
+  // Product Logic: Mortgage must exist before scenarios can be created
+  // Scenarios are projections based on mortgage data
+  if (!mortgages || mortgages.length === 0) {
+    return (
+      <div className="space-y-8">
+        <PageHeader
+          title="Dashboard"
+          description="Your financial overview and projections"
+        />
+        <DashboardNoMortgageState />
+      </div>
+    );
   }
 
   if (!scenarios || scenarios.length === 0) {

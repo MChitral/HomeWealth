@@ -7,3 +7,4 @@ export { EmptyState } from "./empty-state";
 export { ScenarioComparisonSkeleton } from "./scenario-comparison-skeleton";
 export { TimeHorizonSelector } from "./time-horizon-selector";
 export { ComparisonTabs } from "./comparison-tabs";
+export { ComparisonNoMortgageState } from "./no-mortgage-state";

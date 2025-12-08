@@ -176,6 +176,12 @@ export function TermDetailsSection({
                 : `Prime ${currentTerm.lockedSpread >= 0 ? '+' : ''}${currentTerm.lockedSpread}%`
               }
             </p>
+            {/* Debug: Log stored spread value */}
+            {currentTerm.termType !== "fixed" && (
+              <p className="text-xs text-muted-foreground mt-1" style={{ display: 'none' }}>
+                Stored Spread: {currentTerm.lockedSpread}%
+              </p>
+            )}
           </div>
         </div>
         {currentTerm.termType !== "fixed" && (
@@ -189,6 +195,10 @@ export function TermDetailsSection({
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Current Effective Rate</p>
                 <p className="text-2xl font-mono font-bold">{summaryStats.currentRate}%</p>
+                {/* Debug info - shows calculation */}
+                <p className="text-xs text-muted-foreground mt-1">
+                  Prime {summaryStats.currentPrimeRate}% + Spread {currentTerm.lockedSpread >= 0 ? '+' : ''}{currentTerm.lockedSpread}%
+                </p>
               </div>
             </div>
           </>

@@ -26,6 +26,27 @@ import { Trash2 } from "lucide-react";
 import type { UiPayment } from "../types";
 import type { UseMutationResult } from "@tanstack/react-query";
 
+/**
+ * Format payment period label as "MMM-YYYY" (e.g., "Feb-2025") from payment date
+ */
+function formatPaymentPeriod(date: string, existingLabel?: string | null): string {
+  // Use existing label if provided and valid, otherwise generate from date
+  if (existingLabel && existingLabel.trim()) {
+    return existingLabel;
+  }
+  
+  // Generate month-year from payment date
+  try {
+    const paymentDate = new Date(date);
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const month = monthNames[paymentDate.getMonth()];
+    const year = paymentDate.getFullYear();
+    return `${month}-${year}`;
+  } catch {
+    return existingLabel || "-";
+  }
+}
+
 interface PaymentHistorySectionProps {
   filteredPayments: UiPayment[];
   availableYears: number[];
@@ -115,7 +136,7 @@ export function PaymentHistorySection({
                       )}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground max-w-[120px] truncate">
-                      {payment.paymentPeriodLabel || "-"}
+                      {formatPaymentPeriod(payment.date, payment.paymentPeriodLabel)}
                     </TableCell>
                     <TableCell className="text-right font-mono text-sm">
                       {payment.primeRate ? `${payment.primeRate}%` : "-"}

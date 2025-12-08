@@ -41,9 +41,10 @@ export function AppSidebar() {
                     asChild
                     isActive={location === item.url}
                     data-testid={`link-${item.title.toLowerCase()}`}
+                    aria-label={item.title}
                   >
-                    <Link href={item.url}>
-                      <item.icon />
+                    <Link href={item.url} aria-label={item.title}>
+                      <item.icon aria-hidden="true" />
                       <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>

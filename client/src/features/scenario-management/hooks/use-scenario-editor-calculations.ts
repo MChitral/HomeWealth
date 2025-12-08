@@ -49,8 +49,10 @@ export function useScenarioEditorCalculations({
 
   // Current mortgage data from database
   const currentMortgageData = useMemo(() => {
-    const homeValue = Number(mortgage?.propertyPrice || 500000);
-    const originalPrincipal = Number(mortgage?.originalAmount || 400000);
+    // Property price is required for accurate home value calculations
+    // If missing, we'll use 0 and show a warning in the UI (don't use arbitrary fallback)
+    const homeValue = mortgage?.propertyPrice ? Number(mortgage.propertyPrice) : 0;
+    const originalPrincipal = mortgage?.originalAmount ? Number(mortgage.originalAmount) : 0;
 
     const balanceFromPayment = latestPayment ? Number(latestPayment.remainingBalance) : NaN;
     const currentBalance =

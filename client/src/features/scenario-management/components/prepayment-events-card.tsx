@@ -93,44 +93,69 @@ function PrepaymentEventFormFields() {
       />
 
       {eventType === "annual" && (
-        <FormField
-          control={control}
-          name="recurrenceMonth"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel htmlFor="recurrence-month">Which Month?</FormLabel>
-              <Select
-                value={field.value || "3"}
-                onValueChange={field.onChange}
-                data-testid="select-recurrence-month"
-              >
+        <>
+          <FormField
+            control={control}
+            name="recurrenceMonth"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel htmlFor="recurrence-month">Which Month?</FormLabel>
+                <Select
+                  value={field.value || "3"}
+                  onValueChange={field.onChange}
+                  data-testid="select-recurrence-month"
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="1">January</SelectItem>
+                    <SelectItem value="2">February</SelectItem>
+                    <SelectItem value="3">March (Tax Refund)</SelectItem>
+                    <SelectItem value="4">April</SelectItem>
+                    <SelectItem value="5">May</SelectItem>
+                    <SelectItem value="6">June</SelectItem>
+                    <SelectItem value="7">July</SelectItem>
+                    <SelectItem value="8">August</SelectItem>
+                    <SelectItem value="9">September</SelectItem>
+                    <SelectItem value="10">October</SelectItem>
+                    <SelectItem value="11">November</SelectItem>
+                    <SelectItem value="12">December (Bonus)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground">
+                  Common: March for tax refunds, December for year-end bonuses
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name="startYear"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel htmlFor="start-year">Start Year (from mortgage start)</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                  <Input
+                    id="start-year"
+                    type="number"
+                    min="1"
+                    placeholder="1"
+                    {...field}
+                    data-testid="input-start-year"
+                  />
                 </FormControl>
-                <SelectContent>
-                  <SelectItem value="1">January</SelectItem>
-                  <SelectItem value="2">February</SelectItem>
-                  <SelectItem value="3">March (Tax Refund)</SelectItem>
-                  <SelectItem value="4">April</SelectItem>
-                  <SelectItem value="5">May</SelectItem>
-                  <SelectItem value="6">June</SelectItem>
-                  <SelectItem value="7">July</SelectItem>
-                  <SelectItem value="8">August</SelectItem>
-                  <SelectItem value="9">September</SelectItem>
-                  <SelectItem value="10">October</SelectItem>
-                  <SelectItem value="11">November</SelectItem>
-                  <SelectItem value="12">December (Bonus)</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-sm text-muted-foreground">
-                Common: March for tax refunds, December for year-end bonuses
-              </p>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <p className="text-sm text-muted-foreground">
+                  E.g., "2" means this annual prepayment starts in Year 2 and repeats every year
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </>
       )}
 
       {eventType === "one-time" && (
@@ -246,7 +271,10 @@ export function PrepaymentEventsCard({
                     <span className="font-mono font-semibold text-lg">${parseFloat(event.amount).toLocaleString()}</span>
                   </div>
                   {event.eventType === "annual" && event.recurrenceMonth && (
-                    <p className="text-sm text-muted-foreground">Every {getMonthName(event.recurrenceMonth)}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Every {getMonthName(event.recurrenceMonth)}
+                      {event.startYear && event.startYear > 1 && ` starting Year ${event.startYear}`}
+                    </p>
                   )}
                   {event.eventType === "one-time" && event.oneTimeYear && (
                     <p className="text-sm text-muted-foreground">Year {event.oneTimeYear} from mortgage start</p>

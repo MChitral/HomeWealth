@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -161,8 +161,45 @@ export function useCreateMortgageForm({
     return propertyPrice - downPayment;
   })();
 
-  // Check if step 1 is valid
-  const isStep1Valid = form.formState.isValid && form.watch("propertyPrice") && form.watch("downPayment");
+  // Check if step 1 is valid - only validate Step 1 fields, not entire form
+  // This prevents circular dependency where Step 1 can't be valid because Step 2 fields aren't filled yet
+  // Watch all Step 1 fields to trigger re-renders
+  const propertyPrice = form.watch("propertyPrice");
+  const downPayment = form.watch("downPayment");
+  const startDate = form.watch("startDate");
+  const amortization = form.watch("amortization");
+  const frequency = form.watch("frequency");
+
+  const isStep1Valid = useMemo(() => {
+    // Check all Step 1 fields are present
+    if (!propertyPrice || !downPayment || !startDate || !amortization || !frequency) {
+      return false;
+    }
+
+    // Validate property price
+    const priceNum = Number(propertyPrice);
+    if (!Number.isFinite(priceNum) || priceNum <= 0) {
+      return false;
+    }
+
+    // Validate down payment
+    const downNum = Number(downPayment);
+    if (!Number.isFinite(downNum) || downNum < 0) {
+      return false;
+    }
+
+    // Validate down payment <= property price
+    if (downNum > priceNum) {
+      return false;
+    }
+
+    // Validate loan amount > 0 (property price > down payment)
+    if (priceNum <= downNum) {
+      return false;
+    }
+
+    return true;
+  }, [propertyPrice, downPayment, startDate, amortization, frequency]);
 
   // Check if step 2 is valid
   const isStep2Valid = (() => {

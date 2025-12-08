@@ -34,12 +34,32 @@ export function useMortgageComputed({
   const lastKnownAmortizationMonths =
     paymentHistory[paymentHistory.length - 1]?.remainingAmortizationMonths ?? (mortgage ? mortgage.amortizationYears * 12 : 0);
 
+  // Always prefer current prime rate from API, never use stale values from term or payments
+  // For variable rate mortgages, the prime rate changes over time, so we must use the current rate
   const currentPrimeRateValue =
     primeRateData?.primeRate ??
+    parseFloat(primeRate) ??
+    // Only fall back to term/payment rates if API data is unavailable (should rarely happen)
     (uiCurrentTerm?.primeRate ?? null) ??
     paymentHistory[paymentHistory.length - 1]?.primeRate ??
-    parseFloat(primeRate) ??
     0;
+
+  // Log for debugging - show spread calculation details
+  if (uiCurrentTerm && uiCurrentTerm.termType !== "fixed") {
+    const storedSpread = uiCurrentTerm.lockedSpread || 0;
+    const calculatedEffective = Math.round((currentPrimeRateValue + storedSpread) * 100) / 100;
+    console.log(
+      `[Effective Rate Calculation]`,
+      {
+        primeRate: currentPrimeRateValue,
+        primeSource: primeRateData ? 'API' : 'fallback',
+        storedSpread: storedSpread,
+        calculatedEffective: calculatedEffective,
+        termId: uiCurrentTerm.id,
+        note: 'If effective rate is wrong, check if spread (-0.9% vs -1.9%) or prime rate is incorrect'
+      }
+    );
+  }
 
   const currentEffectiveRate = uiCurrentTerm
     ? uiCurrentTerm.termType === "fixed" && uiCurrentTerm.fixedRate

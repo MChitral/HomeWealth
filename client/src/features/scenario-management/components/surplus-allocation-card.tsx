@@ -1,6 +1,9 @@
+import { Link } from "wouter";
+import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Label } from "@/shared/ui/label";
 import { Slider } from "@/shared/ui/slider";
 import { Separator } from "@/shared/ui/separator";
+import { AlertTriangle } from "lucide-react";
 
 interface SurplusAllocationCardProps {
   monthlySurplus: number;
@@ -28,7 +31,11 @@ export function SurplusAllocationCard({
                 <span className="font-mono font-medium text-foreground">
                   ${monthlySurplus.toLocaleString("en-CA", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </span>
-                {!hasCashFlow && <span className="text-orange-500 ml-2">(Set up Cash Flow to calculate)</span>}
+                {!hasCashFlow && (
+                  <span className="text-orange-600 font-medium ml-2">
+                    ⚠️ Set up Cash Flow to calculate
+                  </span>
+                )}
               </p>
             </div>
             <span className="text-sm font-mono text-muted-foreground">
@@ -63,6 +70,19 @@ export function SurplusAllocationCard({
           <p className="text-sm text-muted-foreground">
             How to split surplus cash (after EF is full) between mortgage prepayment and investments
           </p>
+          {!hasCashFlow && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <span className="font-semibold">Cash Flow Required:</span> Without income and expense data, 
+                surplus calculations are $0 and projections will not reflect your actual financial situation.{" "}
+                <Link href="/cash-flow" className="font-medium underline hover:no-underline">
+                  Set up Cash Flow
+                </Link>{" "}
+                to enable accurate scenario projections.
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
       </div>
     </>

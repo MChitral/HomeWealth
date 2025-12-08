@@ -1,6 +1,7 @@
 export * from "./metric-card";
 export * from "./dashboard-skeleton";
 export * from "./dashboard-empty-state";
+export * from "./dashboard-no-mortgage-state";
 export * from "./current-status-stat";
 export * from "./summary-item";
 export * from "./current-financial-status-card";

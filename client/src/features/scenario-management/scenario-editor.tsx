@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link, useParams, useLocation } from "wouter";
 import { usePageTitle } from "@/shared/hooks/use-page-title";
 import { Card, CardContent } from "@/shared/ui/card";
@@ -13,6 +14,7 @@ import { useCashFlowData } from "@/features/cash-flow/hooks";
 import {
   ScenarioEditorSkeleton,
   ScenarioEditorHeader,
+  ScenarioEditorNoMortgageState,
   ScenarioBasicInfoForm,
   CurrentMortgagePositionCard,
   RateAssumptionCard,
@@ -46,7 +48,25 @@ export function ScenarioEditorFeature() {
   const pageTitle = isNewScenario ? "New Scenario | Mortgage Strategy" : "Edit Scenario | Mortgage Strategy";
   usePageTitle(pageTitle);
 
-  const scenarioPaymentFrequency: PaymentFrequency = "monthly";
+  // Get actual payment frequency from mortgage/term data
+  const scenarioPaymentFrequency: PaymentFrequency = useMemo(() => {
+    // Try to get from latest term first
+    const latestTerm = terms && terms.length > 0 
+      ? [...terms].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())[0]
+      : null;
+    
+    if (latestTerm?.paymentFrequency) {
+      return latestTerm.paymentFrequency as PaymentFrequency;
+    }
+    
+    // Fallback to mortgage payment frequency
+    if (mortgage?.paymentFrequency) {
+      return mortgage.paymentFrequency as PaymentFrequency;
+    }
+    
+    // Default to monthly if no data available
+    return "monthly";
+  }, [mortgage, terms]);
 
   // Use centralized state management hook
   const state = useScenarioEditorState(scenario, fetchedEvents, isNewScenario, scenarioId, () => {
@@ -71,11 +91,27 @@ export function ScenarioEditorFeature() {
     prepaymentEvents: state.prepaymentEvents,
     rateAssumption: state.rateAssumption,
     mortgageId: mortgage?.id,
+    paymentFrequency: scenarioPaymentFrequency,
   });
 
   // Show loading skeleton when editing existing scenario or loading mortgage data
   if ((detailLoading && !isNewScenario) || mortgageLoading) {
     return <ScenarioEditorSkeleton />;
+  }
+
+  // Product Logic: Mortgage must exist before scenarios can be created
+  // Scenarios are projections based on mortgage data
+  if (!mortgages || mortgages.length === 0) {
+    return (
+      <div className="space-y-6">
+        <ScenarioEditorHeader
+          isNewScenario={isNewScenario}
+          onSave={state.handleSave}
+          isSaving={state.saveMutation.isPending}
+        />
+        <ScenarioEditorNoMortgageState />
+      </div>
+    );
   }
 
   return (
@@ -104,6 +140,20 @@ export function ScenarioEditorFeature() {
         </AlertDescription>
       </Alert>
 
+      {!cashFlow && (
+        <Alert variant="destructive">
+          <Info className="h-4 w-4" />
+          <AlertDescription>
+            <span className="font-semibold">Cash Flow Not Configured:</span> To calculate accurate surplus cash and 
+            meaningful projections, please set up your income and expenses on the{" "}
+            <Link href="/cash-flow" className="font-medium underline hover:no-underline">
+              Cash Flow page
+            </Link>
+            . Without cash flow data, surplus calculations will be $0 and projections may not reflect your actual financial situation.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <ScenarioBasicInfoForm form={state.basicInfoForm} />
 
       <Card className="bg-muted/50">
@@ -114,6 +164,11 @@ export function ScenarioEditorFeature() {
               Cash Flow page
             </Link>{" "}
             and apply to all scenarios. Here you only configure what differs between strategies.
+            {!cashFlow && (
+              <span className="block mt-2 text-orange-600 font-medium">
+                ⚠️ Set up Cash Flow to enable accurate surplus calculations and projections.
+              </span>
+            )}
           </p>
         </CardContent>
       </Card>

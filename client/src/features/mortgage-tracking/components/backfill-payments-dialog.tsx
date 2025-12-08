@@ -199,10 +199,26 @@ export function BackfillPaymentsDialog({
   const handleBackfill = useCallback(async () => {
     const formData = form.getValues();
     const numPayments = parseInt(formData.numberOfPayments);
-    const paymentAmount =
-      parseFloat(formData.paymentAmount) || currentTerm.regularPaymentAmount || 1500;
-
+    
+    // Validate required data before proceeding
     if (!currentTerm || !formData.startDate || numPayments < 1) {
+      return;
+    }
+
+    // Validate mortgage balance exists (required for accurate backfill)
+    if (!mortgage?.currentBalance) {
+      // This should not happen in normal flow, but validate to prevent data corruption
+      console.error("Cannot backfill: Mortgage current balance is missing");
+      return;
+    }
+
+    // Validate payment amount exists
+    const paymentAmount =
+      parseFloat(formData.paymentAmount) || currentTerm.regularPaymentAmount;
+    
+    if (!paymentAmount) {
+      // Payment amount is required
+      console.error("Cannot backfill: Payment amount is missing");
       return;
     }
 
@@ -223,6 +239,10 @@ export function BackfillPaymentsDialog({
           endDateStr,
         );
         historicalRates = ratesResponse.rates || [];
+        console.log(
+          `[Backfill] Fetched ${historicalRates.length} historical rates from ${queryStartDateStr} to ${endDateStr}`,
+          historicalRates.map((r) => `${r.date}: ${r.primeRate}%`).join(", ")
+        );
       } catch (error) {
         console.error("Failed to fetch historical rates:", error);
       }
@@ -233,21 +253,57 @@ export function BackfillPaymentsDialog({
         return currentTerm.fixedRate || 4.5;
       }
 
+      // Sort rates ascending (oldest first) to find the most recent rate effective on or before payment date
+      // Bank of Canada API returns rates only on change dates, so we need the most recent rate <= payment date
       const sortedRates = [...historicalRates].sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
       );
 
-      for (const rate of sortedRates) {
+      // Find the most recent rate that was effective on or before the payment date
+      // Iterate backwards from newest to find the first rate <= payment date
+      let applicableRate: { date: string; primeRate: number } | undefined;
+      for (let i = sortedRates.length - 1; i >= 0; i--) {
+        const rate = sortedRates[i];
         if (rate.date <= dateStr) {
-          return rate.primeRate + currentTerm.lockedSpread;
+          applicableRate = rate;
+          break;
         }
       }
 
-      return (primeRateData?.primeRate || 5.45) + currentTerm.lockedSpread;
+      if (applicableRate) {
+        const effectiveRate = applicableRate.primeRate + (currentTerm.lockedSpread || 0);
+        console.log(
+          `[Backfill] Rate for ${dateStr}: Prime ${applicableRate.primeRate}% (effective date: ${applicableRate.date}) + Spread ${currentTerm.lockedSpread || 0}% = Effective ${effectiveRate}%`
+        );
+        return effectiveRate;
+      }
+
+      // If no historical rate found, check if we have rates but payment date is before all of them
+      // In this case, use the oldest rate we have (closest to payment date)
+      if (sortedRates.length > 0) {
+        // Sort ascending to get oldest rate
+        const oldestRate = [...sortedRates].sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+        )[0];
+        const effectiveRate = oldestRate.primeRate + (currentTerm.lockedSpread || 0);
+        console.warn(
+          `[Backfill] Payment date ${dateStr} is before all historical rates. Using oldest available rate: Prime ${oldestRate.primeRate}% (date: ${oldestRate.date}) + Spread ${currentTerm.lockedSpread || 0}% = Effective ${effectiveRate}%`
+        );
+        return effectiveRate;
+      }
+
+      // Last resort: use current prime rate (should rarely happen)
+      const fallbackPrime = primeRateData?.primeRate || 5.45;
+      const effectiveRate = fallbackPrime + (currentTerm.lockedSpread || 0);
+      console.warn(
+        `[Backfill] No historical rates available for ${dateStr}. Using current rate: Prime ${fallbackPrime}% + Spread ${currentTerm.lockedSpread || 0}% = Effective ${effectiveRate}%`
+      );
+      return effectiveRate;
     };
 
     const payments: CreatePaymentPayload[] = [];
-    let runningBalance = Number(mortgage?.currentBalance || 300000);
+    // Use actual mortgage balance (validated above)
+    let runningBalance = Number(mortgage.currentBalance);
     let paymentDate = new Date(formData.startDate);
     const frequency = currentTerm.paymentFrequency as PaymentFrequency;
 
@@ -269,10 +325,17 @@ export function BackfillPaymentsDialog({
       });
       runningBalance = breakdown.remainingBalance;
 
+      // Format payment period as "MMM-YYYY" (e.g., "Feb-2025")
+      const paymentDateObj = new Date(paymentDateStr);
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const month = monthNames[paymentDateObj.getMonth()];
+      const year = paymentDateObj.getFullYear();
+      const paymentPeriodLabel = `${month}-${year}`;
+      
       payments.push({
         termId: currentTerm.id,
         paymentDate: paymentDateStr,
-        paymentPeriodLabel: `Payment ${i + 1}`,
+        paymentPeriodLabel,
         regularPaymentAmount: paymentAmount.toString(),
         prepaymentAmount: "0",
         paymentAmount: paymentAmount.toString(),

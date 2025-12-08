@@ -4,10 +4,12 @@ import { usePageTitle } from "@/shared/hooks/use-page-title";
 import { PageHeader } from "@/shared/ui/page-header";
 import { Button } from "@/shared/ui/button";
 import { formatDistanceToNow } from "date-fns";
+import { useMortgageSelection } from "@/features/mortgage-tracking";
 import { useScenarios, useScenarioListState } from "./hooks";
 import {
   ScenarioCard,
   ScenarioListEmptyState,
+  ScenarioListNoMortgageState,
   ScenarioListSkeleton,
   DeleteScenarioDialog,
 } from "./components";
@@ -18,9 +20,10 @@ export function ScenarioListFeature() {
   const [, setLocation] = useLocation();
   usePageTitle("Scenarios | Mortgage Strategy");
 
+  const { mortgages, isLoading: mortgagesLoading } = useMortgageSelection();
   const {
     data: scenarios = [],
-    isLoading,
+    isLoading: scenariosLoading,
   } = useScenarios();
 
   const {
@@ -30,8 +33,19 @@ export function ScenarioListFeature() {
     confirmDelete,
   } = useScenarioListState();
 
-  if (isLoading) {
+  if (scenariosLoading || mortgagesLoading) {
     return <ScenarioListSkeleton />;
+  }
+
+  // Product Logic: Mortgage must exist before scenarios can be created
+  // Scenarios are projections based on mortgage data
+  if (!mortgages || mortgages.length === 0) {
+    return (
+      <div className="space-y-8">
+        <PageHeader title="Scenarios" description="Compare different financial strategies" />
+        <ScenarioListNoMortgageState />
+      </div>
+    );
   }
 
   if (scenarios.length === 0) {

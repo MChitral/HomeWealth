@@ -22,6 +22,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { UseFormReturn } from "react-hook-form";
 import type { EditTermFormData } from "../hooks/use-edit-term-form";
 import type { PrimeRateResponse } from "../api";
+import { useEffect, useState } from "react";
+import { mortgageApi } from "../api";
 
 interface EditTermDialogProps {
   open: boolean;
@@ -54,6 +56,120 @@ function EditTermFormFields({
   const termYears = watch("termYears");
   const primeRate = watch("primeRate");
   const spread = watch("spread");
+  
+  // Fetch historical prime rate if startDate is in the past
+  const [historicalPrimeRate, setHistoricalPrimeRate] = useState<{ rate: number; date: string } | null>(null);
+  const [isLoadingHistorical, setIsLoadingHistorical] = useState(false);
+  
+  useEffect(() => {
+    if (startDate && termType !== "fixed") {
+      const startDateObj = new Date(startDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Only fetch historical rate if startDate is in the past
+      if (startDateObj < today) {
+        setIsLoadingHistorical(true);
+        const queryStartDate = new Date(startDateObj);
+        queryStartDate.setMonth(queryStartDate.getMonth() - 3);
+        const queryEndDate = new Date(startDateObj);
+        queryEndDate.setDate(queryEndDate.getDate() + 1);
+        
+        mortgageApi
+          .fetchHistoricalPrimeRates(
+            queryStartDate.toISOString().split("T")[0],
+            queryEndDate.toISOString().split("T")[0]
+          )
+          .then((response) => {
+            if (response.rates && response.rates.length > 0) {
+              // Find the most recent rate on or before startDate
+              const applicableRates = response.rates
+                .filter((r) => r.date <= startDate)
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+              
+              if (applicableRates.length > 0) {
+                const rate = applicableRates[0];
+                setHistoricalPrimeRate({ rate: rate.primeRate, date: rate.date });
+                // Only update form field if it's not already set (preserve user's existing value)
+                if (!primeRate) {
+                  setValue("primeRate", rate.primeRate.toFixed(2), { shouldValidate: false });
+                }
+              } else {
+                setHistoricalPrimeRate(null);
+              }
+            } else {
+              setHistoricalPrimeRate(null);
+            }
+          })
+          .catch((error) => {
+            console.error("Failed to fetch historical prime rate:", error);
+            setHistoricalPrimeRate(null);
+          })
+          .finally(() => {
+            setIsLoadingHistorical(false);
+          });
+      } else {
+        // Start date is today or in future, use current rate
+        setHistoricalPrimeRate(null);
+        if (primeRateData?.primeRate && !primeRate) {
+          setValue("primeRate", primeRateData.primeRate.toFixed(2), { shouldValidate: false });
+        }
+      }
+    }
+  }, [startDate, termType, setValue, primeRate]);
+  
+  // Determine which rate to display
+  const displayRate = historicalPrimeRate?.rate ?? primeRateData?.primeRate;
+  const displayDate = historicalPrimeRate?.date ?? primeRateData?.effectiveDate;
+  const isHistorical = historicalPrimeRate !== null;
+  
+  // Handle refresh button - fetch historical rate for startDate if in past, otherwise current rate
+  const handleRefreshPrime = async () => {
+    if (startDate && termType !== "fixed") {
+      const startDateObj = new Date(startDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (startDateObj < today) {
+        // Fetch historical rate for startDate
+        setIsLoadingHistorical(true);
+        try {
+          const queryStartDate = new Date(startDateObj);
+          queryStartDate.setMonth(queryStartDate.getMonth() - 3);
+          const queryEndDate = new Date(startDateObj);
+          queryEndDate.setDate(queryEndDate.getDate() + 1);
+          
+          const response = await mortgageApi.fetchHistoricalPrimeRates(
+            queryStartDate.toISOString().split("T")[0],
+            queryEndDate.toISOString().split("T")[0]
+          );
+          
+          if (response.rates && response.rates.length > 0) {
+            const applicableRates = response.rates
+              .filter((r) => r.date <= startDate)
+              .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            
+            if (applicableRates.length > 0) {
+              const rate = applicableRates[0];
+              setHistoricalPrimeRate({ rate: rate.primeRate, date: rate.date });
+              setValue("primeRate", rate.primeRate.toFixed(2), { shouldValidate: false });
+            }
+          }
+        } catch (error) {
+          console.error("Failed to fetch historical prime rate:", error);
+        } finally {
+          setIsLoadingHistorical(false);
+        }
+      } else {
+        // Fetch current rate
+        const result = await refetchPrimeRate();
+        if (result.data?.primeRate) {
+          setHistoricalPrimeRate(null);
+          setValue("primeRate", result.data.primeRate.toString());
+        }
+      }
+    }
+  };
 
   return (
     <div className="space-y-4 py-4">
@@ -162,22 +278,19 @@ function EditTermFormFields({
             render={({ field }) => (
               <FormItem>
                 <div className="flex items-center justify-between">
-                  <FormLabel htmlFor="edit-prime-rate">Current Prime Rate (%)</FormLabel>
+                  <FormLabel htmlFor="edit-prime-rate">
+                    {isHistorical ? "Prime Rate for Start Date (%)" : "Current Prime Rate (%)"}
+                  </FormLabel>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     className="h-6 px-2 text-xs"
-                    onClick={async () => {
-                      const result = await refetchPrimeRate();
-                      if (result.data?.primeRate) {
-                        setValue("primeRate", result.data.primeRate.toString());
-                      }
-                    }}
-                    disabled={isPrimeRateLoading}
+                    onClick={handleRefreshPrime}
+                    disabled={isPrimeRateLoading || isLoadingHistorical}
                     data-testid="button-edit-refresh-prime"
                   >
-                    {isPrimeRateLoading ? (
+                    {(isPrimeRateLoading || isLoadingHistorical) ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
                     ) : (
                       <RefreshCw className="h-3 w-3" />
@@ -192,13 +305,21 @@ function EditTermFormFields({
                     type="number"
                     step="0.01"
                     placeholder="4.45"
+                    value={displayRate?.toFixed(2) ?? field.value}
                     readOnly
+                    disabled={isLoadingHistorical}
                     data-testid="input-edit-prime-rate"
                   />
                 </FormControl>
-                {primeRateData && (
+                {displayDate && (
                   <p className="text-xs text-muted-foreground">
-                    Bank of Canada rate as of {new Date(primeRateData.effectiveDate).toLocaleDateString()}
+                    {isHistorical ? (
+                      <>Historical Bank of Canada rate effective on{" "}
+                      {new Date(displayDate).toLocaleDateString()}</>
+                    ) : (
+                      <>Bank of Canada rate as of{" "}
+                      {new Date(displayDate).toLocaleDateString()}</>
+                    )}
                   </p>
                 )}
                 <FormMessage />

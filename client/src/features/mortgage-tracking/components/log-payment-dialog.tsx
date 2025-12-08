@@ -55,6 +55,22 @@ export function LogPaymentDialog({
 }: LogPaymentDialogProps) {
   const [paymentDate, setPaymentDate] = useState("");
   const [paymentPeriodLabel, setPaymentPeriodLabel] = useState("");
+  
+  // Auto-generate month-year format when payment date changes
+  // Auto-generate month-year format when payment date changes
+  useEffect(() => {
+    if (paymentDate) {
+      try {
+        const paymentDateObj = new Date(paymentDate);
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const month = monthNames[paymentDateObj.getMonth()];
+        const year = paymentDateObj.getFullYear();
+        setPaymentPeriodLabel(`${month}-${year}`);
+      } catch {
+        // Ignore invalid dates
+      }
+    }
+  }, [paymentDate]);
   const [regularPaymentAmount, setRegularPaymentAmount] = useState("");
   const [prepaymentAmount, setPrepaymentAmount] = useState("0");
 
@@ -62,10 +78,31 @@ export function LogPaymentDialog({
     if (open && currentTerm) {
       setRegularPaymentAmount(currentTerm.regularPaymentAmount.toString());
       setPrepaymentAmount("0");
-      setPaymentDate(new Date().toISOString().split("T")[0]);
-      setPaymentPeriodLabel("");
+      const today = new Date().toISOString().split("T")[0];
+      setPaymentDate(today);
+      // Auto-generate month-year format
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const paymentDateObj = new Date(today);
+      const month = monthNames[paymentDateObj.getMonth()];
+      const year = paymentDateObj.getFullYear();
+      setPaymentPeriodLabel(`${month}-${year}`);
     }
   }, [open, currentTerm]);
+  
+  // Auto-update payment period label when payment date changes
+  useEffect(() => {
+    if (paymentDate) {
+      try {
+        const paymentDateObj = new Date(paymentDate);
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const month = monthNames[paymentDateObj.getMonth()];
+        const year = paymentDateObj.getFullYear();
+        setPaymentPeriodLabel(`${month}-${year}`);
+      } catch {
+        // Ignore invalid dates
+      }
+    }
+  }, [paymentDate]);
 
   const totalPaymentAmount =
     (parseFloat(regularPaymentAmount) || 0) + (parseFloat(prepaymentAmount) || 0);
@@ -174,14 +211,17 @@ export function LogPaymentDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="payment-period-label">Payment Label (optional)</Label>
+              <Label htmlFor="payment-period-label">Payment Period (auto-generated)</Label>
               <Input
                 id="payment-period-label"
-                placeholder="e.g., January 2025"
+                placeholder="e.g., Feb-2025"
                 value={paymentPeriodLabel}
                 onChange={(e) => setPaymentPeriodLabel(e.target.value)}
                 data-testid="input-payment-label"
               />
+              <p className="text-xs text-muted-foreground">
+                Automatically set to month-year format based on payment date. You can edit if needed.
+              </p>
             </div>
           </div>
 

@@ -28,6 +28,8 @@ import {
 } from "@/shared/ui/form";
 import type { CreateMortgageFormData } from "../hooks/use-create-mortgage-form";
 import type { PrimeRateResponse } from "../api";
+import { useEffect, useState } from "react";
+import { mortgageApi } from "../api";
 
 interface CreateMortgageDialogProps {
   open: boolean;
@@ -86,7 +88,7 @@ function Step1Fields() {
         <FormField
           control={control}
           name="downPayment"
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <FormItem className="space-y-2">
               <FormLabel htmlFor="down-payment">Down Payment ($)</FormLabel>
               <FormControl>
@@ -101,7 +103,7 @@ function Step1Fields() {
               <FormMessage />
               {Number(propertyPrice) > 0 &&
                 Number(downPayment) >= 0 &&
-                !field.fieldState.error && (
+                !fieldState.error && (
                   <p className="text-sm text-muted-foreground font-medium">
                     Loan amount: $
                     {Number.isFinite(loanAmountValue)
@@ -219,23 +221,88 @@ function Step2Fields({
   onRefreshPrime: () => void;
   isPrimeRateLoading: boolean;
 }) {
-  const { control, watch } = useFormContext<CreateMortgageFormData>();
+  const { control, watch, setValue } = useFormContext<CreateMortgageFormData>();
 
   const termType = watch("termType");
   const amortization = watch("amortization");
   const frequency = watch("frequency");
   const primeRate = watch("primeRate");
   const spread = watch("spread");
+  const startDate = watch("startDate");
+  
+  // Fetch historical prime rate if startDate is in the past
+  const [historicalPrimeRate, setHistoricalPrimeRate] = useState<{ rate: number; date: string } | null>(null);
+  const [isLoadingHistorical, setIsLoadingHistorical] = useState(false);
+  
+  useEffect(() => {
+    if (startDate && termType !== "fixed") {
+      const startDateObj = new Date(startDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Only fetch historical rate if startDate is in the past
+      if (startDateObj < today) {
+        setIsLoadingHistorical(true);
+        const queryStartDate = new Date(startDateObj);
+        queryStartDate.setMonth(queryStartDate.getMonth() - 3);
+        const queryEndDate = new Date(startDateObj);
+        queryEndDate.setDate(queryEndDate.getDate() + 1);
+        
+        mortgageApi
+          .fetchHistoricalPrimeRates(
+            queryStartDate.toISOString().split("T")[0],
+            queryEndDate.toISOString().split("T")[0]
+          )
+          .then((response) => {
+            if (response.rates && response.rates.length > 0) {
+              // Find the most recent rate on or before startDate
+              const applicableRates = response.rates
+                .filter((r) => r.date <= startDate)
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+              
+              if (applicableRates.length > 0) {
+                const rate = applicableRates[0];
+                setHistoricalPrimeRate({ rate: rate.primeRate, date: rate.date });
+                // Update form field with historical rate
+                setValue("primeRate", rate.primeRate.toFixed(2), { shouldValidate: false });
+              } else {
+                setHistoricalPrimeRate(null);
+              }
+            } else {
+              setHistoricalPrimeRate(null);
+            }
+          })
+          .catch((error) => {
+            console.error("Failed to fetch historical prime rate:", error);
+            setHistoricalPrimeRate(null);
+          })
+          .finally(() => {
+            setIsLoadingHistorical(false);
+          });
+      } else {
+        // Start date is today or in future, use current rate
+        setHistoricalPrimeRate(null);
+        if (primeRateData?.primeRate) {
+          setValue("primeRate", primeRateData.primeRate.toFixed(2), { shouldValidate: false });
+        }
+      }
+    }
+  }, [startDate, termType, setValue]);
+  
+  // Determine which rate to display
+  const displayRate = historicalPrimeRate?.rate ?? primeRateData?.primeRate;
+  const displayDate = historicalPrimeRate?.date ?? primeRateData?.effectiveDate;
+  const isHistorical = historicalPrimeRate !== null;
 
   return (
     <div className="space-y-4 py-4">
       <div className="p-3 bg-muted rounded-lg text-sm">
         <p>
           <strong>Loan:</strong> ${loanAmount.toLocaleString()} over{" "}
-          {amortization} years
+          {amortization || "25"} years
         </p>
         <p>
-          <strong>Payments:</strong> {frequency.replace("-", " ")}
+          <strong>Payments:</strong> {(frequency || "monthly").replace("-", " ")}
         </p>
       </div>
 
@@ -333,24 +400,29 @@ function Step2Fields({
               <FormItem className="space-y-2">
                 <div className="flex items-center justify-between">
                   <FormLabel htmlFor="prime-rate">
-                    Current Prime Rate (%)
+                    {isHistorical ? "Prime Rate for Start Date (%)" : "Current Prime Rate (%)"}
                   </FormLabel>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 px-2 text-xs"
-                    onClick={onRefreshPrime}
-                    disabled={isPrimeRateLoading}
-                    data-testid="button-refresh-prime"
-                  >
-                    {isPrimeRateLoading ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <RefreshCw className="h-3 w-3" />
-                    )}
-                    <span className="ml-1">Refresh</span>
-                  </Button>
+                  {!isHistorical && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2 text-xs"
+                      onClick={onRefreshPrime}
+                      disabled={isPrimeRateLoading || isLoadingHistorical}
+                      data-testid="button-refresh-prime"
+                    >
+                      {isPrimeRateLoading ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-3 w-3" />
+                      )}
+                      <span className="ml-1">Refresh</span>
+                    </Button>
+                  )}
+                  {isLoadingHistorical && (
+                    <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                  )}
                 </div>
                 <FormControl>
                   <Input
@@ -359,14 +431,21 @@ function Step2Fields({
                     step="0.01"
                     placeholder="6.45"
                     {...field}
+                    value={displayRate?.toFixed(2) ?? field.value}
                     readOnly
+                    disabled={isLoadingHistorical}
                     data-testid="input-prime-rate"
                   />
                 </FormControl>
-                {primeRateData && (
+                {displayDate && (
                   <p className="text-xs text-muted-foreground">
-                    Bank of Canada rate as of{" "}
-                    {new Date(primeRateData.effectiveDate).toLocaleDateString()}
+                    {isHistorical ? (
+                      <>Historical Bank of Canada rate effective on{" "}
+                      {new Date(displayDate).toLocaleDateString()}</>
+                    ) : (
+                      <>Bank of Canada rate as of{" "}
+                      {new Date(displayDate).toLocaleDateString()}</>
+                    )}
                   </p>
                 )}
                 <FormMessage />
