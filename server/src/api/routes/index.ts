@@ -21,7 +21,7 @@ export function buildApiRouter(
   registerMortgageRoutes(router, services);
   registerScenarioRoutes(router, services);
   registerPrepaymentEventRoutes(router, services);
-  registerPrimeRateRoutes(router);
+  registerPrimeRateRoutes(router, services);
 
   return router;
 }

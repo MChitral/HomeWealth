@@ -7,6 +7,7 @@ import { MortgagePaymentService } from "./mortgage-payment.service";
 import { ScenarioService } from "./scenario.service";
 import { PrepaymentEventService } from "./prepayment-event.service";
 import { ScenarioProjectionService } from "./scenario-projection.service";
+import { PrimeRateTrackingService } from "./prime-rate-tracking.service";
 
 export interface ApplicationServices {
   cashFlows: CashFlowService;
@@ -17,6 +18,7 @@ export interface ApplicationServices {
   scenarios: ScenarioService;
   prepaymentEvents: PrepaymentEventService;
   scenarioProjections: ScenarioProjectionService;
+  primeRateTracking: PrimeRateTrackingService;
 }
 
 export function createServices(repositories: Repositories): ApplicationServices {
@@ -49,6 +51,11 @@ export function createServices(repositories: Repositories): ApplicationServices 
       repositories.cashFlows,
       repositories.emergencyFunds,
     ),
+    primeRateTracking: new PrimeRateTrackingService(
+      repositories.primeRateHistory,
+      repositories.mortgageTerms,
+      repositories.mortgages,
+    ),
   };
 }
 
@@ -60,4 +67,5 @@ export * from "./mortgage-payment.service";
 export * from "./scenario.service";
 export * from "./prepayment-event.service";
 export * from "./scenario-projection.service";
+export * from "./prime-rate-tracking.service";
 

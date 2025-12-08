@@ -8,6 +8,7 @@ import { errorHandler } from "@api/middleware/error-handler";
 import { createRepositories } from "@infrastructure/repositories";
 import { createServices } from "@application/services";
 import { setupVite, serveStatic, log } from "@infrastructure/vite";
+import { startPrimeRateScheduler } from "@infrastructure/jobs/prime-rate-scheduler";
 
 declare module "http" {
   interface IncomingMessage {
@@ -34,6 +35,9 @@ async function bootstrap() {
 
   registerApi(app, services, repositories);
   app.use(errorHandler);
+
+  // Start scheduled jobs
+  startPrimeRateScheduler(services.primeRateTracking);
 
   if (app.get("env") === "development") {
     await setupVite(app, server);

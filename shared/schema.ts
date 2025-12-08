@@ -333,6 +333,10 @@ export const mortgagePayments = pgTable("mortgage_payments", {
   // Trigger rate tracking (VRM-Fixed Payment only)
   triggerRateHit: integer("trigger_rate_hit").notNull().default(0), // boolean as 0/1
   
+  // Payment skipping (Canadian lender feature)
+  isSkipped: integer("is_skipped").notNull().default(0), // boolean as 0/1 - indicates payment was skipped
+  skippedInterestAccrued: decimal("skipped_interest_accrued", { precision: 10, scale: 2 }).notNull().default("0.00"), // Interest accrued during skip
+  
   // Remaining amortization (in months for precision)
   remainingAmortizationMonths: integer("remaining_amortization_months").notNull(),
   
@@ -366,6 +370,9 @@ export const insertMortgagePaymentSchema = createInsertSchema(mortgagePayments)
     effectiveRate: z.union([z.string(), z.number()]).transform((val) => 
       typeof val === 'number' ? val.toFixed(3) : val
     ),
+    skippedInterestAccrued: z.union([z.string(), z.number()]).transform((val) => 
+      typeof val === 'number' ? val.toFixed(2) : val
+    ).optional().default("0.00"),
   });
 export type InsertMortgagePayment = z.infer<typeof insertMortgagePaymentSchema>;
 export type MortgagePayment = typeof mortgagePayments.$inferSelect;
@@ -424,3 +431,26 @@ export const prepaymentEvents = pgTable("prepayment_events", {
 export const insertPrepaymentEventSchema = createInsertSchema(prepaymentEvents).omit({ id: true, createdAt: true });
 export type InsertPrepaymentEvent = z.infer<typeof insertPrepaymentEventSchema>;
 export type PrepaymentEvent = typeof prepaymentEvents.$inferSelect;
+
+// Prime Rate History - Track Bank of Canada prime rate changes
+export const primeRateHistory = pgTable("prime_rate_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  primeRate: decimal("prime_rate", { precision: 5, scale: 3 }).notNull(),
+  effectiveDate: date("effective_date").notNull(),
+  source: text("source").notNull().default("Bank of Canada"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("IDX_prime_rate_effective_date").on(table.effectiveDate),
+  index("IDX_prime_rate_created_at").on(table.createdAt),
+]);
+
+export const insertPrimeRateHistorySchema = createInsertSchema(primeRateHistory)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    primeRate: z.union([z.string(), z.number()]).transform((val) =>
+      typeof val === 'number' ? val.toFixed(3) : val
+    ),
+  });
+
+export type InsertPrimeRateHistory = z.infer<typeof insertPrimeRateHistorySchema>;
+export type PrimeRateHistory = typeof primeRateHistory.$inferSelect;

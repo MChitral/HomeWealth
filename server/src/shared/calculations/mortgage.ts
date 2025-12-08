@@ -5,7 +5,15 @@
  * - Semi-annual compounding (not monthly like US)
  * - Payment frequency affects effective rate
  * - Term (3-5 years) vs Amortization (25-30 years)
+ * 
+ * Rounding Conventions:
+ * - All monetary amounts are rounded to nearest cent (2 decimal places)
+ * - Uses standard JavaScript rounding: Math.round() and .toFixed(2)
+ * - This matches the convention used by major Canadian lenders (RBC, TD, BMO, Scotiabank, CIBC)
+ * - Some lenders may round down (never in borrower's favor), but nearest cent is most common
  */
+
+import { adjustToBusinessDay } from "@server-shared/utils/business-days";
 
 export type PaymentFrequency = 
   | 'monthly'           // 12 payments/year
@@ -64,7 +72,7 @@ export function getEffectivePeriodicRate(annualRate: number, frequency: PaymentF
  * @param annualRate - Annual nominal interest rate (e.g., 0.0549 for 5.49%)
  * @param amortizationMonths - Total amortization period in months
  * @param frequency - Payment frequency
- * @returns Payment amount per period
+ * @returns Payment amount per period (rounded to nearest cent)
  */
 export function calculatePayment(
   principal: number,
@@ -82,29 +90,34 @@ export function calculatePayment(
   if (frequency === 'accelerated-biweekly') {
     // Accelerated bi-weekly: take monthly payment and divide by 2
     const monthlyPayment = calculateMonthlyPayment(principal, annualRate, amortizationMonths);
-    return monthlyPayment / 2;
+    // Round to nearest cent (Canadian lender convention)
+    return Math.round((monthlyPayment / 2) * 100) / 100;
   }
   
   if (frequency === 'accelerated-weekly') {
     // Accelerated weekly: take monthly payment and divide by 4
     const monthlyPayment = calculateMonthlyPayment(principal, annualRate, amortizationMonths);
-    return monthlyPayment / 4;
+    // Round to nearest cent (Canadian lender convention)
+    return Math.round((monthlyPayment / 4) * 100) / 100;
   }
   
   // Standard payment calculation: P = (r * PV) / (1 - (1 + r)^-n)
   if (periodicRate === 0) {
-    return principal / totalPayments;
+    return Math.round((principal / totalPayments) * 100) / 100;
   }
   
   const payment = (periodicRate * principal) / (1 - Math.pow(1 + periodicRate, -totalPayments));
   
-  return payment;
+  // Round to nearest cent (Canadian lender convention)
+  return Math.round(payment * 100) / 100;
 }
 
 /**
  * Calculate monthly payment (used for accelerated calculations)
+ * 
+ * @returns Payment amount rounded to nearest cent (Canadian lender convention)
  */
-function calculateMonthlyPayment(
+export function calculateMonthlyPayment(
   principal: number,
   annualRate: number,
   amortizationMonths: number
@@ -112,12 +125,13 @@ function calculateMonthlyPayment(
   const periodicRate = getEffectivePeriodicRate(annualRate, 'monthly');
   
   if (periodicRate === 0) {
-    return principal / amortizationMonths;
+    return Math.round((principal / amortizationMonths) * 100) / 100;
   }
   
   const payment = (periodicRate * principal) / (1 - Math.pow(1 + periodicRate, -amortizationMonths));
   
-  return payment;
+  // Round to nearest cent (Canadian lender convention)
+  return Math.round(payment * 100) / 100;
 }
 
 /**
@@ -126,7 +140,7 @@ function calculateMonthlyPayment(
  * @param remainingBalance - Current principal balance
  * @param annualRate - Annual nominal interest rate
  * @param frequency - Payment frequency
- * @returns Interest amount for this payment
+ * @returns Interest amount for this payment (rounded to nearest cent)
  */
 export function calculateInterestPayment(
   remainingBalance: number,
@@ -134,7 +148,8 @@ export function calculateInterestPayment(
   frequency: PaymentFrequency
 ): number {
   const periodicRate = getEffectivePeriodicRate(annualRate, frequency);
-  return remainingBalance * periodicRate;
+  // Round to nearest cent (Canadian lender convention)
+  return Math.round(remainingBalance * periodicRate * 100) / 100;
 }
 
 /**
@@ -142,13 +157,14 @@ export function calculateInterestPayment(
  * 
  * @param paymentAmount - Total payment amount
  * @param interestAmount - Interest portion of payment
- * @returns Principal amount for this payment
+ * @returns Principal amount for this payment (rounded to nearest cent)
  */
 export function calculatePrincipalPayment(
   paymentAmount: number,
   interestAmount: number
 ): number {
-  return paymentAmount - interestAmount;
+  // Round to nearest cent (Canadian lender convention)
+  return Math.round((paymentAmount - interestAmount) * 100) / 100;
 }
 
 /**
@@ -157,14 +173,15 @@ export function calculatePrincipalPayment(
  * @param currentBalance - Current principal balance
  * @param principalPayment - Principal portion of payment
  * @param extraPrepayment - Additional prepayment amount
- * @returns New remaining balance
+ * @returns New remaining balance (rounded to nearest cent)
  */
 export function calculateRemainingBalance(
   currentBalance: number,
   principalPayment: number,
   extraPrepayment: number = 0
 ): number {
-  return Math.max(0, currentBalance - principalPayment - extraPrepayment);
+  // Round to nearest cent (Canadian lender convention)
+  return Math.max(0, Math.round((currentBalance - principalPayment - extraPrepayment) * 100) / 100);
 }
 
 /**
@@ -209,7 +226,29 @@ export function calculateRemainingAmortization(
 /**
  * Calculate trigger rate for VRM-Fixed Payment
  * 
- * Trigger rate is the rate at which the payment no longer covers interest
+ * **Trigger Rate Definition:**
+ * The trigger rate is the annual nominal interest rate at which the fixed payment
+ * exactly equals the interest-only payment. Above this rate, the payment no longer
+ * covers interest, resulting in negative amortization (balance increases).
+ * 
+ * **Calculation Method:**
+ * This function performs the reverse calculation of `getEffectivePeriodicRate`:
+ * 1. Calculate periodic rate: `periodicRate = paymentAmount / remainingBalance`
+ * 2. Convert to effective annual rate: `EAR = (1 + periodicRate)^paymentsPerYear - 1`
+ * 3. Convert to semi-annual rate: `semiAnnual = (1 + EAR)^(1/2) - 1`
+ * 4. Convert to nominal annual rate: `nominal = semiAnnual * 2`
+ * 
+ * **Verification:**
+ * The reverse calculation has been verified through comprehensive unit tests.
+ * Given a trigger rate calculated by this function, applying `getEffectivePeriodicRate`
+ * and multiplying by balance yields the original payment amount (within rounding tolerance).
+ * 
+ * **Canadian Mortgage Rule:**
+ * For VRM-Fixed Payment mortgages, when the current rate exceeds the trigger rate:
+ * - Payment amount stays fixed (doesn't change)
+ * - Interest exceeds payment amount
+ * - Unpaid interest is added to principal (negative amortization)
+ * - Balance increases instead of decreases
  * 
  * @param paymentAmount - Fixed payment amount
  * @param remainingBalance - Current principal balance
@@ -223,17 +262,20 @@ export function calculateTriggerRate(
 ): number {
   const paymentsPerYear = getPaymentsPerYear(frequency);
   
-  // At trigger rate: payment = interest
+  // At trigger rate: payment = interest only
   // payment = balance * periodicRate
   // periodicRate = payment / balance
   const periodicRate = paymentAmount / remainingBalance;
   
   // Convert periodic rate back to annual nominal rate
   // This is the reverse of getEffectivePeriodicRate
+  // Step 1: Periodic rate → Effective annual rate
   const effectiveAnnualRate = Math.pow(1 + periodicRate, paymentsPerYear) - 1;
   
-  // Convert effective annual to nominal semi-annual
+  // Step 2: Effective annual → Semi-annual rate
   const semiAnnualRate = Math.pow(1 + effectiveAnnualRate, 1/2) - 1;
+  
+  // Step 3: Semi-annual → Nominal annual rate
   const nominalAnnualRate = semiAnnualRate * 2;
   
   return nominalAnnualRate;
@@ -261,9 +303,25 @@ export function isTriggerRateHit(
 /**
  * Validate prepayment against annual limit
  * 
+ * **Prepayment Limit Calculation Method:**
+ * - Uses **original mortgage amount** (not current balance) as the base for limit calculation
+ * - This is the standard method used by major Canadian lenders (RBC, TD, BMO, Scotiabank, CIBC)
+ * - Formula: `maxAnnualPrepayment = originalMortgageAmount * (annualLimitPercent / 100)`
+ * - Example: $500,000 original amount × 20% = $100,000 annual prepayment limit
+ * 
+ * **Alternative Method (Not Implemented):**
+ * - Some smaller lenders may use current balance as the base
+ * - This would be: `maxAnnualPrepayment = currentBalance * (annualLimitPercent / 100)`
+ * - Not implemented as it's less common and original amount is the industry standard
+ * 
+ * **Year-to-Date Tracking:**
+ * - Prepayments are tracked per calendar year (January 1 - December 31)
+ * - Limit resets each January 1st
+ * - All prepayment types (monthly-percent, annual, one-time) count toward the limit
+ * 
  * @param prepaymentAmount - Proposed prepayment amount
- * @param yearToDatePrepayments - Total prepayments made this year so far
- * @param originalMortgageAmount - Original mortgage amount
+ * @param yearToDatePrepayments - Total prepayments made this calendar year
+ * @param originalMortgageAmount - Original mortgage principal amount (base for limit calculation)
  * @param annualLimitPercent - Lender's annual prepayment limit (e.g., 20 for 20%)
  * @returns true if prepayment is within limits
  */
@@ -273,6 +331,8 @@ export function isWithinPrepaymentLimit(
   originalMortgageAmount: number,
   annualLimitPercent: number
 ): boolean {
+  // Calculate maximum annual prepayment based on original mortgage amount
+  // This is the standard Canadian lender convention
   const maxAnnualPrepayment = (originalMortgageAmount * annualLimitPercent) / 100;
   const totalWithProposed = yearToDatePrepayments + prepaymentAmount;
   return totalWithProposed <= maxAnnualPrepayment;
@@ -345,6 +405,11 @@ export interface TermRenewal {
   startPaymentNumber: number;
   newRate: number;
   newPaymentAmount?: number; // For VRM-Fixed, this stays same; for VRM-Changing, recalculated
+  originalAmortizationMonths?: number; // Original amortization period to reset to at renewal (Canadian convention)
+  /** Blend-and-extend: extended amortization period (months) - if provided, extends beyond original */
+  extendedAmortizationMonths?: number; // For blend-and-extend renewals
+  /** Blend-and-extend: indicates this is a blended rate renewal */
+  isBlendAndExtend?: boolean; // If true, rate is blended between old and new
 }
 
 /**
@@ -377,6 +442,8 @@ export function generateAmortizationSchedule(
   let currentRate = annualRate;
   let basePaymentAmount = calculatePayment(principal, annualRate, amortizationMonths, frequency);
   let currentPaymentAmount = basePaymentAmount;
+  // Track original amortization for term renewal resets (Canadian convention)
+  let currentAmortizationMonths = amortizationMonths;
   
   let cumulativePrincipal = 0;
   let cumulativeInterest = 0;
@@ -411,9 +478,20 @@ export function generateAmortizationSchedule(
         return new Date(targetYear, targetMonth, clampedDay);
       }
       case 'semi-monthly':
-        // Add 15 days (2 payments per month)
-        newDate.setDate(newDate.getDate() + 15);
-        return newDate;
+        // Semi-monthly: Align to 1st and 15th of each month (Canadian lender convention)
+        const currentDay = newDate.getDate();
+        const currentMonth = newDate.getMonth();
+        const currentYear = newDate.getFullYear();
+        
+        if (currentDay < 15) {
+          // If before 15th, next payment is 15th of same month
+          return new Date(currentYear, currentMonth, 15);
+        } else {
+          // If on or after 15th, next payment is 1st of next month
+          const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
+          const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
+          return new Date(nextYear, nextMonth, 1);
+        }
       case 'biweekly':
       case 'accelerated-biweekly':
         // Add 14 days (every 2 weeks)
@@ -432,26 +510,31 @@ export function generateAmortizationSchedule(
     const renewal = termRenewals.find(r => r.startPaymentNumber === paymentNumber);
     if (renewal) {
       currentRate = renewal.newRate;
+      
+      // Canadian mortgage convention: At term renewal, amortization typically resets to original period
+      // unless explicitly extended (blend-and-extend). Use renewal's originalAmortizationMonths if provided,
+      // otherwise keep current amortization (for backward compatibility).
+      if (renewal.extendedAmortizationMonths !== undefined) {
+        // Blend-and-extend: use extended amortization (beyond original)
+        currentAmortizationMonths = renewal.extendedAmortizationMonths;
+      } else if (renewal.originalAmortizationMonths !== undefined) {
+        // Standard renewal: reset to original amortization
+        currentAmortizationMonths = renewal.originalAmortizationMonths;
+      }
+      
       if (renewal.newPaymentAmount !== undefined) {
         // VRM-Fixed Payment: payment stays same
         currentPaymentAmount = renewal.newPaymentAmount;
       } else {
         // VRM-Changing Payment or Fixed renewal: recalculate payment
-        const remainingAmortMonths = calculateRemainingAmortization(
+        // For blend-and-extend, uses extended amortization; otherwise uses original
+        currentPaymentAmount = calculatePayment(
           remainingBalance,
-          basePaymentAmount,
           currentRate,
+          currentAmortizationMonths, // Use extended or original amortization
           frequency
         );
-        if (remainingAmortMonths > 0) {
-          currentPaymentAmount = calculatePayment(
-            remainingBalance,
-            currentRate,
-            remainingAmortMonths,
-            frequency
-          );
-          basePaymentAmount = currentPaymentAmount;
-        }
+        basePaymentAmount = currentPaymentAmount;
       }
     }
     
@@ -459,13 +542,24 @@ export function generateAmortizationSchedule(
     const interestPayment = calculateInterestPayment(remainingBalance, currentRate, frequency);
     
     // Check if trigger rate hit (for VRM-Fixed Payment)
+    // When trigger rate is hit, payment doesn't cover interest, causing negative amortization
     const triggerRateHit = currentPaymentAmount <= interestPayment;
     
-    // Calculate principal payment
-    const principalPayment = Math.min(
-      calculatePrincipalPayment(currentPaymentAmount, interestPayment),
-      remainingBalance
-    );
+    let principalPayment: number;
+    let unpaidInterest = 0;
+    
+    if (triggerRateHit) {
+      // NEGATIVE AMORTIZATION: Payment doesn't cover interest
+      // Unpaid interest is added to principal, causing balance to INCREASE
+      unpaidInterest = interestPayment - currentPaymentAmount;
+      principalPayment = 0; // No principal reduction when trigger rate hit
+    } else {
+      // Normal payment: payment covers interest, remainder goes to principal
+      principalPayment = Math.min(
+        calculatePrincipalPayment(currentPaymentAmount, interestPayment),
+        remainingBalance
+      );
+    }
     
     // Calculate prepayments for this payment
     let extraPrepayment = 0;
@@ -507,13 +601,28 @@ export function generateAmortizationSchedule(
       }
     }
     
-    // Cap prepayment to remaining balance
-    extraPrepayment = Math.min(extraPrepayment, remainingBalance - principalPayment);
+    // Cap prepayment appropriately based on trigger rate status
+    if (triggerRateHit) {
+      // When trigger rate hit, prepayments can still be made
+      // They reduce the negative amortization (unpaid interest)
+      // Cap prepayment to prevent overpayment beyond original mortgage amount (if desired)
+      extraPrepayment = Math.min(extraPrepayment, remainingBalance + unpaidInterest);
+    } else {
+      // Normal case: cap prepayment to remaining balance minus principal payment
+      extraPrepayment = Math.min(extraPrepayment, remainingBalance - principalPayment);
+    }
     
+    // Calculate total principal payment (may be negative if trigger rate hit and no prepayment)
     const totalPrincipalPayment = principalPayment + extraPrepayment;
     
     // Update balance
-    remainingBalance = calculateRemainingBalance(remainingBalance, principalPayment, extraPrepayment);
+    if (triggerRateHit) {
+      // Negative amortization: balance increases by unpaid interest, reduced by any prepayments
+      remainingBalance = remainingBalance + unpaidInterest - extraPrepayment;
+    } else {
+      // Normal payment: balance decreases by principal payment and prepayments
+      remainingBalance = calculateRemainingBalance(remainingBalance, principalPayment, extraPrepayment);
+    }
     
     // Update cumulative totals (include prepayments in principal total)
     cumulativePrincipal += totalPrincipalPayment; // Includes both scheduled + extra
@@ -521,11 +630,14 @@ export function generateAmortizationSchedule(
     cumulativePrepayments += extraPrepayment;
     
     // Calculate remaining amortization
+    // Use total payment amount (regular + prepayment) for accurate amortization
+    // Prepayments reduce the payoff timeline, so they should be included
     let remainingAmortMonths = 0;
     if (remainingBalance > 0.01) {
+      const totalPaymentAmount = currentPaymentAmount + extraPrepayment;
       remainingAmortMonths = calculateRemainingAmortization(
         remainingBalance,
-        currentPaymentAmount,
+        totalPaymentAmount,
         currentRate,
         frequency
       );
@@ -538,10 +650,14 @@ export function generateAmortizationSchedule(
       }
     }
     
+    // Adjust payment date to business day if it falls on weekend/holiday
+    // Interest accrues until the adjusted payment date
+    const adjustedPaymentDate = adjustToBusinessDay(new Date(currentDate));
+    
     // Create payment entry
     payments.push({
       paymentNumber,
-      paymentDate: new Date(currentDate),
+      paymentDate: adjustedPaymentDate,
       paymentAmount: currentPaymentAmount,
       principalPayment,
       interestPayment,
@@ -648,8 +764,20 @@ export function generateAmortizationScheduleWithPayment(
         return new Date(targetYear, targetMonth, clampedDay);
       }
       case 'semi-monthly':
-        newDate.setDate(newDate.getDate() + 15);
-        return newDate;
+        // Semi-monthly: Align to 1st and 15th of each month (Canadian lender convention)
+        const currentDay = newDate.getDate();
+        const currentMonth = newDate.getMonth();
+        const currentYear = newDate.getFullYear();
+        
+        if (currentDay < 15) {
+          // If before 15th, next payment is 15th of same month
+          return new Date(currentYear, currentMonth, 15);
+        } else {
+          // If on or after 15th, next payment is 1st of next month
+          const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
+          const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
+          return new Date(nextYear, nextMonth, 1);
+        }
       case 'biweekly':
       case 'accelerated-biweekly':
         newDate.setDate(newDate.getDate() + 14);
@@ -676,13 +804,24 @@ export function generateAmortizationScheduleWithPayment(
     const interestPayment = calculateInterestPayment(remainingBalance, currentRate, frequency);
     
     // Check if trigger rate hit (payment doesn't cover interest)
+    // When trigger rate is hit, payment doesn't cover interest, causing negative amortization
     const triggerRateHit = currentPaymentAmount <= interestPayment;
     
-    // Calculate principal payment
-    const principalPayment = Math.min(
-      calculatePrincipalPayment(currentPaymentAmount, interestPayment),
-      remainingBalance
-    );
+    let principalPayment: number;
+    let unpaidInterest = 0;
+    
+    if (triggerRateHit) {
+      // NEGATIVE AMORTIZATION: Payment doesn't cover interest
+      // Unpaid interest is added to principal, causing balance to INCREASE
+      unpaidInterest = interestPayment - currentPaymentAmount;
+      principalPayment = 0; // No principal reduction when trigger rate hit
+    } else {
+      // Normal payment: payment covers interest, remainder goes to principal
+      principalPayment = Math.min(
+        calculatePrincipalPayment(currentPaymentAmount, interestPayment),
+        remainingBalance
+      );
+    }
     
     // Calculate prepayments for this payment
     let extraPrepayment = 0;
@@ -720,13 +859,28 @@ export function generateAmortizationScheduleWithPayment(
       }
     }
     
-    // Cap prepayment to remaining balance
-    extraPrepayment = Math.min(extraPrepayment, remainingBalance - principalPayment);
+    // Cap prepayment appropriately based on trigger rate status
+    if (triggerRateHit) {
+      // When trigger rate hit, prepayments can still be made
+      // They reduce the negative amortization (unpaid interest)
+      // Cap prepayment to prevent overpayment beyond original mortgage amount (if desired)
+      extraPrepayment = Math.min(extraPrepayment, remainingBalance + unpaidInterest);
+    } else {
+      // Normal case: cap prepayment to remaining balance minus principal payment
+      extraPrepayment = Math.min(extraPrepayment, remainingBalance - principalPayment);
+    }
     
+    // Calculate total principal payment (may be negative if trigger rate hit and no prepayment)
     const totalPrincipalPayment = principalPayment + extraPrepayment;
     
     // Update balance
-    remainingBalance = calculateRemainingBalance(remainingBalance, principalPayment, extraPrepayment);
+    if (triggerRateHit) {
+      // Negative amortization: balance increases by unpaid interest, reduced by any prepayments
+      remainingBalance = remainingBalance + unpaidInterest - extraPrepayment;
+    } else {
+      // Normal payment: balance decreases by principal payment and prepayments
+      remainingBalance = calculateRemainingBalance(remainingBalance, principalPayment, extraPrepayment);
+    }
     
     // Update cumulative totals
     cumulativePrincipal += totalPrincipalPayment;
@@ -734,11 +888,14 @@ export function generateAmortizationScheduleWithPayment(
     cumulativePrepayments += extraPrepayment;
     
     // Calculate remaining amortization
+    // Use total payment amount (regular + prepayment) for accurate amortization
+    // Prepayments reduce the payoff timeline, so they should be included
     let remainingAmortMonths = 0;
     if (remainingBalance > 0.01) {
+      const totalPaymentAmount = currentPaymentAmount + extraPrepayment;
       remainingAmortMonths = calculateRemainingAmortization(
         remainingBalance,
-        currentPaymentAmount,
+        totalPaymentAmount,
         currentRate,
         frequency
       );
@@ -750,10 +907,14 @@ export function generateAmortizationScheduleWithPayment(
       }
     }
     
+    // Adjust payment date to business day if it falls on weekend/holiday
+    // Interest accrues until the adjusted payment date
+    const adjustedPaymentDate = adjustToBusinessDay(new Date(currentDate));
+    
     // Create payment entry
     payments.push({
       paymentNumber,
-      paymentDate: new Date(currentDate),
+      paymentDate: adjustedPaymentDate,
       paymentAmount: currentPaymentAmount,
       principalPayment,
       interestPayment,

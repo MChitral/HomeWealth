@@ -235,6 +235,93 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
     res.json({ success: true });
   });
 
+  router.post("/mortgage-terms/:id/blend-and-extend", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+
+    try {
+      const { 
+        newMarketRate, 
+        extendedAmortizationMonths,
+      } = req.body as { 
+        newMarketRate: number; 
+        extendedAmortizationMonths?: number;
+      };
+
+      if (!newMarketRate || typeof newMarketRate !== "number") {
+        sendError(res, 400, "newMarketRate is required and must be a number");
+        return;
+      }
+
+      // Get the term and mortgage
+      const term = await services.mortgageTerms.findById(req.params.id);
+      if (!term) {
+        sendError(res, 404, "Term not found");
+        return;
+      }
+
+      // Authorize access
+      const mortgage = await services.mortgages.findById(term.mortgageId);
+      if (!mortgage || mortgage.userId !== user.id) {
+        sendError(res, 404, "Term not found or unauthorized");
+        return;
+      }
+
+      // Get latest payment to find remaining balance
+      const payments = await services.mortgagePayments.findByTermId(term.id);
+      const latestPayment = payments.length > 0
+        ? payments.sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime())[0]
+        : null;
+
+      const remainingBalance = latestPayment
+        ? Number(latestPayment.remainingBalance)
+        : Number(mortgage.currentBalance);
+
+      // Calculate remaining term months
+      const termEndDate = new Date(term.endDate);
+      const today = new Date();
+      const remainingTermMonths = Math.max(0, Math.ceil((termEndDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24 * 30.44)));
+
+      // Get original and remaining amortization
+      const originalAmortizationMonths = (mortgage.amortizationYears * 12) + (mortgage.amortizationMonths ?? 0);
+      const remainingAmortizationMonths = latestPayment
+        ? Number(latestPayment.remainingAmortizationMonths)
+        : originalAmortizationMonths;
+
+      // Calculate extended amortization (default to original if not specified)
+      const extendedAmort = extendedAmortizationMonths ?? originalAmortizationMonths;
+
+      // Get old rate
+      const oldRate = getTermEffectiveRate(term);
+
+      // Calculate blend-and-extend
+      const { calculateBlendAndExtend } = await import("@server-shared/calculations/blend-and-extend");
+      const result = calculateBlendAndExtend({
+        oldRate,
+        newMarketRate: newMarketRate / 100, // Convert percentage to decimal
+        remainingBalance,
+        remainingTermMonths,
+        originalAmortizationMonths,
+        remainingAmortizationMonths,
+        extendedAmortizationMonths: extendedAmort,
+        frequency: term.paymentFrequency as PaymentFrequency,
+      });
+
+      res.json({
+        blendedRate: result.blendedRate,
+        blendedRatePercent: (result.blendedRate * 100).toFixed(3),
+        newPaymentAmount: result.newPaymentAmount,
+        marketRatePaymentAmount: result.marketRatePaymentAmount,
+        oldRatePaymentAmount: result.oldRatePaymentAmount,
+        interestSavingsPerPayment: result.interestSavingsPerPayment,
+        extendedAmortizationMonths: extendedAmort,
+        message: `Blend-and-extend calculated: ${(result.blendedRate * 100).toFixed(3)}% rate, $${result.newPaymentAmount.toFixed(2)} payment`,
+      });
+    } catch (error) {
+      sendError(res, 400, "Failed to calculate blend-and-extend", error);
+    }
+  });
+
   router.get("/mortgages/:mortgageId/payments", async (req, res) => {
     const user = requireUser(req, res);
     if (!user) return;
@@ -335,6 +422,43 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       return;
     }
     res.json({ success: true });
+  });
+
+  router.post("/mortgages/:mortgageId/terms/:termId/skip-payment", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+
+    try {
+      const { paymentDate, maxSkipsPerYear = 2 } = req.body as {
+        paymentDate: string;
+        maxSkipsPerYear?: number;
+      };
+
+      if (!paymentDate) {
+        sendError(res, 400, "paymentDate is required");
+        return;
+      }
+
+      const skippedPayment = await services.mortgagePayments.skipPayment(
+        req.params.mortgageId,
+        req.params.termId,
+        user.id,
+        paymentDate,
+        maxSkipsPerYear
+      );
+
+      if (!skippedPayment) {
+        sendError(res, 404, "Mortgage or term not found");
+        return;
+      }
+
+      res.json({
+        payment: skippedPayment,
+        message: `Payment skipped. Interest accrued: $${Number(skippedPayment.skippedInterestAccrued).toFixed(2)}. New balance: $${Number(skippedPayment.remainingBalance).toFixed(2)}`,
+      });
+    } catch (error) {
+      sendError(res, 400, "Failed to skip payment", error);
+    }
   });
 
   // Amortization projection endpoint - uses the authoritative Canadian mortgage calculation engine

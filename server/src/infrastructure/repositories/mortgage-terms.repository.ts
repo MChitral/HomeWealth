@@ -26,6 +26,10 @@ export class MortgageTermsRepository {
       .where(eq(mortgageTerms.mortgageId, mortgageId));
   }
 
+  async findAll(): Promise<MortgageTermRecord[]> {
+    return this.database.select().from(mortgageTerms);
+  }
+
   async create(payload: InsertMortgageTerm): Promise<MortgageTermRecord> {
     const [created] = await this.database.insert(mortgageTerms).values(payload).returning();
     return created;

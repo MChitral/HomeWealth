@@ -1,4 +1,5 @@
 import { Router } from "express";
+import type { ApplicationServices } from "@application/services";
 import { sendError } from "@server-shared/utils/api-response";
 
 const BOC_PRIME_RATE_API = "https://www.bankofcanada.ca/valet/observations/V121796/json?recent=1";
@@ -18,7 +19,7 @@ interface BoCPrimeRateResponse {
   }>;
 }
 
-export function registerPrimeRateRoutes(router: Router) {
+export function registerPrimeRateRoutes(router: Router, services: ApplicationServices) {
   router.get("/prime-rate", async (_req, res) => {
     try {
       const response = await fetch(BOC_PRIME_RATE_API);
@@ -85,6 +86,65 @@ export function registerPrimeRateRoutes(router: Router) {
     } catch (error: any) {
       console.error("Error fetching historical prime rates:", error);
       sendError(res, 500, "Failed to fetch historical prime rates", error);
+    }
+  });
+
+  // Check for prime rate changes and update VRM terms
+  router.post("/prime-rate/check-and-update", async (_req, res) => {
+    try {
+      const result = await services.primeRateTracking.checkAndUpdatePrimeRate();
+      res.json({
+        success: true,
+        ...result,
+        message: result.changed
+          ? `Prime rate changed from ${result.previousRate}% to ${result.newRate}%. Updated ${result.termsUpdated} VRM terms.`
+          : `Prime rate unchanged at ${result.newRate}%.`,
+      });
+    } catch (error: any) {
+      console.error("Error checking prime rate:", error);
+      sendError(res, 500, "Failed to check and update prime rate", error);
+    }
+  });
+
+  // Get prime rate history from database
+  router.get("/prime-rate/history/db", async (req, res) => {
+    try {
+      const { start_date, end_date } = req.query;
+
+      if (!start_date || !end_date) {
+        sendError(res, 400, "start_date and end_date query parameters are required");
+        return;
+      }
+
+      const history = await services.primeRateTracking.getHistory(
+        start_date as string,
+        end_date as string
+      );
+
+      res.json({
+        history,
+        startDate: start_date,
+        endDate: end_date,
+      });
+    } catch (error: any) {
+      console.error("Error fetching prime rate history:", error);
+      sendError(res, 500, "Failed to fetch prime rate history", error);
+    }
+  });
+
+  // Get latest prime rate from database
+  router.get("/prime-rate/latest", async (_req, res) => {
+    try {
+      const latest = await services.primeRateTracking.getLatest();
+      if (!latest) {
+        return res.json({
+          message: "No prime rate history found. Run /prime-rate/check-and-update first.",
+        });
+      }
+      res.json(latest);
+    } catch (error: any) {
+      console.error("Error fetching latest prime rate:", error);
+      sendError(res, 500, "Failed to fetch latest prime rate", error);
     }
   });
 }
