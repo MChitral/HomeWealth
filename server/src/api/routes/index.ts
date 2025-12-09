@@ -6,6 +6,7 @@ import { registerEmergencyFundRoutes } from "./emergency-fund.routes";
 import { registerMortgageRoutes } from "./mortgage.routes";
 import { registerScenarioRoutes } from "./scenario.routes";
 import { registerPrepaymentEventRoutes } from "./prepayment-event.routes";
+import { registerRefinancingEventRoutes } from "./refinancing-event.routes";
 import { registerSeedRoutes } from "./seed.routes";
 import { registerPrimeRateRoutes } from "./prime-rate.routes";
 
@@ -21,6 +22,7 @@ export function buildApiRouter(
   registerMortgageRoutes(router, services);
   registerScenarioRoutes(router, services);
   registerPrepaymentEventRoutes(router, services);
+  registerRefinancingEventRoutes(router, services);
   registerPrimeRateRoutes(router, services);
 
   return router;

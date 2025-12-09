@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import type { Scenario, PrepaymentEvent } from "@shared/schema";
+import type { Scenario, PrepaymentEvent, RefinancingEvent } from "@shared/schema";
 import { scenarioApi, scenarioQueryKeys } from "../api";
 
 export function useScenarioDetail(scenarioId: string | null) {
@@ -21,10 +21,20 @@ export function useScenarioDetail(scenarioId: string | null) {
     enabled: Boolean(scenarioId),
   });
 
+  const {
+    data: refinancingEvents,
+    isLoading: refinancingEventsLoading,
+  } = useQuery<RefinancingEvent[]>({
+    queryKey: scenarioQueryKeys.scenarioRefinancingEvents(scenarioId),
+    queryFn: () => scenarioApi.fetchRefinancingEvents(scenarioId as string),
+    enabled: Boolean(scenarioId),
+  });
+
   return {
     scenario,
     prepaymentEvents,
-    isLoading: scenarioLoading || eventsLoading,
+    refinancingEvents,
+    isLoading: scenarioLoading || eventsLoading || refinancingEventsLoading,
   };
 }
 

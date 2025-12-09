@@ -585,18 +585,29 @@ export function generateAmortizationSchedule(
     
     // Process annual prepayments (check if this payment matches the recurrence month)
     const currentMonth = currentDate.getMonth() + 1; // 1-12
-    const annualPrepayments = prepayments.filter(
-      p => p.type === 'annual' && 
-          paymentNumber >= p.startPaymentNumber && 
-          p.recurrenceMonth === currentMonth
+    // Filter annual prepayments that are eligible (paymentNumber >= startPaymentNumber)
+    const eligibleAnnualPrepayments = prepayments.filter(
+      p => p.type === 'annual' && paymentNumber >= p.startPaymentNumber
     );
-    for (const prep of annualPrepayments) {
-      // Check if this is the first occurrence this year
+    
+    for (const prep of eligibleAnnualPrepayments) {
+      // Check if this payment is in the correct year and month
+      // For annual prepayments, startPaymentNumber is set to the first payment of the start year
+      // We need to check if this payment is in the correct year and month
       const yearsSinceStart = Math.floor((paymentNumber - prep.startPaymentNumber) / paymentsPerYear);
       const expectedPaymentForThisYear = prep.startPaymentNumber + (yearsSinceStart * paymentsPerYear);
       
-      // Apply only if this is roughly the right payment for this year
-      if (Math.abs(paymentNumber - expectedPaymentForThisYear) < paymentsPerYear / 12) {
+      // Apply prepayment if:
+      // 1. The current month matches the recurrence month
+      // 2. We're in the correct year (within tolerance of the expected payment for this year)
+      // The tolerance allows for the fact that the prepayment occurs in a specific month,
+      // not at the start of the year. For monthly: up to 12 payments (full year).
+      // For biweekly: up to 26 payments (full year). For weekly: up to 52 payments (full year).
+      const tolerance = paymentsPerYear; // Allow full year tolerance since we're checking the month
+      const withinTolerance = Math.abs(paymentNumber - expectedPaymentForThisYear) < tolerance;
+      const monthMatches = prep.recurrenceMonth === currentMonth;
+      
+      if (monthMatches && withinTolerance) {
         extraPrepayment += prep.amount;
       }
     }
@@ -846,15 +857,29 @@ export function generateAmortizationScheduleWithPayment(
     
     // Process annual prepayments
     const currentMonth = currentDate.getMonth() + 1;
-    const annualPrepayments = prepayments.filter(
-      p => p.type === 'annual' && 
-          paymentNumber >= p.startPaymentNumber && 
-          p.recurrenceMonth === currentMonth
+    // Filter annual prepayments that are eligible (paymentNumber >= startPaymentNumber)
+    const eligibleAnnualPrepayments = prepayments.filter(
+      p => p.type === 'annual' && paymentNumber >= p.startPaymentNumber
     );
-    for (const prep of annualPrepayments) {
+    
+    for (const prep of eligibleAnnualPrepayments) {
+      // Check if this payment is in the correct year and month
+      // For annual prepayments, startPaymentNumber is set to the first payment of the start year
+      // We need to check if this payment is in the correct year and month
       const yearsSinceStart = Math.floor((paymentNumber - prep.startPaymentNumber) / paymentsPerYear);
       const expectedPaymentForThisYear = prep.startPaymentNumber + (yearsSinceStart * paymentsPerYear);
-      if (Math.abs(paymentNumber - expectedPaymentForThisYear) < paymentsPerYear / 12) {
+      
+      // Apply prepayment if:
+      // 1. The current month matches the recurrence month
+      // 2. We're in the correct year (within tolerance of the expected payment for this year)
+      // The tolerance allows for the fact that the prepayment occurs in a specific month,
+      // not at the start of the year. For monthly: up to 12 payments (full year).
+      // For biweekly: up to 26 payments (full year). For weekly: up to 52 payments (full year).
+      const tolerance = paymentsPerYear; // Allow full year tolerance since we're checking the month
+      const withinTolerance = Math.abs(paymentNumber - expectedPaymentForThisYear) < tolerance;
+      const monthMatches = prep.recurrenceMonth === currentMonth;
+      
+      if (monthMatches && withinTolerance) {
         extraPrepayment += prep.amount;
       }
     }

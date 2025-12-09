@@ -432,6 +432,31 @@ export const insertPrepaymentEventSchema = createInsertSchema(prepaymentEvents).
 export type InsertPrepaymentEvent = z.infer<typeof insertPrepaymentEventSchema>;
 export type PrepaymentEvent = typeof prepaymentEvents.$inferSelect;
 
+// Refinancing Events - Model refinancing scenarios at renewal points
+export const refinancingEvents = pgTable("refinancing_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  scenarioId: varchar("scenario_id").notNull().references(() => scenarios.id),
+  
+  // Timing options
+  refinancingYear: integer("refinancing_year"), // For year-based refinancing (nullable)
+  atTermEnd: integer("at_term_end").notNull().default(0), // Boolean: 0 = false, 1 = true - for term-end based refinancing
+  
+  // Refinancing details
+  newRate: decimal("new_rate", { precision: 5, scale: 3 }).notNull(), // New interest rate (e.g., 5.490)
+  termType: text("term_type").notNull(), // 'fixed', 'variable-changing', 'variable-fixed'
+  
+  // Optional refinancing changes
+  newAmortizationMonths: integer("new_amortization_months"), // If extending amortization (nullable)
+  paymentFrequency: text("payment_frequency"), // If changing frequency (nullable)
+  
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertRefinancingEventSchema = createInsertSchema(refinancingEvents).omit({ id: true, createdAt: true });
+export type InsertRefinancingEvent = z.infer<typeof insertRefinancingEventSchema>;
+export type RefinancingEvent = typeof refinancingEvents.$inferSelect;
+
 // Prime Rate History - Track Bank of Canada prime rate changes
 export const primeRateHistory = pgTable("prime_rate_history", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

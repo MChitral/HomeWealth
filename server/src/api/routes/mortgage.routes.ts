@@ -537,8 +537,17 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       recurrenceMonth: z.number().int().min(1).max(12).optional(),
       monthlyPercent: z.number().min(0).max(100).optional(),
     })).default([]),
+    refinancingEvents: z.array(z.object({
+      refinancingYear: z.number().int().min(1).optional(),
+      atTermEnd: z.boolean().optional(),
+      newRate: z.number().min(0).max(1), // As decimal, e.g., 0.0549 for 5.49%
+      termType: z.enum(['fixed', 'variable-changing', 'variable-fixed']),
+      newAmortizationMonths: z.number().int().min(1).optional(),
+      paymentFrequency: z.enum(['monthly', 'semi-monthly', 'biweekly', 'accelerated-biweekly', 'weekly', 'accelerated-weekly']).optional(),
+    })).default([]),
     rateOverride: z.number().min(0).max(1).optional(), // Optional rate override for scenario modeling
     mortgageId: z.string().optional(), // Optional: include historical payments
+    scenarioId: z.string().optional(), // Optional: fetch refinancing events from scenario
   });
 
   router.post("/mortgages/projection", async (req, res) => {
@@ -618,6 +627,134 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
           );
         }
       }
+
+      // Fetch and process refinancing events from scenario if provided
+      let refinancingEventsFromScenario: any[] = [];
+      if (data.scenarioId) {
+        const scenarioRefinancingEvents = await services.refinancingEvents.list(data.scenarioId, user.id);
+        if (scenarioRefinancingEvents) {
+          refinancingEventsFromScenario = scenarioRefinancingEvents;
+        }
+      }
+
+      // Merge refinancing events from request and scenario
+      const allRefinancingEvents = [
+        ...data.refinancingEvents,
+        ...refinancingEventsFromScenario.map((event) => ({
+          refinancingYear: event.refinancingYear,
+          atTermEnd: event.atTermEnd === 1 || event.atTermEnd === true,
+          newRate: Number(event.newRate) / 100, // Convert from percentage to decimal
+          termType: event.termType,
+          newAmortizationMonths: event.newAmortizationMonths ?? undefined,
+          paymentFrequency: event.paymentFrequency as PaymentFrequency | undefined,
+        })),
+      ];
+
+      // Convert refinancing events to TermRenewal format
+      const refinancingTermRenewals: TermRenewal[] = [];
+      const paymentsPerYear = getPaymentsPerYear(projectionFrequency);
+      const mortgageStartDate = data.mortgageId && mortgageTerms.length > 0
+        ? new Date(mortgageTerms.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())[0].startDate)
+        : projectionStartDate;
+
+      for (const refinancingEvent of allRefinancingEvents) {
+        let startPaymentNumber: number;
+
+        if (refinancingEvent.atTermEnd) {
+          // Term-end based: find the next term end date after projection start
+          if (mortgageTerms.length === 0) {
+            // No terms, skip term-end refinancing
+            continue;
+          }
+          
+          const sortedTerms = [...mortgageTerms].sort(
+            (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+          );
+          
+          // Find the next term that ends after projection start
+          const nextTermEnd = sortedTerms.find(
+            (term) => new Date(term.endDate) > projectionStartDate
+          );
+          
+          if (!nextTermEnd) {
+            // No future term ends, skip
+            continue;
+          }
+          
+          startPaymentNumber = calculatePaymentNumberFromDates(
+            projectionStartDate,
+            new Date(nextTermEnd.endDate),
+            projectionFrequency,
+          );
+        } else if (refinancingEvent.refinancingYear) {
+          // Year-based: calculate payment number from refinancingYear
+          // refinancingYear is relative to mortgage start
+          const refinancingDate = new Date(mortgageStartDate);
+          refinancingDate.setFullYear(refinancingDate.getFullYear() + refinancingEvent.refinancingYear - 1);
+          
+          // Adjust relative to projection start
+          if (refinancingDate <= projectionStartDate) {
+            // Refinancing year is in the past relative to projection, skip
+            continue;
+          }
+          
+          startPaymentNumber = calculatePaymentNumberFromDates(
+            projectionStartDate,
+            refinancingDate,
+            projectionFrequency,
+          );
+        } else {
+          // Invalid refinancing event (neither atTermEnd nor refinancingYear)
+          continue;
+        }
+
+        // Calculate new payment amount if term type changes
+        let newPaymentAmount: number | undefined;
+        const refinancingFrequency = refinancingEvent.paymentFrequency ?? projectionFrequency;
+        const refinancingAmortization = refinancingEvent.newAmortizationMonths ?? data.amortizationMonths;
+        
+        // For variable-changing, payment recalculates; for variable-fixed and fixed, may stay same or recalculate
+        if (refinancingEvent.termType === 'variable-changing' || refinancingEvent.termType === 'fixed') {
+          // Recalculate payment based on balance at refinancing point
+          // We'll need to estimate the balance at refinancing time
+          // For now, use current balance as approximation (will be more accurate in actual calculation)
+          newPaymentAmount = calculatePayment(
+            lastPaymentBalance, // Approximation - actual balance will be calculated during schedule generation
+            refinancingEvent.newRate,
+            refinancingAmortization,
+            refinancingFrequency,
+          );
+        }
+        // For variable-fixed, payment stays same (undefined means keep current payment)
+
+        refinancingTermRenewals.push({
+          startPaymentNumber,
+          newRate: refinancingEvent.newRate,
+          newPaymentAmount,
+          originalAmortizationMonths: refinancingAmortization !== data.amortizationMonths ? data.amortizationMonths : undefined,
+          extendedAmortizationMonths: refinancingAmortization > data.amortizationMonths ? refinancingAmortization : undefined,
+        });
+      }
+
+      // Merge refinancing term renewals with existing term renewals
+      // Refinancing events take precedence if they occur at the same payment number
+      const mergedTermRenewals = [...termRenewals];
+      for (const refinancingRenewal of refinancingTermRenewals) {
+        const existingIndex = mergedTermRenewals.findIndex(
+          (r) => r.startPaymentNumber === refinancingRenewal.startPaymentNumber
+        );
+        if (existingIndex >= 0) {
+          // Replace existing renewal with refinancing renewal
+          mergedTermRenewals[existingIndex] = refinancingRenewal;
+        } else {
+          // Add new refinancing renewal
+          mergedTermRenewals.push(refinancingRenewal);
+        }
+      }
+      
+      // Sort by startPaymentNumber
+      mergedTermRenewals.sort((a, b) => a.startPaymentNumber - b.startPaymentNumber);
+      termRenewals = mergedTermRenewals;
       
       // Use actual payment amount if provided, otherwise calculate based on rate
       const basePayment = basePaymentOverride ?? calculatePayment(
@@ -633,7 +770,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       // Calculate how many payments have been made historically
       // This is needed to adjust startPaymentNumber relative to projection start
       const historicalPaymentCount = historicalPayments.length;
-      const paymentsPerYear = getPaymentsPerYear(projectionFrequency);
+      // paymentsPerYear already declared above for refinancing events
       
       // Add monthly prepayment as a percentage of the base payment
       if (data.monthlyPrepayAmount > 0 && basePayment > 0) {
@@ -658,15 +795,18 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
           // Prepayment hasn't occurred yet, adjust relative to projection start
           adjustedStartPaymentNumber = event.startPaymentNumber - historicalPaymentCount;
         } else {
-          // Prepayment already occurred in historical payments, skip it
-          // For annual events, we might want to apply it in future years
-          // For now, skip if it already occurred
+          // Prepayment already occurred in historical payments
+          // For annual events, calculate when the next occurrence should be
           if (event.type === 'annual') {
             // For annual events, calculate when the next occurrence should be
             // Find the next year when this prepayment should occur
             const yearsSinceStart = Math.floor((historicalPaymentCount - event.startPaymentNumber) / paymentsPerYear);
             const nextOccurrenceYear = yearsSinceStart + 1;
-            adjustedStartPaymentNumber = (nextOccurrenceYear * paymentsPerYear) - historicalPaymentCount + 1;
+            // Calculate the payment number for the next occurrence
+            // This should be: original startPaymentNumber + (nextOccurrenceYear * paymentsPerYear)
+            // Then adjust relative to projection start
+            const nextOccurrencePaymentNumber = event.startPaymentNumber + (nextOccurrenceYear * paymentsPerYear);
+            adjustedStartPaymentNumber = nextOccurrencePaymentNumber - historicalPaymentCount;
             // Ensure it's positive
             if (adjustedStartPaymentNumber <= 0) {
               adjustedStartPaymentNumber = 1; // Apply in first payment of projection
@@ -853,7 +993,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       }> = [];
       
       // Calculate payments per 2 years based on actual payment frequency
-      const paymentsPerYear = getPaymentsPerYear(projectionFrequency);
+      // paymentsPerYear already declared above
       const paymentsPerTwoYears = paymentsPerYear * 2;
       
       let cumulativePrincipal = 0;

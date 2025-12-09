@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { scenarioApi, type ProjectionRequest, type ProjectionResponse } from "../api";
-import type { DraftPrepaymentEvent } from "./use-scenario-editor-state";
+import type { DraftPrepaymentEvent, DraftRefinancingEvent } from "./use-scenario-editor-state";
 import type { PaymentFrequency } from "@/features/mortgage-tracking/utils/mortgage-math";
 import { getPaymentsPerYear } from "@/features/mortgage-tracking/utils/mortgage-math";
 
@@ -15,8 +15,10 @@ interface UseScenarioEditorProjectionsProps {
   prepaymentSplit: number[];
   monthlySurplus: number;
   prepaymentEvents: DraftPrepaymentEvent[];
+  refinancingEvents: DraftRefinancingEvent[];
   rateAssumption: number | null;
   mortgageId: string | undefined;
+  scenarioId: string | null;
   paymentFrequency: PaymentFrequency;
 }
 
@@ -25,8 +27,10 @@ export function useScenarioEditorProjections({
   prepaymentSplit,
   monthlySurplus,
   prepaymentEvents,
+  refinancingEvents,
   rateAssumption,
   mortgageId,
+  scenarioId,
   paymentFrequency,
 }: UseScenarioEditorProjectionsProps) {
   // Build projection request for API
@@ -52,11 +56,21 @@ export function useScenarioEditorProjections({
         startPaymentNumber = (event.oneTimeYear - 1) * paymentsPerYear + 1;
       } else if (event.eventType === "annual" && event.startYear) {
         // For annual events, convert startYear + recurrenceMonth to payment number
-        // Year N, Month M = payment ((N-1) * paymentsPerYear + M)
-        // E.g., Year 2, March (month 3) = (2-1) * 12 + 3 = 15
-        // This ensures the prepayment occurs in the correct month of that year
-        const monthOffset = event.recurrenceMonth || 1; // Default to January if not specified
-        startPaymentNumber = (event.startYear - 1) * paymentsPerYear + monthOffset;
+        // The backend checks recurrenceMonth against the actual payment date's month,
+        // so we need to set startPaymentNumber to be eligible from the start of that year.
+        // The backend will apply it when the payment date falls in the recurrenceMonth.
+        // 
+        // For Year N, we set startPaymentNumber to the first payment of that year.
+        // The backend's month check will ensure it only applies in the correct month.
+        // 
+        // Example: Year 2, March (month 3)
+        // - Monthly (12/year): Year 2 starts at payment 13, March is payment 15
+        // - Biweekly (26/year): Year 2 starts at payment 27, March is ~payment 32
+        // - Weekly (52/year): Year 2 starts at payment 53, March is ~payment 64
+        // 
+        // We set startPaymentNumber to the first payment of the year, and the backend
+        // will apply it when currentMonth matches recurrenceMonth.
+        startPaymentNumber = (event.startYear - 1) * paymentsPerYear + 1;
       }
 
       return {
@@ -67,6 +81,16 @@ export function useScenarioEditorProjections({
       };
     });
 
+    // Convert draft refinancing events to API format
+    const apiRefinancingEvents = refinancingEvents.map((event) => ({
+      refinancingYear: event.refinancingYear ?? undefined,
+      atTermEnd: event.atTermEnd ?? undefined,
+      newRate: Number(event.newRate), // Already in decimal format
+      termType: event.termType,
+      newAmortizationMonths: event.newAmortizationMonths ?? undefined,
+      paymentFrequency: event.paymentFrequency as PaymentFrequency | undefined,
+    }));
+
     return {
       currentBalance: currentMortgageData.currentBalance,
       annualRate: currentMortgageData.currentRate / 100, // Convert to decimal
@@ -75,12 +99,15 @@ export function useScenarioEditorProjections({
       actualPaymentAmount: currentMortgageData.monthlyPayment, // Use actual payment amount, not recalculated
       monthlyPrepayAmount: monthlyPrepay,
       prepaymentEvents: apiPrepaymentEvents,
+      refinancingEvents: apiRefinancingEvents,
       // Add rate override if user has set a different assumption
       rateOverride: rateAssumption !== null ? rateAssumption / 100 : undefined,
       // Include mortgage ID to fetch historical payments
       mortgageId: mortgageId,
+      // Include scenario ID to fetch refinancing events from scenario
+      scenarioId: scenarioId ?? undefined,
     };
-  }, [currentMortgageData, prepaymentSplit, monthlySurplus, prepaymentEvents, rateAssumption, mortgageId, paymentFrequency]);
+  }, [currentMortgageData, prepaymentSplit, monthlySurplus, prepaymentEvents, refinancingEvents, rateAssumption, mortgageId, scenarioId, paymentFrequency]);
 
   // Fetch projection from backend using authoritative Canadian mortgage calculation engine
   const { data: projectionData, isLoading: projectionLoading } = useQuery<ProjectionResponse>({

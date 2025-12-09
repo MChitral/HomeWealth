@@ -9,6 +9,7 @@ export * from "./scenario-basic-info-form";
 export * from "./current-mortgage-position-card";
 export * from "./rate-assumption-card";
 export * from "./prepayment-events-card";
+export * from "./refinancing-events-card";
 export * from "./surplus-allocation-card";
 export * from "./scenario-editor-no-mortgage-state";
 export * from "./projected-mortgage-outcome-card";

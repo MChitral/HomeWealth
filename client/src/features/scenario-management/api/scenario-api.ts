@@ -2,11 +2,13 @@ import type {
   Scenario,
   PrepaymentEvent,
   InsertPrepaymentEvent,
+  RefinancingEvent,
+  InsertRefinancingEvent,
 } from "@shared/schema";
 import type { ScenarioWithMetrics } from "@/entities";
 import { apiRequest } from "@/shared/api/query-client";
 
-export type { InsertPrepaymentEvent };
+export type { InsertPrepaymentEvent, InsertRefinancingEvent };
 
 export type ScenarioPayload = {
   name: string;
@@ -31,8 +33,17 @@ export type ProjectionRequest = {
     recurrenceMonth?: number;
     monthlyPercent?: number;
   }>;
+  refinancingEvents?: Array<{
+    refinancingYear?: number;
+    atTermEnd?: boolean;
+    newRate: number; // As decimal, e.g., 0.0549 for 5.49%
+    termType: 'fixed' | 'variable-changing' | 'variable-fixed';
+    newAmortizationMonths?: number;
+    paymentFrequency?: 'monthly' | 'semi-monthly' | 'biweekly' | 'accelerated-biweekly' | 'weekly' | 'accelerated-weekly';
+  }>;
   rateOverride?: number; // Optional rate override for scenario modeling (as decimal)
   mortgageId?: string; // Optional: include historical payments from this mortgage
+  scenarioId?: string; // Optional: fetch refinancing events from scenario
 };
 
 export type HistoricalYearData = {
@@ -79,6 +90,7 @@ export const scenarioQueryKeys = {
   scenariosWithMetrics: () => ["/api/scenarios/with-projections"] as const,
   scenario: (id: string | null) => ["/api/scenarios", id] as const,
   scenarioEvents: (id: string | null) => ["/api/scenarios", id, "prepayment-events"] as const,
+  scenarioRefinancingEvents: (id: string | null) => ["/api/scenarios", id, "refinancing-events"] as const,
 };
 
 export const scenarioApi = {
@@ -97,6 +109,14 @@ export const scenarioApi = {
     apiRequest<PrepaymentEvent>("PATCH", `/api/prepayment-events/${eventId}`, payload),
   deletePrepaymentEvent: (eventId: string) =>
     apiRequest("DELETE", `/api/prepayment-events/${eventId}`, {}),
+  fetchRefinancingEvents: (scenarioId: string) =>
+    apiRequest<RefinancingEvent[]>("GET", `/api/scenarios/${scenarioId}/refinancing-events`),
+  createRefinancingEvent: (scenarioId: string, payload: InsertRefinancingEvent) =>
+    apiRequest<RefinancingEvent>("POST", `/api/scenarios/${scenarioId}/refinancing-events`, payload),
+  updateRefinancingEvent: (eventId: string, payload: Partial<InsertRefinancingEvent>) =>
+    apiRequest<RefinancingEvent>("PATCH", `/api/refinancing-events/${eventId}`, payload),
+  deleteRefinancingEvent: (eventId: string) =>
+    apiRequest("DELETE", `/api/refinancing-events/${eventId}`, {}),
   fetchProjection: (params: ProjectionRequest) =>
     apiRequest<ProjectionResponse>("POST", "/api/mortgages/projection", params),
 };

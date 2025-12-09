@@ -19,6 +19,7 @@ import {
   CurrentMortgagePositionCard,
   RateAssumptionCard,
   PrepaymentEventsCard,
+  RefinancingEventsCard,
   SurplusAllocationCard,
   ProjectedMortgageOutcomeCard,
   EmergencyFundStrategyCard,
@@ -35,6 +36,7 @@ export function ScenarioEditorFeature() {
   const {
     scenario,
     prepaymentEvents: fetchedEvents,
+    refinancingEvents: fetchedRefinancingEvents,
     isLoading: detailLoading,
   } = useScenarioDetail(scenarioId);
 
@@ -69,7 +71,7 @@ export function ScenarioEditorFeature() {
   }, [mortgage, terms]);
 
   // Use centralized state management hook
-  const state = useScenarioEditorState(scenario, fetchedEvents, isNewScenario, scenarioId, () => {
+  const state = useScenarioEditorState(scenario, fetchedEvents, fetchedRefinancingEvents, isNewScenario, scenarioId, () => {
     navigate("/scenarios");
   });
 
@@ -89,8 +91,10 @@ export function ScenarioEditorFeature() {
     prepaymentSplit: state.prepaymentSplit,
     monthlySurplus: calculations.monthlySurplus,
     prepaymentEvents: state.prepaymentEvents,
+    refinancingEvents: state.refinancingEvents,
     rateAssumption: state.rateAssumption,
     mortgageId: mortgage?.id,
+    scenarioId: scenarioId,
     paymentFrequency: scenarioPaymentFrequency,
   });
 
@@ -211,6 +215,27 @@ export function ScenarioEditorFeature() {
               state.resetEventForm();
               state.setIsAddingEvent(true);
               state.setEditingEvent(null);
+            }}
+          />
+
+          <RefinancingEventsCard
+            refinancingEvents={state.refinancingEvents}
+            isAddingEvent={state.isAddingRefinancingEvent}
+            editingEvent={state.editingRefinancingEvent}
+            form={state.refinancingEventForm}
+            onAddEvent={state.handleAddRefinancingEvent}
+            onEditEvent={state.handleEditRefinancingEvent}
+            onUpdateEvent={state.handleUpdateRefinancingEvent}
+            onDeleteEvent={state.handleDeleteRefinancingEvent}
+            onCancelEvent={() => {
+              state.setIsAddingRefinancingEvent(false);
+              state.setEditingRefinancingEvent(null);
+              state.resetRefinancingEventForm();
+            }}
+            onStartAddingEvent={() => {
+              state.resetRefinancingEventForm();
+              state.setIsAddingRefinancingEvent(true);
+              state.setEditingRefinancingEvent(null);
             }}
           />
 

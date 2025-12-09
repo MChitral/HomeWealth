@@ -6,6 +6,7 @@ import { MortgageTermsRepository } from "./mortgage-terms.repository";
 import { MortgagePaymentsRepository } from "./mortgage-payments.repository";
 import { ScenariosRepository } from "./scenarios.repository";
 import { PrepaymentEventsRepository } from "./prepayment-events.repository";
+import { RefinancingEventsRepository } from "./refinancing-events.repository";
 import { PrimeRateHistoryRepository } from "./prime-rate-history.repository";
 
 export interface Repositories {
@@ -17,6 +18,7 @@ export interface Repositories {
   mortgagePayments: MortgagePaymentsRepository;
   scenarios: ScenariosRepository;
   prepaymentEvents: PrepaymentEventsRepository;
+  refinancingEvents: RefinancingEventsRepository;
   primeRateHistory: PrimeRateHistoryRepository;
 }
 
@@ -30,6 +32,7 @@ export function createRepositories(): Repositories {
     mortgagePayments: new MortgagePaymentsRepository(),
     scenarios: new ScenariosRepository(),
     prepaymentEvents: new PrepaymentEventsRepository(),
+    refinancingEvents: new RefinancingEventsRepository(),
     primeRateHistory: new PrimeRateHistoryRepository(),
   };
 }
@@ -45,6 +48,7 @@ export {
   MortgagePaymentsRepository,
   ScenariosRepository,
   PrepaymentEventsRepository,
+  RefinancingEventsRepository,
   PrimeRateHistoryRepository,
 };
 

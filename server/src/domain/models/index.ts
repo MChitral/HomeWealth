@@ -6,4 +6,5 @@ export * from "./mortgage-term";
 export * from "./mortgage-payment";
 export * from "./scenario";
 export * from "./prepayment-event";
+export * from "./refinancing-event";
 

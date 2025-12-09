@@ -6,6 +6,7 @@ import { MortgageTermService } from "./mortgage-term.service";
 import { MortgagePaymentService } from "./mortgage-payment.service";
 import { ScenarioService } from "./scenario.service";
 import { PrepaymentEventService } from "./prepayment-event.service";
+import { RefinancingEventService } from "./refinancing-event.service";
 import { ScenarioProjectionService } from "./scenario-projection.service";
 import { PrimeRateTrackingService } from "./prime-rate-tracking.service";
 
@@ -17,6 +18,7 @@ export interface ApplicationServices {
   mortgagePayments: MortgagePaymentService;
   scenarios: ScenarioService;
   prepaymentEvents: PrepaymentEventService;
+  refinancingEvents: RefinancingEventService;
   scenarioProjections: ScenarioProjectionService;
   primeRateTracking: PrimeRateTrackingService;
 }
@@ -45,6 +47,10 @@ export function createServices(repositories: Repositories): ApplicationServices 
       repositories.prepaymentEvents,
       repositories.scenarios,
     ),
+    refinancingEvents: new RefinancingEventService(
+      repositories.refinancingEvents,
+      repositories.scenarios,
+    ),
     scenarioProjections: new ScenarioProjectionService(
       repositories.mortgages,
       repositories.mortgageTerms,
@@ -66,6 +72,7 @@ export * from "./mortgage-term.service";
 export * from "./mortgage-payment.service";
 export * from "./scenario.service";
 export * from "./prepayment-event.service";
+export * from "./refinancing-event.service";
 export * from "./scenario-projection.service";
 export * from "./prime-rate-tracking.service";
 
