@@ -511,15 +511,22 @@ export function generateAmortizationSchedule(
     if (renewal) {
       currentRate = renewal.newRate;
       
-      // Canadian mortgage convention: At term renewal, amortization typically resets to original period
-      // unless explicitly extended (blend-and-extend). Use renewal's originalAmortizationMonths if provided,
-      // otherwise keep current amortization (for backward compatibility).
+      // Handle amortization changes at renewal
       if (renewal.extendedAmortizationMonths !== undefined) {
         // Blend-and-extend: use extended amortization (beyond original)
         currentAmortizationMonths = renewal.extendedAmortizationMonths;
       } else if (renewal.originalAmortizationMonths !== undefined) {
-        // Standard renewal: reset to original amortization
+        // Standard renewal: reset to specified amortization
         currentAmortizationMonths = renewal.originalAmortizationMonths;
+      } else {
+        // No explicit amortization provided - calculate remaining amortization
+        // based on payments made so far (for multiple refinancing events)
+        // This is the typical Canadian convention: at each renewal, recalculate
+        // payment based on remaining balance and remaining amortization period
+        const paymentsMade = paymentNumber - 1;
+        const monthsElapsed = (paymentsMade / paymentsPerYear) * 12;
+        const remainingAmort = Math.max(12, Math.round(amortizationMonths - monthsElapsed));
+        currentAmortizationMonths = remainingAmort;
       }
       
       if (renewal.newPaymentAmount !== undefined) {
@@ -527,11 +534,11 @@ export function generateAmortizationSchedule(
         currentPaymentAmount = renewal.newPaymentAmount;
       } else {
         // VRM-Changing Payment or Fixed renewal: recalculate payment
-        // For blend-and-extend, uses extended amortization; otherwise uses original
+        // For blend-and-extend, uses extended amortization; otherwise uses remaining
         currentPaymentAmount = calculatePayment(
           remainingBalance,
           currentRate,
-          currentAmortizationMonths, // Use extended or original amortization
+          currentAmortizationMonths,
           frequency
         );
         basePaymentAmount = currentPaymentAmount;
@@ -814,8 +821,17 @@ export function generateAmortizationScheduleWithPayment(
         // Blend-and-extend: use extended amortization
         currentAmortizationMonths = renewal.extendedAmortizationMonths;
       } else if (renewal.originalAmortizationMonths !== undefined) {
-        // Standard renewal: reset to original amortization
+        // Standard renewal: reset to specified amortization
         currentAmortizationMonths = renewal.originalAmortizationMonths;
+      } else {
+        // No explicit amortization provided - calculate remaining amortization
+        // based on payments made so far (for multiple refinancing events)
+        // This is the typical Canadian convention: at each renewal, recalculate
+        // payment based on remaining balance and remaining amortization period
+        const paymentsMade = paymentNumber - 1;
+        const monthsElapsed = (paymentsMade / paymentsPerYear) * 12;
+        const remainingAmort = Math.max(12, Math.round(amortizationMonths - monthsElapsed));
+        currentAmortizationMonths = remainingAmort;
       }
       
       if (renewal.newPaymentAmount !== undefined) {
