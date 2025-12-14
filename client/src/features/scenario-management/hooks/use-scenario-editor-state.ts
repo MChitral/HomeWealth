@@ -53,7 +53,7 @@ export function useScenarioEditorState(
   const description = basicInfoForm.watch("description");
 
   // Other form state (not yet migrated to React Hook Form)
-  const [prepaymentSplit, setPrepaymentSplit] = useState([50]);
+  const [prepaymentSplit, setPrepaymentSplit] = useState([0]);
   const [expectedReturnRate, setExpectedReturnRate] = useState(6.0);
   const [efPriorityPercent, setEfPriorityPercent] = useState(0);
   const [rateAssumption, setRateAssumption] = useState<number | null>(null);
@@ -159,7 +159,7 @@ export function useScenarioEditorState(
   };
 
   const buildScenarioPayload = (): ScenarioPayload => {
-    const prepaymentPercent = prepaymentSplit?.[0] ?? 50;
+    const prepaymentPercent = prepaymentSplit?.[0] ?? 0;
     return {
       name: name.trim(),
       description: description?.trim() || null,
@@ -379,7 +379,7 @@ export function useScenarioEditorState(
       newRate: (parseFloat(formData.newRate) / 100).toFixed(6), // Convert from percentage to decimal
       termType: formData.termType,
       newAmortizationMonths: formData.newAmortizationMonths ? parseInt(formData.newAmortizationMonths) : null,
-      paymentFrequency: formData.paymentFrequency || null,
+      paymentFrequency: formData.paymentFrequency && formData.paymentFrequency !== "keep-current" ? formData.paymentFrequency : null,
       description: formData.description || null,
     };
 
@@ -432,7 +432,7 @@ export function useScenarioEditorState(
       newRate: (parseFloat(formData.newRate) / 100).toFixed(6), // Convert from percentage to decimal
       termType: formData.termType,
       newAmortizationMonths: formData.newAmortizationMonths ? parseInt(formData.newAmortizationMonths) : null,
-      paymentFrequency: formData.paymentFrequency || null,
+      paymentFrequency: formData.paymentFrequency && formData.paymentFrequency !== "keep-current" ? formData.paymentFrequency : null,
       description: formData.description || null,
     };
 

@@ -13,14 +13,16 @@ export const refinancingEventFormSchema = z
     refinancingYear: z.string().optional(),
     newRate: z
       .string()
-      .min(1, "Rate is required")
       .refine(
         (val) => {
-          const num = Number(val);
+          // Allow empty string during typing, but validate on submit
+          if (!val || val.trim() === "") return false;
+          const trimmed = val.trim();
+          const num = Number(trimmed);
           return Number.isFinite(num) && num >= 0 && num <= 100;
         },
         {
-          message: "Rate must be between 0 and 100",
+          message: "Rate is required and must be between 0 and 100",
         }
       ),
     termType: z.enum(["fixed", "variable-changing", "variable-fixed"]),
@@ -67,7 +69,7 @@ const defaultValues: RefinancingEventFormData = {
   newRate: "",
   termType: "fixed",
   newAmortizationMonths: "",
-  paymentFrequency: "",
+  paymentFrequency: "keep-current",
   description: "",
 };
 
@@ -78,7 +80,8 @@ export function useRefinancingEventForm({ initialEvent }: UseRefinancingEventFor
   const form = useForm<RefinancingEventFormData>({
     resolver: zodResolver(refinancingEventFormSchema),
     defaultValues,
-    mode: "onChange",
+    mode: "onTouched",
+    reValidateMode: "onChange",
   });
 
   // Sync form with initial event data when editing
@@ -90,7 +93,7 @@ export function useRefinancingEventForm({ initialEvent }: UseRefinancingEventFor
         newRate: initialEvent.newRate ? (Number(initialEvent.newRate) * 100).toFixed(3) : "",
         termType: initialEvent.termType || "fixed",
         newAmortizationMonths: initialEvent.newAmortizationMonths?.toString() || "",
-        paymentFrequency: initialEvent.paymentFrequency || "",
+        paymentFrequency: initialEvent.paymentFrequency || "keep-current",
         description: initialEvent.description || "",
       });
     } else {

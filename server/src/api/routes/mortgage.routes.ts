@@ -643,7 +643,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         ...refinancingEventsFromScenario.map((event) => ({
           refinancingYear: event.refinancingYear,
           atTermEnd: event.atTermEnd === 1 || event.atTermEnd === true,
-          newRate: Number(event.newRate) / 100, // Convert from percentage to decimal
+          newRate: Number(event.newRate), // Already stored as decimal (e.g., 0.0549 for 5.49%)
           termType: event.termType,
           newAmortizationMonths: event.newAmortizationMonths ?? undefined,
           paymentFrequency: event.paymentFrequency as PaymentFrequency | undefined,
@@ -713,19 +713,16 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         const refinancingFrequency = refinancingEvent.paymentFrequency ?? projectionFrequency;
         const refinancingAmortization = refinancingEvent.newAmortizationMonths ?? data.amortizationMonths;
         
-        // For variable-changing, payment recalculates; for variable-fixed and fixed, may stay same or recalculate
-        if (refinancingEvent.termType === 'variable-changing' || refinancingEvent.termType === 'fixed') {
-          // Recalculate payment based on balance at refinancing point
-          // We'll need to estimate the balance at refinancing time
-          // For now, use current balance as approximation (will be more accurate in actual calculation)
-          newPaymentAmount = calculatePayment(
-            lastPaymentBalance, // Approximation - actual balance will be calculated during schedule generation
-            refinancingEvent.newRate,
-            refinancingAmortization,
-            refinancingFrequency,
-          );
-        }
-        // For variable-fixed, payment stays same (undefined means keep current payment)
+        // Payment recalculation logic:
+        // - For fixed and variable-changing: Leave undefined to let schedule generation recalculate
+        //   using the actual balance at the refinancing point (more accurate than using starting balance)
+        // - For variable-fixed: Also leave undefined for now - the schedule will need to handle
+        //   keeping the current payment amount (this may need additional logic in schedule generation)
+        // 
+        // Note: We don't set newPaymentAmount here because we don't know the exact balance at the
+        // refinancing point. The amortization schedule generation will recalculate it correctly using
+        // the actual remaining balance when it reaches that payment number.
+        newPaymentAmount = undefined;
 
         refinancingTermRenewals.push({
           startPaymentNumber,
@@ -757,8 +754,10 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       termRenewals = mergedTermRenewals;
       
       // Use actual payment amount if provided, otherwise calculate based on rate
+      // IMPORTANT: Use lastPaymentBalance (not data.currentBalance) for accurate payment calculation
+      // This ensures the payment is calculated from the actual balance at projection start
       const basePayment = basePaymentOverride ?? calculatePayment(
-        data.currentBalance,
+        lastPaymentBalance,
         effectiveRate,
         data.amortizationMonths,
         projectionFrequency
@@ -824,6 +823,26 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
           recurrenceMonth: event.recurrenceMonth,
           monthlyPercent: event.monthlyPercent,
         });
+      }
+
+      // Validate starting balance
+      if (lastPaymentBalance <= 0) {
+        sendError(res, 400, "Cannot generate projection: mortgage balance is zero or negative.");
+        return;
+      }
+
+      // Validate base payment amount
+      if (!basePayment || basePayment <= 0) {
+        console.error("Invalid basePayment:", {
+          basePayment,
+          basePaymentOverride,
+          actualPaymentAmount: data.actualPaymentAmount,
+          lastPaymentBalance,
+          effectiveRate,
+          amortizationMonths: data.amortizationMonths,
+        });
+        sendError(res, 400, "Cannot generate projection: payment amount is zero or invalid. Please ensure your mortgage has a valid payment amount.");
+        return;
       }
 
       // Generate amortization schedule using the authoritative calculation engine
@@ -1053,14 +1072,109 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         360
       );
 
+      // Validate schedule was generated successfully
+      if (!schedule || !schedule.payments || schedule.payments.length === 0) {
+        console.error("Schedule generation failed:", {
+          scheduleExists: !!schedule,
+          paymentsLength: schedule?.payments?.length || 0,
+          lastPaymentBalance,
+          effectiveRate,
+          amortizationMonths: data.amortizationMonths,
+          projectionFrequency,
+          basePayment,
+          prepaymentsCount: prepayments.length,
+          termRenewalsCount: termRenewals.length,
+        });
+        sendError(res, 400, "Failed to generate amortization schedule. Please check your mortgage and refinancing event configuration.");
+        return;
+      }
+
+      // Validate baseline schedule was generated successfully
+      if (!baselineSchedule || !baselineSchedule.payments || baselineSchedule.payments.length === 0) {
+        console.error("Baseline schedule generation failed:", {
+          baselineScheduleExists: !!baselineSchedule,
+          paymentsLength: baselineSchedule?.payments?.length || 0,
+          lastPaymentBalance,
+          effectiveRate,
+          amortizationMonths: data.amortizationMonths,
+        });
+        sendError(res, 400, "Failed to generate baseline amortization schedule.");
+        return;
+      }
+
+      // Debug: Log schedule summary to help diagnose issues
+      if (schedule.summary.totalInterest === 0 && schedule.payments.length > 0) {
+        console.warn("Schedule has payments but totalInterest is 0:", {
+          paymentsCount: schedule.payments.length,
+          totalPrincipal: schedule.summary.totalPrincipal,
+          totalInterest: schedule.summary.totalInterest,
+          firstPayment: schedule.payments[0],
+          lastPayment: schedule.payments[schedule.payments.length - 1],
+        });
+      }
+
       const interestSaved = Math.max(0, baselineSchedule.summary.totalInterest - schedule.summary.totalInterest);
-      const projectedPayoffYears = schedule.payments.length / 12;
+      // Calculate projected payoff years using correct payments per year for the payment frequency
+      const paymentsPerYear = getPaymentsPerYear(projectionFrequency);
+      // Use schedule summary payoff date if available, otherwise calculate from payment count
+      let projectedPayoffYears = 0;
+      if (schedule.summary.payoffDate) {
+        // Calculate years from projection start to payoff date
+        const payoffDate = new Date(schedule.summary.payoffDate);
+        const yearsDiff = (payoffDate.getTime() - projectionStartDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+        projectedPayoffYears = Math.max(0, yearsDiff);
+      } else if (schedule.payments.length > 0) {
+        // Fallback: calculate from payment count
+        // Find the last payment with balance > 0.01 to estimate payoff
+        const lastPaymentWithBalance = [...schedule.payments].reverse().find(p => p.remainingBalance > 0.01);
+        if (lastPaymentWithBalance) {
+          // Estimate: use payment number to calculate years
+          projectedPayoffYears = lastPaymentWithBalance.paymentNumber / paymentsPerYear;
+        } else {
+          // Balance already paid off, use last payment
+          const lastPayment = schedule.payments[schedule.payments.length - 1];
+          if (lastPayment) {
+            projectedPayoffYears = lastPayment.paymentNumber / paymentsPerYear;
+          } else {
+            // Fallback to payment count if paymentNumber is not available
+            projectedPayoffYears = schedule.payments.length / paymentsPerYear;
+          }
+        }
+      }
+      
+      // Ensure we have a valid projected payoff (should never be 0 if schedule has payments)
+      if (projectedPayoffYears === 0 && schedule.payments.length > 0) {
+        // Last resort: use the last payment's payment number or total payment count
+        const lastPayment = schedule.payments[schedule.payments.length - 1];
+        if (lastPayment && lastPayment.paymentNumber > 0) {
+          projectedPayoffYears = lastPayment.paymentNumber / paymentsPerYear;
+        } else {
+          projectedPayoffYears = schedule.payments.length / paymentsPerYear;
+        }
+      }
+      
+      // Round to 1 decimal place
+      projectedPayoffYears = Math.round(projectedPayoffYears * 10) / 10;
+
+      // Final validation: ensure we have valid summary values
+      if (projectedPayoffYears === 0 && schedule.payments.length > 0) {
+        // This should never happen, but if it does, log a warning and use a fallback
+        console.warn("Projected payoff is 0 but schedule has payments. Schedule length:", schedule.payments.length);
+        // Use the last payment's payment number as fallback
+        const lastPayment = schedule.payments[schedule.payments.length - 1];
+        if (lastPayment && lastPayment.paymentNumber > 0) {
+          projectedPayoffYears = lastPayment.paymentNumber / paymentsPerYear;
+        } else {
+          projectedPayoffYears = schedule.payments.length / paymentsPerYear;
+        }
+        projectedPayoffYears = Math.round(projectedPayoffYears * 10) / 10;
+      }
 
       res.json({
         yearlyData,
         chartData,
         summary: {
-          projectedPayoff: Math.round(projectedPayoffYears * 10) / 10,
+          projectedPayoff: projectedPayoffYears,
           totalInterest: Math.round(schedule.summary.totalInterest),
           totalPrincipal: Math.round(schedule.summary.totalPrincipal),
           interestSaved: Math.round(interestSaved),

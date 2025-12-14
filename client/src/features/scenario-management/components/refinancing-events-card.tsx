@@ -118,7 +118,15 @@ function RefinancingEventFormFields() {
                 min="0"
                 max="100"
                 placeholder="4.5"
-                {...field}
+                value={field.value || ""}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Always pass the value as a string to React Hook Form
+                  field.onChange(value);
+                }}
+                onBlur={field.onBlur}
+                name={field.name}
+                ref={field.ref}
                 data-testid="input-new-rate"
               />
             </FormControl>
@@ -180,14 +188,14 @@ function RefinancingEventFormFields() {
         render={({ field }) => (
           <FormItem>
             <FormLabel htmlFor="payment-frequency">Payment Frequency (optional)</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value || ""}>
+            <Select onValueChange={field.onChange} value={field.value || "keep-current"}>
               <FormControl>
                 <SelectTrigger id="payment-frequency">
                   <SelectValue placeholder="Keep current frequency" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="">Keep current frequency</SelectItem>
+                <SelectItem value="keep-current">Keep current frequency</SelectItem>
                 <SelectItem value="monthly">Monthly</SelectItem>
                 <SelectItem value="semi-monthly">Semi-Monthly</SelectItem>
                 <SelectItem value="biweekly">Biweekly</SelectItem>
