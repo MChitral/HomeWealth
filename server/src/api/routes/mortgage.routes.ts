@@ -689,12 +689,12 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       const allRefinancingEvents = [
         ...data.refinancingEvents,
         ...refinancingEventsFromScenario.map((event) => ({
-          refinancingYear: event.refinancingYear,
+          refinancingYear: event.refinancingYear ?? undefined,
           atTermEnd: event.atTermEnd === 1 || event.atTermEnd === true,
           newRate: Number(event.newRate), // Already stored as decimal (e.g., 0.0549 for 5.49%)
           termType: event.termType,
           newAmortizationMonths: event.newAmortizationMonths ?? undefined,
-          paymentFrequency: event.paymentFrequency as PaymentFrequency | undefined,
+          paymentFrequency: (event.paymentFrequency ?? undefined) as PaymentFrequency | undefined,
         })),
       ];
 

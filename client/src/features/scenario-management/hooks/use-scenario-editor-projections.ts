@@ -88,7 +88,7 @@ export function useScenarioEditorProjections({
       newRate: Number(event.newRate), // Already in decimal format
       termType: event.termType,
       newAmortizationMonths: event.newAmortizationMonths ?? undefined,
-      paymentFrequency: event.paymentFrequency as PaymentFrequency | undefined,
+      paymentFrequency: (event.paymentFrequency ?? undefined) as PaymentFrequency | undefined,
     }));
 
     return {
