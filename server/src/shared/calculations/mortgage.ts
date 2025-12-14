@@ -800,14 +800,36 @@ export function generateAmortizationScheduleWithPayment(
     }
   };
   
+  // Track current amortization for recalculation at renewals
+  let currentAmortizationMonths = amortizationMonths;
+  
   while (remainingBalance > 0.01 && paymentNumber <= maxPayments) {
-    // Check for term renewal (rate change) - payment amount stays fixed
+    // Check for term renewal (rate change)
     const renewal = termRenewals.find(r => r.startPaymentNumber === paymentNumber);
     if (renewal) {
       currentRate = renewal.newRate;
-      // For fixed payment projections, keep the payment amount the same unless explicitly changed
+      
+      // Handle amortization changes at renewal
+      if (renewal.extendedAmortizationMonths !== undefined) {
+        // Blend-and-extend: use extended amortization
+        currentAmortizationMonths = renewal.extendedAmortizationMonths;
+      } else if (renewal.originalAmortizationMonths !== undefined) {
+        // Standard renewal: reset to original amortization
+        currentAmortizationMonths = renewal.originalAmortizationMonths;
+      }
+      
       if (renewal.newPaymentAmount !== undefined) {
+        // Explicit payment amount provided (e.g., VRM-Fixed Payment)
         currentPaymentAmount = renewal.newPaymentAmount;
+      } else {
+        // Recalculate payment based on new rate and remaining balance
+        // This is essential for refinancing events where the rate changes
+        currentPaymentAmount = calculatePayment(
+          remainingBalance,
+          currentRate,
+          currentAmortizationMonths,
+          frequency
+        );
       }
     }
     
