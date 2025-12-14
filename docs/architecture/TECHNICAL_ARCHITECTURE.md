@@ -61,7 +61,7 @@
 │  ┌──────────────────────────────────────────────────────┐  │
 │  │  Drizzle ORM                                         │  │
 │  │  - 8 Tables (users, mortgages, scenarios, etc.)     │  │
-│  │  - In-Memory Storage Layer (IStorage)               │  │
+│  │  - PostgreSQL Database (persistent storage)        │  │
 │  │  - Type-Safe Queries                                 │  │
 │  └──────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
@@ -217,7 +217,9 @@ users
   │
   └─── scenarios (1:N)
            │
-           └─── prepayment_events (1:N)
+           ├─── prepayment_events (1:N)
+           │
+           └─── refinancing_events (1:N)
 ```
 
 ### Table Definitions
@@ -428,15 +430,50 @@ users
 - `one-time`: Single event (e.g., inheritance in year 5)
 - `payment-increase`: Regular payment increase (future)
 
+#### 9. refinancing_events
+```typescript
+{
+  id: varchar (UUID, PK),
+  scenarioId: varchar (FK -> scenarios.id),
+  
+  // Timing options
+  refinancingYear: integer,              // For year-based refinancing (nullable)
+  atTermEnd: integer,                    // Boolean: 0/1 - for term-end based refinancing
+  
+  // Refinancing details
+  newRate: decimal(5,3),                // New interest rate (e.g., 5.490)
+  termType: text,                       // 'fixed', 'variable-changing', 'variable-fixed'
+  
+  // Optional refinancing changes
+  newAmortizationMonths: integer,        // If extending amortization (nullable)
+  paymentFrequency: text,                // If changing frequency (nullable)
+  
+  description: text,
+  createdAt: timestamp
+}
+```
+
+**Purpose**: Model refinancing scenarios at renewal points or specific years
+**Cardinality**: 1:N with scenarios
+**Timing Options**:
+- `refinancingYear`: Refinance at a specific year from mortgage start
+- `atTermEnd`: Refinance at the end of the current term
+**Term Types**:
+- `fixed`: Fixed interest rate for the term
+- `variable-changing`: Payment adjusts when Prime rate changes
+- `variable-fixed`: Payment stays constant, but may hit trigger rate if Prime rises
+
 ### Database Indexes
 
 **Automatic Indexes:**
 - Primary keys (all `id` fields)
 - Foreign keys (all `userId`, `mortgageId`, `scenarioId`, etc.)
+- `prime_rate_history.effectiveDate` - For efficient rate lookups
+- `prime_rate_history.createdAt` - For rate history queries
 
 **Performance Considerations:**
 - Small dataset expected (<10K rows per table)
-- No additional indexes needed at MVP scale
+- Indexes on prime rate history for efficient lookups
 - Future: Add indexes on `paymentDate`, `startDate` for large datasets
 
 ### Data Integrity
@@ -471,14 +508,15 @@ server/
 └── index.ts               # App entry point
 ```
 
-### Storage Layer (IStorage Interface)
+### Storage Layer (Repository Pattern)
 
 **Purpose**: Abstract database operations for testability and flexibility
 
-**Pattern**: Repository pattern
-- Interface defines all CRUD operations
-- `MemStorage` implements interface with in-memory storage
-- Future: Can swap for different storage backends
+**Pattern**: Repository pattern with Drizzle ORM
+- Repository classes define all CRUD operations
+- PostgreSQL database provides persistent storage
+- Type-safe queries via Drizzle ORM
+- All data persists across server restarts
 
 **Interface Definition**:
 ```typescript
@@ -1015,9 +1053,10 @@ const mutation = useMutation({
 ### 1. Canadian Mortgage Calculation Engine
 
 **Locations**:
-- **Server:** `server/calculations/mortgage.ts` (authoritative amortization + compliance checks)
-- **Shared Client Helper:** `client/src/features/mortgage-tracking/utils/mortgage-math.ts` (used by tracker, dashboard, scenario planner). Covered by `node --import tsx --test client/src/features/mortgage-tracking/utils/__tests__/mortgage-math.test.ts`.
-- **Prime Rate Service:** `server/src/shared/services/prime-rate.ts` + `client/src/features/mortgage-tracking/hooks/use-prime-rate.ts`
+- **Server:** `server/src/shared/calculations/mortgage.ts` (authoritative amortization + compliance checks)
+- **Shared Client Helper:** `client/src/features/mortgage-tracking/utils/mortgage-math.ts` (used by tracker, dashboard, scenario planner)
+- **Prime Rate Service:** `server/src/application/services/prime-rate-tracking.service.ts` + `client/src/features/mortgage-tracking/hooks/use-prime-rate.ts`
+- **Blend-and-Extend:** `server/src/shared/calculations/blend-and-extend.ts`
 
 **Core Functions**:
 
@@ -1123,9 +1162,76 @@ function generateAmortizationSchedule(
 }
 ```
 
+#### Trigger Rate & Negative Amortization (VRM-Fixed Payment)
+
+**Location**: `server/src/shared/calculations/mortgage.ts`
+
+For Variable Rate Mortgages with Fixed Payment (VRM-Fixed Payment), the system calculates and tracks trigger rate conditions:
+
+```typescript
+function calculateTriggerRate(
+  paymentAmount: number,
+  remainingBalance: number,
+  frequency: PaymentFrequency
+): number {
+  // Trigger rate is the rate at which payment = interest only
+  // When rate exceeds trigger rate, payment doesn't cover interest
+  // Result: negative amortization (balance increases)
+}
+
+function isTriggerRateHit(
+  currentRate: number,
+  paymentAmount: number,
+  remainingBalance: number,
+  frequency: PaymentFrequency
+): boolean {
+  const triggerRate = calculateTriggerRate(paymentAmount, remainingBalance, frequency);
+  return currentRate >= triggerRate;
+}
+```
+
+**Behavior When Trigger Rate Hit**:
+- Payment amount stays constant (fixed payment)
+- Payment doesn't cover full interest
+- Unpaid interest is added to principal (negative amortization)
+- Balance increases instead of decreases
+- Prepayments can still be made to reduce negative amortization
+- System tracks `triggerRateHit` flag in payment records
+
+#### Blend-and-Extend Renewals
+
+**Location**: `server/src/shared/calculations/blend-and-extend.ts`
+
+Blend-and-extend is a renewal option that combines the old rate with a new rate and extends amortization:
+
+```typescript
+function calculateBlendAndExtend(input: BlendAndExtendInput): BlendAndExtendResult {
+  // Blends old rate (for remaining term) with new rate (for extended term)
+  // Calculates new payment amount with extended amortization
+  // Returns blended rate and new payment amount
+}
+```
+
+**API Endpoint**: `POST /api/mortgage-terms/:id/blend-and-extend`
+
+**Use Cases**:
+- Lock in lower rate before term ends
+- Extend amortization to reduce payment
+- Combine benefits of old and new rates
+
+#### Refinancing Events in Projections
+
+**Location**: `server/src/api/routes/mortgage.routes.ts` (projection endpoint)
+
+Refinancing events are applied during amortization schedule generation:
+- Year-based refinancing: Applied at specified year from mortgage start
+- Term-end refinancing: Applied at the end of each term
+- Supports rate changes, term type changes, amortization extensions, payment frequency changes
+- Integrated with prepayment events for comprehensive scenario modeling
+
 ### 2. Net Worth Projection Engine
 
-**Location**: `server/calculations/projections.ts`
+**Location**: `server/src/shared/calculations/projections.ts`
 
 **Core Algorithm**:
 
@@ -1989,12 +2095,11 @@ return projections;
 
 ## Known Issues & Limitations
 
-### TypeScript Errors
+### TypeScript Type Safety
 
-**Issue**: 59 TypeScript errors in `routes.ts`
-**Cause**: `req.user` type inference
-**Impact**: Non-blocking (app works fine)
-**Fix Needed**: Proper Express User type declaration
+**Status**: ✅ Type definitions in place
+**Implementation**: Express User type declared in `server/src/types/express.d.ts`
+**Note**: Type-safe request handling with proper user type inference
 
 ### Single User Limitation
 
@@ -2002,11 +2107,11 @@ return projections;
 **Impact**: Can't test multi-user scenarios
 **Fix**: Implement Replit Auth
 
-### In-Memory Storage
+### Database Storage
 
-**Current**: Data lost on server restart
-**Impact**: Good for development, bad for production
-**Fix**: Swap to database-backed storage
+**Current**: PostgreSQL database with Drizzle ORM
+**Status**: ✅ Persistent storage implemented
+**Note**: All data persists across server restarts
 
 ### No Real-Time Updates
 
@@ -2022,6 +2127,6 @@ return projections;
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: December 2024  
-**For**: Canadian Mortgage Strategy MVP
+**Document Version**: 1.2  
+**Last Updated**: December 2025  
+**For**: Canadian Mortgage Strategy & Wealth Forecasting Application

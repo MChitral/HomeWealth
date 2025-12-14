@@ -8,31 +8,26 @@ Essential project documentation organized in a clean structure.
 docs/
 ├── README.md (this file)
 │
-├── completed/
-│   └── COMPLETED_WORK_SUMMARY.md       # ✅ What's been done
-│
 ├── guides/
 │   ├── FORM_VALIDATION_GUIDE.md        # Form patterns
 │   ├── ESLINT_PRETTIER_SETUP.md        # Code quality setup
 │   ├── design_guidelines.md            # UI/UX guidelines
-│   ├── STATE_MANAGEMENT_ANALYSIS.md    # Architecture decision
-│   ├── REDUX_DECISION_ANALYSIS.md      # Architecture decision
-│   ├── NEXT_STEPS_AFTER_REFACTORING.md # What's next
 │   ├── ACCELERATED_PAYMENT_CALCULATION.md # Payment calculation guide
 │   ├── PREPAYMENT_LIMIT_CALCULATION.md    # Prepayment limit guide
 │   ├── PRIME_RATE_DATA_FLOW.md            # Prime rate flow guide
 │   ├── PRIME_RATE_SCHEDULER.md           # Prime rate scheduler guide
-│   └── ROUNDING_CONVENTIONS.md           # Rounding rules
+│   ├── ROUNDING_CONVENTIONS.md           # Rounding rules
+│   ├── VARIABLE_RATE_MORTGAGE_BEHAVIOR.md # VRM types and trigger rates
+│   └── FEATURE_LIMITATIONS.md            # What's NOT implemented
 │
 ├── audits/
-│   ├── REACT_APP_AUDIT.md              # Comprehensive audit
 │   └── REFINANCING_FEATURE_AUDIT.md   # Refinancing feature audit
 │
 └── architecture/
     └── TECHNICAL_ARCHITECTURE.md       # System architecture
 ```
 
-**Total: 16 essential files**
+**Total: 13 essential files**
 
 ---
 
@@ -43,17 +38,11 @@ docs/
 - **Project Overview:** See root `README.md` in project root
 - **Architecture:** [`architecture/TECHNICAL_ARCHITECTURE.md`](architecture/TECHNICAL_ARCHITECTURE.md)
 
-### What's Been Done
-
-- **Summary:** [`completed/COMPLETED_WORK_SUMMARY.md`](completed/COMPLETED_WORK_SUMMARY.md)
-
 ### Reference Guides
 
 - **Form Patterns:** [`guides/FORM_VALIDATION_GUIDE.md`](guides/FORM_VALIDATION_GUIDE.md)
 - **Code Quality Setup:** [`guides/ESLINT_PRETTIER_SETUP.md`](guides/ESLINT_PRETTIER_SETUP.md)
 - **Design Guidelines:** [`guides/design_guidelines.md`](guides/design_guidelines.md)
-- **State Management:** [`guides/STATE_MANAGEMENT_ANALYSIS.md`](guides/STATE_MANAGEMENT_ANALYSIS.md)
-- **Redux Decision:** [`guides/REDUX_DECISION_ANALYSIS.md`](guides/REDUX_DECISION_ANALYSIS.md)
 
 ### Calculation Guides
 
@@ -62,36 +51,32 @@ docs/
 - **Prime Rate Flow:** [`guides/PRIME_RATE_DATA_FLOW.md`](guides/PRIME_RATE_DATA_FLOW.md)
 - **Prime Rate Scheduler:** [`guides/PRIME_RATE_SCHEDULER.md`](guides/PRIME_RATE_SCHEDULER.md)
 - **Rounding Conventions:** [`guides/ROUNDING_CONVENTIONS.md`](guides/ROUNDING_CONVENTIONS.md)
+- **Variable Rate Mortgages:** [`guides/VARIABLE_RATE_MORTGAGE_BEHAVIOR.md`](guides/VARIABLE_RATE_MORTGAGE_BEHAVIOR.md)
 
-### Next Steps
+### Feature Information
 
-- **What's Next:** [`guides/NEXT_STEPS_AFTER_REFACTORING.md`](guides/NEXT_STEPS_AFTER_REFACTORING.md)
+- **What's NOT Implemented:** [`guides/FEATURE_LIMITATIONS.md`](guides/FEATURE_LIMITATIONS.md) - Comprehensive list of missing features
 
 ### Audits
 
-- **Comprehensive Audit:** [`audits/REACT_APP_AUDIT.md`](audits/REACT_APP_AUDIT.md)
 - **Refinancing Feature Audit:** [`audits/REFINANCING_FEATURE_AUDIT.md`](audits/REFINANCING_FEATURE_AUDIT.md)
 
 ---
 
 ## 📝 Categories
 
-### `/completed` - Completed Work
-
-Single consolidated summary of all completed improvements.
-
 ### `/guides` - Reference Guides
 
 Active guides and setup instructions:
 
-- How-to guides
-- Architecture decisions
-- Next steps recommendations
+- How-to guides for developers
 - Calculation guides (mortgage math)
+- Feature documentation
+- Setup and configuration guides
 
 ### `/audits` - Audit Reports
 
-Comprehensive code and product audits for reference.
+Current feature audits and analysis for reference.
 
 ### `/architecture` - Architecture
 
@@ -101,4 +86,36 @@ Technical architecture and system design documentation.
 
 **Note:** Historical bug reports, test execution logs, and redundant summaries have been removed. Only essential, current documentation remains.
 
-**Cleanup Summary:** Reduced from 89 files → 15 essential files
+## What's Included vs What's Not
+
+### ✅ Implemented Features
+- Fixed-rate and variable-rate mortgages (VRM-Changing and VRM-Fixed Payment)
+- Trigger rate calculations and negative amortization tracking
+- Blend-and-extend renewal calculations
+- Refinancing events (year-based and term-end)
+- Prepayment tracking with annual limits
+- Accelerated payment frequencies
+- Prime rate tracking and automatic updates
+- Scenario modeling and comparison
+- Emergency fund planning
+- Cash flow tracking
+
+### ❌ Not Implemented (See Limitations Guide)
+- Mortgage penalties (IRD, 3-month interest)
+- HELOC and re-advanceable mortgages
+- Recast functionality
+- CMHC insurance calculations
+- Payment skipping UI
+- Blend-and-extend UI integration
+
+For complete details, see [`guides/FEATURE_LIMITATIONS.md`](guides/FEATURE_LIMITATIONS.md).
+
+---
+
+**Documentation Summary:** 13 essential files (updated December 2025)
+
+**Cleanup:** Removed 6 historical/outdated documents:
+- Removed outdated audit documents (REACT_APP_AUDIT)
+- Removed historical completed work summaries
+- Removed historical architecture decision documents (STATE_MANAGEMENT, REDUX_DECISION)
+- Kept only current, actionable documentation
