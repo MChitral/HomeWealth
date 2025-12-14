@@ -239,10 +239,6 @@ export function BackfillPaymentsDialog({
           endDateStr,
         );
         historicalRates = ratesResponse.rates || [];
-        console.log(
-          `[Backfill] Fetched ${historicalRates.length} historical rates from ${queryStartDateStr} to ${endDateStr}`,
-          historicalRates.map((r) => `${r.date}: ${r.primeRate}%`).join(", ")
-        );
       } catch (error) {
         console.error("Failed to fetch historical rates:", error);
       }
@@ -272,9 +268,6 @@ export function BackfillPaymentsDialog({
 
       if (applicableRate) {
         const effectiveRate = applicableRate.primeRate + (currentTerm.lockedSpread || 0);
-        console.log(
-          `[Backfill] Rate for ${dateStr}: Prime ${applicableRate.primeRate}% (effective date: ${applicableRate.date}) + Spread ${currentTerm.lockedSpread || 0}% = Effective ${effectiveRate}%`
-        );
         return effectiveRate;
       }
 

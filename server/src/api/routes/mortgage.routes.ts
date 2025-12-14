@@ -55,9 +55,6 @@ async function ensurePrimeRate<
               .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
             if (rates.length > 0) {
-              console.log(
-                `[ensurePrimeRate] Using historical rate ${rates[0].rate}% for startDate ${payload.startDate}`
-              );
               return { ...payload, primeRate: rates[0].rate.toFixed(3) };
             }
           }
@@ -79,9 +76,6 @@ async function ensurePrimeRate<
               .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
             if (rates.length > 0) {
-              console.log(
-                `[ensurePrimeRate] Using historical rate ${rates[0].rate}% for startDate ${payload.startDate} (from wider range)`
-              );
               return { ...payload, primeRate: rates[0].rate.toFixed(3) };
             }
           }
@@ -90,9 +84,6 @@ async function ensurePrimeRate<
 
       // Fallback to current rate if no startDate or historical fetch failed
       const { primeRate } = await fetchLatestPrimeRate();
-      console.log(
-        `[ensurePrimeRate] Using current rate ${primeRate}% (no startDate or historical fetch failed)`
-      );
       return { ...payload, primeRate: primeRate.toFixed(3) };
     } catch (error) {
       console.error(`[ensurePrimeRate] Error fetching prime rate:`, error);
@@ -103,9 +94,6 @@ async function ensurePrimeRate<
         // If startDate is in 2024, use 6.45% (Sep 2024 rate)
         const year = startDate.getFullYear();
         const fallbackRate = year >= 2025 ? "5.450" : "6.450";
-        console.log(
-          `[ensurePrimeRate] Using fallback rate ${fallbackRate}% for startDate ${payload.startDate}`
-        );
         return { ...payload, primeRate: fallbackRate };
       }
       return { ...payload, primeRate: "6.450" };
@@ -1183,16 +1171,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         return;
       }
 
-      // Debug: Log schedule summary to help diagnose issues
-      if (schedule.summary.totalInterest === 0 && schedule.payments.length > 0) {
-        console.warn("Schedule has payments but totalInterest is 0:", {
-          paymentsCount: schedule.payments.length,
-          totalPrincipal: schedule.summary.totalPrincipal,
-          totalInterest: schedule.summary.totalInterest,
-          firstPayment: schedule.payments[0],
-          lastPayment: schedule.payments[schedule.payments.length - 1],
-        });
-      }
+      // Note: If schedule has payments but totalInterest is 0, this may indicate a calculation issue
 
       const interestSaved = Math.max(
         0,

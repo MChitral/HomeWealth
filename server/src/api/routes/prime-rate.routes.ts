@@ -38,11 +38,6 @@ export function registerPrimeRateRoutes(router: Router, services: ApplicationSer
       const primeRate = parseFloat(latestObservation.V121796.v);
       const effectiveDate = latestObservation.d;
       
-      // Log the API response for debugging
-      console.log(
-        `[Prime Rate API] Fetched rate: ${primeRate}% (date: ${effectiveDate}), Series: V121796`
-      );
-      
       res.json({
         primeRate,
         effectiveDate,
@@ -87,11 +82,6 @@ export function registerPrimeRateRoutes(router: Router, services: ApplicationSer
       // Sort rates by date ascending (oldest first) for easier lookup
       // Frontend will sort descending when needed
       rates.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      
-      console.log(
-        `[Prime Rate History] Fetched ${rates.length} rates from ${start_date} to ${end_date}`,
-        rates.map((r) => `${r.date}: ${r.primeRate}%`).join(", ")
-      );
       
       res.json({
         rates,

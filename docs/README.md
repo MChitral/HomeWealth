@@ -25,13 +25,14 @@ docs/
 │   └── ROUNDING_CONVENTIONS.md           # Rounding rules
 │
 ├── audits/
-│   └── REACT_APP_AUDIT.md              # Comprehensive audit
+│   ├── REACT_APP_AUDIT.md              # Comprehensive audit
+│   └── REFINANCING_FEATURE_AUDIT.md   # Refinancing feature audit
 │
 └── architecture/
     └── TECHNICAL_ARCHITECTURE.md       # System architecture
 ```
 
-**Total: 15 essential files**
+**Total: 16 essential files**
 
 ---
 
@@ -66,9 +67,10 @@ docs/
 
 - **What's Next:** [`guides/NEXT_STEPS_AFTER_REFACTORING.md`](guides/NEXT_STEPS_AFTER_REFACTORING.md)
 
-### Audit
+### Audits
 
 - **Comprehensive Audit:** [`audits/REACT_APP_AUDIT.md`](audits/REACT_APP_AUDIT.md)
+- **Refinancing Feature Audit:** [`audits/REFINANCING_FEATURE_AUDIT.md`](audits/REFINANCING_FEATURE_AUDIT.md)
 
 ---
 

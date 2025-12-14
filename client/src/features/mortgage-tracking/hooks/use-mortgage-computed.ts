@@ -44,22 +44,7 @@ export function useMortgageComputed({
     paymentHistory[paymentHistory.length - 1]?.primeRate ??
     0;
 
-  // Log for debugging - show spread calculation details
-  if (uiCurrentTerm && uiCurrentTerm.termType !== "fixed") {
-    const storedSpread = uiCurrentTerm.lockedSpread || 0;
-    const calculatedEffective = Math.round((currentPrimeRateValue + storedSpread) * 100) / 100;
-    console.log(
-      `[Effective Rate Calculation]`,
-      {
-        primeRate: currentPrimeRateValue,
-        primeSource: primeRateData ? 'API' : 'fallback',
-        storedSpread: storedSpread,
-        calculatedEffective: calculatedEffective,
-        termId: uiCurrentTerm.id,
-        note: 'If effective rate is wrong, check if spread (-0.9% vs -1.9%) or prime rate is incorrect'
-      }
-    );
-  }
+  // Effective rate calculation for variable rate mortgages
 
   const currentEffectiveRate = uiCurrentTerm
     ? uiCurrentTerm.termType === "fixed" && uiCurrentTerm.fixedRate
