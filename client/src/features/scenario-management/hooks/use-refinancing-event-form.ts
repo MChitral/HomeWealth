@@ -15,11 +15,14 @@ export const refinancingEventFormSchema = z
       .string()
       .refine(
         (val) => {
-          // Allow empty string during typing, but validate on submit
-          if (!val || val.trim() === "") return false;
+          // Handle undefined, null, or empty string
+          if (!val || typeof val !== "string") return false;
           const trimmed = val.trim();
+          if (trimmed === "") return false;
           const num = Number(trimmed);
-          return Number.isFinite(num) && num >= 0 && num <= 100;
+          // Check if it's a valid finite number and within range
+          // Also allow 0 as a valid rate
+          return Number.isFinite(num) && !isNaN(num) && num >= 0 && num <= 100;
         },
         {
           message: "Rate is required and must be between 0 and 100",
@@ -80,8 +83,8 @@ export function useRefinancingEventForm({ initialEvent }: UseRefinancingEventFor
   const form = useForm<RefinancingEventFormData>({
     resolver: zodResolver(refinancingEventFormSchema),
     defaultValues,
-    mode: "onTouched",
-    reValidateMode: "onChange",
+    mode: "onBlur", // Validate on blur for better UX
+    reValidateMode: "onChange", // Re-validate on change after first validation
   });
 
   // Sync form with initial event data when editing

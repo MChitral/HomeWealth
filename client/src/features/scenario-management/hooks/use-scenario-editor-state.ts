@@ -371,12 +371,23 @@ export function useScenarioEditorState(
   };
 
   const handleAddRefinancingEvent = async (formData: RefinancingEventFormData) => {
+    // Validate rate before processing
+    const rateValue = parseFloat(formData.newRate);
+    if (isNaN(rateValue) || rateValue < 0 || rateValue > 100) {
+      toast({
+        title: "Invalid rate",
+        description: "Rate must be a valid number between 0 and 100",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const eventData: DraftRefinancingEvent = {
       id: `temp-${Date.now()}`,
       scenarioId: scenarioId || "",
       refinancingYear: formData.timingType === "by-year" ? parseInt(formData.refinancingYear || "1") : null,
       atTermEnd: formData.timingType === "at-term-end",
-      newRate: (parseFloat(formData.newRate) / 100).toFixed(6), // Convert from percentage to decimal
+      newRate: (rateValue / 100).toFixed(6), // Convert from percentage to decimal
       termType: formData.termType,
       newAmortizationMonths: formData.newAmortizationMonths ? parseInt(formData.newAmortizationMonths) : null,
       paymentFrequency: formData.paymentFrequency && formData.paymentFrequency !== "keep-current" ? formData.paymentFrequency : null,
@@ -425,11 +436,22 @@ export function useScenarioEditorState(
       return;
     }
 
+    // Validate rate before processing
+    const rateValue = parseFloat(formData.newRate);
+    if (isNaN(rateValue) || rateValue < 0 || rateValue > 100) {
+      toast({
+        title: "Invalid rate",
+        description: "Rate must be a valid number between 0 and 100",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const updatedEvent: DraftRefinancingEvent = {
       ...editingRefinancingEvent,
       refinancingYear: formData.timingType === "by-year" ? parseInt(formData.refinancingYear || "1") : null,
       atTermEnd: formData.timingType === "at-term-end",
-      newRate: (parseFloat(formData.newRate) / 100).toFixed(6), // Convert from percentage to decimal
+      newRate: (rateValue / 100).toFixed(6), // Convert from percentage to decimal
       termType: formData.termType,
       newAmortizationMonths: formData.newAmortizationMonths ? parseInt(formData.newAmortizationMonths) : null,
       paymentFrequency: formData.paymentFrequency && formData.paymentFrequency !== "keep-current" ? formData.paymentFrequency : null,

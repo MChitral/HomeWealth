@@ -118,15 +118,12 @@ function RefinancingEventFormFields() {
                 min="0"
                 max="100"
                 placeholder="4.5"
-                value={field.value || ""}
+                {...field}
+                value={field.value ?? ""}
                 onChange={(e) => {
-                  const value = e.target.value;
-                  // Always pass the value as a string to React Hook Form
-                  field.onChange(value);
+                  // Ensure we always pass a string to React Hook Form
+                  field.onChange(e.target.value);
                 }}
-                onBlur={field.onBlur}
-                name={field.name}
-                ref={field.ref}
                 data-testid="input-new-rate"
               />
             </FormControl>

@@ -25,8 +25,14 @@ import {
 } from "@server-shared/calculations/term-helpers";
 import { fetchLatestPrimeRate } from "@server-shared/services/prime-rate";
 import { z } from "zod";
-async function ensurePrimeRate<T extends { termType?: string; primeRate?: string | number; startDate?: string }>(payload: T): Promise<T> {
-  if (payload.termType && payload.termType.startsWith("variable") && (payload.primeRate == null || payload.primeRate === "")) {
+async function ensurePrimeRate<
+  T extends { termType?: string; primeRate?: string | number; startDate?: string },
+>(payload: T): Promise<T> {
+  if (
+    payload.termType &&
+    payload.termType.startsWith("variable") &&
+    (payload.primeRate == null || payload.primeRate === "")
+  ) {
     try {
       // If startDate is provided, fetch historical rate for that date
       // Otherwise, use current rate
@@ -34,10 +40,10 @@ async function ensurePrimeRate<T extends { termType?: string; primeRate?: string
         const startDate = new Date(payload.startDate);
         const endDate = new Date(startDate);
         endDate.setDate(endDate.getDate() + 1); // Add 1 day to ensure we get the rate
-        
+
         const url = `https://www.bankofcanada.ca/valet/observations/V121796/json?start_date=${startDate.toISOString().split("T")[0]}&end_date=${endDate.toISOString().split("T")[0]}`;
         const response = await fetch(url);
-        
+
         if (response.ok) {
           const data = await response.json();
           if (data.observations && data.observations.length > 0) {
@@ -46,20 +52,22 @@ async function ensurePrimeRate<T extends { termType?: string; primeRate?: string
               .map((obs: any) => ({ date: obs.d, rate: parseFloat(obs.V121796.v) }))
               .filter((r: any) => r.date <= payload.startDate)
               .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
-            
+
             if (rates.length > 0) {
-              console.log(`[ensurePrimeRate] Using historical rate ${rates[0].rate}% for startDate ${payload.startDate}`);
+              console.log(
+                `[ensurePrimeRate] Using historical rate ${rates[0].rate}% for startDate ${payload.startDate}`
+              );
               return { ...payload, primeRate: rates[0].rate.toFixed(3) };
             }
           }
         }
-        
+
         // If historical fetch failed, try fetching a wider range (3 months before)
         const queryStartDate = new Date(startDate);
         queryStartDate.setMonth(queryStartDate.getMonth() - 3);
         const wideUrl = `https://www.bankofcanada.ca/valet/observations/V121796/json?start_date=${queryStartDate.toISOString().split("T")[0]}&end_date=${endDate.toISOString().split("T")[0]}`;
         const wideResponse = await fetch(wideUrl);
-        
+
         if (wideResponse.ok) {
           const wideData = await wideResponse.json();
           if (wideData.observations && wideData.observations.length > 0) {
@@ -67,18 +75,22 @@ async function ensurePrimeRate<T extends { termType?: string; primeRate?: string
               .map((obs: any) => ({ date: obs.d, rate: parseFloat(obs.V121796.v) }))
               .filter((r: any) => r.date <= payload.startDate)
               .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
-            
+
             if (rates.length > 0) {
-              console.log(`[ensurePrimeRate] Using historical rate ${rates[0].rate}% for startDate ${payload.startDate} (from wider range)`);
+              console.log(
+                `[ensurePrimeRate] Using historical rate ${rates[0].rate}% for startDate ${payload.startDate} (from wider range)`
+              );
               return { ...payload, primeRate: rates[0].rate.toFixed(3) };
             }
           }
         }
       }
-      
+
       // Fallback to current rate if no startDate or historical fetch failed
       const { primeRate } = await fetchLatestPrimeRate();
-      console.log(`[ensurePrimeRate] Using current rate ${primeRate}% (no startDate or historical fetch failed)`);
+      console.log(
+        `[ensurePrimeRate] Using current rate ${primeRate}% (no startDate or historical fetch failed)`
+      );
       return { ...payload, primeRate: primeRate.toFixed(3) };
     } catch (error) {
       console.error(`[ensurePrimeRate] Error fetching prime rate:`, error);
@@ -89,7 +101,9 @@ async function ensurePrimeRate<T extends { termType?: string; primeRate?: string
         // If startDate is in 2024, use 6.45% (Sep 2024 rate)
         const year = startDate.getFullYear();
         const fallbackRate = year >= 2025 ? "5.450" : "6.450";
-        console.log(`[ensurePrimeRate] Using fallback rate ${fallbackRate}% for startDate ${payload.startDate}`);
+        console.log(
+          `[ensurePrimeRate] Using fallback rate ${fallbackRate}% for startDate ${payload.startDate}`
+        );
         return { ...payload, primeRate: fallbackRate };
       }
       return { ...payload, primeRate: "6.450" };
@@ -133,7 +147,7 @@ function getActiveTermForDate(terms: MortgageTerm[], targetDate: Date): Mortgage
 function calculatePaymentNumberFromDates(
   startDate: Date,
   targetDate: Date,
-  frequency: PaymentFrequency,
+  frequency: PaymentFrequency
 ): number {
   if (targetDate <= startDate) {
     return 1;
@@ -150,7 +164,7 @@ function calculatePaymentNumberFromDates(
 function buildTermRenewalsRelativeToProjection(
   terms: MortgageTerm[],
   projectionStartDate: Date,
-  frequency: PaymentFrequency,
+  frequency: PaymentFrequency
 ): TermRenewal[] {
   return terms
     .filter((term) => new Date(term.startDate) > projectionStartDate)
@@ -159,7 +173,7 @@ function buildTermRenewalsRelativeToProjection(
       startPaymentNumber: calculatePaymentNumberFromDates(
         projectionStartDate,
         new Date(term.startDate),
-        frequency,
+        frequency
       ),
       newRate: getTermEffectiveRate(term),
       newPaymentAmount: shouldUpdatePaymentAmount(term)
@@ -301,11 +315,8 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
     if (!user) return;
 
     try {
-      const { 
-        newMarketRate, 
-        extendedAmortizationMonths,
-      } = req.body as { 
-        newMarketRate: number; 
+      const { newMarketRate, extendedAmortizationMonths } = req.body as {
+        newMarketRate: number;
         extendedAmortizationMonths?: number;
       };
 
@@ -330,9 +341,12 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
       // Get latest payment to find remaining balance
       const payments = await services.mortgagePayments.findByTermId(term.id);
-      const latestPayment = payments.length > 0
-        ? payments.sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime())[0]
-        : null;
+      const latestPayment =
+        payments.length > 0
+          ? payments.sort(
+              (a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime()
+            )[0]
+          : null;
 
       const remainingBalance = latestPayment
         ? Number(latestPayment.remainingBalance)
@@ -341,10 +355,14 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       // Calculate remaining term months
       const termEndDate = new Date(term.endDate);
       const today = new Date();
-      const remainingTermMonths = Math.max(0, Math.ceil((termEndDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24 * 30.44)));
+      const remainingTermMonths = Math.max(
+        0,
+        Math.ceil((termEndDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24 * 30.44))
+      );
 
       // Get original and remaining amortization
-      const originalAmortizationMonths = (mortgage.amortizationYears * 12) + (mortgage.amortizationMonths ?? 0);
+      const originalAmortizationMonths =
+        mortgage.amortizationYears * 12 + (mortgage.amortizationMonths ?? 0);
       const remainingAmortizationMonths = latestPayment
         ? Number(latestPayment.remainingAmortizationMonths)
         : originalAmortizationMonths;
@@ -356,7 +374,8 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       const oldRate = getTermEffectiveRate(term);
 
       // Calculate blend-and-extend
-      const { calculateBlendAndExtend } = await import("@server-shared/calculations/blend-and-extend");
+      const { calculateBlendAndExtend } =
+        await import("@server-shared/calculations/blend-and-extend");
       const result = calculateBlendAndExtend({
         oldRate,
         newMarketRate: newMarketRate / 100, // Convert percentage to decimal
@@ -420,7 +439,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       const payment = await services.mortgagePayments.create(
         req.params.mortgageId,
         user.id,
-        payload,
+        payload
       );
       if (!payment) {
         sendError(res, 403, "Forbidden");
@@ -438,7 +457,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
     try {
       const { payments } = req.body as { payments: Array<Record<string, unknown>> };
-      
+
       if (!Array.isArray(payments) || payments.length === 0) {
         sendError(res, 400, "Payments array is required");
         return;
@@ -464,7 +483,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       const result = await services.mortgagePayments.createBulk(
         req.params.mortgageId,
         user.id,
-        validatedPayments,
+        validatedPayments
       );
 
       res.json(result);
@@ -527,24 +546,50 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
     currentBalance: z.number().positive(),
     annualRate: z.number().min(0).max(1), // As decimal, e.g., 0.0549 for 5.49%
     amortizationMonths: z.number().int().positive(),
-    paymentFrequency: z.enum(['monthly', 'semi-monthly', 'biweekly', 'accelerated-biweekly', 'weekly', 'accelerated-weekly']).default('monthly'),
+    paymentFrequency: z
+      .enum([
+        "monthly",
+        "semi-monthly",
+        "biweekly",
+        "accelerated-biweekly",
+        "weekly",
+        "accelerated-weekly",
+      ])
+      .default("monthly"),
     actualPaymentAmount: z.number().positive().optional(), // User's actual payment amount (use instead of recalculating)
     monthlyPrepayAmount: z.number().min(0).default(0),
-    prepaymentEvents: z.array(z.object({
-      type: z.enum(['annual', 'one-time', 'monthly-percent']),
-      amount: z.number().min(0),
-      startPaymentNumber: z.number().int().min(1).default(1),
-      recurrenceMonth: z.number().int().min(1).max(12).optional(),
-      monthlyPercent: z.number().min(0).max(100).optional(),
-    })).default([]),
-    refinancingEvents: z.array(z.object({
-      refinancingYear: z.number().int().min(1).optional(),
-      atTermEnd: z.boolean().optional(),
-      newRate: z.number().min(0).max(1), // As decimal, e.g., 0.0549 for 5.49%
-      termType: z.enum(['fixed', 'variable-changing', 'variable-fixed']),
-      newAmortizationMonths: z.number().int().min(1).optional(),
-      paymentFrequency: z.enum(['monthly', 'semi-monthly', 'biweekly', 'accelerated-biweekly', 'weekly', 'accelerated-weekly']).optional(),
-    })).default([]),
+    prepaymentEvents: z
+      .array(
+        z.object({
+          type: z.enum(["annual", "one-time", "monthly-percent"]),
+          amount: z.number().min(0),
+          startPaymentNumber: z.number().int().min(1).default(1),
+          recurrenceMonth: z.number().int().min(1).max(12).optional(),
+          monthlyPercent: z.number().min(0).max(100).optional(),
+        })
+      )
+      .default([]),
+    refinancingEvents: z
+      .array(
+        z.object({
+          refinancingYear: z.number().int().min(1).optional(),
+          atTermEnd: z.boolean().optional(),
+          newRate: z.number().min(0).max(1), // As decimal, e.g., 0.0549 for 5.49%
+          termType: z.enum(["fixed", "variable-changing", "variable-fixed"]),
+          newAmortizationMonths: z.number().int().min(1).optional(),
+          paymentFrequency: z
+            .enum([
+              "monthly",
+              "semi-monthly",
+              "biweekly",
+              "accelerated-biweekly",
+              "weekly",
+              "accelerated-weekly",
+            ])
+            .optional(),
+        })
+      )
+      .default([]),
     rateOverride: z.number().min(0).max(1).optional(), // Optional rate override for scenario modeling
     mortgageId: z.string().optional(), // Optional: include historical payments
     scenarioId: z.string().optional(), // Optional: fetch refinancing events from scenario
@@ -556,19 +601,19 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
     try {
       const data = projectionSchema.parse(req.body);
-      
+
       // Use rate override if provided, otherwise use the passed annualRate
       let effectiveRate = data.rateOverride ?? data.annualRate;
       let projectionFrequency = data.paymentFrequency as PaymentFrequency;
       let basePaymentOverride = data.actualPaymentAmount;
       let termRenewals: TermRenewal[] = [];
       let mortgageTerms: MortgageTerm[] = [];
-      
+
       // Fetch historical payments first to determine projection start date
       let historicalPayments: any[] = [];
       let lastPaymentDate: Date | null = null;
       let lastPaymentBalance: number = data.currentBalance;
-      
+
       if (data.mortgageId) {
         const mortgageRecord = await services.mortgages.getByIdForUser(data.mortgageId, user.id);
         if (!mortgageRecord) {
@@ -576,14 +621,16 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
           return;
         }
 
-        mortgageTerms = (await services.mortgageTerms.listForMortgage(data.mortgageId, user.id)) ?? [];
+        mortgageTerms =
+          (await services.mortgageTerms.listForMortgage(data.mortgageId, user.id)) ?? [];
 
-        historicalPayments = await services.mortgagePayments.listByMortgage(data.mortgageId, user.id) || [];
-        
+        historicalPayments =
+          (await services.mortgagePayments.listByMortgage(data.mortgageId, user.id)) || [];
+
         if (historicalPayments.length > 0) {
           // Sort by date to find the last payment
-          historicalPayments.sort((a, b) => 
-            new Date(a.paymentDate).getTime() - new Date(b.paymentDate).getTime()
+          historicalPayments.sort(
+            (a, b) => new Date(a.paymentDate).getTime() - new Date(b.paymentDate).getTime()
           );
           const lastPayment = historicalPayments[historicalPayments.length - 1];
           lastPaymentDate = new Date(lastPayment.paymentDate);
@@ -592,7 +639,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
         if (mortgageTerms.length > 0) {
           const sortedTerms = [...mortgageTerms].sort(
-            (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+            (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
           );
           const referenceDate = lastPaymentDate ?? new Date();
           const frequencyTerm =
@@ -602,17 +649,19 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
           }
         }
       }
-      
+
       // Calculate projection start date: day after last payment, or today if no payments
-      const projectionStartDate = lastPaymentDate 
+      const projectionStartDate = lastPaymentDate
         ? advanceDateByFrequency(lastPaymentDate, projectionFrequency)
         : new Date();
 
       if (mortgageTerms.length > 0) {
         const sortedTerms = [...mortgageTerms].sort(
-          (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+          (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
         );
-        const activeTerm = getActiveTermForDate(sortedTerms, projectionStartDate) ?? sortedTerms[sortedTerms.length - 1];
+        const activeTerm =
+          getActiveTermForDate(sortedTerms, projectionStartDate) ??
+          sortedTerms[sortedTerms.length - 1];
         if (activeTerm) {
           if (!data.rateOverride) {
             effectiveRate = getTermEffectiveRate(activeTerm);
@@ -623,7 +672,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
           termRenewals = buildTermRenewalsRelativeToProjection(
             sortedTerms,
             projectionStartDate,
-            projectionFrequency,
+            projectionFrequency
           );
         }
       }
@@ -631,7 +680,10 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       // Fetch and process refinancing events from scenario if provided
       let refinancingEventsFromScenario: any[] = [];
       if (data.scenarioId) {
-        const scenarioRefinancingEvents = await services.refinancingEvents.list(data.scenarioId, user.id);
+        const scenarioRefinancingEvents = await services.refinancingEvents.list(
+          data.scenarioId,
+          user.id
+        );
         if (scenarioRefinancingEvents) {
           refinancingEventsFromScenario = scenarioRefinancingEvents;
         }
@@ -653,9 +705,14 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       // Convert refinancing events to TermRenewal format
       const refinancingTermRenewals: TermRenewal[] = [];
       const paymentsPerYear = getPaymentsPerYear(projectionFrequency);
-      const mortgageStartDate = data.mortgageId && mortgageTerms.length > 0
-        ? new Date(mortgageTerms.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())[0].startDate)
-        : projectionStartDate;
+      const mortgageStartDate =
+        data.mortgageId && mortgageTerms.length > 0
+          ? new Date(
+              mortgageTerms.sort(
+                (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+              )[0].startDate
+            )
+          : projectionStartDate;
 
       for (const refinancingEvent of allRefinancingEvents) {
         let startPaymentNumber: number;
@@ -666,42 +723,44 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
             // No terms, skip term-end refinancing
             continue;
           }
-          
+
           const sortedTerms = [...mortgageTerms].sort(
-            (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+            (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
           );
-          
+
           // Find the next term that ends after projection start
           const nextTermEnd = sortedTerms.find(
             (term) => new Date(term.endDate) > projectionStartDate
           );
-          
+
           if (!nextTermEnd) {
             // No future term ends, skip
             continue;
           }
-          
+
           startPaymentNumber = calculatePaymentNumberFromDates(
             projectionStartDate,
             new Date(nextTermEnd.endDate),
-            projectionFrequency,
+            projectionFrequency
           );
         } else if (refinancingEvent.refinancingYear) {
           // Year-based: calculate payment number from refinancingYear
           // refinancingYear is relative to mortgage start
           const refinancingDate = new Date(mortgageStartDate);
-          refinancingDate.setFullYear(refinancingDate.getFullYear() + refinancingEvent.refinancingYear - 1);
-          
+          refinancingDate.setFullYear(
+            refinancingDate.getFullYear() + refinancingEvent.refinancingYear - 1
+          );
+
           // Adjust relative to projection start
           if (refinancingDate <= projectionStartDate) {
             // Refinancing year is in the past relative to projection, skip
             continue;
           }
-          
+
           startPaymentNumber = calculatePaymentNumberFromDates(
             projectionStartDate,
             refinancingDate,
-            projectionFrequency,
+            projectionFrequency
           );
         } else {
           // Invalid refinancing event (neither atTermEnd nor refinancingYear)
@@ -711,14 +770,15 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         // Calculate new payment amount if term type changes
         let newPaymentAmount: number | undefined;
         const refinancingFrequency = refinancingEvent.paymentFrequency ?? projectionFrequency;
-        const refinancingAmortization = refinancingEvent.newAmortizationMonths ?? data.amortizationMonths;
-        
+        const refinancingAmortization =
+          refinancingEvent.newAmortizationMonths ?? data.amortizationMonths;
+
         // Payment recalculation logic:
         // - For fixed and variable-changing: Leave undefined to let schedule generation recalculate
         //   using the actual balance at the refinancing point (more accurate than using starting balance)
         // - For variable-fixed: Also leave undefined for now - the schedule will need to handle
         //   keeping the current payment amount (this may need additional logic in schedule generation)
-        // 
+        //
         // Note: We don't set newPaymentAmount here because we don't know the exact balance at the
         // refinancing point. The amortization schedule generation will recalculate it correctly using
         // the actual remaining balance when it reaches that payment number.
@@ -728,8 +788,12 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
           startPaymentNumber,
           newRate: refinancingEvent.newRate,
           newPaymentAmount,
-          originalAmortizationMonths: refinancingAmortization !== data.amortizationMonths ? data.amortizationMonths : undefined,
-          extendedAmortizationMonths: refinancingAmortization > data.amortizationMonths ? refinancingAmortization : undefined,
+          originalAmortizationMonths:
+            refinancingAmortization !== data.amortizationMonths
+              ? data.amortizationMonths
+              : undefined,
+          extendedAmortizationMonths:
+            refinancingAmortization > data.amortizationMonths ? refinancingAmortization : undefined,
         });
       }
 
@@ -748,63 +812,68 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
           mergedTermRenewals.push(refinancingRenewal);
         }
       }
-      
+
       // Sort by startPaymentNumber
       mergedTermRenewals.sort((a, b) => a.startPaymentNumber - b.startPaymentNumber);
       termRenewals = mergedTermRenewals;
-      
+
       // Use actual payment amount if provided, otherwise calculate based on rate
       // IMPORTANT: Use lastPaymentBalance (not data.currentBalance) for accurate payment calculation
       // This ensures the payment is calculated from the actual balance at projection start
-      const basePayment = basePaymentOverride ?? calculatePayment(
-        lastPaymentBalance,
-        effectiveRate,
-        data.amortizationMonths,
-        projectionFrequency
-      );
-      
+      const basePayment =
+        basePaymentOverride ??
+        calculatePayment(
+          lastPaymentBalance,
+          effectiveRate,
+          data.amortizationMonths,
+          projectionFrequency
+        );
+
       // Convert prepayment events to calculation engine format
       const prepayments: CalcPrepaymentEvent[] = [];
-      
+
       // Calculate how many payments have been made historically
       // This is needed to adjust startPaymentNumber relative to projection start
       const historicalPaymentCount = historicalPayments.length;
       // paymentsPerYear already declared above for refinancing events
-      
+
       // Add monthly prepayment as a percentage of the base payment
       if (data.monthlyPrepayAmount > 0 && basePayment > 0) {
         // Calculate what percentage of the base payment this represents
         const monthlyPrepayPercent = (data.monthlyPrepayAmount / basePayment) * 100;
         prepayments.push({
-          type: 'monthly-percent',
+          type: "monthly-percent",
           amount: 0, // Not used for monthly-percent type
           startPaymentNumber: 1, // Always starts from projection start
           monthlyPercent: monthlyPrepayPercent,
         });
       }
-      
+
       // Add configured prepayment events
       for (const event of data.prepaymentEvents) {
         // Adjust startPaymentNumber relative to projection start
         // startPaymentNumber is relative to mortgage start, but projection paymentNumber starts at 1
         // So we subtract historicalPaymentCount to get the relative payment number in the projection
         let adjustedStartPaymentNumber = event.startPaymentNumber;
-        
+
         if (event.startPaymentNumber > historicalPaymentCount) {
           // Prepayment hasn't occurred yet, adjust relative to projection start
           adjustedStartPaymentNumber = event.startPaymentNumber - historicalPaymentCount;
         } else {
           // Prepayment already occurred in historical payments
           // For annual events, calculate when the next occurrence should be
-          if (event.type === 'annual') {
+          if (event.type === "annual") {
             // For annual events, calculate when the next occurrence should be
             // Find the next year when this prepayment should occur
-            const yearsSinceStart = Math.floor((historicalPaymentCount - event.startPaymentNumber) / paymentsPerYear);
+            const yearsSinceStart = Math.floor(
+              (historicalPaymentCount - event.startPaymentNumber) / paymentsPerYear
+            );
             const nextOccurrenceYear = yearsSinceStart + 1;
             // Calculate the payment number for the next occurrence
             // This should be: original startPaymentNumber + (nextOccurrenceYear * paymentsPerYear)
             // Then adjust relative to projection start
-            const nextOccurrencePaymentNumber = event.startPaymentNumber + (nextOccurrenceYear * paymentsPerYear);
+            const nextOccurrencePaymentNumber =
+              event.startPaymentNumber + nextOccurrenceYear * paymentsPerYear;
             adjustedStartPaymentNumber = nextOccurrencePaymentNumber - historicalPaymentCount;
             // Ensure it's positive
             if (adjustedStartPaymentNumber <= 0) {
@@ -815,7 +884,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
             continue;
           }
         }
-        
+
         prepayments.push({
           type: event.type,
           amount: event.amount,
@@ -841,7 +910,11 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
           effectiveRate,
           amortizationMonths: data.amortizationMonths,
         });
-        sendError(res, 400, "Cannot generate projection: payment amount is zero or invalid. Please ensure your mortgage has a valid payment amount.");
+        sendError(
+          res,
+          400,
+          "Cannot generate projection: payment amount is zero or invalid. Please ensure your mortgage has a valid payment amount."
+        );
         return;
       }
 
@@ -860,19 +933,22 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       );
 
       // Aggregate historical payments by year
-      const historicalYearlyMap = new Map<number, { 
-        totalPaid: number; 
-        principalPaid: number; 
-        interestPaid: number; 
-        endingBalance: number;
-        lastPaymentMonth: number;
-      }>();
+      const historicalYearlyMap = new Map<
+        number,
+        {
+          totalPaid: number;
+          principalPaid: number;
+          interestPaid: number;
+          endingBalance: number;
+          lastPaymentMonth: number;
+        }
+      >();
 
       for (const payment of historicalPayments) {
         const paymentDate = new Date(payment.paymentDate);
         const year = paymentDate.getFullYear();
         const month = paymentDate.getMonth();
-        
+
         const existing = historicalYearlyMap.get(year) || {
           totalPaid: 0,
           principalPaid: 0,
@@ -886,17 +962,17 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         existing.interestPaid += Number(payment.interestPaid || 0);
         existing.endingBalance = Number(payment.remainingBalance || 0);
         existing.lastPaymentMonth = Math.max(existing.lastPaymentMonth, month);
-        
+
         historicalYearlyMap.set(year, existing);
       }
 
       // Find years that need projected data to complete them
       const currentCalendarYear = new Date().getFullYear();
       const yearsNeedingCompletion = new Set<number>();
-      
+
       // Check if there are any prepayment events configured
       const hasPrepaymentEvents = data.prepaymentEvents && data.prepaymentEvents.length > 0;
-      
+
       Array.from(historicalYearlyMap.entries()).forEach(([year, yearData]) => {
         // If historical data doesn't cover the full year (month 11 = December), mark for completion
         if (yearData.lastPaymentMonth < 11 && year >= currentCalendarYear) {
@@ -911,16 +987,19 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       });
 
       // Aggregate projected payments by year
-      const projectedYearlyMap = new Map<number, { 
-        totalPaid: number; 
-        principalPaid: number; 
-        interestPaid: number; 
-        endingBalance: number;
-      }>();
+      const projectedYearlyMap = new Map<
+        number,
+        {
+          totalPaid: number;
+          principalPaid: number;
+          interestPaid: number;
+          endingBalance: number;
+        }
+      >();
 
       for (const payment of schedule.payments) {
         const paymentYear = payment.paymentDate.getFullYear();
-        
+
         const existing = projectedYearlyMap.get(paymentYear) || {
           totalPaid: 0,
           principalPaid: 0,
@@ -932,7 +1011,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         existing.principalPaid += payment.totalPrincipalPayment;
         existing.interestPaid += payment.interestPayment;
         existing.endingBalance = payment.remainingBalance;
-        
+
         projectedYearlyMap.set(paymentYear, existing);
       }
 
@@ -948,16 +1027,16 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
       // Get all years we have data for
       const allYearsArr = [
-        ...Array.from(historicalYearlyMap.keys()), 
-        ...Array.from(projectedYearlyMap.keys())
+        ...Array.from(historicalYearlyMap.keys()),
+        ...Array.from(projectedYearlyMap.keys()),
       ];
       const allYears = new Set(allYearsArr);
       const sortedYears = Array.from(allYears).sort((a, b) => a - b);
-      
+
       for (const year of sortedYears) {
         const historical = historicalYearlyMap.get(year);
         const projected = projectedYearlyMap.get(year);
-        
+
         if (historical && yearsNeedingCompletion.has(year) && projected) {
           // Merge historical + projected for this year
           yearlyData.push({
@@ -1010,19 +1089,19 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         principal: number;
         interest: number;
       }> = [];
-      
+
       // Calculate payments per 2 years based on actual payment frequency
       // paymentsPerYear already declared above
       const paymentsPerTwoYears = paymentsPerYear * 2;
-      
+
       let cumulativePrincipal = 0;
       let cumulativeInterest = 0;
-      
+
       for (let i = 0; i < schedule.payments.length; i++) {
         const payment = schedule.payments[i];
         cumulativePrincipal += payment.totalPrincipalPayment;
         cumulativeInterest += payment.interestPayment;
-        
+
         // Add data point every 2 years worth of payments (based on actual frequency)
         if (i % paymentsPerTwoYears === 0) {
           const yearsFromNow = i / paymentsPerYear;
@@ -1034,21 +1113,19 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
           });
         }
       }
-      
+
       // Ensure final point is included
       if (schedule.payments.length > 0) {
         const lastPayment = schedule.payments[schedule.payments.length - 1];
         const finalYears = schedule.payments.length / paymentsPerYear;
         const finalYearsRounded = Math.round(finalYears * 10) / 10;
-        
+
         // Only add final point if it's different from the last point or if chart is empty
         const lastChartPoint = chartData[chartData.length - 1];
         if (
           chartData.length === 0 ||
-          (lastChartPoint && (
-            lastChartPoint.balance > 0 ||
-            Math.abs(lastChartPoint.year - finalYearsRounded) > 0.1
-          ))
+          (lastChartPoint &&
+            (lastChartPoint.balance > 0 || Math.abs(lastChartPoint.year - finalYearsRounded) > 0.1))
         ) {
           chartData.push({
             year: finalYearsRounded,
@@ -1085,12 +1162,20 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
           prepaymentsCount: prepayments.length,
           termRenewalsCount: termRenewals.length,
         });
-        sendError(res, 400, "Failed to generate amortization schedule. Please check your mortgage and refinancing event configuration.");
+        sendError(
+          res,
+          400,
+          "Failed to generate amortization schedule. Please check your mortgage and refinancing event configuration."
+        );
         return;
       }
 
       // Validate baseline schedule was generated successfully
-      if (!baselineSchedule || !baselineSchedule.payments || baselineSchedule.payments.length === 0) {
+      if (
+        !baselineSchedule ||
+        !baselineSchedule.payments ||
+        baselineSchedule.payments.length === 0
+      ) {
         console.error("Baseline schedule generation failed:", {
           baselineScheduleExists: !!baselineSchedule,
           paymentsLength: baselineSchedule?.payments?.length || 0,
@@ -1113,20 +1198,26 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         });
       }
 
-      const interestSaved = Math.max(0, baselineSchedule.summary.totalInterest - schedule.summary.totalInterest);
+      const interestSaved = Math.max(
+        0,
+        baselineSchedule.summary.totalInterest - schedule.summary.totalInterest
+      );
       // Calculate projected payoff years using correct payments per year for the payment frequency
-      const paymentsPerYear = getPaymentsPerYear(projectionFrequency);
+      // paymentsPerYear already declared above
       // Use schedule summary payoff date if available, otherwise calculate from payment count
       let projectedPayoffYears = 0;
       if (schedule.summary.payoffDate) {
         // Calculate years from projection start to payoff date
         const payoffDate = new Date(schedule.summary.payoffDate);
-        const yearsDiff = (payoffDate.getTime() - projectionStartDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+        const yearsDiff =
+          (payoffDate.getTime() - projectionStartDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
         projectedPayoffYears = Math.max(0, yearsDiff);
       } else if (schedule.payments.length > 0) {
         // Fallback: calculate from payment count
         // Find the last payment with balance > 0.01 to estimate payoff
-        const lastPaymentWithBalance = [...schedule.payments].reverse().find(p => p.remainingBalance > 0.01);
+        const lastPaymentWithBalance = [...schedule.payments]
+          .reverse()
+          .find((p) => p.remainingBalance > 0.01);
         if (lastPaymentWithBalance) {
           // Estimate: use payment number to calculate years
           projectedPayoffYears = lastPaymentWithBalance.paymentNumber / paymentsPerYear;
@@ -1141,7 +1232,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
           }
         }
       }
-      
+
       // Ensure we have a valid projected payoff (should never be 0 if schedule has payments)
       if (projectedPayoffYears === 0 && schedule.payments.length > 0) {
         // Last resort: use the last payment's payment number or total payment count
@@ -1152,14 +1243,17 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
           projectedPayoffYears = schedule.payments.length / paymentsPerYear;
         }
       }
-      
+
       // Round to 1 decimal place
       projectedPayoffYears = Math.round(projectedPayoffYears * 10) / 10;
 
       // Final validation: ensure we have valid summary values
       if (projectedPayoffYears === 0 && schedule.payments.length > 0) {
         // This should never happen, but if it does, log a warning and use a fallback
-        console.warn("Projected payoff is 0 but schedule has payments. Schedule length:", schedule.payments.length);
+        console.warn(
+          "Projected payoff is 0 but schedule has payments. Schedule length:",
+          schedule.payments.length
+        );
         // Use the last payment's payment number as fallback
         const lastPayment = schedule.payments[schedule.payments.length - 1];
         if (lastPayment && lastPayment.paymentNumber > 0) {
@@ -1188,4 +1282,3 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
     }
   });
 }
-
