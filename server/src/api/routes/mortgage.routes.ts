@@ -48,9 +48,10 @@ async function ensurePrimeRate<
           const data = await response.json();
           if (data.observations && data.observations.length > 0) {
             // Get the most recent rate on or before startDate
+            const payloadStartDate = payload.startDate;
             const rates = data.observations
               .map((obs: any) => ({ date: obs.d, rate: parseFloat(obs.V121796.v) }))
-              .filter((r: any) => r.date <= payload.startDate)
+              .filter((r: any) => r.date <= payloadStartDate)
               .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
             if (rates.length > 0) {
@@ -71,9 +72,10 @@ async function ensurePrimeRate<
         if (wideResponse.ok) {
           const wideData = await wideResponse.json();
           if (wideData.observations && wideData.observations.length > 0) {
+            const payloadStartDate = payload.startDate;
             const rates = wideData.observations
               .map((obs: any) => ({ date: obs.d, rate: parseFloat(obs.V121796.v) }))
-              .filter((r: any) => r.date <= payload.startDate)
+              .filter((r: any) => r.date <= payloadStartDate)
               .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
             if (rates.length > 0) {
@@ -325,22 +327,16 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         return;
       }
 
-      // Get the term and mortgage
-      const term = await services.mortgageTerms.findById(req.params.id);
-      if (!term) {
-        sendError(res, 404, "Term not found");
-        return;
-      }
-
-      // Authorize access
-      const mortgage = await services.mortgages.findById(term.mortgageId);
-      if (!mortgage || mortgage.userId !== user.id) {
+      // Get the term and mortgage with authorization
+      const termData = await services.mortgageTerms.getByIdForUser(req.params.id, user.id);
+      if (!termData) {
         sendError(res, 404, "Term not found or unauthorized");
         return;
       }
+      const { term, mortgage } = termData;
 
       // Get latest payment to find remaining balance
-      const payments = await services.mortgagePayments.findByTermId(term.id);
+      const payments = await services.mortgagePayments.listByTerm(term.id, user.id) || [];
       const latestPayment =
         payments.length > 0
           ? payments.sort(

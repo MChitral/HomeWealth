@@ -32,6 +32,18 @@ export class MortgageTermService {
     return (await this.authorizeMortgage(term.mortgageId, userId)) ? term : undefined;
   }
 
+  async getByIdForUser(termId: string, userId: string): Promise<{ term: MortgageTerm; mortgage: Mortgage } | undefined> {
+    const term = await this.mortgageTerms.findById(termId);
+    if (!term) {
+      return undefined;
+    }
+    const mortgage = await this.authorizeMortgage(term.mortgageId, userId);
+    if (!mortgage) {
+      return undefined;
+    }
+    return { term, mortgage };
+  }
+
   async listForMortgage(mortgageId: string, userId: string): Promise<MortgageTerm[] | undefined> {
     const authorized = await this.authorizeMortgage(mortgageId, userId);
     if (!authorized) {
