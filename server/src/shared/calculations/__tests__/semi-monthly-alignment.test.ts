@@ -1,9 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import {
-  generateAmortizationSchedule,
-  type PaymentFrequency,
-} from "../mortgage";
+import { generateAmortizationSchedule, type PaymentFrequency } from "../mortgage";
+import { isBusinessDay } from "../../utils/business-days";
 
 describe("Semi-Monthly Date Alignment", () => {
   it("aligns payments to 1st and 15th of each month", () => {
@@ -11,7 +9,7 @@ describe("Semi-Monthly Date Alignment", () => {
     const annualRate = 0.05;
     const amortizationMonths = 300;
     const frequency: PaymentFrequency = "semi-monthly";
-    const startDate = new Date(2024, 0, 1); // Start on 1st (year, month (0-indexed), day)
+    const startDate = new Date(2023, 10, 1); // Start on 1st (year, month (0-indexed), day)
 
     const schedule = generateAmortizationSchedule(
       principal,
@@ -25,15 +23,11 @@ describe("Semi-Monthly Date Alignment", () => {
     );
 
     // First payment uses the start date (1st)
-    assert.equal(
-      schedule.payments[0].paymentDate.getDate(),
-      1,
-      "First payment should be on 1st"
-    );
+    assert.equal(schedule.payments[0].paymentDate.getDate(), 1, "First payment should be on 1st");
     assert.equal(
       schedule.payments[0].paymentDate.getMonth(),
-      0, // January (0-indexed)
-      "First payment should be in January"
+      10, // November (0-indexed)
+      "First payment should be in November"
     );
 
     // Second payment should be on 15th of same month (aligned)
@@ -44,8 +38,8 @@ describe("Semi-Monthly Date Alignment", () => {
     );
     assert.equal(
       schedule.payments[1].paymentDate.getMonth(),
-      0,
-      "Second payment should still be in January"
+      10,
+      "Second payment should still be in November"
     );
 
     // Third payment should be on 1st of next month (aligned)
@@ -56,11 +50,11 @@ describe("Semi-Monthly Date Alignment", () => {
     );
     assert.equal(
       schedule.payments[2].paymentDate.getMonth(),
-      1, // February
-      "Third payment should be in February"
+      11, // December
+      "Third payment should be in December"
     );
 
-    // Fourth payment should be on 15th of February
+    // Fourth payment should be on 15th of December
     assert.equal(
       schedule.payments[3].paymentDate.getDate(),
       15,
@@ -68,8 +62,8 @@ describe("Semi-Monthly Date Alignment", () => {
     );
     assert.equal(
       schedule.payments[3].paymentDate.getMonth(),
-      1,
-      "Fourth payment should be in February"
+      11,
+      "Fourth payment should be in December"
     );
   });
 
@@ -78,7 +72,7 @@ describe("Semi-Monthly Date Alignment", () => {
     const annualRate = 0.05;
     const amortizationMonths = 300;
     const frequency: PaymentFrequency = "semi-monthly";
-    const startDate = new Date(2024, 0, 15); // Start on 15th
+    const startDate = new Date(2023, 10, 15); // Start on 15th (Nov 2023)
 
     const schedule = generateAmortizationSchedule(
       principal,
@@ -102,15 +96,11 @@ describe("Semi-Monthly Date Alignment", () => {
     // The advancePaymentDate function will align it
     const secondPaymentDate = schedule.payments[1].paymentDate;
     // Since we're on 15th, next payment should be 1st of next month
-    assert.equal(
-      secondPaymentDate.getDate(),
-      1,
-      "Second payment should be on 1st of next month"
-    );
+    assert.equal(secondPaymentDate.getDate(), 1, "Second payment should be on 1st of next month");
     assert.equal(
       secondPaymentDate.getMonth(),
-      1, // February
-      "Second payment should be in February"
+      11, // December
+      "Second payment should be in December"
     );
   });
 
@@ -119,7 +109,7 @@ describe("Semi-Monthly Date Alignment", () => {
     const annualRate = 0.05;
     const amortizationMonths = 300;
     const frequency: PaymentFrequency = "semi-monthly";
-    const startDate = new Date(2024, 0, 10); // Start on 10th
+    const startDate = new Date(2023, 10, 10); // Start on 10th (Nov 2023)
 
     const schedule = generateAmortizationSchedule(
       principal,
@@ -141,8 +131,8 @@ describe("Semi-Monthly Date Alignment", () => {
     );
     assert.equal(
       schedule.payments[1].paymentDate.getMonth(),
-      0, // Still January
-      "Second payment should still be in January"
+      10, // Still November
+      "Second payment should still be in November"
     );
 
     // Third payment should be on 1st of next month
@@ -158,7 +148,7 @@ describe("Semi-Monthly Date Alignment", () => {
     const annualRate = 0.05;
     const amortizationMonths = 300;
     const frequency: PaymentFrequency = "semi-monthly";
-    const startDate = new Date(2024, 0, 20); // Start on 20th
+    const startDate = new Date(2023, 10, 20); // Start on 20th (Nov 2023)
 
     const schedule = generateAmortizationSchedule(
       principal,
@@ -180,16 +170,16 @@ describe("Semi-Monthly Date Alignment", () => {
     );
     assert.equal(
       schedule.payments[1].paymentDate.getMonth(),
-      1, // February
-      "Second payment should be in February"
+      11, // December
+      "Second payment should be in December"
     );
 
     // Third payment should be on 15th of February
+    assert.equal(schedule.payments[2].paymentDate.getDate(), 15, "Third payment should be on 15th");
     assert.equal(
-      schedule.payments[2].paymentDate.getDate(),
-      15,
-      "Third payment should be on 15th"
+      schedule.payments[2].paymentDate.getMonth(),
+      11,
+      "Third payment should be in December"
     );
   });
 });
-
