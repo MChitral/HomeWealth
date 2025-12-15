@@ -7,6 +7,11 @@ Essential project documentation organized in a clean structure.
 ```
 docs/
 ├── README.md (this file)
+├── PRODUCT_FEATURE_INVENTORY.md              # Complete product feature catalog
+├── PRODUCT_STRATEGY_MORTGAGE_HEALTH_MONITOR.md # Strategic pivot roadmap
+├── COMPETITIVE_ANALYSIS.md                   # Competitive analysis (ProjectionLab, LunchMoney)
+├── SUBSCRIPTION_VALUE_FRAMEWORK.md          # Framework for creating subscription value
+├── AI_INTEGRATION_STRATEGY.md               # AI/GenAI integration opportunities and strategy
 │
 ├── guides/
 │   ├── FORM_VALIDATION_GUIDE.md        # Form patterns
@@ -27,7 +32,7 @@ docs/
     └── TECHNICAL_ARCHITECTURE.md       # System architecture
 ```
 
-**Total: 13 essential files**
+**Total: 18 essential files**
 
 ---
 
@@ -36,6 +41,11 @@ docs/
 ### Getting Started
 
 - **Project Overview:** See root `README.md` in project root
+- **Product Features:** [`PRODUCT_FEATURE_INVENTORY.md`](PRODUCT_FEATURE_INVENTORY.md) - Complete feature catalog
+- **Product Strategy:** [`PRODUCT_STRATEGY_MORTGAGE_HEALTH_MONITOR.md`](PRODUCT_STRATEGY_MORTGAGE_HEALTH_MONITOR.md) - Strategic pivot roadmap
+- **Competitive Analysis:** [`COMPETITIVE_ANALYSIS.md`](COMPETITIVE_ANALYSIS.md) - Competitive landscape analysis
+- **Subscription Value Framework:** [`SUBSCRIPTION_VALUE_FRAMEWORK.md`](SUBSCRIPTION_VALUE_FRAMEWORK.md) - What creates recurring subscription value
+- **AI Integration Strategy:** [`AI_INTEGRATION_STRATEGY.md`](AI_INTEGRATION_STRATEGY.md) - AI/GenAI integration opportunities
 - **Architecture:** [`architecture/TECHNICAL_ARCHITECTURE.md`](architecture/TECHNICAL_ARCHITECTURE.md)
 
 ### Reference Guides
@@ -112,7 +122,7 @@ For complete details, see [`guides/FEATURE_LIMITATIONS.md`](guides/FEATURE_LIMIT
 
 ---
 
-**Documentation Summary:** 13 essential files (updated December 2025)
+**Documentation Summary:** 18 essential files (updated December 2025)
 
 **Cleanup:** Removed 6 historical/outdated documents:
 - Removed outdated audit documents (REACT_APP_AUDIT)
