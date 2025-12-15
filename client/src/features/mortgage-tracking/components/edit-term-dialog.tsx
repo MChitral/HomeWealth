@@ -10,13 +10,7 @@ import {
 } from "@/shared/ui/dialog";
 import { Loader2, RefreshCw } from "lucide-react";
 import { FormProvider, useFormContext } from "react-hook-form";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/shared/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/shared/ui/form";
 import { Input } from "@/shared/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import type { UseFormReturn } from "react-hook-form";
@@ -56,17 +50,20 @@ function EditTermFormFields({
   const termYears = watch("termYears");
   const primeRate = watch("primeRate");
   const spread = watch("spread");
-  
+
   // Fetch historical prime rate if startDate is in the past
-  const [historicalPrimeRate, setHistoricalPrimeRate] = useState<{ rate: number; date: string } | null>(null);
+  const [historicalPrimeRate, setHistoricalPrimeRate] = useState<{
+    rate: number;
+    date: string;
+  } | null>(null);
   const [isLoadingHistorical, setIsLoadingHistorical] = useState(false);
-  
+
   useEffect(() => {
     if (startDate && termType !== "fixed") {
       const startDateObj = new Date(startDate);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       // Only fetch historical rate if startDate is in the past
       if (startDateObj < today) {
         setIsLoadingHistorical(true);
@@ -74,7 +71,7 @@ function EditTermFormFields({
         queryStartDate.setMonth(queryStartDate.getMonth() - 3);
         const queryEndDate = new Date(startDateObj);
         queryEndDate.setDate(queryEndDate.getDate() + 1);
-        
+
         mortgageApi
           .fetchHistoricalPrimeRates(
             queryStartDate.toISOString().split("T")[0],
@@ -86,7 +83,7 @@ function EditTermFormFields({
               const applicableRates = response.rates
                 .filter((r) => r.date <= startDate)
                 .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-              
+
               if (applicableRates.length > 0) {
                 const rate = applicableRates[0];
                 setHistoricalPrimeRate({ rate: rate.primeRate, date: rate.date });
@@ -117,19 +114,19 @@ function EditTermFormFields({
       }
     }
   }, [startDate, termType, setValue, primeRate]);
-  
+
   // Determine which rate to display
   const displayRate = historicalPrimeRate?.rate ?? primeRateData?.primeRate;
   const displayDate = historicalPrimeRate?.date ?? primeRateData?.effectiveDate;
   const isHistorical = historicalPrimeRate !== null;
-  
+
   // Handle refresh button - fetch historical rate for startDate if in past, otherwise current rate
   const handleRefreshPrime = async () => {
     if (startDate && termType !== "fixed") {
       const startDateObj = new Date(startDate);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       if (startDateObj < today) {
         // Fetch historical rate for startDate
         setIsLoadingHistorical(true);
@@ -138,17 +135,17 @@ function EditTermFormFields({
           queryStartDate.setMonth(queryStartDate.getMonth() - 3);
           const queryEndDate = new Date(startDateObj);
           queryEndDate.setDate(queryEndDate.getDate() + 1);
-          
+
           const response = await mortgageApi.fetchHistoricalPrimeRates(
             queryStartDate.toISOString().split("T")[0],
             queryEndDate.toISOString().split("T")[0]
           );
-          
+
           if (response.rates && response.rates.length > 0) {
             const applicableRates = response.rates
               .filter((r) => r.date <= startDate)
               .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-            
+
             if (applicableRates.length > 0) {
               const rate = applicableRates[0];
               setHistoricalPrimeRate({ rate: rate.primeRate, date: rate.date });
@@ -290,7 +287,7 @@ function EditTermFormFields({
                     disabled={isPrimeRateLoading || isLoadingHistorical}
                     data-testid="button-edit-refresh-prime"
                   >
-                    {(isPrimeRateLoading || isLoadingHistorical) ? (
+                    {isPrimeRateLoading || isLoadingHistorical ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
                     ) : (
                       <RefreshCw className="h-3 w-3" />
@@ -314,11 +311,12 @@ function EditTermFormFields({
                 {displayDate && (
                   <p className="text-xs text-muted-foreground">
                     {isHistorical ? (
-                      <>Historical Bank of Canada rate effective on{" "}
-                      {new Date(displayDate).toLocaleDateString()}</>
+                      <>
+                        Historical Bank of Canada rate effective on{" "}
+                        {new Date(displayDate).toLocaleDateString()}
+                      </>
                     ) : (
-                      <>Bank of Canada rate as of{" "}
-                      {new Date(displayDate).toLocaleDateString()}</>
+                      <>Bank of Canada rate as of {new Date(displayDate).toLocaleDateString()}</>
                     )}
                   </p>
                 )}
@@ -361,7 +359,10 @@ function EditTermFormFields({
             <FormLabel htmlFor="edit-payment-frequency">Payment Frequency</FormLabel>
             <Select value={field.value} onValueChange={field.onChange}>
               <FormControl>
-                <SelectTrigger id="edit-payment-frequency" data-testid="select-edit-payment-frequency">
+                <SelectTrigger
+                  id="edit-payment-frequency"
+                  data-testid="select-edit-payment-frequency"
+                >
                   <SelectValue />
                 </SelectTrigger>
               </FormControl>
@@ -451,4 +452,3 @@ export function EditTermDialog({
     </Dialog>
   );
 }
-

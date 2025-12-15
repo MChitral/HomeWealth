@@ -8,7 +8,13 @@ export type UiTerm = {
   lockedSpread: number;
   fixedRate: number | null;
   primeRate: number | null;
-  paymentFrequency: "monthly" | "biweekly" | "accelerated-biweekly" | "semi-monthly" | "weekly" | "accelerated-weekly";
+  paymentFrequency:
+    | "monthly"
+    | "biweekly"
+    | "accelerated-biweekly"
+    | "semi-monthly"
+    | "weekly"
+    | "accelerated-weekly";
   regularPaymentAmount: number;
 };
 
@@ -32,4 +38,3 @@ export type UiPayment = {
   termStartDate?: string;
   remainingAmortizationMonths: number;
 };
-

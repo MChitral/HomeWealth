@@ -44,4 +44,3 @@ export function registerCashFlowRoutes(router: Router, services: ApplicationServ
     }
   });
 }
-

@@ -1,4 +1,8 @@
-import type { PrimeRateHistoryRepository, MortgageTermsRepository, MortgagesRepository } from "@infrastructure/repositories";
+import type {
+  PrimeRateHistoryRepository,
+  MortgageTermsRepository,
+  MortgagesRepository,
+} from "@infrastructure/repositories";
 import { fetchLatestPrimeRate } from "@server-shared/services/prime-rate";
 
 export interface PrimeRateChangeResult {
@@ -12,7 +16,7 @@ export interface PrimeRateChangeResult {
 
 /**
  * Service to track prime rate changes and automatically update variable rate mortgages
- * 
+ *
  * **Canadian Mortgage Rule:**
  * - Bank of Canada announces prime rate changes periodically
  * - Variable rate mortgages (VRM) need to be updated when prime rate changes
@@ -23,19 +27,19 @@ export class PrimeRateTrackingService {
   constructor(
     private readonly primeRateHistory: PrimeRateHistoryRepository,
     private readonly mortgageTerms: MortgageTermsRepository,
-    private readonly mortgages: MortgagesRepository,
+    private readonly mortgages: MortgagesRepository
   ) {}
 
   /**
    * Check for prime rate changes and update all active variable rate mortgages
-   * 
+   *
    * This method:
    * 1. Fetches latest prime rate from Bank of Canada
    * 2. Checks if it's different from the last recorded rate
    * 3. If changed, records it in history
    * 4. Updates all active VRM terms with the new rate
    * 5. Recalculates payments for VRM-Changing terms
-   * 
+   *
    * @returns Result with change status and update counts
    */
   async checkAndUpdatePrimeRate(): Promise<PrimeRateChangeResult> {
@@ -45,9 +49,7 @@ export class PrimeRateTrackingService {
 
       // Get the latest recorded prime rate from history
       const latestHistory = await this.primeRateHistory.findLatest();
-      const previousRate = latestHistory
-        ? Number(latestHistory.primeRate)
-        : undefined;
+      const previousRate = latestHistory ? Number(latestHistory.primeRate) : undefined;
 
       // Check if rate has changed
       const changed = previousRate === undefined || previousRate !== newRate;
@@ -142,4 +144,3 @@ export class PrimeRateTrackingService {
     };
   }
 }
-

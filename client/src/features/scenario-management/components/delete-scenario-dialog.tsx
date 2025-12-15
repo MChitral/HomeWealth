@@ -22,8 +22,8 @@ export function DeleteScenarioDialog({ open, onOpenChange, onConfirm }: DeleteSc
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Scenario</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete this scenario? This action cannot be undone. All projection data for this
-            scenario will be permanently removed.
+            Are you sure you want to delete this scenario? This action cannot be undone. All
+            projection data for this scenario will be permanently removed.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -40,4 +40,3 @@ export function DeleteScenarioDialog({ open, onOpenChange, onConfirm }: DeleteSc
     </AlertDialog>
   );
 }
-

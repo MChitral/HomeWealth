@@ -14,21 +14,9 @@ import { Info, Loader2, RefreshCw } from "lucide-react";
 import { InfoTooltip } from "@/shared/ui/info-tooltip";
 import type { UiTerm } from "../types";
 import { FormProvider, useFormContext } from "react-hook-form";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/shared/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/shared/ui/form";
 import { Input } from "@/shared/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import type { UseFormReturn } from "react-hook-form";
 import type { TermRenewalFormData } from "../hooks/use-term-renewal-form";
 import type { PrimeRateResponse } from "../api";
@@ -123,7 +111,11 @@ function TermRenewalFormFields({
               <FormLabel htmlFor="new-term-type">Mortgage Type</FormLabel>
               <InfoTooltip content="Fixed Rate: Interest rate stays the same for the entire term. Variable-Changing Payment: Your payment adjusts when Prime rate changes. Variable-Fixed Payment: Payment stays constant, but if Prime rises too much, you may hit the 'trigger rate' where payment doesn't cover interest." />
             </div>
-            <Select value={field.value} onValueChange={field.onChange} data-testid="select-term-type">
+            <Select
+              value={field.value}
+              onValueChange={field.onChange}
+              data-testid="select-term-type"
+            >
               <FormControl>
                 <SelectTrigger>
                   <SelectValue />
@@ -138,7 +130,8 @@ function TermRenewalFormFields({
             <p className="text-sm text-muted-foreground">
               {termType === "fixed" && "Rate stays constant for the term"}
               {termType === "variable-changing" && "Payment recalculates when Prime changes"}
-              {termType === "variable-fixed" && "Payment stays same, amortization extends if Prime rises"}
+              {termType === "variable-fixed" &&
+                "Payment stays same, amortization extends if Prime rises"}
             </p>
             <FormMessage />
           </FormItem>
@@ -164,15 +157,19 @@ function TermRenewalFormFields({
               <SelectContent>
                 <SelectItem value="monthly">Monthly (12 payments/year)</SelectItem>
                 <SelectItem value="biweekly">Bi-weekly (26 payments/year)</SelectItem>
-                <SelectItem value="accelerated-biweekly">Accelerated Bi-weekly (pays off faster)</SelectItem>
+                <SelectItem value="accelerated-biweekly">
+                  Accelerated Bi-weekly (pays off faster)
+                </SelectItem>
                 <SelectItem value="semi-monthly">Semi-monthly (24 payments/year)</SelectItem>
                 <SelectItem value="weekly">Weekly (52 payments/year)</SelectItem>
-                <SelectItem value="accelerated-weekly">Accelerated Weekly (pays off faster)</SelectItem>
+                <SelectItem value="accelerated-weekly">
+                  Accelerated Weekly (pays off faster)
+                </SelectItem>
               </SelectContent>
             </Select>
             <p className="text-sm text-muted-foreground">
-              Accelerated payments pay your mortgage off faster by making the equivalent of one extra monthly payment
-              per year
+              Accelerated payments pay your mortgage off faster by making the equivalent of one
+              extra monthly payment per year
             </p>
             <FormMessage />
           </FormItem>
@@ -185,7 +182,11 @@ function TermRenewalFormFields({
         render={({ field }) => (
           <FormItem>
             <FormLabel htmlFor="term-length">Term Length</FormLabel>
-            <Select value={field.value} onValueChange={field.onChange} data-testid="select-term-length">
+            <Select
+              value={field.value}
+              onValueChange={field.onChange}
+              data-testid="select-term-length"
+            >
               <FormControl>
                 <SelectTrigger>
                   <SelectValue />
@@ -200,7 +201,9 @@ function TermRenewalFormFields({
                 <SelectItem value="10">10 Years</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-sm text-muted-foreground">Most Canadian mortgages are 3 or 5 year terms</p>
+            <p className="text-sm text-muted-foreground">
+              Most Canadian mortgages are 3 or 5 year terms
+            </p>
             <FormMessage />
           </FormItem>
         )}
@@ -251,7 +254,8 @@ function TermRenewalFormFields({
                   />
                 </FormControl>
                 <p className="text-sm text-muted-foreground">
-                  Your lender offers Prime minus 0.65% (or Prime plus X%). This spread is locked for your term.
+                  Your lender offers Prime minus 0.65% (or Prime plus X%). This spread is locked for
+                  your term.
                 </p>
                 <FormMessage />
               </FormItem>
@@ -296,11 +300,13 @@ function TermRenewalFormFields({
                 </FormControl>
                 {primeRateData?.effectiveDate && (
                   <p className="text-xs text-muted-foreground">
-                    Bank of Canada rate as of {new Date(primeRateData.effectiveDate).toLocaleDateString()}
+                    Bank of Canada rate as of{" "}
+                    {new Date(primeRateData.effectiveDate).toLocaleDateString()}
                   </p>
                 )}
                 <p className="text-sm text-muted-foreground">
-                  Current Bank of Canada Prime rate. This will change during your term, but your spread won't.
+                  Current Bank of Canada Prime rate. This will change during your term, but your
+                  spread won't.
                 </p>
                 <FormMessage />
               </FormItem>
@@ -345,7 +351,8 @@ function TermRenewalFormFields({
             )}
             {!autoPaymentAmount && (
               <p className="text-sm text-muted-foreground">
-                Your regular payment amount for this term. This can be calculated based on your balance and rate.
+                Your regular payment amount for this term. This can be calculated based on your
+                balance and rate.
               </p>
             )}
             <FormMessage />
@@ -414,7 +421,11 @@ export function TermRenewalDialog({
           />
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => onOpenChange(false)} data-testid="button-cancel-renewal">
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              data-testid="button-cancel-renewal"
+            >
               Cancel
             </Button>
             <Button

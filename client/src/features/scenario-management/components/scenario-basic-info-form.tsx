@@ -1,11 +1,5 @@
 import { FormProvider } from "react-hook-form";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/shared/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/shared/ui/form";
 import { Input } from "@/shared/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import type { UseFormReturn } from "react-hook-form";
@@ -61,7 +55,10 @@ export function ScenarioBasicInfoForm({ form }: ScenarioBasicInfoFormProps) {
           )}
         />
         <div>
-          <label htmlFor="horizon" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          <label
+            htmlFor="horizon"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
             Projection Horizon (years)
           </label>
           <Select defaultValue="10">

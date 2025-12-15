@@ -21,7 +21,11 @@ export function EmergencyFundProgress({
       {hasExpenseData ? (
         <>
           <p className="text-3xl font-mono font-bold mb-2" data-testid="text-target-amount">
-            ${targetAmount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+            $
+            {targetAmount.toLocaleString(undefined, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            })}
           </p>
           <p className="text-sm text-muted-foreground">
             = {targetMonths} months × ${monthlyExpenses.toLocaleString()}/month
@@ -40,12 +44,14 @@ export function EmergencyFundProgress({
         <div className="text-sm text-muted-foreground">
           <p className="font-medium mb-2">No expense data available</p>
           <p>
-            Please fill out your <a href="/cash-flow" className="text-primary underline">Cash Flow</a> page first to
-            calculate recommended targets.
+            Please fill out your{" "}
+            <a href="/cash-flow" className="text-primary underline">
+              Cash Flow
+            </a>{" "}
+            page first to calculate recommended targets.
           </p>
         </div>
       )}
     </div>
   );
 }
-

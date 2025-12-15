@@ -7,7 +7,11 @@ interface ComparisonTableProps {
   getMetricForHorizon: (metrics: any, metricName: MetricName) => number;
 }
 
-export function ComparisonTable({ scenarios, timeHorizon, getMetricForHorizon }: ComparisonTableProps) {
+export function ComparisonTable({
+  scenarios,
+  timeHorizon,
+  getMetricForHorizon,
+}: ComparisonTableProps) {
   return (
     <Card>
       <CardHeader>
@@ -19,7 +23,9 @@ export function ComparisonTable({ scenarios, timeHorizon, getMetricForHorizon }:
           <table className="w-full">
             <thead>
               <tr className="border-b">
-                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Metric</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                  Metric
+                </th>
                 {scenarios.map((scenario) => (
                   <th key={scenario.id} className="text-right py-3 px-4 text-sm font-medium">
                     {scenario.name}
@@ -32,15 +38,17 @@ export function ComparisonTable({ scenarios, timeHorizon, getMetricForHorizon }:
                 <td className="py-3 px-4 text-sm font-medium">Net Worth ({timeHorizon} years)</td>
                 {scenarios.map((scenario) => (
                   <td key={scenario.id} className="text-right py-3 px-4 font-mono text-sm">
-                    ${getMetricForHorizon(scenario.metrics, 'netWorth').toLocaleString()}
+                    ${getMetricForHorizon(scenario.metrics, "netWorth").toLocaleString()}
                   </td>
                 ))}
               </tr>
               <tr className="hover-elevate">
-                <td className="py-3 px-4 text-sm font-medium">Mortgage Balance ({timeHorizon} years)</td>
+                <td className="py-3 px-4 text-sm font-medium">
+                  Mortgage Balance ({timeHorizon} years)
+                </td>
                 {scenarios.map((scenario) => (
                   <td key={scenario.id} className="text-right py-3 px-4 font-mono text-sm">
-                    ${getMetricForHorizon(scenario.metrics, 'mortgageBalance').toLocaleString()}
+                    ${getMetricForHorizon(scenario.metrics, "mortgageBalance").toLocaleString()}
                   </td>
                 ))}
               </tr>
@@ -55,24 +63,32 @@ export function ComparisonTable({ scenarios, timeHorizon, getMetricForHorizon }:
               <tr className="hover-elevate">
                 <td className="py-3 px-4 text-sm font-medium">Total Interest Paid</td>
                 {scenarios.map((scenario) => (
-                  <td key={scenario.id} className="text-right py-3 px-4 font-mono text-sm text-orange-600">
+                  <td
+                    key={scenario.id}
+                    className="text-right py-3 px-4 font-mono text-sm text-orange-600"
+                  >
                     ${scenario.metrics.totalInterestPaid.toLocaleString()}
                   </td>
                 ))}
               </tr>
               <tr className="hover-elevate">
-                <td className="py-3 px-4 text-sm font-medium">Investment Portfolio ({timeHorizon} years)</td>
+                <td className="py-3 px-4 text-sm font-medium">
+                  Investment Portfolio ({timeHorizon} years)
+                </td>
                 {scenarios.map((scenario) => (
                   <td key={scenario.id} className="text-right py-3 px-4 font-mono text-sm">
-                    ${getMetricForHorizon(scenario.metrics, 'investments').toLocaleString()}
+                    ${getMetricForHorizon(scenario.metrics, "investments").toLocaleString()}
                   </td>
                 ))}
               </tr>
               <tr className="hover-elevate">
                 <td className="py-3 px-4 text-sm font-medium">Investment Returns Earned</td>
                 {scenarios.map((scenario) => (
-                  <td key={scenario.id} className="text-right py-3 px-4 font-mono text-sm text-green-600">
-                    +${getMetricForHorizon(scenario.metrics, 'investmentReturns').toLocaleString()}
+                  <td
+                    key={scenario.id}
+                    className="text-right py-3 px-4 font-mono text-sm text-green-600"
+                  >
+                    +${getMetricForHorizon(scenario.metrics, "investmentReturns").toLocaleString()}
                   </td>
                 ))}
               </tr>

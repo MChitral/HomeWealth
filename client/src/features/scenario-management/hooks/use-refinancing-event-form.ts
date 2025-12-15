@@ -11,23 +11,21 @@ export const refinancingEventFormSchema = z
   .object({
     timingType: z.enum(["by-year", "at-term-end"]),
     refinancingYear: z.string().optional(),
-    newRate: z
-      .string()
-      .refine(
-        (val) => {
-          // Handle undefined, null, or empty string
-          if (!val || typeof val !== "string") return false;
-          const trimmed = val.trim();
-          if (trimmed === "") return false;
-          const num = Number(trimmed);
-          // Check if it's a valid finite number and within range
-          // Also allow 0 as a valid rate
-          return Number.isFinite(num) && !isNaN(num) && num >= 0 && num <= 100;
-        },
-        {
-          message: "Rate is required and must be between 0 and 100",
-        }
-      ),
+    newRate: z.string().refine(
+      (val) => {
+        // Handle undefined, null, or empty string
+        if (!val || typeof val !== "string") return false;
+        const trimmed = val.trim();
+        if (trimmed === "") return false;
+        const num = Number(trimmed);
+        // Check if it's a valid finite number and within range
+        // Also allow 0 as a valid rate
+        return Number.isFinite(num) && !isNaN(num) && num >= 0 && num <= 100;
+      },
+      {
+        message: "Rate is required and must be between 0 and 100",
+      }
+    ),
     termType: z.enum(["fixed", "variable-changing", "variable-fixed"]),
     newAmortizationMonths: z.string().optional(),
     paymentFrequency: z.string().optional(),
@@ -115,4 +113,3 @@ export function useRefinancingEventForm({ initialEvent }: UseRefinancingEventFor
     reset,
   };
 }
-

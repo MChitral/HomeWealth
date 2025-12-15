@@ -4,7 +4,9 @@ import { prepaymentEventCreateSchema } from "@domain/models";
 import { requireUser } from "@api/utils/auth";
 import { sendError } from "@server-shared/utils/api-response";
 
-const prepaymentEventUpdateSchema = prepaymentEventCreateSchema.omit({ scenarioId: true }).partial();
+const prepaymentEventUpdateSchema = prepaymentEventCreateSchema
+  .omit({ scenarioId: true })
+  .partial();
 
 export function registerPrepaymentEventRoutes(router: Router, services: ApplicationServices) {
   router.get("/scenarios/:scenarioId/prepayment-events", async (req, res) => {
@@ -29,11 +31,7 @@ export function registerPrepaymentEventRoutes(router: Router, services: Applicat
         scenarioId: req.params.scenarioId,
       });
       const { scenarioId, ...payload } = data;
-      const event = await services.prepaymentEvents.create(
-        req.params.scenarioId,
-        user.id,
-        payload,
-      );
+      const event = await services.prepaymentEvents.create(req.params.scenarioId, user.id, payload);
       if (!event) {
         sendError(res, 404, "Scenario not found");
         return;
@@ -73,4 +71,3 @@ export function registerPrepaymentEventRoutes(router: Router, services: Applicat
     res.json({ success: true });
   });
 }
-

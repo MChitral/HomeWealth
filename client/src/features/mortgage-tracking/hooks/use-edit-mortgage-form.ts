@@ -80,11 +80,11 @@ export function useEditMortgageForm({
       form.reset({
         propertyPrice: initialPropertyPrice || "",
         currentBalance: initialCurrentBalance || "",
-        paymentFrequency: (initialPaymentFrequency || "monthly") as EditMortgageFormData["paymentFrequency"],
+        paymentFrequency: (initialPaymentFrequency ||
+          "monthly") as EditMortgageFormData["paymentFrequency"],
       });
     }
   }, [initialPropertyPrice, initialCurrentBalance, initialPaymentFrequency, form]);
 
   return form;
 }
-

@@ -8,5 +8,6 @@ export type RefinancingEventEntity = RefinancingEvent;
 export type RefinancingEventCreateInput = InsertRefinancingEvent;
 
 export const refinancingEventCreateSchema = insertRefinancingEventSchema;
-export const refinancingEventUpdateSchema = refinancingEventCreateSchema.omit({ scenarioId: true }).partial();
-
+export const refinancingEventUpdateSchema = refinancingEventCreateSchema
+  .omit({ scenarioId: true })
+  .partial();

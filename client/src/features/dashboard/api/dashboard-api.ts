@@ -15,4 +15,3 @@ export const dashboardApi = {
   fetchMortgages: () => apiRequest<Mortgage[]>("GET", "/api/mortgages"),
   fetchCashFlow: () => apiRequest<CashFlow | null>("GET", "/api/cash-flow"),
 };
-

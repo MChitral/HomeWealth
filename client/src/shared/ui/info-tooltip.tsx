@@ -26,4 +26,3 @@ export function InfoTooltip({ content, side = "top", className = "" }: InfoToolt
     </Tooltip>
   );
 }
-

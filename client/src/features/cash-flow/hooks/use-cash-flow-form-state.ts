@@ -65,20 +65,32 @@ export function useCashFlowFormState({ cashFlow }: UseCashFlowFormStateProps) {
   const watchedValues = form.watch();
 
   // Create setters that use form.setValue (compatible with existing components)
-  const setMonthlyIncome = (value: number) => form.setValue("monthlyIncome", value, { shouldValidate: true });
-  const setExtraPaycheques = (value: number) => form.setValue("extraPaycheques", value, { shouldValidate: true });
-  const setAnnualBonus = (value: number) => form.setValue("annualBonus", value, { shouldValidate: true });
-  const setPropertyTax = (value: number) => form.setValue("propertyTax", value, { shouldValidate: true });
-  const setInsurance = (value: number) => form.setValue("insurance", value, { shouldValidate: true });
-  const setCondoFees = (value: number) => form.setValue("condoFees", value, { shouldValidate: true });
-  const setUtilities = (value: number) => form.setValue("utilities", value, { shouldValidate: true });
-  const setGroceries = (value: number) => form.setValue("groceries", value, { shouldValidate: true });
+  const setMonthlyIncome = (value: number) =>
+    form.setValue("monthlyIncome", value, { shouldValidate: true });
+  const setExtraPaycheques = (value: number) =>
+    form.setValue("extraPaycheques", value, { shouldValidate: true });
+  const setAnnualBonus = (value: number) =>
+    form.setValue("annualBonus", value, { shouldValidate: true });
+  const setPropertyTax = (value: number) =>
+    form.setValue("propertyTax", value, { shouldValidate: true });
+  const setInsurance = (value: number) =>
+    form.setValue("insurance", value, { shouldValidate: true });
+  const setCondoFees = (value: number) =>
+    form.setValue("condoFees", value, { shouldValidate: true });
+  const setUtilities = (value: number) =>
+    form.setValue("utilities", value, { shouldValidate: true });
+  const setGroceries = (value: number) =>
+    form.setValue("groceries", value, { shouldValidate: true });
   const setDining = (value: number) => form.setValue("dining", value, { shouldValidate: true });
-  const setTransportation = (value: number) => form.setValue("transportation", value, { shouldValidate: true });
-  const setEntertainment = (value: number) => form.setValue("entertainment", value, { shouldValidate: true });
+  const setTransportation = (value: number) =>
+    form.setValue("transportation", value, { shouldValidate: true });
+  const setEntertainment = (value: number) =>
+    form.setValue("entertainment", value, { shouldValidate: true });
   const setCarLoan = (value: number) => form.setValue("carLoan", value, { shouldValidate: true });
-  const setStudentLoan = (value: number) => form.setValue("studentLoan", value, { shouldValidate: true });
-  const setCreditCard = (value: number) => form.setValue("creditCard", value, { shouldValidate: true });
+  const setStudentLoan = (value: number) =>
+    form.setValue("studentLoan", value, { shouldValidate: true });
+  const setCreditCard = (value: number) =>
+    form.setValue("creditCard", value, { shouldValidate: true });
 
   return {
     // Form values (from watched values)
@@ -121,4 +133,3 @@ export function useCashFlowFormState({ cashFlow }: UseCashFlowFormStateProps) {
     form,
   };
 }
-

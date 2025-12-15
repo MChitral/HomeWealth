@@ -40,8 +40,9 @@ export function CurrentMortgagePositionCard({
           <Alert className="mb-4">
             <Info className="h-4 w-4" />
             <AlertDescription>
-              <span className="font-semibold">Property Price Not Set:</span> Home value calculations require the property price. 
-              Please set the property price in your mortgage details for accurate net worth projections.
+              <span className="font-semibold">Property Price Not Set:</span> Home value calculations
+              require the property price. Please set the property price in your mortgage details for
+              accurate net worth projections.
             </AlertDescription>
           </Alert>
         )}
@@ -49,18 +50,24 @@ export function CurrentMortgagePositionCard({
           <div>
             <p className="text-sm text-muted-foreground mb-1">Home Value</p>
             <p className="text-lg font-mono font-semibold">
-              {currentMortgageData.homeValue > 0 
-                ? `$${currentMortgageData.homeValue.toLocaleString()}` 
-                : <span className="text-muted-foreground">Not Set</span>}
+              {currentMortgageData.homeValue > 0 ? (
+                `$${currentMortgageData.homeValue.toLocaleString()}`
+              ) : (
+                <span className="text-muted-foreground">Not Set</span>
+              )}
             </p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground mb-1">Current Balance</p>
-            <p className="text-lg font-mono font-semibold">${currentMortgageData.currentBalance.toLocaleString()}</p>
+            <p className="text-lg font-mono font-semibold">
+              ${currentMortgageData.currentBalance.toLocaleString()}
+            </p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground mb-1">Years Into Mortgage</p>
-            <p className="text-lg font-mono font-semibold">{currentMortgageData.yearsIntoMortgage} years</p>
+            <p className="text-lg font-mono font-semibold">
+              {currentMortgageData.yearsIntoMortgage} years
+            </p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground mb-1">Current Rate</p>
@@ -71,11 +78,15 @@ export function CurrentMortgagePositionCard({
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div>
             <p className="text-sm text-muted-foreground mb-1">Principal Paid So Far</p>
-            <p className="text-base font-mono text-green-600">${currentMortgageData.principalPaid.toLocaleString()}</p>
+            <p className="text-base font-mono text-green-600">
+              ${currentMortgageData.principalPaid.toLocaleString()}
+            </p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground mb-1">Interest Paid So Far</p>
-            <p className="text-base font-mono text-orange-600">${currentMortgageData.interestPaid.toLocaleString()}</p>
+            <p className="text-base font-mono text-orange-600">
+              ${currentMortgageData.interestPaid.toLocaleString()}
+            </p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground mb-1">Current Amortization</p>
@@ -83,7 +94,9 @@ export function CurrentMortgagePositionCard({
           </div>
           <div>
             <p className="text-sm text-muted-foreground mb-1">Monthly Payment</p>
-            <p className="text-base font-mono">${currentMortgageData.monthlyPayment.toLocaleString()}</p>
+            <p className="text-base font-mono">
+              ${currentMortgageData.monthlyPayment.toLocaleString()}
+            </p>
           </div>
         </div>
         {paymentPreview && (
@@ -91,11 +104,15 @@ export function CurrentMortgagePositionCard({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Next Payment Principal</p>
-                <p className="text-base font-mono text-green-600">${paymentPreview.principal.toFixed(2)}</p>
+                <p className="text-base font-mono text-green-600">
+                  ${paymentPreview.principal.toFixed(2)}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Next Payment Interest</p>
-                <p className="text-base font-mono text-orange-600">${paymentPreview.interest.toFixed(2)}</p>
+                <p className="text-base font-mono text-orange-600">
+                  ${paymentPreview.interest.toFixed(2)}
+                </p>
               </div>
             </div>
             <p className="text-xs text-muted-foreground">
@@ -104,8 +121,8 @@ export function CurrentMortgagePositionCard({
             {paymentPreview.triggerRateHit && (
               <Alert variant="destructive">
                 <AlertDescription>
-                  Current payment is below the interest-only threshold. Increase the payment or adjust your strategy to
-                  avoid trigger-rate calls.
+                  Current payment is below the interest-only threshold. Increase the payment or
+                  adjust your strategy to avoid trigger-rate calls.
                 </AlertDescription>
               </Alert>
             )}
@@ -129,4 +146,3 @@ export function CurrentMortgagePositionCard({
     </Card>
   );
 }
-

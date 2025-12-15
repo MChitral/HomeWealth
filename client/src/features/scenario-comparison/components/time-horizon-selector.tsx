@@ -23,4 +23,3 @@ export function TimeHorizonSelector({ value, onValueChange }: TimeHorizonSelecto
     </div>
   );
 }
-

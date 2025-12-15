@@ -25,7 +25,7 @@ export class EmergencyFundRepository {
 
   async update(
     id: string,
-    payload: Partial<UpdateEmergencyFund>,
+    payload: Partial<UpdateEmergencyFund>
   ): Promise<EmergencyFundRecord | undefined> {
     const [updated] = await this.database
       .update(emergencyFund)
@@ -36,4 +36,3 @@ export class EmergencyFundRepository {
     return updated;
   }
 }
-

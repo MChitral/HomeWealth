@@ -10,10 +10,7 @@ import { registerRefinancingEventRoutes } from "./refinancing-event.routes";
 import { registerSeedRoutes } from "./seed.routes";
 import { registerPrimeRateRoutes } from "./prime-rate.routes";
 
-export function buildApiRouter(
-  services: ApplicationServices,
-  repositories: Repositories,
-): Router {
+export function buildApiRouter(services: ApplicationServices, repositories: Repositories): Router {
   const router = Router();
 
   registerSeedRoutes(router, repositories);
@@ -27,4 +24,3 @@ export function buildApiRouter(
 
   return router;
 }
-

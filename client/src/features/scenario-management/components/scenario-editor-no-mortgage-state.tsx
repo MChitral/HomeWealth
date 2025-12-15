@@ -3,7 +3,7 @@ import { Home } from "lucide-react";
 
 /**
  * Empty state shown when user tries to create a scenario but has no mortgages.
- * 
+ *
  * Product Logic: Scenarios require mortgage data to function.
  * Users must create a mortgage before they can create scenarios,
  * as scenarios are projections based on mortgage balance, rate, and payment history.
@@ -38,4 +38,3 @@ export function ScenarioEditorNoMortgageState() {
     />
   );
 }
-

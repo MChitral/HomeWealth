@@ -16,4 +16,3 @@ export function ScenarioComparisonSkeleton() {
     </div>
   );
 }
-

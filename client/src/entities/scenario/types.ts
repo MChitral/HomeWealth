@@ -23,4 +23,3 @@ export type ScenarioWithMetrics = Scenario & {
     investmentProjections: number[];
   };
 };
-

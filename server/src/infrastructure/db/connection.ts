@@ -1,13 +1,7 @@
 import { Pool as NeonPool, neonConfig } from "@neondatabase/serverless";
-import {
-  drizzle as drizzleNeon,
-  type NeonDatabase,
-} from "drizzle-orm/neon-serverless";
+import { drizzle as drizzleNeon, type NeonDatabase } from "drizzle-orm/neon-serverless";
 import { Pool as PgPool } from "pg";
-import {
-  drizzle as drizzlePg,
-  type NodePgDatabase,
-} from "drizzle-orm/node-postgres";
+import { drizzle as drizzlePg, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import ws from "ws";
 import * as schema from "@shared/schema";
 
@@ -37,4 +31,3 @@ if (client === "neon") {
 }
 
 export { db };
-

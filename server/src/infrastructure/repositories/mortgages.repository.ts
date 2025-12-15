@@ -23,15 +23,16 @@ export class MortgagesRepository {
     return this.database.select().from(mortgages).where(eq(mortgages.userId, userId));
   }
 
+  async findAll(): Promise<MortgageRecord[]> {
+    return this.database.select().from(mortgages);
+  }
+
   async create(payload: InsertMortgage): Promise<MortgageRecord> {
     const [created] = await this.database.insert(mortgages).values(payload).returning();
     return created;
   }
 
-  async update(
-    id: string,
-    payload: Partial<UpdateMortgage>,
-  ): Promise<MortgageRecord | undefined> {
+  async update(id: string, payload: Partial<UpdateMortgage>): Promise<MortgageRecord | undefined> {
     const [updated] = await this.database
       .update(mortgages)
       .set(payload)
@@ -47,4 +48,3 @@ export class MortgagesRepository {
     return Boolean(result.rowCount && result.rowCount > 0);
   }
 }
-

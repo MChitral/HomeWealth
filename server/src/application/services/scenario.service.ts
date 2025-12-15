@@ -5,7 +5,7 @@ import type { ScenarioCreateInput } from "@domain/models";
 export class ScenarioService {
   constructor(
     private readonly scenarios: ScenariosRepository,
-    private readonly prepaymentEvents: PrepaymentEventsRepository,
+    private readonly prepaymentEvents: PrepaymentEventsRepository
   ) {}
 
   listByUserId(userId: string): Promise<Scenario[]> {
@@ -30,7 +30,7 @@ export class ScenarioService {
   async update(
     id: string,
     userId: string,
-    payload: Partial<Omit<ScenarioCreateInput, "userId">>,
+    payload: Partial<Omit<ScenarioCreateInput, "userId">>
   ): Promise<Scenario | undefined> {
     const scenario = await this.getByIdForUser(id, userId);
     if (!scenario) {
@@ -48,4 +48,3 @@ export class ScenarioService {
     return this.scenarios.delete(id);
   }
 }
-

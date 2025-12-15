@@ -4,7 +4,9 @@ import { refinancingEventCreateSchema } from "@domain/models";
 import { requireUser } from "@api/utils/auth";
 import { sendError } from "@server-shared/utils/api-response";
 
-const refinancingEventUpdateSchema = refinancingEventCreateSchema.omit({ scenarioId: true }).partial();
+const refinancingEventUpdateSchema = refinancingEventCreateSchema
+  .omit({ scenarioId: true })
+  .partial();
 
 export function registerRefinancingEventRoutes(router: Router, services: ApplicationServices) {
   router.get("/scenarios/:scenarioId/refinancing-events", async (req, res) => {
@@ -32,7 +34,7 @@ export function registerRefinancingEventRoutes(router: Router, services: Applica
       const event = await services.refinancingEvents.create(
         req.params.scenarioId,
         user.id,
-        payload,
+        payload
       );
       if (!event) {
         sendError(res, 404, "Scenario not found");
@@ -73,4 +75,3 @@ export function registerRefinancingEventRoutes(router: Router, services: Applica
     res.json({ success: true });
   });
 }
-

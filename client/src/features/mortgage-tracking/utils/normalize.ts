@@ -20,7 +20,7 @@ export function normalizeTerm(term: MortgageTerm | undefined): UiTerm | null {
 
 export function normalizePayments(
   payments: MortgagePayment[] | undefined,
-  terms: MortgageTerm[] | undefined,
+  terms: MortgageTerm[] | undefined
 ): UiPayment[] {
   if (!payments) return [];
   return payments.map((payment) => {
@@ -49,4 +49,3 @@ export function normalizePayments(
     };
   });
 }
-

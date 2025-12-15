@@ -20,4 +20,3 @@ export const VALIDATION_MESSAGES = {
   LESS_THAN: (fieldName: string) => `Must be less than ${fieldName}`,
   GREATER_THAN: (fieldName: string) => `Must be greater than ${fieldName}`,
 } as const;
-

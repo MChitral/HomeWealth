@@ -64,7 +64,7 @@ export function useAutoCreatePayment({
       loanAmount,
       effectiveRatePercent / 100,
       amortMonths,
-      frequency,
+      frequency
     );
 
     if (Number.isFinite(paymentValue)) {
@@ -171,7 +171,7 @@ export function useAutoRenewalPayment({
       balance,
       effectiveRatePercent / 100,
       remainingMonths,
-      frequency,
+      frequency
     );
 
     if (Number.isFinite(paymentValue)) {
@@ -203,4 +203,3 @@ export function useAutoRenewalPayment({
 
   return autoPayment;
 }
-

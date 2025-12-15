@@ -13,7 +13,7 @@ interface ComparisonChartsProps {
 }
 
 export function ComparisonCharts({ scenarios, chartData }: ComparisonChartsProps) {
-  const scenarioMeta = scenarios.map(s => ({ id: s.id, name: s.name, color: s.color }));
+  const scenarioMeta = scenarios.map((s) => ({ id: s.id, name: s.name, color: s.color }));
 
   return (
     <>
@@ -23,10 +23,7 @@ export function ComparisonCharts({ scenarios, chartData }: ComparisonChartsProps
           <CardDescription>How your total net worth grows under each strategy</CardDescription>
         </CardHeader>
         <CardContent>
-          <ComparisonNetWorthChart 
-            data={chartData.netWorth} 
-            scenarios={scenarioMeta}
-          />
+          <ComparisonNetWorthChart data={chartData.netWorth} scenarios={scenarioMeta} />
         </CardContent>
       </Card>
 
@@ -37,8 +34,8 @@ export function ComparisonCharts({ scenarios, chartData }: ComparisonChartsProps
             <CardDescription>How quickly each strategy pays down the mortgage</CardDescription>
           </CardHeader>
           <CardContent>
-            <ComparisonLineChart 
-              data={chartData.mortgage} 
+            <ComparisonLineChart
+              data={chartData.mortgage}
               scenarios={scenarioMeta}
               yAxisLabel="Mortgage Balance"
             />
@@ -51,8 +48,8 @@ export function ComparisonCharts({ scenarios, chartData }: ComparisonChartsProps
             <CardDescription>Investment portfolio value over time</CardDescription>
           </CardHeader>
           <CardContent>
-            <ComparisonLineChart 
-              data={chartData.investment} 
+            <ComparisonLineChart
+              data={chartData.investment}
               scenarios={scenarioMeta}
               yAxisLabel="Investment Value"
             />

@@ -11,21 +11,9 @@ import { Loader2 } from "lucide-react";
 import type { UseMutationResult } from "@tanstack/react-query";
 import type { UpdateMortgagePayload } from "../api";
 import { FormProvider } from "react-hook-form";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/shared/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/shared/ui/form";
 import { Input } from "@/shared/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import type { UseFormReturn } from "react-hook-form";
 import type { EditMortgageFormData } from "../hooks/use-edit-mortgage-form";
 
@@ -60,7 +48,9 @@ export function EditMortgageDialog({
         <FormProvider {...form}>
           <DialogHeader>
             <DialogTitle>Edit Mortgage Details</DialogTitle>
-            <DialogDescription>Update your property value, current balance, and payment settings</DialogDescription>
+            <DialogDescription>
+              Update your property value, current balance, and payment settings
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={onSubmit}>
             <div className="space-y-4 py-4">
@@ -138,10 +128,16 @@ export function EditMortgageDialog({
               </Button>
               <Button
                 type="submit"
-                disabled={editMortgageMutation.isPending || !form.formState.isValid || !form.formState.isDirty}
+                disabled={
+                  editMortgageMutation.isPending ||
+                  !form.formState.isValid ||
+                  !form.formState.isDirty
+                }
                 data-testid="button-save-edit-mortgage"
               >
-                {editMortgageMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                {editMortgageMutation.isPending && (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                )}
                 Save Changes
               </Button>
             </DialogFooter>

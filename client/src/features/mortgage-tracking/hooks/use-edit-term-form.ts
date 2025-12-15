@@ -86,10 +86,7 @@ const defaultValues: EditTermFormData = {
  * React Hook Form hook for edit term form
  * Replaces 9 useState calls with a single useForm hook
  */
-export function useEditTermForm({
-  currentTerm,
-  primeRateData,
-}: UseEditTermFormProps = {}) {
+export function useEditTermForm({ currentTerm, primeRateData }: UseEditTermFormProps = {}) {
   const form = useForm<EditTermFormData>({
     resolver: zodResolver(editTermFormSchema),
     defaultValues,
@@ -101,26 +98,30 @@ export function useEditTermForm({
     if (currentTerm) {
       const startDate = currentTerm.startDate || "";
       const endDate = currentTerm.endDate || "";
-      
+
       // Calculate term years from start and end dates
       let termYears = "5";
       if (startDate && endDate) {
         const start = new Date(startDate);
         const end = new Date(endDate);
-        const years = Math.round((end.getTime() - start.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+        const years = Math.round(
+          (end.getTime() - start.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+        );
         termYears = years.toString();
       }
 
       const formData: EditTermFormData = {
         startDate,
         termType: (currentTerm.termType || "variable-fixed") as EditTermFormData["termType"],
-        paymentFrequency: (currentTerm.paymentFrequency || "monthly") as EditTermFormData["paymentFrequency"],
+        paymentFrequency: (currentTerm.paymentFrequency ||
+          "monthly") as EditTermFormData["paymentFrequency"],
         termYears,
-        fixedRate: currentTerm.termType === "fixed" ? (currentTerm.fixedRate || "") : "",
-        primeRate: currentTerm.termType !== "fixed" 
-          ? (currentTerm.primeRate?.toString() || primeRateData?.primeRate?.toString() || "")
-          : "",
-        spread: currentTerm.termType !== "fixed" ? (currentTerm.lockedSpread || "") : "",
+        fixedRate: currentTerm.termType === "fixed" ? currentTerm.fixedRate || "" : "",
+        primeRate:
+          currentTerm.termType !== "fixed"
+            ? currentTerm.primeRate?.toString() || primeRateData?.primeRate?.toString() || ""
+            : "",
+        spread: currentTerm.termType !== "fixed" ? currentTerm.lockedSpread || "" : "",
         paymentAmount: currentTerm.regularPaymentAmount || "",
       };
 
@@ -153,4 +154,3 @@ export function useEditTermForm({
 
   return form;
 }
-

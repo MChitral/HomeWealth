@@ -6,18 +6,12 @@ export * from "./use-dashboard-calculations";
 export * from "./use-dashboard-charts";
 
 export function useDashboardData(): DashboardData {
-  const {
-    data: scenarios,
-    isLoading: scenariosLoading,
-  } = useQuery({
+  const { data: scenarios, isLoading: scenariosLoading } = useQuery({
     queryKey: dashboardQueryKeys.scenarios(),
     queryFn: dashboardApi.fetchScenarios,
   });
 
-  const {
-    data: emergencyFund,
-    isLoading: efLoading,
-  } = useQuery({
+  const { data: emergencyFund, isLoading: efLoading } = useQuery({
     queryKey: dashboardQueryKeys.emergencyFund(),
     queryFn: dashboardApi.fetchEmergencyFund,
   });
@@ -34,4 +28,3 @@ export function useDashboardData(): DashboardData {
     isLoading: scenariosLoading || efLoading || cashFlowLoading,
   };
 }
-

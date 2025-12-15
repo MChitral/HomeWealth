@@ -5,7 +5,10 @@ import { z } from "zod";
  * In development, shows detailed error information.
  * In production, only exposes safe, user-friendly messages.
  */
-export function sanitizeError(error: unknown, isDevelopment: boolean): {
+export function sanitizeError(
+  error: unknown,
+  isDevelopment: boolean
+): {
   message: string;
   details?: unknown;
 } {
@@ -72,9 +75,7 @@ export function sanitizeError(error: unknown, isDevelopment: boolean): {
     ];
 
     // Check if error message contains any safe message
-    const isSafeMessage = safeErrorMessages.some((safeMsg) =>
-      error.message.includes(safeMsg),
-    );
+    const isSafeMessage = safeErrorMessages.some((safeMsg) => error.message.includes(safeMsg));
 
     if (isSafeMessage) {
       return { message: error.message };
@@ -87,4 +88,3 @@ export function sanitizeError(error: unknown, isDevelopment: boolean): {
   // Fallback for unknown error types
   return { message: "An error occurred. Please try again." };
 }
-

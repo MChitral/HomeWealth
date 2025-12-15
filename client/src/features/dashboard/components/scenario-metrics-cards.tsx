@@ -7,7 +7,7 @@ interface ScenarioMetricsCardsProps {
   selectedHorizon: number;
   getMetricForHorizon: (
     scenario: ScenarioWithMetrics | undefined,
-    metric: "netWorth" | "mortgageBalance" | "investments" | "investmentReturns",
+    metric: "netWorth" | "mortgageBalance" | "investments" | "investmentReturns"
   ) => number;
 }
 
@@ -42,4 +42,3 @@ export function ScenarioMetricsCards({
     </div>
   );
 }
-

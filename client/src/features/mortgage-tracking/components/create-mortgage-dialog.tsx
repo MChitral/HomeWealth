@@ -9,23 +9,11 @@ import {
 } from "@/shared/ui/dialog";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { InfoTooltip } from "@/shared/ui/info-tooltip";
 import { Loader2, RefreshCw } from "lucide-react";
 import { FormProvider, useFormContext, type UseFormReturn } from "react-hook-form";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/shared/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/shared/ui/form";
 import type { CreateMortgageFormData } from "../hooks/use-create-mortgage-form";
 import type { PrimeRateResponse } from "../api";
 import { useEffect, useState } from "react";
@@ -60,8 +48,7 @@ function Step1Fields() {
 
   const propertyPrice = watch("propertyPrice");
   const downPayment = watch("downPayment");
-  const loanAmountValue =
-    (Number(propertyPrice) || 0) - (Number(downPayment) || 0);
+  const loanAmountValue = (Number(propertyPrice) || 0) - (Number(downPayment) || 0);
 
   return (
     <div className="space-y-4 py-4">
@@ -101,16 +88,12 @@ function Step1Fields() {
                 />
               </FormControl>
               <FormMessage />
-              {Number(propertyPrice) > 0 &&
-                Number(downPayment) >= 0 &&
-                !fieldState.error && (
-                  <p className="text-sm text-muted-foreground font-medium">
-                    Loan amount: $
-                    {Number.isFinite(loanAmountValue)
-                      ? loanAmountValue.toLocaleString()
-                      : "0"}
-                  </p>
-                )}
+              {Number(propertyPrice) > 0 && Number(downPayment) >= 0 && !fieldState.error && (
+                <p className="text-sm text-muted-foreground font-medium">
+                  Loan amount: $
+                  {Number.isFinite(loanAmountValue) ? loanAmountValue.toLocaleString() : "0"}
+                </p>
+              )}
             </FormItem>
           )}
         />
@@ -122,12 +105,7 @@ function Step1Fields() {
           <FormItem className="space-y-2">
             <FormLabel htmlFor="start-date">Mortgage Start Date</FormLabel>
             <FormControl>
-              <Input
-                id="start-date"
-                type="date"
-                {...field}
-                data-testid="input-start-date"
-              />
+              <Input id="start-date" type="date" {...field} data-testid="input-start-date" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -139,9 +117,7 @@ function Step1Fields() {
           name="amortization"
           render={({ field }) => (
             <FormItem className="space-y-2">
-              <FormLabel htmlFor="amortization-years">
-                Amortization (years)
-              </FormLabel>
+              <FormLabel htmlFor="amortization-years">Amortization (years)</FormLabel>
               <Select
                 value={field.value}
                 onValueChange={field.onChange}
@@ -168,9 +144,7 @@ function Step1Fields() {
           name="frequency"
           render={({ field }) => (
             <FormItem className="space-y-2">
-              <FormLabel htmlFor="payment-frequency">
-                Payment Frequency
-              </FormLabel>
+              <FormLabel htmlFor="payment-frequency">Payment Frequency</FormLabel>
               <Select
                 value={field.value}
                 onValueChange={field.onChange}
@@ -184,9 +158,7 @@ function Step1Fields() {
                 <SelectContent>
                   <SelectItem value="monthly">Monthly</SelectItem>
                   <SelectItem value="biweekly">Bi-weekly</SelectItem>
-                  <SelectItem value="accelerated-biweekly">
-                    Accelerated Bi-weekly
-                  </SelectItem>
+                  <SelectItem value="accelerated-biweekly">Accelerated Bi-weekly</SelectItem>
                   <SelectItem value="weekly">Weekly</SelectItem>
                 </SelectContent>
               </Select>
@@ -229,17 +201,20 @@ function Step2Fields({
   const primeRate = watch("primeRate");
   const spread = watch("spread");
   const startDate = watch("startDate");
-  
+
   // Fetch historical prime rate if startDate is in the past
-  const [historicalPrimeRate, setHistoricalPrimeRate] = useState<{ rate: number; date: string } | null>(null);
+  const [historicalPrimeRate, setHistoricalPrimeRate] = useState<{
+    rate: number;
+    date: string;
+  } | null>(null);
   const [isLoadingHistorical, setIsLoadingHistorical] = useState(false);
-  
+
   useEffect(() => {
     if (startDate && termType !== "fixed") {
       const startDateObj = new Date(startDate);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       // Only fetch historical rate if startDate is in the past
       if (startDateObj < today) {
         setIsLoadingHistorical(true);
@@ -247,7 +222,7 @@ function Step2Fields({
         queryStartDate.setMonth(queryStartDate.getMonth() - 3);
         const queryEndDate = new Date(startDateObj);
         queryEndDate.setDate(queryEndDate.getDate() + 1);
-        
+
         mortgageApi
           .fetchHistoricalPrimeRates(
             queryStartDate.toISOString().split("T")[0],
@@ -259,7 +234,7 @@ function Step2Fields({
               const applicableRates = response.rates
                 .filter((r) => r.date <= startDate)
                 .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-              
+
               if (applicableRates.length > 0) {
                 const rate = applicableRates[0];
                 setHistoricalPrimeRate({ rate: rate.primeRate, date: rate.date });
@@ -288,7 +263,7 @@ function Step2Fields({
       }
     }
   }, [startDate, termType, setValue]);
-  
+
   // Determine which rate to display
   const displayRate = historicalPrimeRate?.rate ?? primeRateData?.primeRate;
   const displayDate = historicalPrimeRate?.date ?? primeRateData?.effectiveDate;
@@ -298,8 +273,7 @@ function Step2Fields({
     <div className="space-y-4 py-4">
       <div className="p-3 bg-muted rounded-lg text-sm">
         <p>
-          <strong>Loan:</strong> ${loanAmount.toLocaleString()} over{" "}
-          {amortization || "25"} years
+          <strong>Loan:</strong> ${loanAmount.toLocaleString()} over {amortization || "25"} years
         </p>
         <p>
           <strong>Payments:</strong> {(frequency || "monthly").replace("-", " ")}
@@ -328,12 +302,8 @@ function Step2Fields({
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="fixed">Fixed Rate</SelectItem>
-                  <SelectItem value="variable-changing">
-                    Variable (Changing Payment)
-                  </SelectItem>
-                  <SelectItem value="variable-fixed">
-                    Variable (Fixed Payment)
-                  </SelectItem>
+                  <SelectItem value="variable-changing">Variable (Changing Payment)</SelectItem>
+                  <SelectItem value="variable-fixed">Variable (Fixed Payment)</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -440,11 +410,12 @@ function Step2Fields({
                 {displayDate && (
                   <p className="text-xs text-muted-foreground">
                     {isHistorical ? (
-                      <>Historical Bank of Canada rate effective on{" "}
-                      {new Date(displayDate).toLocaleDateString()}</>
+                      <>
+                        Historical Bank of Canada rate effective on{" "}
+                        {new Date(displayDate).toLocaleDateString()}
+                      </>
                     ) : (
-                      <>Bank of Canada rate as of{" "}
-                      {new Date(displayDate).toLocaleDateString()}</>
+                      <>Bank of Canada rate as of {new Date(displayDate).toLocaleDateString()}</>
                     )}
                   </p>
                 )}
@@ -470,11 +441,7 @@ function Step2Fields({
                 </FormControl>
                 <p className="text-xs text-muted-foreground">
                   Effective rate:{" "}
-                  {(
-                    (Number(primeRate || "0") || 0) +
-                    (Number(spread || "0") || 0)
-                  ).toFixed(2)}
-                  %
+                  {((Number(primeRate || "0") || 0) + (Number(spread || "0") || 0)).toFixed(2)}%
                 </p>
                 <FormMessage />
               </FormItem>
@@ -488,9 +455,7 @@ function Step2Fields({
         name="paymentAmount"
         render={({ field }) => (
           <FormItem className="space-y-2">
-            <FormLabel htmlFor="payment-amount">
-              Regular Payment Amount ($)
-            </FormLabel>
+            <FormLabel htmlFor="payment-amount">Regular Payment Amount ($)</FormLabel>
             <FormControl>
               <Input
                 id="payment-amount"
@@ -509,12 +474,7 @@ function Step2Fields({
               <div className="text-xs text-muted-foreground flex items-center justify-between">
                 <span>Auto payment: ${autoPayment}</span>
                 {paymentEdited && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={onUseAutoPayment}
-                  >
+                  <Button type="button" variant="ghost" size="sm" onClick={onUseAutoPayment}>
                     Use auto
                   </Button>
                 )}
@@ -557,9 +517,7 @@ export function CreateMortgageDialog({
         <FormProvider {...form}>
           <DialogHeader>
             <DialogTitle>
-              {wizardStep === 1
-                ? "Step 1: Mortgage Details"
-                : "Step 2: Term Details"}
+              {wizardStep === 1 ? "Step 1: Mortgage Details" : "Step 2: Term Details"}
             </DialogTitle>
             <DialogDescription>
               {wizardStep === 1
@@ -619,9 +577,7 @@ export function CreateMortgageDialog({
                   disabled={isCreatingMortgage || !isStep2Valid}
                   data-testid="button-create-mortgage-term"
                 >
-                  {isCreatingMortgage && (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  )}
+                  {isCreatingMortgage && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Create Mortgage
                 </Button>
               </>

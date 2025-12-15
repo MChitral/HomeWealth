@@ -79,4 +79,3 @@ export function registerScenarioRoutes(router: Router, services: ApplicationServ
     res.json({ success: true });
   });
 }
-

@@ -1,6 +1,10 @@
 import { eq, desc, and, gte, lte } from "drizzle-orm";
 import { db } from "@infrastructure/db/connection";
-import { primeRateHistory, type InsertPrimeRateHistory, type PrimeRateHistory } from "@shared/schema";
+import {
+  primeRateHistory,
+  type InsertPrimeRateHistory,
+  type PrimeRateHistory,
+} from "@shared/schema";
 
 export class PrimeRateHistoryRepository {
   /**
@@ -61,4 +65,3 @@ export class PrimeRateHistoryRepository {
     return existing !== undefined;
   }
 }
-

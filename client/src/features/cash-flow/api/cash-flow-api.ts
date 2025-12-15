@@ -13,4 +13,3 @@ export const cashFlowApi = {
   update: (id: string, payload: CashFlowPayload) =>
     apiRequest<CashFlow>("PATCH", `/api/cash-flow/${id}`, payload),
 };
-

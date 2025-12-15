@@ -64,9 +64,7 @@ export function MortgageSummaryPanels({ stats, formatAmortization }: MortgageSum
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-3xl font-bold font-mono">
-            ${stats.currentBalance.toLocaleString()}
-          </p>
+          <p className="text-3xl font-bold font-mono">${stats.currentBalance.toLocaleString()}</p>
           <p className="text-sm text-muted-foreground mt-1">
             {formatAmortization(stats.amortizationYears)} amort.
           </p>
@@ -75,4 +73,3 @@ export function MortgageSummaryPanels({ stats, formatAmortization }: MortgageSum
     </div>
   );
 }
-

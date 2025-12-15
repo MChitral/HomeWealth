@@ -1,6 +1,4 @@
-import {
-  apiRequest,
-} from "@/shared/api/query-client";
+import { apiRequest } from "@/shared/api/query-client";
 import type { Mortgage, MortgageTerm, MortgagePayment } from "@shared/schema";
 
 export type CreateMortgagePayload = {
@@ -73,23 +71,40 @@ export type HistoricalPrimeRatesResponse = {
 export const mortgageQueryKeys = {
   // Base key for all mortgage queries
   all: ["/api/mortgages"] as const,
-  
+
   // Prime rate key (separate from mortgage hierarchy)
   primeRate: () => ["prime-rate"] as const,
-  
+
   // List of all mortgages
   mortgages: () => ["/api/mortgages"] as const,
-  
+
   // Terms for a specific mortgage
   mortgageTerms: (mortgageId: string | null) => ["/api/mortgages", mortgageId, "terms"] as const,
-  
+
   // Payments for a specific mortgage
-  mortgagePayments: (mortgageId: string | null) => ["/api/mortgages", mortgageId, "payments"] as const,
+  mortgagePayments: (mortgageId: string | null) =>
+    ["/api/mortgages", mortgageId, "payments"] as const,
+
+  // Trigger rate status
+  triggerStatus: (mortgageId: string | null) =>
+    ["/api/mortgages", mortgageId, "trigger-status"] as const,
 };
 
 export type BulkCreatePaymentsResponse = {
   created: number;
   payments: MortgagePayment[];
+};
+
+export type TriggerRateAlert = {
+  mortgageId: string;
+  mortgageName: string;
+  userId: string;
+  currentRate: number;
+  triggerRate: number;
+  isHit: boolean;
+  isRisk: boolean; // Within 0.5%
+  balance: number;
+  paymentAmount: number;
 };
 
 export const mortgageApi = {
@@ -98,10 +113,16 @@ export const mortgageApi = {
     apiRequest<MortgageTerm[]>("GET", `/api/mortgages/${mortgageId}/terms`),
   fetchMortgagePayments: (mortgageId: string) =>
     apiRequest<MortgagePayment[]>("GET", `/api/mortgages/${mortgageId}/payments`),
+  fetchTriggerStatus: (mortgageId: string) =>
+    apiRequest<TriggerRateAlert | null>("GET", `/api/mortgages/${mortgageId}/trigger-status`),
   fetchPrimeRate: () => apiRequest<PrimeRateResponse>("GET", "/api/prime-rate"),
   fetchHistoricalPrimeRates: (startDate: string, endDate: string) =>
-    apiRequest<HistoricalPrimeRatesResponse>("GET", `/api/prime-rate/history?start_date=${startDate}&end_date=${endDate}`),
-  createMortgage: (payload: CreateMortgagePayload) => apiRequest<Mortgage>("POST", "/api/mortgages", payload),
+    apiRequest<HistoricalPrimeRatesResponse>(
+      "GET",
+      `/api/prime-rate/history?start_date=${startDate}&end_date=${endDate}`
+    ),
+  createMortgage: (payload: CreateMortgagePayload) =>
+    apiRequest<Mortgage>("POST", "/api/mortgages", payload),
   updateMortgage: (mortgageId: string, payload: UpdateMortgagePayload) =>
     apiRequest<Mortgage>("PATCH", `/api/mortgages/${mortgageId}`, payload),
   createTerm: (mortgageId: string, payload: CreateTermPayload) =>
@@ -111,8 +132,9 @@ export const mortgageApi = {
   createPayment: (mortgageId: string, payload: CreatePaymentPayload) =>
     apiRequest<MortgagePayment>("POST", `/api/mortgages/${mortgageId}/payments`, payload),
   createBulkPayments: (mortgageId: string, payments: CreatePaymentPayload[]) =>
-    apiRequest<BulkCreatePaymentsResponse>("POST", `/api/mortgages/${mortgageId}/payments/bulk`, { payments }),
+    apiRequest<BulkCreatePaymentsResponse>("POST", `/api/mortgages/${mortgageId}/payments/bulk`, {
+      payments,
+    }),
   deletePayment: (paymentId: string) =>
     apiRequest<{ success: boolean }>("DELETE", `/api/mortgage-payments/${paymentId}`),
 };
-

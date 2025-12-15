@@ -1,13 +1,10 @@
-import {
-  RefinancingEventsRepository,
-  ScenariosRepository,
-} from "@infrastructure/repositories";
+import { RefinancingEventsRepository, ScenariosRepository } from "@infrastructure/repositories";
 import type { InsertRefinancingEvent } from "@shared/schema";
 
 export class RefinancingEventService {
   constructor(
     private readonly refinancingEvents: RefinancingEventsRepository,
-    private readonly scenarios: ScenariosRepository,
+    private readonly scenarios: ScenariosRepository
   ) {}
 
   async list(scenarioId: string, userId: string): Promise<any[] | null> {
@@ -23,7 +20,7 @@ export class RefinancingEventService {
   async create(
     scenarioId: string,
     userId: string,
-    payload: Omit<InsertRefinancingEvent, "scenarioId">,
+    payload: Omit<InsertRefinancingEvent, "scenarioId">
   ): Promise<any | null> {
     // Verify scenario belongs to user
     const scenario = await this.scenarios.findById(scenarioId);
@@ -40,7 +37,7 @@ export class RefinancingEventService {
   async update(
     id: string,
     userId: string,
-    payload: Partial<InsertRefinancingEvent>,
+    payload: Partial<InsertRefinancingEvent>
   ): Promise<any | null> {
     const event = await this.refinancingEvents.findById(id);
     if (!event) {
@@ -71,4 +68,3 @@ export class RefinancingEventService {
     return this.refinancingEvents.delete(id);
   }
 }
-

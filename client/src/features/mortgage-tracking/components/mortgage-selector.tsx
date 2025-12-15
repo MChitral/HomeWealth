@@ -27,8 +27,8 @@ export function MortgageSelector({
 
   if (mortgages.length === 0) {
     return (
-      <Card 
-        className="p-4 border-dashed border-2 hover-elevate cursor-pointer" 
+      <Card
+        className="p-4 border-dashed border-2 hover-elevate cursor-pointer"
         onClick={onCreateNew}
         data-testid="button-create-first-mortgage"
       >
@@ -48,10 +48,7 @@ export function MortgageSelector({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Card 
-          className="p-3 cursor-pointer hover-elevate"
-          data-testid="mortgage-selector-trigger"
-        >
+        <Card className="p-3 cursor-pointer hover-elevate" data-testid="mortgage-selector-trigger">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
@@ -71,9 +68,7 @@ export function MortgageSelector({
                     ? `$${Number(selectedMortgage.propertyPrice).toLocaleString()} property`
                     : "Mortgage"}
                   {mortgages.length > 1 && (
-                    <span className="ml-2 text-xs">
-                      ({mortgages.length} mortgages)
-                    </span>
+                    <span className="ml-2 text-xs">({mortgages.length} mortgages)</span>
                   )}
                 </p>
               </div>
@@ -105,9 +100,7 @@ export function MortgageSelector({
                 </p>
               </div>
             </div>
-            {mortgage.id === selectedMortgageId && (
-              <Check className="h-4 w-4 text-primary" />
-            )}
+            {mortgage.id === selectedMortgageId && <Check className="h-4 w-4 text-primary" />}
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />

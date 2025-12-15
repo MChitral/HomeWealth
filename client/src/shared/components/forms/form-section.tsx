@@ -10,7 +10,13 @@ interface FormSectionProps {
   headerClassName?: string;
 }
 
-export function FormSection({ title, description, children, className, headerClassName }: FormSectionProps) {
+export function FormSection({
+  title,
+  description,
+  children,
+  className,
+  headerClassName,
+}: FormSectionProps) {
   if (!title && !description) {
     return <div className={cn("space-y-4", className)}>{children}</div>;
   }
@@ -27,4 +33,3 @@ export function FormSection({ title, description, children, className, headerCla
     </Card>
   );
 }
-

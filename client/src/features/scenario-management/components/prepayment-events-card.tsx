@@ -6,21 +6,9 @@ import { Plus, Edit2, Trash2 } from "lucide-react";
 import type { DraftPrepaymentEvent } from "../hooks/use-scenario-editor-state";
 import { getMonthName } from "../utils";
 import { FormProvider, useFormContext } from "react-hook-form";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/shared/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/shared/ui/form";
 import { Input } from "@/shared/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import type { UseFormReturn } from "react-hook-form";
 import type { PrepaymentEventFormData } from "../hooks/use-prepayment-event-form";
 
@@ -236,9 +224,16 @@ export function PrepaymentEventsCard({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>Prepayment Events</CardTitle>
-            <CardDescription>Annual lump sums (bonuses, tax refunds) and one-time prepayments</CardDescription>
+            <CardDescription>
+              Annual lump sums (bonuses, tax refunds) and one-time prepayments
+            </CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={onStartAddingEvent} data-testid="button-add-event">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onStartAddingEvent}
+            data-testid="button-add-event"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Event
           </Button>
@@ -249,8 +244,8 @@ export function PrepaymentEventsCard({
         {prepaymentEvents.length === 0 && !isAddingEvent && (
           <Alert>
             <AlertDescription>
-              No prepayment events configured. Add annual lump sums (like tax refunds) or one-time prepayments (like
-              inheritances).
+              No prepayment events configured. Add annual lump sums (like tax refunds) or one-time
+              prepayments (like inheritances).
             </AlertDescription>
           </Alert>
         )}
@@ -268,21 +263,32 @@ export function PrepaymentEventsCard({
                     <Badge variant="outline" data-testid={`badge-${event.eventType}`}>
                       {event.eventType === "annual" ? "Annual" : "One-Time"}
                     </Badge>
-                    <span className="font-mono font-semibold text-lg">${parseFloat(event.amount).toLocaleString()}</span>
+                    <span className="font-mono font-semibold text-lg">
+                      ${parseFloat(event.amount).toLocaleString()}
+                    </span>
                   </div>
                   {event.eventType === "annual" && event.recurrenceMonth && (
                     <p className="text-sm text-muted-foreground">
                       Every {getMonthName(event.recurrenceMonth)}
-                      {event.startYear && event.startYear > 1 && ` starting Year ${event.startYear}`}
+                      {event.startYear &&
+                        event.startYear > 1 &&
+                        ` starting Year ${event.startYear}`}
                     </p>
                   )}
                   {event.eventType === "one-time" && event.oneTimeYear && (
-                    <p className="text-sm text-muted-foreground">Year {event.oneTimeYear} from mortgage start</p>
+                    <p className="text-sm text-muted-foreground">
+                      Year {event.oneTimeYear} from mortgage start
+                    </p>
                   )}
                   {event.description && <p className="text-sm mt-1">{event.description}</p>}
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="ghost" size="icon" onClick={() => onEditEvent(event)} data-testid={`button-edit-${event.id}`}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onEditEvent(event)}
+                    data-testid={`button-edit-${event.id}`}
+                  >
                     <Edit2 className="h-4 w-4" />
                   </Button>
                   <Button
@@ -315,7 +321,12 @@ export function PrepaymentEventsCard({
                     <Button type="submit" data-testid="button-save-event">
                       {editingEvent ? "Update Event" : "Add Event"}
                     </Button>
-                    <Button type="button" variant="outline" onClick={onCancelEvent} data-testid="button-cancel-event">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={onCancelEvent}
+                      data-testid="button-cancel-event"
+                    >
                       Cancel
                     </Button>
                   </div>

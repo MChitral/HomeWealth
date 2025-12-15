@@ -23,21 +23,21 @@ export function registerPrimeRateRoutes(router: Router, services: ApplicationSer
   router.get("/prime-rate", async (_req, res) => {
     try {
       const response = await fetch(BOC_PRIME_RATE_API);
-      
+
       if (!response.ok) {
         throw new Error(`Bank of Canada API returned ${response.status}`);
       }
-      
+
       const data: BoCPrimeRateResponse = await response.json();
-      
+
       if (!data.observations || data.observations.length === 0) {
         throw new Error("No prime rate data available");
       }
-      
+
       const latestObservation = data.observations[0];
       const primeRate = parseFloat(latestObservation.V121796.v);
       const effectiveDate = latestObservation.d;
-      
+
       res.json({
         primeRate,
         effectiveDate,
@@ -53,36 +53,36 @@ export function registerPrimeRateRoutes(router: Router, services: ApplicationSer
   router.get("/prime-rate/history", async (req, res) => {
     try {
       const { start_date, end_date } = req.query;
-      
+
       if (!start_date || !end_date) {
         sendError(res, 400, "start_date and end_date query parameters are required");
         return;
       }
-      
+
       const url = `https://www.bankofcanada.ca/valet/observations/V121796/json?start_date=${start_date}&end_date=${end_date}`;
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         throw new Error(`Bank of Canada API returned ${response.status}`);
       }
-      
+
       const data: BoCPrimeRateResponse = await response.json();
-      
+
       if (!data.observations || data.observations.length === 0) {
         return res.json({ rates: [], message: "No historical data available for this period" });
       }
-      
+
       // Map observations to rate entries
       // Bank of Canada API returns observations in reverse chronological order (newest first)
-      const rates = data.observations.map(obs => ({
+      const rates = data.observations.map((obs) => ({
         date: obs.d,
         primeRate: parseFloat(obs.V121796.v),
       }));
-      
+
       // Sort rates by date ascending (oldest first) for easier lookup
       // Frontend will sort descending when needed
       rates.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      
+
       res.json({
         rates,
         source: "Bank of Canada",

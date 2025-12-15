@@ -1,6 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/shared/hooks/use-toast";
-import { mortgageApi, mortgageQueryKeys, type CreateTermPayload, type PrimeRateResponse } from "../api";
+import {
+  mortgageApi,
+  mortgageQueryKeys,
+  type CreateTermPayload,
+  type PrimeRateResponse,
+} from "../api";
 import { useTermRenewalFormWithAutoPayment } from "./use-term-renewal-form-with-auto-payment";
 import type { Mortgage } from "@shared/schema";
 import type { UiTerm, UiPayment } from "../types";
@@ -69,7 +74,11 @@ export function useTermRenewalFormState({
       }
 
       const termYears = Number(formData.termYears) || 5;
-      const startDate = formData.startDate || defaultStartDate || currentTerm?.endDate || new Date().toISOString().split("T")[0];
+      const startDate =
+        formData.startDate ||
+        defaultStartDate ||
+        currentTerm?.endDate ||
+        new Date().toISOString().split("T")[0];
       const endDate = new Date(startDate);
       endDate.setFullYear(endDate.getFullYear() + termYears);
 
@@ -89,7 +98,9 @@ export function useTermRenewalFormState({
       return mortgageApi.createTerm(mortgage.id, payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.mortgageTerms(mortgage?.id ?? null) });
+      queryClient.invalidateQueries({
+        queryKey: mortgageQueryKeys.mortgageTerms(mortgage?.id ?? null),
+      });
       toast({
         title: "Term renewed",
         description: "New mortgage term has been created successfully",
@@ -126,4 +137,3 @@ export function useTermRenewalFormState({
     reset,
   };
 }
-

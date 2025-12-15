@@ -2,7 +2,7 @@ import type { ScenarioWithMetrics } from "@/entities";
 
 export function formatScenarioMetrics(scenario: ScenarioWithMetrics) {
   const metrics = scenario.metrics;
-  
+
   if (!metrics) {
     return {
       netWorth: "Calculating...",
@@ -15,4 +15,3 @@ export function formatScenarioMetrics(scenario: ScenarioWithMetrics) {
     mortgageBalance: `$${(metrics.mortgageBalance10yr / 1000).toFixed(0)}k`,
   };
 }
-

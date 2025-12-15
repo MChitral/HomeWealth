@@ -24,4 +24,3 @@ export function useMortgageDialogs() {
     setIsEditTermOpen,
   };
 }
-

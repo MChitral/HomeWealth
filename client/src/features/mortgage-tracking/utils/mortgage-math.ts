@@ -23,10 +23,7 @@ export function getPaymentsPerYear(frequency: PaymentFrequency): number {
   }
 }
 
-export function getEffectivePeriodicRate(
-  annualRate: number,
-  frequency: PaymentFrequency,
-): number {
+export function getEffectivePeriodicRate(annualRate: number, frequency: PaymentFrequency): number {
   const semiAnnualRate = annualRate / 2;
   const effectiveAnnualRate = Math.pow(1 + semiAnnualRate, 2) - 1;
   const paymentsPerYear = getPaymentsPerYear(frequency);
@@ -37,7 +34,7 @@ export function calculatePayment(
   principal: number,
   annualRate: number,
   amortizationMonths: number,
-  frequency: PaymentFrequency,
+  frequency: PaymentFrequency
 ): number {
   if (principal <= 0 || amortizationMonths <= 0) return 0;
 
@@ -58,10 +55,7 @@ export function calculatePayment(
     return principal / totalPayments;
   }
 
-  return (
-    (periodicRate * principal) /
-    (1 - Math.pow(1 + periodicRate, -totalPayments))
-  );
+  return (periodicRate * principal) / (1 - Math.pow(1 + periodicRate, -totalPayments));
 }
 
 export interface PaymentBreakdown {
@@ -109,7 +103,12 @@ export function calculatePaymentBreakdown({
   const triggerRateHit = triggerRatePayment <= interestPortion;
 
   let remainingAmortizationMonths = 0;
-  if (!triggerRateHit && regularPaymentAmount && regularPaymentAmount > interestPortion && periodicRate > 0) {
+  if (
+    !triggerRateHit &&
+    regularPaymentAmount &&
+    regularPaymentAmount > interestPortion &&
+    periodicRate > 0
+  ) {
     const paymentsPerYear = getPaymentsPerYear(frequency);
     const remainingPayments =
       -Math.log(1 - (periodicRate * remainingBalance) / regularPaymentAmount) /
@@ -153,4 +152,3 @@ export function advancePaymentDate(date: Date, frequency: PaymentFrequency): Dat
       return next;
   }
 }
-

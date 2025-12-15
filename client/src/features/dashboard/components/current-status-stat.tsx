@@ -14,4 +14,3 @@ export function CurrentStatusStat({ label, value, testId, children }: CurrentSta
     </StatDisplay>
   );
 }
-

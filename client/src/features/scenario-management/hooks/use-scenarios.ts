@@ -21,4 +21,3 @@ export function useDeleteScenario(onSuccess?: () => void, onError?: () => void) 
     onError,
   });
 }
-

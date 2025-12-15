@@ -1,14 +1,11 @@
 import type { PrepaymentEvent } from "@shared/schema";
-import {
-  PrepaymentEventsRepository,
-  ScenariosRepository,
-} from "@infrastructure/repositories";
+import { PrepaymentEventsRepository, ScenariosRepository } from "@infrastructure/repositories";
 import type { PrepaymentEventCreateInput } from "@domain/models";
 
 export class PrepaymentEventService {
   constructor(
     private readonly prepaymentEvents: PrepaymentEventsRepository,
-    private readonly scenarios: ScenariosRepository,
+    private readonly scenarios: ScenariosRepository
   ) {}
 
   private async authorizeScenario(scenarioId: string, userId: string) {
@@ -30,7 +27,7 @@ export class PrepaymentEventService {
   async create(
     scenarioId: string,
     userId: string,
-    payload: Omit<PrepaymentEventCreateInput, "scenarioId">,
+    payload: Omit<PrepaymentEventCreateInput, "scenarioId">
   ): Promise<PrepaymentEvent | undefined> {
     const scenario = await this.authorizeScenario(scenarioId, userId);
     if (!scenario) {
@@ -45,7 +42,7 @@ export class PrepaymentEventService {
   async update(
     id: string,
     userId: string,
-    payload: Partial<Omit<PrepaymentEventCreateInput, "scenarioId">>,
+    payload: Partial<Omit<PrepaymentEventCreateInput, "scenarioId">>
   ): Promise<PrepaymentEvent | undefined> {
     const event = await this.prepaymentEvents.findById(id);
     if (!event) {
@@ -70,4 +67,3 @@ export class PrepaymentEventService {
     return this.prepaymentEvents.delete(id);
   }
 }
-

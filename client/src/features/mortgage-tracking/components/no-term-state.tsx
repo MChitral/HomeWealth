@@ -50,7 +50,8 @@ export function NoTermState({
       <div className="text-center space-y-2">
         <h2 className="text-2xl font-semibold">No Term Data</h2>
         <p className="text-muted-foreground max-w-md">
-          Your mortgage has been created! Now create your first mortgage term to start tracking payments.
+          Your mortgage has been created! Now create your first mortgage term to start tracking
+          payments.
         </p>
       </div>
 
@@ -82,4 +83,3 @@ export function NoTermState({
     </div>
   );
 }
-

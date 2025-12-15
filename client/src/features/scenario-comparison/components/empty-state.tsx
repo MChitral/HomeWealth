@@ -11,14 +11,19 @@ interface EmptyStateProps {
 export function EmptyState({ allScenarios, toggleScenario }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 p-8">
-      <div className="flex items-center justify-center w-20 h-20 rounded-full bg-primary/10" data-testid="icon-empty-comparison">
+      <div
+        className="flex items-center justify-center w-20 h-20 rounded-full bg-primary/10"
+        data-testid="icon-empty-comparison"
+      >
         <GitCompare className="h-10 w-10 text-primary" />
       </div>
       <div className="text-center max-w-md space-y-2">
-        <h2 className="text-2xl font-semibold" data-testid="heading-empty-comparison">No Scenarios Selected</h2>
+        <h2 className="text-2xl font-semibold" data-testid="heading-empty-comparison">
+          No Scenarios Selected
+        </h2>
         <p className="text-muted-foreground">
-          Select up to 4 scenarios from the list below to compare their financial projections side-by-side.
-          See which strategy performs best over time.
+          Select up to 4 scenarios from the list below to compare their financial projections
+          side-by-side. See which strategy performs best over time.
         </p>
       </div>
       <Card className="max-w-2xl w-full">

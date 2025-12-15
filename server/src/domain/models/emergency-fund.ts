@@ -12,4 +12,3 @@ export type EmergencyFundUpdateInput = UpdateEmergencyFund;
 
 export const emergencyFundCreateSchema = insertEmergencyFundSchema;
 export const emergencyFundUpdateSchema = updateEmergencyFundSchema;
-

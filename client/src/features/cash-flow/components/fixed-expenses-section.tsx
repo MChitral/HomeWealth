@@ -94,7 +94,9 @@ export function FixedExpensesSection({
         <div className="space-y-2">
           <Label htmlFor="total-fixed">Total Fixed Housing Costs</Label>
           <div className="p-4 bg-muted/50 rounded-md">
-            <p className="text-2xl font-mono font-bold">${fixedHousingCosts.toLocaleString()}/month</p>
+            <p className="text-2xl font-mono font-bold">
+              ${fixedHousingCosts.toLocaleString()}/month
+            </p>
             <p className="text-sm text-muted-foreground mt-1">Excluding mortgage payment</p>
           </div>
         </div>
@@ -102,4 +104,3 @@ export function FixedExpensesSection({
     </Card>
   );
 }
-

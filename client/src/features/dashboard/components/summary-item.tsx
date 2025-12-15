@@ -11,4 +11,3 @@ export function SummaryItem({ label, value }: SummaryItemProps) {
     </div>
   );
 }
-

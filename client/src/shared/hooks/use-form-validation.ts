@@ -35,13 +35,10 @@ export function useFormField<T>(options: FormFieldOptions<T>) {
 
   const error = touched && !validationResult.isValid ? validationResult.error : undefined;
 
-  const setValueAndTouch = useCallback(
-    (newValue: T) => {
-      setValue(newValue);
-      setTouched(true);
-    },
-    []
-  );
+  const setValueAndTouch = useCallback((newValue: T) => {
+    setValue(newValue);
+    setTouched(true);
+  }, []);
 
   const setTouchedOnly = useCallback(() => {
     setTouched(true);
@@ -68,12 +65,12 @@ export function useFormField<T>(options: FormFieldOptions<T>) {
  * Note: This is a convenience wrapper. For better performance and flexibility,
  * use individual useFormField hooks for each field.
  */
-export function useFormFields<T extends Record<string, any>>(
-  fields: { [K in keyof T]: FormFieldOptions<T[K]> }
-) {
+export function useFormFields<T extends Record<string, any>>(fields: {
+  [K in keyof T]: FormFieldOptions<T[K]>;
+}) {
   // This hook is a pattern example. In practice, call useFormField for each field individually
   // This avoids Rules of Hooks violations and provides better TypeScript inference
-  
+
   // For now, return a helper that suggests using individual hooks
   // In a real implementation, you'd structure your component to call useFormField for each field
   return {
@@ -84,4 +81,3 @@ export function useFormFields<T extends Record<string, any>>(
     // Then combine them manually or use a form library like React Hook Form
   };
 }
-

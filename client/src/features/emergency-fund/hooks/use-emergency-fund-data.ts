@@ -13,4 +13,3 @@ export function useEmergencyFundData() {
     isLoading,
   };
 }
-

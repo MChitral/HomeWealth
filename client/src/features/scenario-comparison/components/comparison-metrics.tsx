@@ -11,7 +11,12 @@ interface ComparisonMetricsProps {
   getMetricForHorizon: (metrics: any, metricName: MetricName) => number;
 }
 
-export function ComparisonMetrics({ scenarios, winner, timeHorizon, getMetricForHorizon }: ComparisonMetricsProps) {
+export function ComparisonMetrics({
+  scenarios,
+  winner,
+  timeHorizon,
+  getMetricForHorizon,
+}: ComparisonMetricsProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {scenarios.map((scenario) => {
@@ -35,7 +40,9 @@ export function ComparisonMetrics({ scenarios, winner, timeHorizon, getMetricFor
             <CardContent className="space-y-4">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Net Worth ({timeHorizon}yr)</p>
-                <p className="text-3xl font-bold font-mono">${getMetricForHorizon(scenario.metrics, 'netWorth').toLocaleString()}</p>
+                <p className="text-3xl font-bold font-mono">
+                  ${getMetricForHorizon(scenario.metrics, "netWorth").toLocaleString()}
+                </p>
               </div>
               <Separator />
               <div className="space-y-3">
@@ -45,14 +52,18 @@ export function ComparisonMetrics({ scenarios, winner, timeHorizon, getMetricFor
                       <Home className="h-3 w-3" />
                       Mortgage Payoff
                     </span>
-                    <span className="text-sm font-mono font-medium">{scenario.metrics.mortgagePayoffYear} yrs</span>
+                    <span className="text-sm font-mono font-medium">
+                      {scenario.metrics.mortgagePayoffYear} yrs
+                    </span>
                   </div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm text-muted-foreground flex items-center gap-1">
                       <DollarSign className="h-3 w-3" />
                       Total Interest
                     </span>
-                    <span className="text-sm font-mono font-medium">${scenario.metrics.totalInterestPaid.toLocaleString()}</span>
+                    <span className="text-sm font-mono font-medium">
+                      ${scenario.metrics.totalInterestPaid.toLocaleString()}
+                    </span>
                   </div>
                 </div>
                 <Separator />
@@ -62,14 +73,19 @@ export function ComparisonMetrics({ scenarios, winner, timeHorizon, getMetricFor
                       <TrendingUp className="h-3 w-3" />
                       Investments ({timeHorizon}yr)
                     </span>
-                    <span className="text-sm font-mono font-medium">${getMetricForHorizon(scenario.metrics, 'investments').toLocaleString()}</span>
+                    <span className="text-sm font-mono font-medium">
+                      ${getMetricForHorizon(scenario.metrics, "investments").toLocaleString()}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground flex items-center gap-1">
                       <PiggyBank className="h-3 w-3" />
                       Investment Returns
                     </span>
-                    <span className="text-sm font-mono font-medium text-green-600">+${getMetricForHorizon(scenario.metrics, 'investmentReturns').toLocaleString()}</span>
+                    <span className="text-sm font-mono font-medium text-green-600">
+                      +$
+                      {getMetricForHorizon(scenario.metrics, "investmentReturns").toLocaleString()}
+                    </span>
                   </div>
                 </div>
               </div>

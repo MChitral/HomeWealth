@@ -19,7 +19,7 @@ export class CashFlowService {
   async update(
     userId: string,
     id: string,
-    payload: Partial<Omit<CashFlowUpdateInput, "userId">>,
+    payload: Partial<Omit<CashFlowUpdateInput, "userId">>
   ): Promise<CashFlow | undefined> {
     const existing = await this.repository.findByUserId(userId);
     if (!existing || existing.id !== id) {
@@ -29,4 +29,3 @@ export class CashFlowService {
     return this.repository.update(id, payload);
   }
 }
-

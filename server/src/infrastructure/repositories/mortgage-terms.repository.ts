@@ -37,7 +37,7 @@ export class MortgageTermsRepository {
 
   async update(
     id: string,
-    payload: Partial<UpdateMortgageTerm>,
+    payload: Partial<UpdateMortgageTerm>
   ): Promise<MortgageTermRecord | undefined> {
     const [updated] = await this.database
       .update(mortgageTerms)
@@ -58,4 +58,3 @@ export class MortgageTermsRepository {
     await db.delete(mortgageTerms).where(eq(mortgageTerms.mortgageId, mortgageId));
   }
 }
-

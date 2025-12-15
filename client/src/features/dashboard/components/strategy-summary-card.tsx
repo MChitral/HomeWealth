@@ -6,11 +6,14 @@ interface StrategySummaryCardProps {
   selectedScenario: ScenarioWithMetrics;
   getMetricForHorizon: (
     scenario: ScenarioWithMetrics | undefined,
-    metric: "netWorth" | "mortgageBalance" | "investments" | "investmentReturns",
+    metric: "netWorth" | "mortgageBalance" | "investments" | "investmentReturns"
   ) => number;
 }
 
-export function StrategySummaryCard({ selectedScenario, getMetricForHorizon }: StrategySummaryCardProps) {
+export function StrategySummaryCard({
+  selectedScenario,
+  getMetricForHorizon,
+}: StrategySummaryCardProps) {
   return (
     <Card>
       <CardHeader>
@@ -44,4 +47,3 @@ export function StrategySummaryCard({ selectedScenario, getMetricForHorizon }: S
     </Card>
   );
 }
-

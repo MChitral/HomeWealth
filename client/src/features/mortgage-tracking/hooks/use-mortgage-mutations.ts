@@ -74,7 +74,9 @@ export function useMortgageMutations({
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.mortgagePayments(mortgage?.id ?? null) });
+      queryClient.invalidateQueries({
+        queryKey: mortgageQueryKeys.mortgagePayments(mortgage?.id ?? null),
+      });
       toast({
         title: "Payment logged",
         description: "Mortgage payment has been recorded successfully",
@@ -96,7 +98,9 @@ export function useMortgageMutations({
       return mortgageApi.createTerm(mortgage.id, term);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.mortgageTerms(mortgage?.id ?? null) });
+      queryClient.invalidateQueries({
+        queryKey: mortgageQueryKeys.mortgageTerms(mortgage?.id ?? null),
+      });
       toast({
         title: "Term renewed",
         description: "New mortgage term has been created successfully",
@@ -118,7 +122,9 @@ export function useMortgageMutations({
       return mortgageApi.createBulkPayments(mortgage.id, paymentsPayload);
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.mortgagePayments(mortgage?.id ?? null) });
+      queryClient.invalidateQueries({
+        queryKey: mortgageQueryKeys.mortgagePayments(mortgage?.id ?? null),
+      });
       toast({
         title: "Payments backfilled",
         description: `Successfully created ${data.created} payments`,
@@ -138,7 +144,9 @@ export function useMortgageMutations({
   const deletePaymentMutation = useMutation({
     mutationFn: (paymentId: string) => mortgageApi.deletePayment(paymentId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.mortgagePayments(mortgage?.id ?? null) });
+      queryClient.invalidateQueries({
+        queryKey: mortgageQueryKeys.mortgagePayments(mortgage?.id ?? null),
+      });
       toast({
         title: "Payment deleted",
         description: "The payment has been removed from your records",
@@ -180,7 +188,9 @@ export function useMortgageMutations({
       return mortgageApi.updateTerm(termId, updates);
     },
     onSuccess: async () => {
-      await queryClient.refetchQueries({ queryKey: mortgageQueryKeys.mortgageTerms(mortgage?.id ?? null) });
+      await queryClient.refetchQueries({
+        queryKey: mortgageQueryKeys.mortgageTerms(mortgage?.id ?? null),
+      });
       toast({
         title: "Term updated",
         description: "Your mortgage term has been updated successfully",
@@ -205,4 +215,3 @@ export function useMortgageMutations({
     updateTermMutation,
   };
 }
-

@@ -11,6 +11,8 @@ import { useDashboardData, useDashboardCalculations, useDashboardCharts } from "
 import { useMortgageData } from "@/features/mortgage-tracking/hooks";
 import type { PaymentFrequency } from "@/features/mortgage-tracking/utils/mortgage-math";
 import type { ScenarioWithMetrics } from "@/entities";
+import { useTriggerStatus } from "@/features/mortgage-tracking/hooks/use-trigger-status";
+import { AlertBanner } from "./components/alert-banner";
 import {
   DashboardSkeleton,
   DashboardEmptyState,
@@ -33,7 +35,8 @@ export function DashboardFeature() {
 
   usePageTitle("Dashboard | Mortgage Strategy");
 
-  const { selectedMortgageId, setSelectedMortgageId, mortgages, selectedMortgage } = useMortgageSelection();
+  const { selectedMortgageId, setSelectedMortgageId, mortgages, selectedMortgage } =
+    useMortgageSelection();
   const { scenarios, emergencyFund, cashFlow, isLoading } = useDashboardData();
   const {
     mortgage: detailedMortgage,
@@ -43,6 +46,8 @@ export function DashboardFeature() {
   } = useMortgageData(selectedMortgageId);
   const activeMortgage = detailedMortgage ?? selectedMortgage ?? null;
   const dashboardPaymentFrequency: PaymentFrequency = "monthly";
+
+  const { triggerStatus } = useTriggerStatus(activeMortgage?.id ?? null);
 
   const newScenarioAction = (
     <Link href="/scenarios/new">
@@ -61,13 +66,17 @@ export function DashboardFeature() {
 
   const sortedTerms = useMemo(() => {
     if (!terms?.length) return [];
-    return [...terms].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+    return [...terms].sort(
+      (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+    );
   }, [terms]);
   const latestTerm = sortedTerms[0] || null;
 
   const sortedPayments = useMemo(() => {
     if (!payments?.length) return [];
-    return [...payments].sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
+    return [...payments].sort(
+      (a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime()
+    );
   }, [payments]);
   const latestPayment = sortedPayments[0] || null;
 
@@ -90,7 +99,7 @@ export function DashboardFeature() {
   const selectedScenario = scenarios?.find((s) => s.id === selectedScenarioId);
   const getMetricForHorizon = (
     scenario: ScenarioWithMetrics | undefined,
-    metric: "netWorth" | "mortgageBalance" | "investments" | "investmentReturns",
+    metric: "netWorth" | "mortgageBalance" | "investments" | "investmentReturns"
   ) => {
     if (!scenario?.metrics) return 0;
     const key = `${metric}${selectedHorizon}yr` as keyof ScenarioWithMetrics["metrics"];
@@ -113,10 +122,7 @@ export function DashboardFeature() {
   if (!mortgages || mortgages.length === 0) {
     return (
       <div className="space-y-8">
-        <PageHeader
-          title="Dashboard"
-          description="Your financial overview and projections"
-        />
+        <PageHeader title="Dashboard" description="Your financial overview and projections" />
         <DashboardNoMortgageState />
       </div>
     );
@@ -137,7 +143,15 @@ export function DashboardFeature() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title="Dashboard" description="Your financial overview and projections" actions={newScenarioAction} />
+      <PageHeader
+        title="Dashboard"
+        description="Your financial overview and projections"
+        actions={newScenarioAction}
+      />
+
+      {triggerStatus && (triggerStatus.isHit || triggerStatus.isRisk) && (
+        <AlertBanner alert={triggerStatus} />
+      )}
 
       {mortgages.length > 0 && (
         <div className="lg:w-[340px]">
@@ -158,6 +172,7 @@ export function DashboardFeature() {
         efTargetAmount={efTargetAmount}
         activeMortgage={activeMortgage}
         paymentPreview={paymentPreview}
+        triggerStatus={triggerStatus}
       />
 
       <Separator />
@@ -178,7 +193,10 @@ export function DashboardFeature() {
             getMetricForHorizon={getMetricForHorizon}
           />
 
-          <MortgageDetailsCard selectedScenario={selectedScenario} mortgageChartData={mortgageChartData} />
+          <MortgageDetailsCard
+            selectedScenario={selectedScenario}
+            mortgageChartData={mortgageChartData}
+          />
 
           <NetWorthProjectionCard
             selectedScenario={selectedScenario}
@@ -187,11 +205,13 @@ export function DashboardFeature() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <InvestmentGrowthCard investmentChartData={investmentChartData} />
-            <StrategySummaryCard selectedScenario={selectedScenario} getMetricForHorizon={getMetricForHorizon} />
+            <StrategySummaryCard
+              selectedScenario={selectedScenario}
+              getMetricForHorizon={getMetricForHorizon}
+            />
           </div>
         </>
       )}
     </div>
   );
 }
-

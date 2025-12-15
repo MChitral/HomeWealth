@@ -29,7 +29,11 @@ export function SurplusAllocationCard({
               <p className="text-sm text-muted-foreground mt-1">
                 Monthly surplus:{" "}
                 <span className="font-mono font-medium text-foreground">
-                  ${monthlySurplus.toLocaleString("en-CA", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                  $
+                  {monthlySurplus.toLocaleString("en-CA", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  })}
                 </span>
                 {!hasCashFlow && (
                   <span className="text-orange-600 font-medium ml-2">
@@ -74,8 +78,9 @@ export function SurplusAllocationCard({
             <Alert variant="destructive" className="mt-4">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                <span className="font-semibold">Cash Flow Required:</span> Without income and expense data, 
-                surplus calculations are $0 and projections will not reflect your actual financial situation.{" "}
+                <span className="font-semibold">Cash Flow Required:</span> Without income and
+                expense data, surplus calculations are $0 and projections will not reflect your
+                actual financial situation.{" "}
                 <Link href="/cash-flow" className="font-medium underline hover:no-underline">
                   Set up Cash Flow
                 </Link>{" "}
@@ -88,4 +93,3 @@ export function SurplusAllocationCard({
     </>
   );
 }
-

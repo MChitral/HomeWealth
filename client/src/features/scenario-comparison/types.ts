@@ -34,4 +34,4 @@ export interface ScenarioForSelection {
 
 export type TimeHorizon = "10" | "20" | "30";
 
-export type MetricName = 'netWorth' | 'mortgageBalance' | 'investments' | 'investmentReturns';
+export type MetricName = "netWorth" | "mortgageBalance" | "investments" | "investmentReturns";

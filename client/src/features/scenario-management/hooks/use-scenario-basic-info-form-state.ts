@@ -1,7 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/shared/hooks/use-toast";
 import { scenarioApi, scenarioQueryKeys, type ScenarioPayload } from "../api";
-import { useScenarioBasicInfoForm, type ScenarioBasicInfoFormData } from "./use-scenario-basic-info-form";
+import {
+  useScenarioBasicInfoForm,
+  type ScenarioBasicInfoFormData,
+} from "./use-scenario-basic-info-form";
 import type { Scenario } from "@shared/schema";
 
 interface UseScenarioBasicInfoFormStateProps {
@@ -84,4 +87,3 @@ export function useScenarioBasicInfoFormState({
     saveMutation,
   };
 }
-

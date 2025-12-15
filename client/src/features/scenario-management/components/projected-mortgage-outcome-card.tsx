@@ -3,7 +3,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Button } from "@/shared/ui/button";
 import { Separator } from "@/shared/ui/separator";
 import { Badge } from "@/shared/ui/badge";
-import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/shared/ui/table";
 import { BarChart3, TableIcon } from "lucide-react";
 import { MortgageBalanceChart } from "@/widgets/charts/mortgage-balance-chart";
 import type { DraftPrepaymentEvent } from "../hooks/use-scenario-editor-state";
@@ -84,7 +92,9 @@ export function ProjectedMortgageOutcomeCard({
           </div>
           <div>
             <p className="text-sm text-muted-foreground mb-1">Interest Saved</p>
-            <p className="text-2xl font-bold font-mono text-green-600">${interestSaved.toLocaleString()}</p>
+            <p className="text-2xl font-bold font-mono text-green-600">
+              ${interestSaved.toLocaleString()}
+            </p>
             <p className="text-xs text-muted-foreground">vs minimum payments</p>
           </div>
         </div>
@@ -95,7 +105,9 @@ export function ProjectedMortgageOutcomeCard({
             <p className="text-sm font-medium mb-3">
               Mortgage Balance Projection
               {rateAssumption !== null && (
-                <span className="text-muted-foreground ml-2">(at {rateAssumption.toFixed(2)}% rate)</span>
+                <span className="text-muted-foreground ml-2">
+                  (at {rateAssumption.toFixed(2)}% rate)
+                </span>
               )}
             </p>
             <MortgageBalanceChart data={mortgageProjection} />
@@ -106,7 +118,9 @@ export function ProjectedMortgageOutcomeCard({
               <p className="text-sm font-medium">
                 Yearly Amortization Schedule
                 {rateAssumption !== null && (
-                  <span className="text-muted-foreground ml-2">(at {rateAssumption.toFixed(2)}% rate)</span>
+                  <span className="text-muted-foreground ml-2">
+                    (at {rateAssumption.toFixed(2)}% rate)
+                  </span>
                 )}
               </p>
               {yearlyAmortization.some((r) => r.isHistorical) && (
@@ -156,14 +170,18 @@ export function ProjectedMortgageOutcomeCard({
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell className="text-right font-mono">${row.totalPaid.toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono">
+                        ${row.totalPaid.toLocaleString()}
+                      </TableCell>
                       <TableCell className="text-right font-mono text-green-600">
                         ${row.principalPaid.toLocaleString()}
                       </TableCell>
                       <TableCell className="text-right font-mono text-blue-600">
                         ${row.interestPaid.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-right font-mono">${row.endingBalance.toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono">
+                        ${row.endingBalance.toLocaleString()}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -171,16 +189,28 @@ export function ProjectedMortgageOutcomeCard({
                   <TableRow className="bg-muted font-semibold">
                     <TableCell>Total</TableCell>
                     <TableCell className="text-right font-mono">
-                      ${yearlyAmortization.reduce((sum, r) => sum + r.totalPaid, 0).toLocaleString()}
+                      $
+                      {yearlyAmortization.reduce((sum, r) => sum + r.totalPaid, 0).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right font-mono text-green-600">
-                      ${yearlyAmortization.reduce((sum, r) => sum + r.principalPaid, 0).toLocaleString()}
+                      $
+                      {yearlyAmortization
+                        .reduce((sum, r) => sum + r.principalPaid, 0)
+                        .toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right font-mono text-blue-600">
-                      ${yearlyAmortization.reduce((sum, r) => sum + r.interestPaid, 0).toLocaleString()}
+                      $
+                      {yearlyAmortization
+                        .reduce((sum, r) => sum + r.interestPaid, 0)
+                        .toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right font-mono">
-                      ${yearlyAmortization.length > 0 ? yearlyAmortization[yearlyAmortization.length - 1].endingBalance.toLocaleString() : "0"}
+                      $
+                      {yearlyAmortization.length > 0
+                        ? yearlyAmortization[
+                            yearlyAmortization.length - 1
+                          ].endingBalance.toLocaleString()
+                        : "0"}
                     </TableCell>
                   </TableRow>
                 </TableFooter>
@@ -196,4 +226,3 @@ export function ProjectedMortgageOutcomeCard({
     </Card>
   );
 }
-

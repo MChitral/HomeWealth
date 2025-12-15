@@ -16,4 +16,3 @@ export function AppProviders({ children }: PropsWithChildren) {
     </ErrorBoundary>
   );
 }
-

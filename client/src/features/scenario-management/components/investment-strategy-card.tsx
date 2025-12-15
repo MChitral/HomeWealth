@@ -9,7 +9,10 @@ interface InvestmentStrategyCardProps {
   setExpectedReturnRate: (rate: number) => void;
 }
 
-export function InvestmentStrategyCard({ expectedReturnRate, setExpectedReturnRate }: InvestmentStrategyCardProps) {
+export function InvestmentStrategyCard({
+  expectedReturnRate,
+  setExpectedReturnRate,
+}: InvestmentStrategyCardProps) {
   return (
     <Card>
       <CardHeader>
@@ -19,7 +22,12 @@ export function InvestmentStrategyCard({ expectedReturnRate, setExpectedReturnRa
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="base-contribution">Base Monthly Contribution</Label>
-          <Input id="base-contribution" type="number" placeholder="1000" data-testid="input-base-contribution" />
+          <Input
+            id="base-contribution"
+            type="number"
+            placeholder="1000"
+            data-testid="input-base-contribution"
+          />
           <p className="text-sm text-muted-foreground">Fixed amount invested each month</p>
         </div>
 
@@ -34,7 +42,9 @@ export function InvestmentStrategyCard({ expectedReturnRate, setExpectedReturnRa
             placeholder="6.0"
             data-testid="input-annual-return"
           />
-          <p className="text-sm text-muted-foreground">Historical average: 6-8% for balanced portfolio</p>
+          <p className="text-sm text-muted-foreground">
+            Historical average: 6-8% for balanced portfolio
+          </p>
         </div>
 
         <div className="space-y-2">
@@ -55,12 +65,11 @@ export function InvestmentStrategyCard({ expectedReturnRate, setExpectedReturnRa
         <div className="p-4 bg-muted/50 rounded-md">
           <p className="text-sm font-medium mb-2">Additional Investment Sources</p>
           <p className="text-sm text-muted-foreground">
-            After Emergency Fund is full, surplus cash is split between investments and mortgage prepayment based on the
-            allocation slider in the Mortgage tab.
+            After Emergency Fund is full, surplus cash is split between investments and mortgage
+            prepayment based on the allocation slider in the Mortgage tab.
           </p>
         </div>
       </CardContent>
     </Card>
   );
 }
-

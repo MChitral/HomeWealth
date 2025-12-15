@@ -8,7 +8,12 @@ interface MortgageLayoutProps {
   children: ReactNode;
 }
 
-export function MortgageLayout({ isLoading, hasMortgage, emptyState, children }: MortgageLayoutProps) {
+export function MortgageLayout({
+  isLoading,
+  hasMortgage,
+  emptyState,
+  children,
+}: MortgageLayoutProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -23,4 +28,3 @@ export function MortgageLayout({ isLoading, hasMortgage, emptyState, children }:
 
   return <>{children}</>;
 }
-

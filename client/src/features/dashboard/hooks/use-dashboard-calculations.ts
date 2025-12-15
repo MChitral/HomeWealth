@@ -24,15 +24,21 @@ export function useDashboardCalculations({
   paymentFrequency,
 }: UseDashboardCalculationsProps) {
   const homeValue = useMemo(() => {
-    return activeMortgage && activeMortgage.propertyPrice ? Number(activeMortgage.propertyPrice) : 0;
+    return activeMortgage && activeMortgage.propertyPrice
+      ? Number(activeMortgage.propertyPrice)
+      : 0;
   }, [activeMortgage]);
 
   const mortgageBalance = useMemo(() => {
-    return activeMortgage && activeMortgage.currentBalance ? Number(activeMortgage.currentBalance) : 0;
+    return activeMortgage && activeMortgage.currentBalance
+      ? Number(activeMortgage.currentBalance)
+      : 0;
   }, [activeMortgage]);
 
   const originalMortgageBalance = useMemo(() => {
-    return activeMortgage && activeMortgage.originalAmount ? Number(activeMortgage.originalAmount) : 0;
+    return activeMortgage && activeMortgage.originalAmount
+      ? Number(activeMortgage.originalAmount)
+      : 0;
   }, [activeMortgage]);
 
   const efBalance = useMemo(() => {
@@ -89,7 +95,12 @@ export function useDashboardCalculations({
       ? Number(latestPayment.regularPaymentAmount)
       : Number(latestTerm?.regularPaymentAmount || 0);
     if ((!paymentAmount || paymentAmount <= 0) && amortizationMonths > 0) {
-      paymentAmount = calculatePayment(balance, ratePercent / 100, amortizationMonths, paymentFrequency);
+      paymentAmount = calculatePayment(
+        balance,
+        ratePercent / 100,
+        amortizationMonths,
+        paymentFrequency
+      );
     }
 
     if (!paymentAmount || paymentAmount <= 0) {
@@ -122,4 +133,3 @@ export function useDashboardCalculations({
     paymentPreview,
   };
 }
-

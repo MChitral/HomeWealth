@@ -1,10 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "@infrastructure/db/connection";
-import {
-  scenarios,
-  type Scenario as ScenarioRecord,
-  type InsertScenario,
-} from "@shared/schema";
+import { scenarios, type Scenario as ScenarioRecord, type InsertScenario } from "@shared/schema";
 
 export class ScenariosRepository {
   constructor(private readonly database = db) {}
@@ -23,10 +19,7 @@ export class ScenariosRepository {
     return created;
   }
 
-  async update(
-    id: string,
-    payload: Partial<InsertScenario>,
-  ): Promise<ScenarioRecord | undefined> {
+  async update(id: string, payload: Partial<InsertScenario>): Promise<ScenarioRecord | undefined> {
     const [updated] = await this.database
       .update(scenarios)
       .set(payload)
@@ -41,4 +34,3 @@ export class ScenariosRepository {
     return Boolean(result.rowCount && result.rowCount > 0);
   }
 }
-

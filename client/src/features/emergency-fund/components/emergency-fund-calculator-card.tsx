@@ -52,14 +52,17 @@ export function EmergencyFundCalculatorCard({
                 <p className="text-lg font-mono font-bold" data-testid="text-monthly-expenses">
                   ${monthlyExpenses.toLocaleString()}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">From Cash Flow page (excludes mortgage)</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  From Cash Flow page (excludes mortgage)
+                </p>
               </div>
             </div>
 
             <div className="p-4 bg-primary/10 rounded-md">
               <p className="text-sm text-muted-foreground mb-1">Recommendation</p>
               <p className="text-sm font-medium mb-2">
-                Financial experts recommend 3-6 months for stable employment, 6-12 months for self-employed
+                Financial experts recommend 3-6 months for stable employment, 6-12 months for
+                self-employed
               </p>
               <div className="grid grid-cols-2 gap-3 mt-4">
                 {[3, 6, 9, 12].map((months) => (
@@ -82,8 +85,8 @@ export function EmergencyFundCalculatorCard({
           <div className="p-4 bg-muted/50 rounded-md text-center">
             <p className="text-sm font-medium mb-2">No Expense Data Available</p>
             <p className="text-sm text-muted-foreground mb-4">
-              Please fill out your Cash Flow page first to see personalized recommendations based on your monthly
-              expenses.
+              Please fill out your Cash Flow page first to see personalized recommendations based on
+              your monthly expenses.
             </p>
             <Button variant="outline" asChild>
               <a href="/cash-flow" data-testid="link-go-to-cash-flow">
@@ -96,4 +99,3 @@ export function EmergencyFundCalculatorCard({
     </Card>
   );
 }
-

@@ -1,10 +1,10 @@
 /**
  * Business Day Utilities for Canadian Mortgages
- * 
+ *
  * **Canadian Mortgage Rule:**
  * When a payment date falls on a weekend or holiday, lenders adjust to the next business day.
  * Interest accrues until the adjusted payment date.
- * 
+ *
  * **Federal Holidays (Canada):**
  * - New Year's Day (January 1)
  * - Good Friday (varies)
@@ -28,7 +28,7 @@ export function isWeekend(date: Date): boolean {
 
 /**
  * Check if a date is a Canadian federal holiday
- * 
+ *
  * Note: This is a simplified version. For production, consider using a library
  * like `date-holidays` or maintaining a comprehensive holiday calendar.
  */
@@ -93,7 +93,7 @@ function isSameDay(date1: Date, date2: Date): boolean {
 
 /**
  * Calculate Easter Sunday for a given year (using anonymous Gregorian algorithm)
- * 
+ *
  * This is a simplified implementation. For production, consider using a library.
  */
 function calculateEaster(year: number): Date {
@@ -123,14 +123,14 @@ function getVictoriaDay(year: number): Date {
   // Victoria Day is the Monday before May 25
   const may25 = new Date(year, 4, 25); // May = month 4
   const dayOfWeek = may25.getDay();
-  
+
   // If May 25 is Monday (1), Victoria Day is May 25
   // If May 25 is Tuesday (2), Victoria Day is May 24 (Monday)
   // etc.
   const daysToSubtract = dayOfWeek === 1 ? 0 : dayOfWeek === 0 ? 6 : dayOfWeek - 1;
   const victoriaDay = new Date(may25);
   victoriaDay.setDate(may25.getDate() - daysToSubtract);
-  
+
   return victoriaDay;
 }
 
@@ -140,14 +140,14 @@ function getVictoriaDay(year: number): Date {
 function getLabourDay(year: number): Date {
   const september1 = new Date(year, 8, 1); // September = month 8
   const dayOfWeek = september1.getDay();
-  
+
   // If Sept 1 is Monday (1), Labour Day is Sept 1
   // If Sept 1 is Tuesday (2), Labour Day is Sept 7 (next Monday)
   // etc.
   const daysToAdd = dayOfWeek === 1 ? 0 : dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
   const labourDay = new Date(september1);
   labourDay.setDate(september1.getDate() + daysToAdd);
-  
+
   return labourDay;
 }
 
@@ -157,16 +157,16 @@ function getLabourDay(year: number): Date {
 function getThanksgiving(year: number): Date {
   const october1 = new Date(year, 9, 1); // October = month 9
   const dayOfWeek = october1.getDay();
-  
+
   // Find first Monday in October
   const daysToAdd = dayOfWeek === 1 ? 0 : dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
   const firstMonday = new Date(october1);
   firstMonday.setDate(october1.getDate() + daysToAdd);
-  
+
   // Second Monday is 7 days later
   const secondMonday = new Date(firstMonday);
   secondMonday.setDate(firstMonday.getDate() + 7);
-  
+
   return secondMonday;
 }
 
@@ -179,29 +179,29 @@ export function isBusinessDay(date: Date): boolean {
 
 /**
  * Adjust a payment date to the next business day if it falls on a weekend or holiday
- * 
+ *
  * **Canadian Mortgage Rule:**
  * - If payment date is Saturday/Sunday → move to next Monday
  * - If payment date is a holiday → move to next business day
  * - Interest accrues until the adjusted payment date
- * 
+ *
  * @param date - Original payment date
  * @returns Adjusted payment date (next business day if needed)
  */
 export function adjustToBusinessDay(date: Date): Date {
   const adjusted = new Date(date);
-  
+
   // Keep moving forward until we find a business day
   while (!isBusinessDay(adjusted)) {
     adjusted.setDate(adjusted.getDate() + 1);
   }
-  
+
   return adjusted;
 }
 
 /**
  * Calculate the number of days between two dates (for interest accrual)
- * 
+ *
  * @param startDate - Start date
  * @param endDate - End date (adjusted payment date)
  * @returns Number of days (can be fractional for partial days)
@@ -210,4 +210,3 @@ export function daysBetween(startDate: Date, endDate: Date): number {
   const diffTime = endDate.getTime() - startDate.getTime();
   return diffTime / (1000 * 60 * 60 * 24); // Convert to days
 }
-

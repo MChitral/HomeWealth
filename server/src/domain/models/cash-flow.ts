@@ -12,4 +12,3 @@ export type CashFlowUpdateInput = UpdateCashFlow;
 
 export const cashFlowCreateSchema = insertCashFlowSchema;
 export const cashFlowUpdateSchema = updateCashFlowSchema;
-

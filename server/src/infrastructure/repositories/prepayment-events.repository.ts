@@ -31,7 +31,7 @@ export class PrepaymentEventsRepository {
 
   async update(
     id: string,
-    payload: Partial<InsertPrepaymentEvent>,
+    payload: Partial<InsertPrepaymentEvent>
   ): Promise<PrepaymentEventRecord | undefined> {
     const [updated] = await this.database
       .update(prepaymentEvents)
@@ -51,4 +51,3 @@ export class PrepaymentEventsRepository {
     await this.database.delete(prepaymentEvents).where(eq(prepaymentEvents.scenarioId, scenarioId));
   }
 }
-

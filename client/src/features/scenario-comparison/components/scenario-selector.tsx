@@ -9,7 +9,11 @@ interface ScenarioSelectorProps {
   toggleScenario: (id: string) => void;
 }
 
-export function ScenarioSelector({ allScenarios, selectedScenarios, toggleScenario }: ScenarioSelectorProps) {
+export function ScenarioSelector({
+  allScenarios,
+  selectedScenarios,
+  toggleScenario,
+}: ScenarioSelectorProps) {
   return (
     <Card>
       <CardHeader>
@@ -22,13 +26,13 @@ export function ScenarioSelector({ allScenarios, selectedScenarios, toggleScenar
             const isSelected = selectedScenarios.includes(scenario.id);
             const canDeselect = selectedScenarios.length > 1;
             const canSelect = selectedScenarios.length < 4;
-            
+
             return (
               <Button
                 key={scenario.id}
                 variant={isSelected ? "default" : "outline"}
                 onClick={() => toggleScenario(scenario.id)}
-                disabled={isSelected && !canDeselect || !isSelected && !canSelect}
+                disabled={(isSelected && !canDeselect) || (!isSelected && !canSelect)}
                 data-testid={`button-select-${scenario.id}`}
                 data-selected={isSelected ? "true" : "false"}
                 aria-pressed={isSelected}

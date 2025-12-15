@@ -1,9 +1,6 @@
 import type { EmergencyFund } from "@shared/schema";
 import { EmergencyFundRepository } from "@infrastructure/repositories/emergency-fund.repository";
-import type {
-  EmergencyFundCreateInput,
-  EmergencyFundUpdateInput,
-} from "@domain/models";
+import type { EmergencyFundCreateInput, EmergencyFundUpdateInput } from "@domain/models";
 
 export class EmergencyFundService {
   constructor(private readonly repository: EmergencyFundRepository) {}
@@ -14,7 +11,7 @@ export class EmergencyFundService {
 
   create(
     userId: string,
-    payload: Omit<EmergencyFundCreateInput, "userId">,
+    payload: Omit<EmergencyFundCreateInput, "userId">
   ): Promise<EmergencyFund> {
     return this.repository.create({
       ...payload,
@@ -25,7 +22,7 @@ export class EmergencyFundService {
   async update(
     userId: string,
     id: string,
-    payload: Partial<Omit<EmergencyFundUpdateInput, "userId">>,
+    payload: Partial<Omit<EmergencyFundUpdateInput, "userId">>
   ): Promise<EmergencyFund | undefined> {
     const existing = await this.repository.findByUserId(userId);
     if (!existing || existing.id !== id) {
@@ -35,4 +32,3 @@ export class EmergencyFundService {
     return this.repository.update(id, payload);
   }
 }
-

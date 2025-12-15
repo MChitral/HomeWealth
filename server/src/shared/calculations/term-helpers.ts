@@ -8,9 +8,7 @@ export function getTermEffectiveRate(term: MortgageTerm, fallbackPrimePercent = 
     return parseFloat(term.fixedRate) / 100;
   }
 
-  const primePercent = term.primeRate
-    ? parseFloat(term.primeRate)
-    : fallbackPrimePercent;
+  const primePercent = term.primeRate ? parseFloat(term.primeRate) : fallbackPrimePercent;
   const spreadPercent = term.lockedSpread ? parseFloat(term.lockedSpread) : 0;
 
   return (primePercent + spreadPercent) / 100;
@@ -23,5 +21,3 @@ export function getTermEffectiveRate(term: MortgageTerm, fallbackPrimePercent = 
 export function shouldUpdatePaymentAmount(term: MortgageTerm): boolean {
   return term.termType !== "variable-fixed";
 }
-
-

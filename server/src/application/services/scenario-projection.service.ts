@@ -23,7 +23,7 @@ export class ScenarioProjectionService {
     private readonly mortgages: MortgagesRepository,
     private readonly mortgageTerms: MortgageTermsRepository,
     private readonly cashFlows: CashFlowRepository,
-    private readonly emergencyFunds: EmergencyFundRepository,
+    private readonly emergencyFunds: EmergencyFundRepository
   ) {}
 
   async buildForUser(userId: string, scenarios: Scenario[]): Promise<ScenarioWithAnalytics[]> {
@@ -42,13 +42,9 @@ export class ScenarioProjectionService {
     const terms = await this.mortgageTerms.findByMortgageId(mortgage.id);
     const currentTerm = terms
       .slice()
-      .sort(
-        (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime(),
-      )[0];
+      .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())[0];
 
-    const currentRate = currentTerm
-      ? getTermEffectiveRate(currentTerm)
-      : 0.0549;
+    const currentRate = currentTerm ? getTermEffectiveRate(currentTerm) : 0.0549;
 
     return scenarios.map((scenario) => {
       const metrics = calculateScenarioMetrics(
@@ -58,7 +54,7 @@ export class ScenarioProjectionService {
           cashFlow: cashFlow ?? undefined,
           emergencyFund: emergencyFund ?? undefined,
         },
-        currentRate,
+        currentRate
       );
 
       const projections = generateProjections(
@@ -69,7 +65,7 @@ export class ScenarioProjectionService {
           emergencyFund: emergencyFund ?? undefined,
         },
         30,
-        currentRate,
+        currentRate
       );
 
       return {
@@ -80,4 +76,3 @@ export class ScenarioProjectionService {
     });
   }
 }
-

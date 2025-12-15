@@ -59,15 +59,15 @@ export function useScenarioEditorProjections({
         // The backend checks recurrenceMonth against the actual payment date's month,
         // so we need to set startPaymentNumber to be eligible from the start of that year.
         // The backend will apply it when the payment date falls in the recurrenceMonth.
-        // 
+        //
         // For Year N, we set startPaymentNumber to the first payment of that year.
         // The backend's month check will ensure it only applies in the correct month.
-        // 
+        //
         // Example: Year 2, March (month 3)
         // - Monthly (12/year): Year 2 starts at payment 13, March is payment 15
         // - Biweekly (26/year): Year 2 starts at payment 27, March is ~payment 32
         // - Weekly (52/year): Year 2 starts at payment 53, March is ~payment 64
-        // 
+        //
         // We set startPaymentNumber to the first payment of the year, and the backend
         // will apply it when currentMonth matches recurrenceMonth.
         startPaymentNumber = (event.startYear - 1) * paymentsPerYear + 1;
@@ -107,7 +107,17 @@ export function useScenarioEditorProjections({
       // Include scenario ID to fetch refinancing events from scenario
       scenarioId: scenarioId ?? undefined,
     };
-  }, [currentMortgageData, prepaymentSplit, monthlySurplus, prepaymentEvents, refinancingEvents, rateAssumption, mortgageId, scenarioId, paymentFrequency]);
+  }, [
+    currentMortgageData,
+    prepaymentSplit,
+    monthlySurplus,
+    prepaymentEvents,
+    refinancingEvents,
+    rateAssumption,
+    mortgageId,
+    scenarioId,
+    paymentFrequency,
+  ]);
 
   // Fetch projection from backend using authoritative Canadian mortgage calculation engine
   const { data: projectionData, isLoading: projectionLoading } = useQuery<ProjectionResponse>({
@@ -133,4 +143,3 @@ export function useScenarioEditorProjections({
     projectionLoading,
   };
 }
-

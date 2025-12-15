@@ -37,20 +37,21 @@ export function useCashFlowCalculations({
 }: UseCashFlowCalculationsProps) {
   const extraPaychequesMonthly = useMemo(
     () => (monthlyIncome * extraPaycheques) / 12,
-    [monthlyIncome, extraPaycheques],
+    [monthlyIncome, extraPaycheques]
   );
 
   const annualBonusMonthly = useMemo(() => annualBonus / 12, [annualBonus]);
 
   const totalMonthlyIncome = useMemo(
     () => monthlyIncome + extraPaychequesMonthly + annualBonusMonthly,
-    [monthlyIncome, extraPaychequesMonthly, annualBonusMonthly],
+    [monthlyIncome, extraPaychequesMonthly, annualBonusMonthly]
   );
 
   const fixedHousingCosts = propertyTax + insurance + condoFees + utilities;
   const variableExpenses = groceries + dining + transportation + entertainment;
   const otherDebtPayments = carLoan + studentLoan + creditCard;
-  const totalMonthlyExpenses = fixedHousingCosts + variableExpenses + otherDebtPayments + mortgagePayment;
+  const totalMonthlyExpenses =
+    fixedHousingCosts + variableExpenses + otherDebtPayments + mortgagePayment;
   const monthlySurplus = totalMonthlyIncome - totalMonthlyExpenses;
 
   const runwayMonths = useMemo(() => {
@@ -73,4 +74,3 @@ export function useCashFlowCalculations({
     mortgagePayment,
   };
 }
-

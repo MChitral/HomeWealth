@@ -9,4 +9,3 @@ export type DashboardData = {
   cashFlow: CashFlow | null | undefined;
   isLoading: boolean;
 };
-

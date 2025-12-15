@@ -31,7 +31,7 @@ export class RefinancingEventsRepository {
 
   async update(
     id: string,
-    payload: Partial<InsertRefinancingEvent>,
+    payload: Partial<InsertRefinancingEvent>
   ): Promise<RefinancingEventRecord | undefined> {
     const [updated] = await this.database
       .update(refinancingEvents)
@@ -43,12 +43,15 @@ export class RefinancingEventsRepository {
   }
 
   async delete(id: string): Promise<boolean> {
-    const result = await this.database.delete(refinancingEvents).where(eq(refinancingEvents.id, id));
+    const result = await this.database
+      .delete(refinancingEvents)
+      .where(eq(refinancingEvents.id, id));
     return Boolean(result.rowCount && result.rowCount > 0);
   }
 
   async deleteByScenarioId(scenarioId: string): Promise<void> {
-    await this.database.delete(refinancingEvents).where(eq(refinancingEvents.scenarioId, scenarioId));
+    await this.database
+      .delete(refinancingEvents)
+      .where(eq(refinancingEvents.scenarioId, scenarioId));
   }
 }
-

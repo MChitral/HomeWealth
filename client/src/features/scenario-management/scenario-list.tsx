@@ -21,17 +21,10 @@ export function ScenarioListFeature() {
   usePageTitle("Scenarios | Mortgage Strategy");
 
   const { mortgages, isLoading: mortgagesLoading } = useMortgageSelection();
-  const {
-    data: scenarios = [],
-    isLoading: scenariosLoading,
-  } = useScenarios();
+  const { data: scenarios = [], isLoading: scenariosLoading } = useScenarios();
 
-  const {
-    deleteDialogOpen,
-    setDeleteDialogOpen,
-    handleDelete,
-    confirmDelete,
-  } = useScenarioListState();
+  const { deleteDialogOpen, setDeleteDialogOpen, handleDelete, confirmDelete } =
+    useScenarioListState();
 
   if (scenariosLoading || mortgagesLoading) {
     return <ScenarioListSkeleton />;

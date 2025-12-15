@@ -6,14 +6,22 @@ import {
 } from "@infrastructure/repositories";
 import type { MortgageTermCreateInput, MortgageTermUpdateInput } from "@domain/models";
 import { fetchLatestPrimeRate } from "@server-shared/services/prime-rate";
-import { getTermEffectiveRate, shouldUpdatePaymentAmount } from "@server-shared/calculations/term-helpers";
-import { calculatePayment, calculateTriggerRate, isTriggerRateHit, type PaymentFrequency } from "@server-shared/calculations/mortgage";
+import {
+  getTermEffectiveRate,
+  shouldUpdatePaymentAmount,
+} from "@server-shared/calculations/term-helpers";
+import {
+  calculatePayment,
+  calculateTriggerRate,
+  isTriggerRateHit,
+  type PaymentFrequency,
+} from "@server-shared/calculations/mortgage";
 
 export class MortgageTermService {
   constructor(
     private readonly mortgages: MortgagesRepository,
     private readonly mortgageTerms: MortgageTermsRepository,
-    private readonly mortgagePayments: MortgagePaymentsRepository,
+    private readonly mortgagePayments: MortgagePaymentsRepository
   ) {}
 
   private async authorizeMortgage(mortgageId: string, userId: string) {
@@ -32,7 +40,10 @@ export class MortgageTermService {
     return (await this.authorizeMortgage(term.mortgageId, userId)) ? term : undefined;
   }
 
-  async getByIdForUser(termId: string, userId: string): Promise<{ term: MortgageTerm; mortgage: Mortgage } | undefined> {
+  async getByIdForUser(
+    termId: string,
+    userId: string
+  ): Promise<{ term: MortgageTerm; mortgage: Mortgage } | undefined> {
     const term = await this.mortgageTerms.findById(termId);
     if (!term) {
       return undefined;
@@ -55,7 +66,7 @@ export class MortgageTermService {
   async create(
     mortgageId: string,
     userId: string,
-    payload: Omit<MortgageTermCreateInput, "mortgageId">,
+    payload: Omit<MortgageTermCreateInput, "mortgageId">
   ): Promise<MortgageTerm | undefined> {
     const authorized = await this.authorizeMortgage(mortgageId, userId);
     if (!authorized) {
@@ -65,14 +76,15 @@ export class MortgageTermService {
     // Validate term dates
     const newStartDate = new Date(payload.startDate);
     const newEndDate = new Date(payload.endDate);
-    
+
     // Validate end date is after start date (check this first)
     if (newEndDate <= newStartDate) {
       throw new Error("Term end date must be after start date");
     }
-    
+
     // Validate term length: Canadian mortgage terms are typically 3-5 years
-    const termLengthYears = (newEndDate.getTime() - newStartDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+    const termLengthYears =
+      (newEndDate.getTime() - newStartDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
     if (termLengthYears < 2.5 || termLengthYears > 6) {
       throw new Error(
         `Term length must be between 3-5 years (Canadian convention). Current term is ${termLengthYears.toFixed(1)} years.`
@@ -89,7 +101,7 @@ export class MortgageTermService {
       // Check for overlap: new term overlaps if it starts before existing ends AND ends after existing starts
       if (newStartDate < existingEnd && newEndDate > existingStart) {
         throw new Error(
-          `Term dates overlap with existing term (${existingStart.toISOString().split('T')[0]} to ${existingEnd.toISOString().split('T')[0]})`
+          `Term dates overlap with existing term (${existingStart.toISOString().split("T")[0]} to ${existingEnd.toISOString().split("T")[0]})`
         );
       }
     }
@@ -103,7 +115,7 @@ export class MortgageTermService {
   async update(
     termId: string,
     userId: string,
-    payload: Partial<Omit<MortgageTermUpdateInput, "mortgageId">>,
+    payload: Partial<Omit<MortgageTermUpdateInput, "mortgageId">>
   ): Promise<MortgageTerm | undefined> {
     const term = await this.authorizeTerm(termId, userId);
     if (!term) {
@@ -113,16 +125,19 @@ export class MortgageTermService {
     // Validate term dates don't overlap with other existing terms (excluding this one)
     if (payload.startDate || payload.endDate) {
       const existingTerms = await this.mortgageTerms.findByMortgageId(term.mortgageId);
-      const newStartDate = payload.startDate ? new Date(payload.startDate) : new Date(term.startDate);
+      const newStartDate = payload.startDate
+        ? new Date(payload.startDate)
+        : new Date(term.startDate);
       const newEndDate = payload.endDate ? new Date(payload.endDate) : new Date(term.endDate);
-      
+
       // Validate end date is after start date (check this first)
       if (newEndDate <= newStartDate) {
         throw new Error("Term end date must be after start date");
       }
-      
+
       // Validate term length: Canadian mortgage terms are typically 3-5 years
-      const termLengthYears = (newEndDate.getTime() - newStartDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+      const termLengthYears =
+        (newEndDate.getTime() - newStartDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
       if (termLengthYears < 2.5 || termLengthYears > 6) {
         throw new Error(
           `Term length must be between 3-5 years (Canadian convention). Current term is ${termLengthYears.toFixed(1)} years.`
@@ -141,7 +156,7 @@ export class MortgageTermService {
         // Check for overlap
         if (newStartDate < existingEnd && newEndDate > existingStart) {
           throw new Error(
-            `Updated term dates overlap with existing term (${existingStart.toISOString().split('T')[0]} to ${existingEnd.toISOString().split('T')[0]})`
+            `Updated term dates overlap with existing term (${existingStart.toISOString().split("T")[0]} to ${existingEnd.toISOString().split("T")[0]})`
           );
         }
       }
@@ -161,10 +176,10 @@ export class MortgageTermService {
 
   /**
    * Recalculate payment for a variable rate mortgage term when prime rate changes
-   * 
+   *
    * For VRM-Changing: Recalculates payment amount based on new rate
    * For VRM-Fixed: Keeps payment same but checks if trigger rate has been hit
-   * 
+   *
    * @param termId - Term ID to recalculate
    * @param userId - User ID for authorization
    * @param forcePrimeRate - Optional: Force a specific prime rate (for testing)
@@ -174,7 +189,9 @@ export class MortgageTermService {
     termId: string,
     userId: string,
     forcePrimeRate?: number
-  ): Promise<{ term: MortgageTerm; triggerRateHit?: boolean; newPaymentAmount?: number } | undefined> {
+  ): Promise<
+    { term: MortgageTerm; triggerRateHit?: boolean; newPaymentAmount?: number } | undefined
+  > {
     const term = await this.authorizeTerm(termId, userId);
     if (!term) {
       return undefined;
@@ -213,14 +230,17 @@ export class MortgageTermService {
     }
 
     const frequency = term.paymentFrequency as PaymentFrequency;
-    const amortizationMonths = (mortgage.amortizationYears * 12) + (mortgage.amortizationMonths ?? 0);
-    
+    const amortizationMonths = mortgage.amortizationYears * 12 + (mortgage.amortizationMonths ?? 0);
+
     // Get current balance (from latest payment or mortgage current balance)
     const payments = await this.mortgagePayments.findByTermId(termId);
-    const latestPayment = payments.length > 0
-      ? payments.sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime())[0]
-      : null;
-    
+    const latestPayment =
+      payments.length > 0
+        ? payments.sort(
+            (a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime()
+          )[0]
+        : null;
+
     const currentBalance = latestPayment
       ? Number(latestPayment.remainingBalance)
       : Number(mortgage.currentBalance);
@@ -238,12 +258,12 @@ export class MortgageTermService {
         amortizationMonths,
         frequency
       );
-      
+
       // Update term with new payment amount
       const finalTerm = await this.mortgageTerms.update(termId, {
         regularPaymentAmount: newPaymentAmount.toFixed(2),
       });
-      
+
       if (finalTerm) {
         result.term = finalTerm;
         result.newPaymentAmount = newPaymentAmount;
@@ -252,8 +272,13 @@ export class MortgageTermService {
       // VRM-Fixed: Payment stays same, but check trigger rate
       const currentPaymentAmount = Number(term.regularPaymentAmount);
       const triggerRate = calculateTriggerRate(currentPaymentAmount, currentBalance, frequency);
-      const triggerRateHit = isTriggerRateHit(newEffectiveRate, currentPaymentAmount, currentBalance, frequency);
-      
+      const triggerRateHit = isTriggerRateHit(
+        newEffectiveRate,
+        currentPaymentAmount,
+        currentBalance,
+        frequency
+      );
+
       result.triggerRateHit = triggerRateHit;
     }
 
@@ -262,7 +287,7 @@ export class MortgageTermService {
 
   /**
    * Change payment frequency for a mortgage term
-   * 
+   *
    * Canadian Mortgage Rule:
    * - Frequency changes are allowed but require payment recalculation
    * - Some lenders charge fees for frequency changes (not tracked here)
@@ -271,7 +296,7 @@ export class MortgageTermService {
    *   - Current interest rate
    *   - Remaining amortization period
    *   - New payment frequency
-   * 
+   *
    * @param termId - Term ID to change frequency for
    * @param userId - User ID for authorization
    * @param newFrequency - New payment frequency
@@ -294,10 +319,13 @@ export class MortgageTermService {
 
     // Get current balance (from latest payment or mortgage current balance)
     const payments = await this.mortgagePayments.findByTermId(termId);
-    const latestPayment = payments.length > 0
-      ? payments.sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime())[0]
-      : null;
-    
+    const latestPayment =
+      payments.length > 0
+        ? payments.sort(
+            (a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime()
+          )[0]
+        : null;
+
     const currentBalance = latestPayment
       ? Number(latestPayment.remainingBalance)
       : Number(mortgage.currentBalance);
@@ -308,17 +336,22 @@ export class MortgageTermService {
     // Calculate remaining amortization
     // Use original amortization minus time elapsed, or use remaining amortization from latest payment
     const amortizationYears = mortgage.amortizationYears;
-    const amortizationMonths = (amortizationYears * 12) + (mortgage.amortizationMonths ?? 0);
-    
+    const amortizationMonths = amortizationYears * 12 + (mortgage.amortizationMonths ?? 0);
+
     let remainingAmortizationMonths = amortizationMonths;
-    if (latestPayment && latestPayment.remainingAmortizationMonths && latestPayment.remainingAmortizationMonths > 0) {
+    if (
+      latestPayment &&
+      latestPayment.remainingAmortizationMonths &&
+      latestPayment.remainingAmortizationMonths > 0
+    ) {
       // Use remaining amortization from latest payment if available
       remainingAmortizationMonths = latestPayment.remainingAmortizationMonths;
     } else {
       // Estimate remaining amortization based on time elapsed
       const mortgageStartDate = new Date(mortgage.startDate);
       const currentDate = latestPayment ? new Date(latestPayment.paymentDate) : new Date();
-      const monthsElapsed = (currentDate.getFullYear() - mortgageStartDate.getFullYear()) * 12 +
+      const monthsElapsed =
+        (currentDate.getFullYear() - mortgageStartDate.getFullYear()) * 12 +
         (currentDate.getMonth() - mortgageStartDate.getMonth());
       remainingAmortizationMonths = Math.max(1, amortizationMonths - monthsElapsed);
     }
@@ -347,4 +380,3 @@ export class MortgageTermService {
     };
   }
 }
-

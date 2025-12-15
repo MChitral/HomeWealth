@@ -9,7 +9,7 @@ import { useMortgageMutations } from "./use-mortgage-mutations";
 /**
  * Core hook for mortgage tracking state management.
  * Manages only essential state - all form state is handled by form hooks.
- * 
+ *
  * This hook was refactored from 558 lines to ~150 lines by:
  * - Removing all legacy form state (now in React Hook Form hooks)
  * - Removing business logic functions (moved to form hooks)
@@ -17,8 +17,12 @@ import { useMortgageMutations } from "./use-mortgage-mutations";
  * - Keeping only core state management
  */
 export function useMortgageTrackingState() {
-  const { selectedMortgageId, setSelectedMortgageId, mortgages: contextMortgages } = useMortgageSelection();
-  
+  const {
+    selectedMortgageId,
+    setSelectedMortgageId,
+    mortgages: contextMortgages,
+  } = useMortgageSelection();
+
   // Dialog state (extracted hook)
   const dialogs = useMortgageDialogs();
   const {
@@ -39,8 +43,9 @@ export function useMortgageTrackingState() {
 
   // Core data hooks
   const { mortgage, terms, payments, isLoading } = useMortgageData(selectedMortgageId);
-  const { primeRate, setPrimeRate, primeRateData, isPrimeRateLoading, refetchPrimeRate } = usePrimeRate();
-  
+  const { primeRate, setPrimeRate, primeRateData, isPrimeRateLoading, refetchPrimeRate } =
+    usePrimeRate();
+
   // Use mortgages from context
   const mortgages = contextMortgages;
 
@@ -93,7 +98,7 @@ export function useMortgageTrackingState() {
     // Mortgage selection
     selectedMortgageId,
     setSelectedMortgageId,
-    
+
     // Dialog states
     isDialogOpen,
     setIsDialogOpen,
@@ -105,25 +110,25 @@ export function useMortgageTrackingState() {
     setIsEditMortgageOpen,
     isEditTermOpen,
     setIsEditTermOpen,
-    
+
     // Payment history filter
     filterYear,
     setFilterYear,
-    
+
     // Core data
     mortgages,
     mortgage,
     terms,
     payments,
     isLoading,
-    
+
     // Prime rate
     primeRate,
     setPrimeRate,
     primeRateData,
     isPrimeRateLoading,
     refetchPrimeRate,
-    
+
     // Computed values
     uiCurrentTerm,
     paymentHistory,
@@ -136,7 +141,7 @@ export function useMortgageTrackingState() {
     availableYears,
     effectiveRate,
     monthsRemainingInTerm,
-    
+
     // Mutations
     createPaymentMutation,
     createTermMutation,
@@ -146,4 +151,3 @@ export function useMortgageTrackingState() {
     updateTermMutation,
   };
 }
-

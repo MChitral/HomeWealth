@@ -39,15 +39,17 @@ export function EmergencyFundTargetCard({
           <Shield className="h-5 w-5 text-primary" />
           <CardTitle>Emergency Fund Target</CardTitle>
         </div>
-        <CardDescription>Your financial safety net in case of job loss or emergencies</CardDescription>
+        <CardDescription>
+          Your financial safety net in case of job loss or emergencies
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="p-4 bg-primary/10 rounded-md">
           <p className="text-sm font-medium mb-2">What is an Emergency Fund?</p>
           <p className="text-sm text-muted-foreground">
-            An emergency fund is cash set aside to cover unexpected expenses or income loss. Financial experts recommend
-            3-6 months of living expenses for most people, or 6-12 months if you're self-employed or have variable
-            income.
+            An emergency fund is cash set aside to cover unexpected expenses or income loss.
+            Financial experts recommend 3-6 months of living expenses for most people, or 6-12
+            months if you're self-employed or have variable income.
           </p>
         </div>
 
@@ -115,4 +117,3 @@ export function EmergencyFundTargetCard({
     </Card>
   );
 }
-

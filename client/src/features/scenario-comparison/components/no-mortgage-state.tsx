@@ -3,7 +3,7 @@ import { Home } from "lucide-react";
 
 /**
  * Empty state shown when user has no mortgages created.
- * 
+ *
  * Product Logic: Scenario comparison requires scenarios, which in turn require mortgages.
  * Users must create a mortgage before they can create scenarios to compare.
  */
@@ -37,4 +37,3 @@ export function ComparisonNoMortgageState() {
     />
   );
 }
-

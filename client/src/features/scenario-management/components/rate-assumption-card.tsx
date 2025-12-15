@@ -12,12 +12,18 @@ interface RateAssumptionCardProps {
   setRateAssumption: (rate: number | null) => void;
 }
 
-export function RateAssumptionCard({ currentRate, rateAssumption, setRateAssumption }: RateAssumptionCardProps) {
+export function RateAssumptionCard({
+  currentRate,
+  rateAssumption,
+  setRateAssumption,
+}: RateAssumptionCardProps) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>Rate Assumption for Projections</CardTitle>
-        <CardDescription>Model what happens if rates change (affects amortization timeline)</CardDescription>
+        <CardDescription>
+          Model what happens if rates change (affects amortization timeline)
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-3">
@@ -116,4 +122,3 @@ export function RateAssumptionCard({ currentRate, rateAssumption, setRateAssumpt
     </Card>
   );
 }
-

@@ -102,7 +102,10 @@ export function useTermRenewalFormWithAutoPayment({
     paymentHistory,
     lastKnownBalance,
     lastKnownAmortizationMonths,
-    termType: (watchedValues.termType || "variable-fixed") as "fixed" | "variable-changing" | "variable-fixed",
+    termType: (watchedValues.termType || "variable-fixed") as
+      | "fixed"
+      | "variable-changing"
+      | "variable-fixed",
     renewalRateInput: watchedValues.fixedRate || "",
     renewalPrimeInput: watchedValues.primeRate || defaultPrimeRate,
     renewalSpreadInput: watchedValues.spread || "",
@@ -184,4 +187,3 @@ export function useTermRenewalFormWithAutoPayment({
     reset,
   };
 }
-

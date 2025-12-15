@@ -60,4 +60,3 @@ export function ComparisonNetWorthChart({ data, scenarios }: ComparisonNetWorthC
     </ResponsiveContainer>
   );
 }
-

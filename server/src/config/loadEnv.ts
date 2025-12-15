@@ -13,4 +13,3 @@ function loadEnvFile(fileName: string, override = false) {
 
 loadEnvFile(".env");
 loadEnvFile(".env.local", true);
-

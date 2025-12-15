@@ -75,11 +75,12 @@ export function DebtSection({
         <div className="space-y-2">
           <Label htmlFor="total-debt">Total Other Debt Payments</Label>
           <div className="p-4 bg-muted/50 rounded-md">
-            <p className="text-2xl font-mono font-bold">${otherDebtPayments.toLocaleString()}/month</p>
+            <p className="text-2xl font-mono font-bold">
+              ${otherDebtPayments.toLocaleString()}/month
+            </p>
           </div>
         </div>
       </CardContent>
     </Card>
   );
 }
-

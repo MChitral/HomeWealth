@@ -7,7 +7,10 @@ interface BoCPrimeRateResponse {
   }>;
 }
 
-export async function fetchLatestPrimeRate(): Promise<{ primeRate: number; effectiveDate: string }> {
+export async function fetchLatestPrimeRate(): Promise<{
+  primeRate: number;
+  effectiveDate: string;
+}> {
   const response = await fetch(BOC_PRIME_RATE_API);
   if (!response.ok) {
     throw new Error(`Bank of Canada API returned ${response.status}`);
@@ -22,4 +25,3 @@ export async function fetchLatestPrimeRate(): Promise<{ primeRate: number; effec
     effectiveDate: latest.d,
   };
 }
-

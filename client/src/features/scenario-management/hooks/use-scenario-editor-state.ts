@@ -2,11 +2,20 @@ import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/shared/hooks/use-toast";
 import { queryClient } from "@/shared/api/query-client";
-import { scenarioApi, scenarioQueryKeys, type ScenarioPayload, type InsertPrepaymentEvent, type InsertRefinancingEvent } from "../api";
+import {
+  scenarioApi,
+  scenarioQueryKeys,
+  type ScenarioPayload,
+  type InsertPrepaymentEvent,
+  type InsertRefinancingEvent,
+} from "../api";
 import type { Scenario, PrepaymentEvent, RefinancingEvent } from "@shared/schema";
 import { useScenarioBasicInfoForm } from "./use-scenario-basic-info-form";
 import { usePrepaymentEventForm, type PrepaymentEventFormData } from "./use-prepayment-event-form";
-import { useRefinancingEventForm, type RefinancingEventFormData } from "./use-refinancing-event-form";
+import {
+  useRefinancingEventForm,
+  type RefinancingEventFormData,
+} from "./use-refinancing-event-form";
 
 export type DraftPrepaymentEvent = {
   id: string;
@@ -38,7 +47,7 @@ export function useScenarioEditorState(
   fetchedRefinancingEvents: RefinancingEvent[] | null | undefined,
   isNewScenario: boolean,
   scenarioId: string | null,
-  onSaveSuccess: () => void,
+  onSaveSuccess: () => void
 ) {
   const { toast } = useToast();
 
@@ -65,7 +74,8 @@ export function useScenarioEditorState(
 
   // Refinancing events state
   const [refinancingEvents, setRefinancingEvents] = useState<DraftRefinancingEvent[]>([]);
-  const [editingRefinancingEvent, setEditingRefinancingEvent] = useState<DraftRefinancingEvent | null>(null);
+  const [editingRefinancingEvent, setEditingRefinancingEvent] =
+    useState<DraftRefinancingEvent | null>(null);
   const [isAddingRefinancingEvent, setIsAddingRefinancingEvent] = useState(false);
 
   // React Hook Form for prepayment event
@@ -124,13 +134,16 @@ export function useScenarioEditorState(
         // Estimate start year: startPaymentNumber / 12 (assuming monthly)
         startYear = Math.max(1, Math.ceil(editingEvent.startPaymentNumber / 12)).toString();
       }
-      
+
       prepaymentEventForm.form.reset({
         eventType: editingEvent.eventType,
         amount: editingEvent.amount || "",
         description: editingEvent.description || "",
         recurrenceMonth: editingEvent.recurrenceMonth?.toString() || "3",
-        startYear: editingEvent.eventType === "annual" ? (editingEvent.startYear?.toString() || startYear) : undefined,
+        startYear:
+          editingEvent.eventType === "annual"
+            ? editingEvent.startYear?.toString() || startYear
+            : undefined,
         oneTimeYear: editingEvent.oneTimeYear?.toString() || "1",
       });
     }
@@ -144,7 +157,7 @@ export function useScenarioEditorState(
       // Estimate start year: startPaymentNumber / 12 (assuming monthly)
       startYear = Math.max(1, Math.ceil(event.startPaymentNumber / 12));
     }
-    
+
     return {
       id: event.id,
       scenarioId: event.scenarioId,
@@ -170,13 +183,16 @@ export function useScenarioEditorState(
     };
   };
 
-  const buildEventPayload = (event: DraftPrepaymentEvent, scenarioIdValue: string): InsertPrepaymentEvent => ({
+  const buildEventPayload = (
+    event: DraftPrepaymentEvent,
+    scenarioIdValue: string
+  ): InsertPrepaymentEvent => ({
     scenarioId: scenarioIdValue,
     eventType: event.eventType,
     amount: event.amount ?? "0",
     startPaymentNumber: event.startPaymentNumber ?? 1,
-    recurrenceMonth: event.eventType === "annual" ? event.recurrenceMonth ?? null : null,
-    oneTimeYear: event.eventType === "one-time" ? event.oneTimeYear ?? null : null,
+    recurrenceMonth: event.eventType === "annual" ? (event.recurrenceMonth ?? null) : null,
+    oneTimeYear: event.eventType === "one-time" ? (event.oneTimeYear ?? null) : null,
     description: event.description ?? null,
   });
 
@@ -191,8 +207,11 @@ export function useScenarioEditorState(
       if (isNewScenario && savedScenario?.id && prepaymentEvents.length > 0) {
         await Promise.all(
           prepaymentEvents.map((event) =>
-            scenarioApi.createPrepaymentEvent(savedScenario.id!, buildEventPayload(event, savedScenario.id!)),
-          ),
+            scenarioApi.createPrepaymentEvent(
+              savedScenario.id!,
+              buildEventPayload(event, savedScenario.id!)
+            )
+          )
         );
       }
 
@@ -208,7 +227,9 @@ export function useScenarioEditorState(
       }
       toast({
         title: isNewScenario ? "Scenario created" : "Scenario saved",
-        description: isNewScenario ? "Your new scenario has been created." : "Your scenario has been updated.",
+        description: isNewScenario
+          ? "Your new scenario has been created."
+          : "Your scenario has been updated.",
       });
       onSaveSuccess();
     },
@@ -250,7 +271,8 @@ export function useScenarioEditorState(
       amount: parseFloat(formData.amount).toFixed(2),
       startPaymentNumber: 1, // Will be calculated from startYear/oneTimeYear in projections
       description: formData.description || null,
-      recurrenceMonth: formData.eventType === "annual" ? parseInt(formData.recurrenceMonth || "3") : null,
+      recurrenceMonth:
+        formData.eventType === "annual" ? parseInt(formData.recurrenceMonth || "3") : null,
       startYear: formData.eventType === "annual" ? parseInt(formData.startYear || "1") : null,
       oneTimeYear: formData.eventType === "one-time" ? parseInt(formData.oneTimeYear || "1") : null,
     };
@@ -258,7 +280,10 @@ export function useScenarioEditorState(
     // For existing scenarios, save to API immediately
     if (!isNewScenario && scenarioId) {
       try {
-        const savedEvent = await scenarioApi.createPrepaymentEvent(scenarioId, buildEventPayload(eventData, scenarioId));
+        const savedEvent = await scenarioApi.createPrepaymentEvent(
+          scenarioId,
+          buildEventPayload(eventData, scenarioId)
+        );
         setPrepaymentEvents([...prepaymentEvents, toDraftEvent(savedEvent)]);
         queryClient.invalidateQueries({ queryKey: scenarioQueryKeys.scenarioEvents(scenarioId) });
         toast({
@@ -302,7 +327,8 @@ export function useScenarioEditorState(
       eventType: formData.eventType,
       amount: parseFloat(formData.amount).toFixed(2),
       description: formData.description || null,
-      recurrenceMonth: formData.eventType === "annual" ? parseInt(formData.recurrenceMonth || "3") : null,
+      recurrenceMonth:
+        formData.eventType === "annual" ? parseInt(formData.recurrenceMonth || "3") : null,
       startYear: formData.eventType === "annual" ? parseInt(formData.startYear || "1") : null,
       oneTimeYear: formData.eventType === "one-time" ? parseInt(formData.oneTimeYear || "1") : null,
     };
@@ -310,7 +336,10 @@ export function useScenarioEditorState(
     // For existing scenarios with real event IDs, update via API
     if (!isNewScenario && scenarioId && !editingEvent.id.startsWith("temp-")) {
       try {
-        await scenarioApi.updatePrepaymentEvent(editingEvent.id, buildEventPayload(updatedEvent, scenarioId));
+        await scenarioApi.updatePrepaymentEvent(
+          editingEvent.id,
+          buildEventPayload(updatedEvent, scenarioId)
+        );
         queryClient.invalidateQueries({ queryKey: scenarioQueryKeys.scenarioEvents(scenarioId) });
         toast({
           title: "Event updated",
@@ -355,7 +384,10 @@ export function useScenarioEditorState(
     setPrepaymentEvents(prepaymentEvents.filter((e) => e.id !== eventId));
   };
 
-  const buildRefinancingEventPayload = (event: DraftRefinancingEvent, scenarioIdValue: string): InsertRefinancingEvent => ({
+  const buildRefinancingEventPayload = (
+    event: DraftRefinancingEvent,
+    scenarioIdValue: string
+  ): InsertRefinancingEvent => ({
     scenarioId: scenarioIdValue,
     refinancingYear: event.refinancingYear ?? null,
     atTermEnd: event.atTermEnd ? 1 : 0,
@@ -385,21 +417,32 @@ export function useScenarioEditorState(
     const eventData: DraftRefinancingEvent = {
       id: `temp-${Date.now()}`,
       scenarioId: scenarioId || "",
-      refinancingYear: formData.timingType === "by-year" ? parseInt(formData.refinancingYear || "1") : null,
+      refinancingYear:
+        formData.timingType === "by-year" ? parseInt(formData.refinancingYear || "1") : null,
       atTermEnd: formData.timingType === "at-term-end",
       newRate: (rateValue / 100).toFixed(6), // Convert from percentage to decimal
       termType: formData.termType,
-      newAmortizationMonths: formData.newAmortizationMonths ? parseInt(formData.newAmortizationMonths) : null,
-      paymentFrequency: formData.paymentFrequency && formData.paymentFrequency !== "keep-current" ? formData.paymentFrequency : null,
+      newAmortizationMonths: formData.newAmortizationMonths
+        ? parseInt(formData.newAmortizationMonths)
+        : null,
+      paymentFrequency:
+        formData.paymentFrequency && formData.paymentFrequency !== "keep-current"
+          ? formData.paymentFrequency
+          : null,
       description: formData.description || null,
     };
 
     // For existing scenarios, save to API immediately
     if (!isNewScenario && scenarioId) {
       try {
-        const savedEvent = await scenarioApi.createRefinancingEvent(scenarioId, buildRefinancingEventPayload(eventData, scenarioId));
+        const savedEvent = await scenarioApi.createRefinancingEvent(
+          scenarioId,
+          buildRefinancingEventPayload(eventData, scenarioId)
+        );
         setRefinancingEvents([...refinancingEvents, toDraftRefinancingEvent(savedEvent)]);
-        queryClient.invalidateQueries({ queryKey: scenarioQueryKeys.scenarioRefinancingEvents(scenarioId) });
+        queryClient.invalidateQueries({
+          queryKey: scenarioQueryKeys.scenarioRefinancingEvents(scenarioId),
+        });
         toast({
           title: "Event added",
           description: "Refinancing event has been saved.",
@@ -449,20 +492,31 @@ export function useScenarioEditorState(
 
     const updatedEvent: DraftRefinancingEvent = {
       ...editingRefinancingEvent,
-      refinancingYear: formData.timingType === "by-year" ? parseInt(formData.refinancingYear || "1") : null,
+      refinancingYear:
+        formData.timingType === "by-year" ? parseInt(formData.refinancingYear || "1") : null,
       atTermEnd: formData.timingType === "at-term-end",
       newRate: (rateValue / 100).toFixed(6), // Convert from percentage to decimal
       termType: formData.termType,
-      newAmortizationMonths: formData.newAmortizationMonths ? parseInt(formData.newAmortizationMonths) : null,
-      paymentFrequency: formData.paymentFrequency && formData.paymentFrequency !== "keep-current" ? formData.paymentFrequency : null,
+      newAmortizationMonths: formData.newAmortizationMonths
+        ? parseInt(formData.newAmortizationMonths)
+        : null,
+      paymentFrequency:
+        formData.paymentFrequency && formData.paymentFrequency !== "keep-current"
+          ? formData.paymentFrequency
+          : null,
       description: formData.description || null,
     };
 
     // For existing scenarios with real event IDs, update via API
     if (!isNewScenario && scenarioId && !editingRefinancingEvent.id.startsWith("temp-")) {
       try {
-        await scenarioApi.updateRefinancingEvent(editingRefinancingEvent.id, buildRefinancingEventPayload(updatedEvent, scenarioId));
-        queryClient.invalidateQueries({ queryKey: scenarioQueryKeys.scenarioRefinancingEvents(scenarioId) });
+        await scenarioApi.updateRefinancingEvent(
+          editingRefinancingEvent.id,
+          buildRefinancingEventPayload(updatedEvent, scenarioId)
+        );
+        queryClient.invalidateQueries({
+          queryKey: scenarioQueryKeys.scenarioRefinancingEvents(scenarioId),
+        });
         toast({
           title: "Event updated",
           description: "Refinancing event has been saved.",
@@ -477,7 +531,9 @@ export function useScenarioEditorState(
       }
     }
 
-    setRefinancingEvents(refinancingEvents.map((e) => (e.id === editingRefinancingEvent.id ? updatedEvent : e)));
+    setRefinancingEvents(
+      refinancingEvents.map((e) => (e.id === editingRefinancingEvent.id ? updatedEvent : e))
+    );
     setIsAddingRefinancingEvent(false);
     setEditingRefinancingEvent(null);
     resetRefinancingEventForm();
@@ -488,7 +544,9 @@ export function useScenarioEditorState(
     if (!isNewScenario && scenarioId && !eventId.startsWith("temp-")) {
       try {
         await scenarioApi.deleteRefinancingEvent(eventId);
-        queryClient.invalidateQueries({ queryKey: scenarioQueryKeys.scenarioRefinancingEvents(scenarioId) });
+        queryClient.invalidateQueries({
+          queryKey: scenarioQueryKeys.scenarioRefinancingEvents(scenarioId),
+        });
         toast({
           title: "Event deleted",
           description: "Refinancing event has been removed.",
@@ -556,4 +614,3 @@ export function useScenarioEditorState(
     buildEventPayload,
   };
 }
-

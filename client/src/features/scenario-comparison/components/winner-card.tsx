@@ -18,9 +18,7 @@ export function WinnerCard({ winner, timeHorizon, getMetricForHorizon }: WinnerC
             <Trophy className="h-8 w-8 text-primary" />
           </div>
           <div className="flex-1">
-            <h3 className="text-2xl font-semibold mb-2">
-              Best Strategy: {winner.name}
-            </h3>
+            <h3 className="text-2xl font-semibold mb-2">Best Strategy: {winner.name}</h3>
             <p className="text-sm text-muted-foreground mb-4">
               Highest net worth at {timeHorizon} years with optimal balance of growth and risk
             </p>
@@ -28,7 +26,7 @@ export function WinnerCard({ winner, timeHorizon, getMetricForHorizon }: WinnerC
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Net Worth</p>
                 <p className="font-mono font-semibold text-xl text-primary">
-                  ${getMetricForHorizon(winner.metrics, 'netWorth').toLocaleString()}
+                  ${getMetricForHorizon(winner.metrics, "netWorth").toLocaleString()}
                 </p>
               </div>
               <div>
@@ -46,7 +44,7 @@ export function WinnerCard({ winner, timeHorizon, getMetricForHorizon }: WinnerC
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Investment Value</p>
                 <p className="font-mono font-semibold text-xl text-green-600">
-                  ${getMetricForHorizon(winner.metrics, 'investments').toLocaleString()}
+                  ${getMetricForHorizon(winner.metrics, "investments").toLocaleString()}
                 </p>
               </div>
             </div>

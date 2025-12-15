@@ -53,7 +53,9 @@ export function StatDisplay({
 
   return (
     <div className={cn("space-y-2", className)}>
-      <p className={cn("text-muted-foreground uppercase tracking-wide", sizeClasses.label)}>{label}</p>
+      <p className={cn("text-muted-foreground uppercase tracking-wide", sizeClasses.label)}>
+        {label}
+      </p>
       <p
         className={cn(
           "font-bold font-mono",
@@ -70,4 +72,3 @@ export function StatDisplay({
     </div>
   );
 }
-

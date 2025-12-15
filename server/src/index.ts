@@ -9,6 +9,7 @@ import { createRepositories } from "@infrastructure/repositories";
 import { createServices } from "@application/services";
 import { setupVite, serveStatic, log } from "@infrastructure/vite";
 import { startPrimeRateScheduler } from "@infrastructure/jobs/prime-rate-scheduler";
+import { startTriggerRateCheck } from "@infrastructure/jobs/daily-trigger-check";
 
 declare module "http" {
   interface IncomingMessage {
@@ -24,7 +25,7 @@ app.use(
     verify: (req: Request, _res, buf) => {
       req.rawBody = buf;
     },
-  }),
+  })
 );
 app.use(express.urlencoded({ extended: false }));
 app.use(requestLogger);
@@ -38,6 +39,7 @@ async function bootstrap() {
 
   // Start scheduled jobs
   startPrimeRateScheduler(services.primeRateTracking);
+  startTriggerRateCheck(services.triggerRateMonitor);
 
   if (app.get("env") === "development") {
     await setupVite(app, server);
@@ -52,4 +54,3 @@ async function bootstrap() {
 }
 
 void bootstrap();
-

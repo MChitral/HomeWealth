@@ -57,7 +57,9 @@ export function SummarySection({
             <Separator />
             <div className="flex items-center justify-between font-semibold">
               <span>Total Monthly Income</span>
-              <span>${totalMonthlyIncome.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+              <span>
+                ${totalMonthlyIncome.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </span>
             </div>
           </div>
         </div>
@@ -105,12 +107,11 @@ export function SummarySection({
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Mortgage payment is mocked for now; once the amortization engine is connected this will reflect actual
-            payments.
+            Mortgage payment is mocked for now; once the amortization engine is connected this will
+            reflect actual payments.
           </p>
         </div>
       </CardContent>
     </Card>
   );
 }
-

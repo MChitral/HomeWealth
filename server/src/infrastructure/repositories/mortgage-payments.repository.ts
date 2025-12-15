@@ -29,10 +29,7 @@ export class MortgagePaymentsRepository {
   }
 
   async findByTermId(termId: string): Promise<MortgagePaymentRecord[]> {
-    return this.database
-      .select()
-      .from(mortgagePayments)
-      .where(eq(mortgagePayments.termId, termId));
+    return this.database.select().from(mortgagePayments).where(eq(mortgagePayments.termId, termId));
   }
 
   async create(payload: InsertMortgagePayment, tx?: Database): Promise<MortgagePaymentRecord> {
@@ -51,8 +48,10 @@ export class MortgagePaymentsRepository {
   }
 
   async delete(id: string): Promise<boolean> {
-    const result = await this.database.delete(mortgagePayments).where(eq(mortgagePayments.id, id)).returning();
+    const result = await this.database
+      .delete(mortgagePayments)
+      .where(eq(mortgagePayments.id, id))
+      .returning();
     return result.length > 0;
   }
 }
-

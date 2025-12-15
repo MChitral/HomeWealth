@@ -8,7 +8,12 @@ import { Info } from "lucide-react";
 import { useMortgageSelection } from "@/features/mortgage-tracking";
 import { MortgageSelector } from "@/features/mortgage-tracking/components/mortgage-selector";
 import type { PaymentFrequency } from "@/features/mortgage-tracking/utils/mortgage-math";
-import { useScenarioDetail, useScenarioEditorState, useScenarioEditorCalculations, useScenarioEditorProjections } from "./hooks";
+import {
+  useScenarioDetail,
+  useScenarioEditorState,
+  useScenarioEditorCalculations,
+  useScenarioEditorProjections,
+} from "./hooks";
 import { useMortgageData } from "@/features/mortgage-tracking/hooks";
 import { useCashFlowData } from "@/features/cash-flow/hooks";
 import {
@@ -41,39 +46,57 @@ export function ScenarioEditorFeature() {
   } = useScenarioDetail(scenarioId);
 
   // Use global mortgage selection
-  const { selectedMortgageId, setSelectedMortgageId, mortgages, selectedMortgage } = useMortgageSelection();
-  
+  const { selectedMortgageId, setSelectedMortgageId, mortgages, selectedMortgage } =
+    useMortgageSelection();
+
   // Fetch real mortgage data from the database
-  const { mortgage, terms, payments, isLoading: mortgageLoading } = useMortgageData(selectedMortgageId);
+  const {
+    mortgage,
+    terms,
+    payments,
+    isLoading: mortgageLoading,
+  } = useMortgageData(selectedMortgageId);
   const { cashFlow } = useCashFlowData();
 
-  const pageTitle = isNewScenario ? "New Scenario | Mortgage Strategy" : "Edit Scenario | Mortgage Strategy";
+  const pageTitle = isNewScenario
+    ? "New Scenario | Mortgage Strategy"
+    : "Edit Scenario | Mortgage Strategy";
   usePageTitle(pageTitle);
 
   // Get actual payment frequency from mortgage/term data
   const scenarioPaymentFrequency: PaymentFrequency = useMemo(() => {
     // Try to get from latest term first
-    const latestTerm = terms && terms.length > 0 
-      ? [...terms].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())[0]
-      : null;
-    
+    const latestTerm =
+      terms && terms.length > 0
+        ? [...terms].sort(
+            (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+          )[0]
+        : null;
+
     if (latestTerm?.paymentFrequency) {
       return latestTerm.paymentFrequency as PaymentFrequency;
     }
-    
+
     // Fallback to mortgage payment frequency
     if (mortgage?.paymentFrequency) {
       return mortgage.paymentFrequency as PaymentFrequency;
     }
-    
+
     // Default to monthly if no data available
     return "monthly";
   }, [mortgage, terms]);
 
   // Use centralized state management hook
-  const state = useScenarioEditorState(scenario, fetchedEvents, fetchedRefinancingEvents, isNewScenario, scenarioId, () => {
-    navigate("/scenarios");
-  });
+  const state = useScenarioEditorState(
+    scenario,
+    fetchedEvents,
+    fetchedRefinancingEvents,
+    isNewScenario,
+    scenarioId,
+    () => {
+      navigate("/scenarios");
+    }
+  );
 
   // Use calculations hook
   const calculations = useScenarioEditorCalculations({
@@ -140,7 +163,8 @@ export function ScenarioEditorFeature() {
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          Your current mortgage data is pre-loaded from Mortgage History. Projections start from today's position.
+          Your current mortgage data is pre-loaded from Mortgage History. Projections start from
+          today's position.
         </AlertDescription>
       </Alert>
 
@@ -148,12 +172,13 @@ export function ScenarioEditorFeature() {
         <Alert variant="destructive">
           <Info className="h-4 w-4" />
           <AlertDescription>
-            <span className="font-semibold">Cash Flow Not Configured:</span> To calculate accurate surplus cash and 
-            meaningful projections, please set up your income and expenses on the{" "}
+            <span className="font-semibold">Cash Flow Not Configured:</span> To calculate accurate
+            surplus cash and meaningful projections, please set up your income and expenses on the{" "}
             <Link href="/cash-flow" className="font-medium underline hover:no-underline">
               Cash Flow page
             </Link>
-            . Without cash flow data, surplus calculations will be $0 and projections may not reflect your actual financial situation.
+            . Without cash flow data, surplus calculations will be $0 and projections may not
+            reflect your actual financial situation.
           </AlertDescription>
         </Alert>
       )}
@@ -179,9 +204,15 @@ export function ScenarioEditorFeature() {
 
       <Tabs defaultValue="mortgage" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="mortgage" data-testid="tab-mortgage">Mortgage & Prepayment</TabsTrigger>
-          <TabsTrigger value="ef" data-testid="tab-ef">Emergency Fund</TabsTrigger>
-          <TabsTrigger value="investments" data-testid="tab-investments">Investments</TabsTrigger>
+          <TabsTrigger value="mortgage" data-testid="tab-mortgage">
+            Mortgage & Prepayment
+          </TabsTrigger>
+          <TabsTrigger value="ef" data-testid="tab-ef">
+            Emergency Fund
+          </TabsTrigger>
+          <TabsTrigger value="investments" data-testid="tab-investments">
+            Investments
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="mortgage" className="space-y-6">

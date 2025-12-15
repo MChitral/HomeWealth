@@ -16,9 +16,9 @@ export function EmergencyFundStrategyCard() {
   // Calculate actual target amount and months
   const targetAmount = useMemo(() => {
     if (!emergencyFund?.targetMonths || !cashFlow) return null;
-    
+
     // Calculate monthly expenses from cash flow
-    const monthlyExpenses = 
+    const monthlyExpenses =
       Number(cashFlow.propertyTax || 0) +
       Number(cashFlow.homeInsurance || 0) +
       Number(cashFlow.condoFees || 0) +
@@ -30,14 +30,12 @@ export function EmergencyFundStrategyCard() {
       Number(cashFlow.carLoan || 0) +
       Number(cashFlow.studentLoan || 0) +
       Number(cashFlow.creditCard || 0);
-    
+
     const targetMonths = Number(emergencyFund.targetMonths);
     return monthlyExpenses * targetMonths;
   }, [emergencyFund, cashFlow]);
 
-  const targetMonths = emergencyFund?.targetMonths 
-    ? Number(emergencyFund.targetMonths) 
-    : null;
+  const targetMonths = emergencyFund?.targetMonths ? Number(emergencyFund.targetMonths) : null;
 
   // Track monthly contribution for dynamic timeline calculation
   const [monthlyContribution, setMonthlyContribution] = useState<string>("500");
@@ -55,7 +53,9 @@ export function EmergencyFundStrategyCard() {
       <Card className="bg-accent/50">
         <CardHeader>
           <CardTitle>Emergency Fund Target</CardTitle>
-          <CardDescription>Configured on Emergency Fund page (applies to all scenarios)</CardDescription>
+          <CardDescription>
+            Configured on Emergency Fund page (applies to all scenarios)
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="p-4 bg-background rounded-md">
@@ -63,7 +63,11 @@ export function EmergencyFundStrategyCard() {
             {targetAmount !== null && targetMonths !== null ? (
               <>
                 <p className="text-2xl font-mono font-bold mb-2">
-                  ${targetAmount.toLocaleString("en-CA", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                  $
+                  {targetAmount.toLocaleString("en-CA", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  })}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   = {targetMonths} {targetMonths === 1 ? "month" : "months"} of expenses
@@ -78,7 +82,12 @@ export function EmergencyFundStrategyCard() {
               </>
             )}
             <Link href="/emergency-fund">
-              <Button variant="outline" size="sm" className="mt-3" data-testid="button-edit-ef-target">
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                data-testid="button-edit-ef-target"
+              >
                 {targetAmount !== null ? "Edit Target" : "Set Target"}
               </Button>
             </Link>
@@ -102,7 +111,9 @@ export function EmergencyFundStrategyCard() {
               onChange={(e) => setMonthlyContribution(e.target.value)}
               data-testid="input-ef-contribution"
             />
-            <p className="text-sm text-muted-foreground">How much to contribute each month until target is reached</p>
+            <p className="text-sm text-muted-foreground">
+              How much to contribute each month until target is reached
+            </p>
           </div>
 
           <Separator />
@@ -132,12 +143,15 @@ export function EmergencyFundStrategyCard() {
               <p className="text-sm font-medium mb-2">Timeline Estimate</p>
               {timelineMonths !== null ? (
                 <p className="text-sm text-muted-foreground">
-                  At ${parseFloat(monthlyContribution || "0").toLocaleString("en-CA")}/month contribution, emergency fund will be fully funded in{" "}
+                  At ${parseFloat(monthlyContribution || "0").toLocaleString("en-CA")}/month
+                  contribution, emergency fund will be fully funded in{" "}
                   <span className="font-mono font-semibold">
-                    {timelineMonths} {timelineMonths === 1 ? "month" : "months"} ({Math.round(timelineMonths / 12 * 10) / 10} years)
+                    {timelineMonths} {timelineMonths === 1 ? "month" : "months"} (
+                    {Math.round((timelineMonths / 12) * 10) / 10} years)
                   </span>
-                  . After that, this ${parseFloat(monthlyContribution || "0").toLocaleString("en-CA")}/month will
-                  be redirected according to your selection above.
+                  . After that, this $
+                  {parseFloat(monthlyContribution || "0").toLocaleString("en-CA")}/month will be
+                  redirected according to your selection above.
                 </p>
               ) : (
                 <p className="text-sm text-muted-foreground">
@@ -151,4 +165,3 @@ export function EmergencyFundStrategyCard() {
     </>
   );
 }
-

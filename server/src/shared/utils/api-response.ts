@@ -5,14 +5,9 @@ import { sanitizeError } from "./error-sanitizer";
  * Standardized API error response helper
  * Ensures all error responses follow the same format across all routes
  */
-export function sendError(
-  res: Response,
-  status: number,
-  message: string,
-  error?: unknown,
-): void {
+export function sendError(res: Response, status: number, message: string, error?: unknown): void {
   const isDevelopment = process.env.NODE_ENV === "development";
-  
+
   if (error) {
     const sanitized = sanitizeError(error, isDevelopment);
     const response: { error: string; details?: unknown } = {
@@ -34,4 +29,3 @@ export function sendError(
 export function sendSuccess<T>(res: Response, data: T, status = 200): void {
   res.status(status).json(data);
 }
-

@@ -24,7 +24,7 @@ export function useEditTermFormState({
     currentTerm,
     primeRateData,
   });
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -33,8 +33,8 @@ export function useEditTermFormState({
       return mortgageApi.updateTerm(termId, updates);
     },
     onSuccess: async () => {
-      await queryClient.refetchQueries({ 
-        queryKey: mortgageQueryKeys.mortgageTerms(currentTerm?.mortgageId ?? null) 
+      await queryClient.refetchQueries({
+        queryKey: mortgageQueryKeys.mortgageTerms(currentTerm?.mortgageId ?? null),
       });
       toast({
         title: "Term updated",
@@ -91,4 +91,3 @@ export function useEditTermFormState({
     isValid: form.formState.isValid,
   };
 }
-

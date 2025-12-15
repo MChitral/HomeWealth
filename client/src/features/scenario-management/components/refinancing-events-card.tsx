@@ -5,21 +5,9 @@ import { Badge } from "@/shared/ui/badge";
 import { Plus, Edit2, Trash2 } from "lucide-react";
 import type { DraftRefinancingEvent } from "../hooks/use-scenario-editor-state";
 import { FormProvider, useFormContext } from "react-hook-form";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/shared/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/shared/ui/form";
 import { Input } from "@/shared/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group";
 import type { UseFormReturn } from "react-hook-form";
 import type { RefinancingEventFormData } from "../hooks/use-refinancing-event-form";
@@ -61,13 +49,19 @@ function RefinancingEventFormFields() {
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="by-year" id="timing-year" />
-                  <label htmlFor="timing-year" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  <label
+                    htmlFor="timing-year"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
                     By Year (from mortgage start)
                   </label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="at-term-end" id="timing-term-end" />
-                  <label htmlFor="timing-term-end" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  <label
+                    htmlFor="timing-term-end"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
                     At Term End
                   </label>
                 </div>
@@ -273,7 +267,12 @@ export function RefinancingEventsCard({
             <CardTitle>Refinancing Events</CardTitle>
             <CardDescription>Model refinancing scenarios at renewal points</CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={onStartAddingEvent} data-testid="button-add-refinancing-event">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onStartAddingEvent}
+            data-testid="button-add-refinancing-event"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Event
           </Button>
@@ -284,7 +283,8 @@ export function RefinancingEventsCard({
         {refinancingEvents.length === 0 && !isAddingEvent && (
           <Alert>
             <AlertDescription>
-              No refinancing events configured. Add refinancing scenarios to model rate changes, term type changes, or amortization extensions at renewal points.
+              No refinancing events configured. Add refinancing scenarios to model rate changes,
+              term type changes, or amortization extensions at renewal points.
             </AlertDescription>
           </Alert>
         )}
@@ -309,7 +309,9 @@ export function RefinancingEventsCard({
                   {event.atTermEnd ? (
                     <p className="text-sm text-muted-foreground">At term end</p>
                   ) : event.refinancingYear ? (
-                    <p className="text-sm text-muted-foreground">Year {event.refinancingYear} from mortgage start</p>
+                    <p className="text-sm text-muted-foreground">
+                      Year {event.refinancingYear} from mortgage start
+                    </p>
                   ) : null}
                   {event.newAmortizationMonths && (
                     <p className="text-sm text-muted-foreground">
@@ -324,7 +326,12 @@ export function RefinancingEventsCard({
                   {event.description && <p className="text-sm mt-1">{event.description}</p>}
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="ghost" size="icon" onClick={() => onEditEvent(event)} data-testid={`button-edit-${event.id}`}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onEditEvent(event)}
+                    data-testid={`button-edit-${event.id}`}
+                  >
                     <Edit2 className="h-4 w-4" />
                   </Button>
                   <Button
@@ -357,7 +364,12 @@ export function RefinancingEventsCard({
                     <Button type="submit" data-testid="button-save-refinancing-event">
                       {editingEvent ? "Update Event" : "Add Event"}
                     </Button>
-                    <Button type="button" variant="outline" onClick={onCancelEvent} data-testid="button-cancel-refinancing-event">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={onCancelEvent}
+                      data-testid="button-cancel-refinancing-event"
+                    >
                       Cancel
                     </Button>
                   </div>
@@ -370,4 +382,3 @@ export function RefinancingEventsCard({
     </Card>
   );
 }
-

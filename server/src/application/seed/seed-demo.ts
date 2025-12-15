@@ -108,4 +108,3 @@ export async function seedDemoData(repositories: Repositories) {
     throw error;
   }
 }
-

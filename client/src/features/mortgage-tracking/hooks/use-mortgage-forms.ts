@@ -11,19 +11,19 @@ interface UseMortgageFormsProps {
   isCreateMortgageOpen: boolean;
   isEditMortgageOpen: boolean;
   isTermRenewalOpen: boolean;
-  
+
   // Data
   mortgage: Mortgage | null;
   primeRateData?: PrimeRateResponse;
   primeRate: string;
   setPrimeRate: (rate: string) => void;
-  
+
   // Handlers
   setSelectedMortgageId: (id: string) => void;
   setIsCreateMortgageOpen: (open: boolean) => void;
   setIsEditMortgageOpen: (open: boolean) => void;
   setIsTermRenewalOpen: (open: boolean) => void;
-  
+
   // For term renewal form
   paymentHistory?: UiPayment[];
   lastKnownBalance?: number;
@@ -134,4 +134,3 @@ export function useMortgageForms({
     firstTermFormState,
   };
 }
-

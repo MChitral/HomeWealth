@@ -18,7 +18,7 @@ export function useScenarioListState() {
         title: "Error deleting scenario",
         description: "Please try again.",
         variant: "destructive",
-      }),
+      })
   );
 
   const handleDelete = (scenarioId: string) => {
@@ -49,4 +49,3 @@ export function useScenarioListState() {
     deleteScenario,
   };
 }
-

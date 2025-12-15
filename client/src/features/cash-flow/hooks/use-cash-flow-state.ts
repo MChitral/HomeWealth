@@ -50,24 +50,36 @@ export function useCashFlowState({ cashFlow }: UseCashFlowStateProps) {
   useEffect(() => {
     if (!cashFlow) return;
 
-    setMonthlyIncome(cashFlow.monthlyIncome != null ? Number(cashFlow.monthlyIncome) : DEFAULTS.monthlyIncome);
+    setMonthlyIncome(
+      cashFlow.monthlyIncome != null ? Number(cashFlow.monthlyIncome) : DEFAULTS.monthlyIncome
+    );
     setExtraPaycheques(cashFlow.extraPaycheques ?? DEFAULTS.extraPaycheques);
-    setAnnualBonus(cashFlow.annualBonus != null ? Number(cashFlow.annualBonus) : DEFAULTS.annualBonus);
+    setAnnualBonus(
+      cashFlow.annualBonus != null ? Number(cashFlow.annualBonus) : DEFAULTS.annualBonus
+    );
 
-    setPropertyTax(cashFlow.propertyTax != null ? Number(cashFlow.propertyTax) : DEFAULTS.propertyTax);
-    setInsurance(cashFlow.homeInsurance != null ? Number(cashFlow.homeInsurance) : DEFAULTS.insurance);
+    setPropertyTax(
+      cashFlow.propertyTax != null ? Number(cashFlow.propertyTax) : DEFAULTS.propertyTax
+    );
+    setInsurance(
+      cashFlow.homeInsurance != null ? Number(cashFlow.homeInsurance) : DEFAULTS.insurance
+    );
     setCondoFees(cashFlow.condoFees != null ? Number(cashFlow.condoFees) : DEFAULTS.condoFees);
     setUtilities(cashFlow.utilities != null ? Number(cashFlow.utilities) : DEFAULTS.utilities);
 
     setGroceries(cashFlow.groceries != null ? Number(cashFlow.groceries) : DEFAULTS.groceries);
     setDining(cashFlow.dining != null ? Number(cashFlow.dining) : DEFAULTS.dining);
     setTransportation(
-      cashFlow.transportation != null ? Number(cashFlow.transportation) : DEFAULTS.transportation,
+      cashFlow.transportation != null ? Number(cashFlow.transportation) : DEFAULTS.transportation
     );
-    setEntertainment(cashFlow.entertainment != null ? Number(cashFlow.entertainment) : DEFAULTS.entertainment);
+    setEntertainment(
+      cashFlow.entertainment != null ? Number(cashFlow.entertainment) : DEFAULTS.entertainment
+    );
 
     setCarLoan(cashFlow.carLoan != null ? Number(cashFlow.carLoan) : DEFAULTS.carLoan);
-    setStudentLoan(cashFlow.studentLoan != null ? Number(cashFlow.studentLoan) : DEFAULTS.studentLoan);
+    setStudentLoan(
+      cashFlow.studentLoan != null ? Number(cashFlow.studentLoan) : DEFAULTS.studentLoan
+    );
     setCreditCard(cashFlow.creditCard != null ? Number(cashFlow.creditCard) : DEFAULTS.creditCard);
   }, [cashFlow]);
 
@@ -153,4 +165,3 @@ export function useCashFlowState({ cashFlow }: UseCashFlowStateProps) {
     saveMutation,
   };
 }
-

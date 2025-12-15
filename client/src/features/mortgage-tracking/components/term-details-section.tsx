@@ -120,9 +120,11 @@ export function TermDetailsSection({
           <div>
             <p className="text-sm text-muted-foreground mb-1">Term Type</p>
             <p className="text-base font-medium">
-              {currentTerm.termType === "fixed" ? "Fixed Rate" :
-               currentTerm.termType === "variable-changing" ? "Variable (Changing Payment)" :
-               "Variable (Fixed Payment)"}
+              {currentTerm.termType === "fixed"
+                ? "Fixed Rate"
+                : currentTerm.termType === "variable-changing"
+                  ? "Variable (Changing Payment)"
+                  : "Variable (Fixed Payment)"}
             </p>
             <Badge variant="outline" className="mt-2">
               {currentTerm.termType === "fixed" && "Fixed"}
@@ -143,7 +145,8 @@ export function TermDetailsSection({
             <p className="text-xs text-muted-foreground mt-1">
               {currentTerm.paymentFrequency === "monthly" && "12 payments/year"}
               {currentTerm.paymentFrequency === "biweekly" && "26 payments/year"}
-              {currentTerm.paymentFrequency === "accelerated-biweekly" && "26 payments/year + extra"}
+              {currentTerm.paymentFrequency === "accelerated-biweekly" &&
+                "26 payments/year + extra"}
               {currentTerm.paymentFrequency === "semi-monthly" && "24 payments/year"}
               {currentTerm.paymentFrequency === "weekly" && "52 payments/year"}
               {currentTerm.paymentFrequency === "accelerated-weekly" && "52 payments/year + extra"}
@@ -152,18 +155,20 @@ export function TermDetailsSection({
           <div>
             <p className="text-sm text-muted-foreground mb-1">Regular Payment</p>
             <p className="text-base font-medium font-mono" data-testid="text-regular-payment">
-              ${currentTerm.regularPaymentAmount ? Number(currentTerm.regularPaymentAmount).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+              $
+              {currentTerm.regularPaymentAmount
+                ? Number(currentTerm.regularPaymentAmount).toLocaleString("en-CA", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })
+                : "0.00"}
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Principal & Interest
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Principal & Interest</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground mb-1">Term Duration</p>
             <p className="text-base font-medium">{currentTerm.termYears} years</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Ends {currentTerm.endDate}
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Ends {currentTerm.endDate}</p>
             <p className="text-xs text-muted-foreground">{monthsRemainingInTerm} months left</p>
           </div>
           <div>
@@ -173,12 +178,11 @@ export function TermDetailsSection({
             <p className="text-base font-medium font-mono">
               {currentTerm.termType === "fixed"
                 ? `${currentTerm.fixedRate}%`
-                : `Prime ${currentTerm.lockedSpread >= 0 ? '+' : ''}${currentTerm.lockedSpread}%`
-              }
+                : `Prime ${currentTerm.lockedSpread >= 0 ? "+" : ""}${currentTerm.lockedSpread}%`}
             </p>
             {/* Debug: Log stored spread value */}
             {currentTerm.termType !== "fixed" && (
-              <p className="text-xs text-muted-foreground mt-1" style={{ display: 'none' }}>
+              <p className="text-xs text-muted-foreground mt-1" style={{ display: "none" }}>
                 Stored Spread: {currentTerm.lockedSpread}%
               </p>
             )}
@@ -197,7 +201,9 @@ export function TermDetailsSection({
                 <p className="text-2xl font-mono font-bold">{summaryStats.currentRate}%</p>
                 {/* Debug info - shows calculation */}
                 <p className="text-xs text-muted-foreground mt-1">
-                  Prime {summaryStats.currentPrimeRate}% + Spread {currentTerm.lockedSpread >= 0 ? '+' : ''}{currentTerm.lockedSpread}%
+                  Prime {summaryStats.currentPrimeRate}% + Spread{" "}
+                  {currentTerm.lockedSpread >= 0 ? "+" : ""}
+                  {currentTerm.lockedSpread}%
                 </p>
               </div>
             </div>
@@ -207,4 +213,3 @@ export function TermDetailsSection({
     </Card>
   );
 }
-

@@ -8,4 +8,3 @@ export type MortgagePaymentEntity = MortgagePayment;
 export type MortgagePaymentCreateInput = InsertMortgagePayment;
 
 export const mortgagePaymentCreateSchema = insertMortgagePaymentSchema;
-

@@ -28,7 +28,7 @@ export class MortgagePaymentService {
   constructor(
     private readonly mortgages: MortgagesRepository,
     private readonly mortgageTerms: MortgageTermsRepository,
-    private readonly mortgagePayments: MortgagePaymentsRepository,
+    private readonly mortgagePayments: MortgagePaymentsRepository
   ) {}
 
   private async authorizeMortgage(mortgageId: string, userId: string) {
@@ -69,7 +69,7 @@ export class MortgagePaymentService {
       return undefined;
     }
     return payments.sort(
-      (a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime(),
+      (a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime()
     )[0];
   }
 
@@ -80,11 +80,7 @@ export class MortgagePaymentService {
       .reduce((sum, payment) => sum + Number(payment.prepaymentAmount || 0), 0);
   }
 
-  private validatePaymentDate(
-    mortgage: Mortgage,
-    term: MortgageTerm,
-    paymentDate: string,
-  ): void {
+  private validatePaymentDate(mortgage: Mortgage, term: MortgageTerm, paymentDate: string): void {
     const date = new Date(paymentDate);
     const today = new Date();
     today.setHours(23, 59, 59, 999); // End of today
@@ -97,7 +93,9 @@ export class MortgagePaymentService {
     // Payment date should not be before mortgage start date
     const mortgageStartDate = new Date(mortgage.startDate);
     if (date < mortgageStartDate) {
-      throw new Error(`Payment date cannot be before mortgage start date (${mortgageStartDate.toISOString().split('T')[0]})`);
+      throw new Error(
+        `Payment date cannot be before mortgage start date (${mortgageStartDate.toISOString().split("T")[0]})`
+      );
     }
 
     // Payment date should be within term dates
@@ -105,26 +103,26 @@ export class MortgagePaymentService {
     const termEndDate = new Date(term.endDate);
     if (date < termStartDate || date > termEndDate) {
       throw new Error(
-        `Payment date must be within term period (${termStartDate.toISOString().split('T')[0]} to ${termEndDate.toISOString().split('T')[0]})`
+        `Payment date must be within term period (${termStartDate.toISOString().split("T")[0]} to ${termEndDate.toISOString().split("T")[0]})`
       );
     }
   }
 
   /**
    * Enforce annual prepayment limit
-   * 
+   *
    * **Prepayment Limit Method:**
    * - Uses original mortgage amount (not current balance) as the base
    * - This matches the convention used by major Canadian lenders
    * - Limit resets each calendar year (January 1st)
-   * 
+   *
    * @throws PrepaymentLimitError if limit is exceeded
    */
   private enforcePrepaymentLimit(
     mortgage: Mortgage,
     paymentDate: string,
     prepaymentAmount: number,
-    yearToDate: number,
+    yearToDate: number
   ) {
     const annualLimitPercent = mortgage.annualPrepaymentLimitPercent ?? 20;
     const originalAmount = Number(mortgage.originalAmount);
@@ -132,14 +130,14 @@ export class MortgagePaymentService {
       prepaymentAmount,
       yearToDate,
       originalAmount,
-      annualLimitPercent,
+      annualLimitPercent
     );
     if (!withinLimit) {
       const maxAnnual = (originalAmount * annualLimitPercent) / 100;
       throw new PrepaymentLimitError(
         `Annual prepayment limit exceeded. Max ${annualLimitPercent}% of original balance ($${maxAnnual.toFixed(
-          2,
-        )}) has already been used.`,
+          2
+        )}) has already been used.`
       );
     }
   }
@@ -148,7 +146,7 @@ export class MortgagePaymentService {
     mortgage: Mortgage,
     term: MortgageTerm,
     payload: Omit<MortgagePaymentCreateInput, "mortgageId">,
-    previousPayment?: MortgagePayment,
+    previousPayment?: MortgagePayment
   ) {
     const paymentAmount = Number(payload.paymentAmount);
     const regularPaymentAmount = Number(payload.regularPaymentAmount);
@@ -156,9 +154,7 @@ export class MortgagePaymentService {
 
     // Use effectiveRate from payload if provided (for historical/backfilled payments)
     // This allows validation to use historical rates instead of term's current rate
-    const effectiveRateOverride = payload.effectiveRate
-      ? Number(payload.effectiveRate)
-      : undefined;
+    const effectiveRateOverride = payload.effectiveRate ? Number(payload.effectiveRate) : undefined;
 
     const validation = validateMortgagePayment({
       mortgage,
@@ -181,16 +177,17 @@ export class MortgagePaymentService {
       // Use effectiveRate from payload if provided (for historical/backfilled payments),
       // otherwise calculate from term's current rate
       // Payload rate is already in percentage format (e.g., "5.490"), so use as-is
-      effectiveRate: effectiveRateOverride !== undefined
-        ? effectiveRateOverride.toFixed(3)
-        : (getTermEffectiveRate(term) * 100).toFixed(3),
+      effectiveRate:
+        effectiveRateOverride !== undefined
+          ? effectiveRateOverride.toFixed(3)
+          : (getTermEffectiveRate(term) * 100).toFixed(3),
     };
   }
 
   async create(
     mortgageId: string,
     userId: string,
-    payload: Omit<MortgagePaymentCreateInput, "mortgageId">,
+    payload: Omit<MortgagePaymentCreateInput, "mortgageId">
   ): Promise<MortgagePayment | undefined> {
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
     if (!mortgage) {
@@ -207,17 +204,18 @@ export class MortgagePaymentService {
     // Adjust payment date to business day if it falls on weekend/holiday
     const paymentDateObj = new Date(payload.paymentDate);
     const adjustedDate = adjustToBusinessDay(paymentDateObj);
-    const adjustedPaymentDate = adjustedDate.toISOString().split('T')[0];
-    const finalPaymentDate = adjustedDate.getTime() !== paymentDateObj.getTime()
-      ? adjustedPaymentDate
-      : payload.paymentDate;
+    const adjustedPaymentDate = adjustedDate.toISOString().split("T")[0];
+    const finalPaymentDate =
+      adjustedDate.getTime() !== paymentDateObj.getTime()
+        ? adjustedPaymentDate
+        : payload.paymentDate;
 
     const previousPayment = await this.getPreviousPayment(payload.termId);
     const normalizedPayload = this.validateAndNormalizePayment(
       mortgage,
       term,
       { ...payload, paymentDate: finalPaymentDate },
-      previousPayment,
+      previousPayment
     );
     const paymentYear = new Date(finalPaymentDate).getFullYear();
     const yearToDate = await this.getYearToDatePrepayments(mortgageId, paymentYear);
@@ -225,7 +223,7 @@ export class MortgagePaymentService {
       mortgage,
       finalPaymentDate,
       Number(normalizedPayload.prepaymentAmount || 0),
-      yearToDate,
+      yearToDate
     );
     return this.mortgagePayments.create({
       ...normalizedPayload,
@@ -237,7 +235,7 @@ export class MortgagePaymentService {
   async createBulk(
     mortgageId: string,
     userId: string,
-    payments: Array<Omit<MortgagePaymentCreateInput, "mortgageId">>,
+    payments: Array<Omit<MortgagePaymentCreateInput, "mortgageId">>
   ): Promise<{ created: number; payments: MortgagePayment[] }> {
     // Authorize mortgage first
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
@@ -248,14 +246,15 @@ export class MortgagePaymentService {
     // Sort payments by date to ensure chronological processing
     // This ensures each payment can reference the previous payment in the batch
     const sortedPayments = [...payments].sort(
-      (a, b) => new Date(a.paymentDate).getTime() - new Date(b.paymentDate).getTime(),
+      (a, b) => new Date(a.paymentDate).getTime() - new Date(b.paymentDate).getTime()
     );
 
     // Get the latest existing payment once (before processing batch)
     // This will be used as the previous payment for the first payment in the batch
-    const latestExistingPayment = sortedPayments.length > 0
-      ? await this.getPreviousPayment(sortedPayments[0].termId)
-      : undefined;
+    const latestExistingPayment =
+      sortedPayments.length > 0
+        ? await this.getPreviousPayment(sortedPayments[0].termId)
+        : undefined;
 
     // Validate all payments BEFORE creating any (fail fast)
     // Track cumulative prepayments by year to properly enforce limits within the batch
@@ -282,10 +281,11 @@ export class MortgagePaymentService {
       // Adjust payment date to business day if it falls on weekend/holiday
       const paymentDateObj = new Date(payload.paymentDate);
       const adjustedDate = adjustToBusinessDay(paymentDateObj);
-      const adjustedPaymentDate = adjustedDate.toISOString().split('T')[0];
-      const finalPaymentDate = adjustedDate.getTime() !== paymentDateObj.getTime()
-        ? adjustedPaymentDate
-        : payload.paymentDate;
+      const adjustedPaymentDate = adjustedDate.toISOString().split("T")[0];
+      const finalPaymentDate =
+        adjustedDate.getTime() !== paymentDateObj.getTime()
+          ? adjustedPaymentDate
+          : payload.paymentDate;
 
       // Use previous payment from batch if available, otherwise from database
       // This ensures correct balance calculation for each payment in the batch
@@ -296,7 +296,7 @@ export class MortgagePaymentService {
         mortgage,
         term,
         { ...payload, paymentDate: finalPaymentDate },
-        previousPayment,
+        previousPayment
       );
 
       // Create a mock payment object for the next iteration
@@ -306,9 +306,9 @@ export class MortgagePaymentService {
         mortgageId,
         termId: payload.termId,
         paymentDate: finalPaymentDate, // Use adjusted date
-        paymentPeriodLabel: payload.paymentPeriodLabel || '',
+        paymentPeriodLabel: payload.paymentPeriodLabel || "",
         regularPaymentAmount: normalized.regularPaymentAmount,
-        prepaymentAmount: normalized.prepaymentAmount || '0',
+        prepaymentAmount: normalized.prepaymentAmount || "0",
         paymentAmount: normalized.paymentAmount,
         principalPaid: normalized.principalPaid,
         interestPaid: normalized.interestPaid,
@@ -328,23 +328,26 @@ export class MortgagePaymentService {
       // This ensures that if a date is adjusted (e.g., Dec 31 holiday → Jan 1),
       // the prepayment limit is calculated for the correct year
       const adjustedPaymentYear = new Date(finalPaymentDate).getFullYear();
-      const existingYearToDate = await this.getYearToDatePrepayments(mortgageId, adjustedPaymentYear);
+      const existingYearToDate = await this.getYearToDatePrepayments(
+        mortgageId,
+        adjustedPaymentYear
+      );
       const batchYearToDate = yearToDatePrepayments.get(adjustedPaymentYear) || 0;
       const totalYearToDate = existingYearToDate + batchYearToDate;
-      
+
       const prepaymentAmount = Number(normalized.prepaymentAmount || 0);
       this.enforcePrepaymentLimit(
         mortgage,
         finalPaymentDate, // Use adjusted date for limit calculation
         prepaymentAmount,
-        totalYearToDate,
+        totalYearToDate
       );
 
       // Update cumulative prepayments for this year in the batch (use adjusted year)
       yearToDatePrepayments.set(adjustedPaymentYear, batchYearToDate + prepaymentAmount);
 
-      validatedPayments.push({ 
-        payload, 
+      validatedPayments.push({
+        payload,
         normalized,
         adjustedPaymentDate: finalPaymentDate,
       });
@@ -361,7 +364,7 @@ export class MortgagePaymentService {
             paymentDate: adjustedPaymentDate, // Use adjusted date from array
             mortgageId,
           },
-          tx,
+          tx
         );
         created.push(payment);
       }
@@ -387,13 +390,13 @@ export class MortgagePaymentService {
 
   /**
    * Skip a payment (with interest accrual)
-   * 
+   *
    * **Canadian Mortgage Rule:**
    * - Interest accrues during skipped period
    * - Balance increases (negative amortization)
    * - Amortization extends
    * - Limited to 1-2 per calendar year (lender dependent)
-   * 
+   *
    * @param mortgageId - Mortgage ID
    * @param termId - Term ID
    * @param userId - User ID
@@ -429,7 +432,7 @@ export class MortgagePaymentService {
 
     const currentAmortizationMonths = previousPayment
       ? Number(previousPayment.remainingAmortizationMonths)
-      : (mortgage.amortizationYears * 12) + (mortgage.amortizationMonths ?? 0);
+      : mortgage.amortizationYears * 12 + (mortgage.amortizationMonths ?? 0);
 
     // Check skip limit for the year
     const payments = await this.mortgagePayments.findByTermId(termId);
@@ -465,7 +468,7 @@ export class MortgagePaymentService {
     return this.mortgagePayments.create({
       termId,
       paymentDate,
-      paymentPeriodLabel: `Skipped Payment - ${new Date(paymentDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`,
+      paymentPeriodLabel: `Skipped Payment - ${new Date(paymentDate).toLocaleDateString("en-US", { month: "long", year: "numeric" })}`,
       regularPaymentAmount: regularPaymentAmount.toFixed(2),
       prepaymentAmount: "0.00",
       paymentAmount: "0.00", // No payment made
@@ -482,4 +485,3 @@ export class MortgagePaymentService {
     });
   }
 }
-

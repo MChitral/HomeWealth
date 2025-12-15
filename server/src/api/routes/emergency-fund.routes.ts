@@ -44,4 +44,3 @@ export function registerEmergencyFundRoutes(router: Router, services: Applicatio
     }
   });
 }
-

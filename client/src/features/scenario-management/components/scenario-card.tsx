@@ -1,4 +1,11 @@
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import { Edit, GitCompare, Trash2 } from "lucide-react";
 
@@ -49,12 +56,22 @@ export function ScenarioCard({
           <Edit className="h-4 w-4 mr-1" />
           Edit
         </Button>
-        <Button variant="outline" size="sm" onClick={onCompare} data-testid={`button-compare-${id}`}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onCompare}
+          data-testid={`button-compare-${id}`}
+        >
           <GitCompare className="h-4 w-4 mr-1" />
           Compare
         </Button>
         {onDelete && (
-          <Button variant="outline" size="sm" onClick={onDelete} data-testid={`button-delete-${id}`}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onDelete}
+            data-testid={`button-delete-${id}`}
+          >
             <Trash2 className="h-4 w-4 mr-1" />
             Delete
           </Button>

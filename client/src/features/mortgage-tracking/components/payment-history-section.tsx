@@ -2,14 +2,7 @@ import { useState } from "react";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Label } from "@/shared/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/shared/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { Badge } from "@/shared/ui/badge";
 import {
@@ -34,11 +27,24 @@ function formatPaymentPeriod(date: string, existingLabel?: string | null): strin
   if (existingLabel && existingLabel.trim()) {
     return existingLabel;
   }
-  
+
   // Generate month-year from payment date
   try {
     const paymentDate = new Date(date);
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
     const month = monthNames[paymentDate.getMonth()];
     const year = paymentDate.getFullYear();
     return `${month}-${year}`;
@@ -84,7 +90,11 @@ export function PaymentHistorySection({
               Filter by year:
             </Label>
             <Select value={filterYear} onValueChange={onFilterYearChange}>
-              <SelectTrigger className="w-[140px]" id="year-filter" data-testid="select-year-filter">
+              <SelectTrigger
+                className="w-[140px]"
+                id="year-filter"
+                data-testid="select-year-filter"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -128,11 +138,17 @@ export function PaymentHistorySection({
                 </TableRow>
               ) : (
                 filteredPayments.map((payment) => (
-                  <TableRow key={payment.id} data-testid={`row-payment-${payment.id}`} className={payment.triggerHit ? "bg-destructive/10" : ""}>
+                  <TableRow
+                    key={payment.id}
+                    data-testid={`row-payment-${payment.id}`}
+                    className={payment.triggerHit ? "bg-destructive/10" : ""}
+                  >
                     <TableCell className="font-medium">
                       {payment.date}
                       {payment.triggerHit && (
-                        <Badge variant="destructive" className="ml-2 text-xs">Trigger</Badge>
+                        <Badge variant="destructive" className="ml-2 text-xs">
+                          Trigger
+                        </Badge>
                       )}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground max-w-[120px] truncate">
@@ -142,15 +158,21 @@ export function PaymentHistorySection({
                       {payment.primeRate ? `${payment.primeRate}%` : "-"}
                     </TableCell>
                     <TableCell className="text-right font-mono text-sm">
-                      {payment.termSpread !== undefined ? `${payment.termSpread >= 0 ? '+' : ''}${payment.termSpread}%` : "-"}
+                      {payment.termSpread !== undefined
+                        ? `${payment.termSpread >= 0 ? "+" : ""}${payment.termSpread}%`
+                        : "-"}
                     </TableCell>
-                    <TableCell className="text-right font-mono text-sm">{payment.effectiveRate}%</TableCell>
+                    <TableCell className="text-right font-mono text-sm">
+                      {payment.effectiveRate}%
+                    </TableCell>
                     <TableCell className="text-right font-mono text-sm">
                       ${payment.regularPaymentAmount.toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right font-mono text-sm">
                       {payment.prepaymentAmount > 0 ? (
-                        <span className="text-primary font-medium">+${payment.prepaymentAmount.toLocaleString()}</span>
+                        <span className="text-primary font-medium">
+                          +${payment.prepaymentAmount.toLocaleString()}
+                        </span>
                       ) : (
                         <span className="text-muted-foreground">-</span>
                       )}
@@ -189,13 +211,16 @@ export function PaymentHistorySection({
           </Table>
         </div>
 
-        <AlertDialog open={!!paymentToDelete} onOpenChange={(open) => !open && setPaymentToDelete(null)}>
+        <AlertDialog
+          open={!!paymentToDelete}
+          onOpenChange={(open) => !open && setPaymentToDelete(null)}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Payment</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete this payment from {paymentToDelete?.date}?
-                This action cannot be undone.
+                Are you sure you want to delete this payment from {paymentToDelete?.date}? This
+                action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -214,4 +239,3 @@ export function PaymentHistorySection({
     </Card>
   );
 }
-

@@ -93,11 +93,12 @@ export function VariableExpensesSection({
         <div className="space-y-2">
           <Label htmlFor="total-variable">Total Variable Expenses</Label>
           <div className="p-4 bg-muted/50 rounded-md">
-            <p className="text-2xl font-mono font-bold">${variableExpenses.toLocaleString()}/month</p>
+            <p className="text-2xl font-mono font-bold">
+              ${variableExpenses.toLocaleString()}/month
+            </p>
           </div>
         </div>
       </CardContent>
     </Card>
   );
 }
-

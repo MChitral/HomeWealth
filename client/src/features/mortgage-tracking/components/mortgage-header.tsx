@@ -63,7 +63,7 @@ export function MortgageHeader({
               <Plus className="h-4 w-4 mr-2" />
               Log Payment
             </Button>
-            
+
             <Button
               variant="outline"
               data-testid="button-backfill-payments"
@@ -73,16 +73,12 @@ export function MortgageHeader({
               <History className="h-4 w-4 mr-2" />
               Backfill
             </Button>
-            
-            <Button
-              variant="outline"
-              data-testid="button-edit-mortgage"
-              onClick={onEditMortgage}
-            >
+
+            <Button variant="outline" data-testid="button-edit-mortgage" onClick={onEditMortgage}>
               <Pencil className="h-4 w-4 mr-2" />
               Edit
             </Button>
-            
+
             <Button
               variant="ghost"
               data-testid="button-export"
@@ -92,7 +88,7 @@ export function MortgageHeader({
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
-            
+
             {actionsExtra}
           </div>
         )}

@@ -9,6 +9,7 @@ import { PrepaymentEventService } from "./prepayment-event.service";
 import { RefinancingEventService } from "./refinancing-event.service";
 import { ScenarioProjectionService } from "./scenario-projection.service";
 import { PrimeRateTrackingService } from "./prime-rate-tracking.service";
+import { TriggerRateMonitor } from "./trigger-rate-monitor";
 
 export interface ApplicationServices {
   cashFlows: CashFlowService;
@@ -21,6 +22,7 @@ export interface ApplicationServices {
   refinancingEvents: RefinancingEventService;
   scenarioProjections: ScenarioProjectionService;
   primeRateTracking: PrimeRateTrackingService;
+  triggerRateMonitor: TriggerRateMonitor;
 }
 
 export function createServices(repositories: Repositories): ApplicationServices {
@@ -30,37 +32,42 @@ export function createServices(repositories: Repositories): ApplicationServices 
     mortgages: new MortgageService(
       repositories.mortgages,
       repositories.mortgageTerms,
-      repositories.mortgagePayments,
+      repositories.mortgagePayments
     ),
     mortgageTerms: new MortgageTermService(
       repositories.mortgages,
       repositories.mortgageTerms,
-      repositories.mortgagePayments,
+      repositories.mortgagePayments
     ),
     mortgagePayments: new MortgagePaymentService(
       repositories.mortgages,
       repositories.mortgageTerms,
-      repositories.mortgagePayments,
+      repositories.mortgagePayments
     ),
     scenarios: new ScenarioService(repositories.scenarios, repositories.prepaymentEvents),
     prepaymentEvents: new PrepaymentEventService(
       repositories.prepaymentEvents,
-      repositories.scenarios,
+      repositories.scenarios
     ),
     refinancingEvents: new RefinancingEventService(
       repositories.refinancingEvents,
-      repositories.scenarios,
+      repositories.scenarios
     ),
     scenarioProjections: new ScenarioProjectionService(
       repositories.mortgages,
       repositories.mortgageTerms,
       repositories.cashFlows,
-      repositories.emergencyFunds,
+      repositories.emergencyFunds
     ),
     primeRateTracking: new PrimeRateTrackingService(
       repositories.primeRateHistory,
       repositories.mortgageTerms,
+      repositories.mortgages
+    ),
+    triggerRateMonitor: new TriggerRateMonitor(
       repositories.mortgages,
+      repositories.mortgageTerms,
+      repositories.mortgagePayments
     ),
   };
 }
@@ -75,4 +82,4 @@ export * from "./prepayment-event.service";
 export * from "./refinancing-event.service";
 export * from "./scenario-projection.service";
 export * from "./prime-rate-tracking.service";
-
+export * from "./trigger-rate-monitor";

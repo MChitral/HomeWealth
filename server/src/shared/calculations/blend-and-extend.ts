@@ -1,18 +1,18 @@
 /**
  * Blend-and-Extend Renewal Calculations
- * 
+ *
  * **Canadian Mortgage Rule:**
  * Blend-and-extend is a renewal option where:
  * 1. The new rate is "blended" between the old rate and current market rate
  * 2. The amortization period can be extended (e.g., 20 years remaining → 25 years)
  * 3. This helps borrowers lower payments by extending the term
- * 
+ *
  * **Blended Rate Calculation:**
  * The blended rate is a weighted average based on:
  * - Remaining balance at renewal
  * - Time remaining in old term
  * - Current market rate
- * 
+ *
  * Formula: blendedRate = (oldRate × oldBalance + newRate × newBalance) / totalBalance
  * Where newBalance is the amount that would be at the new rate
  */
@@ -53,16 +53,16 @@ export interface BlendAndExtendResult {
 
 /**
  * Calculate blended rate for blend-and-extend renewal
- * 
+ *
  * **Blended Rate Formula:**
  * The rate is weighted by the remaining balance and time:
  * - Old rate applies to remaining balance for remaining term
  * - New rate applies to the balance going forward
- * 
+ *
  * Simplified approach (most lenders use):
  * blendedRate = oldRate × weight + newMarketRate × (1 - weight)
  * where weight = remainingTermMonths / (remainingTermMonths + newTermMonths)
- * 
+ *
  * @param oldRate - Current rate from expiring term
  * @param newMarketRate - Current market rate for new term
  * @param remainingTermMonths - Months remaining in old term
@@ -82,7 +82,7 @@ export function calculateBlendedRate(
   const newWeight = 1 - oldWeight;
 
   // Blended rate is weighted average
-  const blendedRate = (oldRate * oldWeight) + (newMarketRate * newWeight);
+  const blendedRate = oldRate * oldWeight + newMarketRate * newWeight;
 
   // Round to 3 decimal places (standard rate precision)
   return Math.round(blendedRate * 1000) / 1000;
@@ -90,12 +90,12 @@ export function calculateBlendedRate(
 
 /**
  * Calculate blend-and-extend renewal parameters
- * 
+ *
  * This function calculates:
  * 1. Blended rate between old and new rates
  * 2. New payment amount using blended rate and extended amortization
  * 3. Comparison payments for analysis
- * 
+ *
  * @param input - Blend-and-extend parameters
  * @returns Calculated blend-and-extend result
  */
@@ -156,16 +156,16 @@ export function calculateBlendAndExtend(input: BlendAndExtendInput): BlendAndExt
 
 /**
  * Calculate extended amortization period
- * 
+ *
  * **Canadian Mortgage Rule:**
  * At renewal, borrowers can extend amortization:
  * - From remaining period (e.g., 20 years) to original (e.g., 25 years)
  * - Or to a longer period (e.g., 30 years) if lender allows
- * 
+ *
  * **Common Scenarios:**
  * - Original: 25 years, Remaining: 20 years → Extend to 25 years
  * - Original: 25 years, Remaining: 20 years → Extend to 30 years (if allowed)
- * 
+ *
  * @param remainingAmortizationMonths - Current remaining amortization
  * @param originalAmortizationMonths - Original amortization period
  * @param extendToMonths - Desired extended amortization (optional, defaults to original)
@@ -197,4 +197,3 @@ export function calculateExtendedAmortization(
 
   return extendToMonths;
 }
-

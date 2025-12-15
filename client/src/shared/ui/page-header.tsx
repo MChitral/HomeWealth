@@ -9,13 +9,19 @@ interface PageHeaderProps {
   sticky?: boolean;
 }
 
-export function PageHeader({ title, description, actions, className, sticky = false }: PageHeaderProps) {
+export function PageHeader({
+  title,
+  description,
+  actions,
+  className,
+  sticky = false,
+}: PageHeaderProps) {
   return (
     <div
       className={cn(
         "flex flex-wrap items-start justify-between gap-4",
         sticky && "sticky top-0 bg-background z-10 py-4 -mt-4",
-        className,
+        className
       )}
     >
       <div className="flex-1 min-w-[240px]">
@@ -26,4 +32,3 @@ export function PageHeader({ title, description, actions, className, sticky = fa
     </div>
   );
 }
-

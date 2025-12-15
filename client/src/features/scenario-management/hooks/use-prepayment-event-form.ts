@@ -129,7 +129,7 @@ export function usePrepaymentEventForm({ initialEvent }: UsePrepaymentEventFormP
         // This is approximate, but better than defaulting to 1
         startYear = Math.max(1, Math.ceil(initialEvent.startPaymentNumber / 12)).toString();
       }
-      
+
       form.reset({
         eventType: initialEvent.eventType,
         amount: initialEvent.amount || "",
@@ -154,4 +154,3 @@ export function usePrepaymentEventForm({ initialEvent }: UsePrepaymentEventFormP
     reset,
   };
 }
-

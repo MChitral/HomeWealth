@@ -32,4 +32,3 @@ export function usePrimeRate(initialPrime: string = DEFAULT_PRIME) {
     refetchPrimeRate: refetch,
   };
 }
-

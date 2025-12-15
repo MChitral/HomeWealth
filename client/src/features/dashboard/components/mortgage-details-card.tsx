@@ -13,11 +13,16 @@ interface MortgageDetailsCardProps {
   }>;
 }
 
-export function MortgageDetailsCard({ selectedScenario, mortgageChartData }: MortgageDetailsCardProps) {
+export function MortgageDetailsCard({
+  selectedScenario,
+  mortgageChartData,
+}: MortgageDetailsCardProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl font-semibold">Mortgage Details - {selectedScenario.name}</CardTitle>
+        <CardTitle className="text-xl font-semibold">
+          Mortgage Details - {selectedScenario.name}
+        </CardTitle>
         <p className="text-sm text-muted-foreground">Projected mortgage journey</p>
       </CardHeader>
       <CardContent>
@@ -48,4 +53,3 @@ export function MortgageDetailsCard({ selectedScenario, mortgageChartData }: Mor
     </Card>
   );
 }
-

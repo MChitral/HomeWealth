@@ -55,14 +55,27 @@ export function LogPaymentDialog({
 }: LogPaymentDialogProps) {
   const [paymentDate, setPaymentDate] = useState("");
   const [paymentPeriodLabel, setPaymentPeriodLabel] = useState("");
-  
+
   // Auto-generate month-year format when payment date changes
   // Auto-generate month-year format when payment date changes
   useEffect(() => {
     if (paymentDate) {
       try {
         const paymentDateObj = new Date(paymentDate);
-        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const monthNames = [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dec",
+        ];
         const month = monthNames[paymentDateObj.getMonth()];
         const year = paymentDateObj.getFullYear();
         setPaymentPeriodLabel(`${month}-${year}`);
@@ -81,20 +94,46 @@ export function LogPaymentDialog({
       const today = new Date().toISOString().split("T")[0];
       setPaymentDate(today);
       // Auto-generate month-year format
-      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const monthNames = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
       const paymentDateObj = new Date(today);
       const month = monthNames[paymentDateObj.getMonth()];
       const year = paymentDateObj.getFullYear();
       setPaymentPeriodLabel(`${month}-${year}`);
     }
   }, [open, currentTerm]);
-  
+
   // Auto-update payment period label when payment date changes
   useEffect(() => {
     if (paymentDate) {
       try {
         const paymentDateObj = new Date(paymentDate);
-        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const monthNames = [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dec",
+        ];
         const month = monthNames[paymentDateObj.getMonth()];
         const year = paymentDateObj.getFullYear();
         setPaymentPeriodLabel(`${month}-${year}`);
@@ -118,8 +157,7 @@ export function LogPaymentDialog({
     return calculatePaymentBreakdown({
       balance: lastKnownBalance,
       paymentAmount: totalPaymentAmount,
-      regularPaymentAmount:
-        parseFloat(regularPaymentAmount) || currentTerm.regularPaymentAmount,
+      regularPaymentAmount: parseFloat(regularPaymentAmount) || currentTerm.regularPaymentAmount,
       extraPrepaymentAmount: parseFloat(prepaymentAmount) || 0,
       frequency: currentTerm.paymentFrequency as PaymentFrequency,
       annualRate: annualRatePercent / 100,
@@ -220,7 +258,8 @@ export function LogPaymentDialog({
                 data-testid="input-payment-label"
               />
               <p className="text-xs text-muted-foreground">
-                Automatically set to month-year format based on payment date. You can edit if needed.
+                Automatically set to month-year format based on payment date. You can edit if
+                needed.
               </p>
             </div>
           </div>
@@ -307,7 +346,10 @@ export function LogPaymentDialog({
               <div className="text-sm">
                 <p className="text-muted-foreground">New Balance</p>
                 <p className="font-mono font-medium">
-                  ${paymentBreakdown.remainingBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  $
+                  {paymentBreakdown.remainingBalance.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                  })}
                 </p>
               </div>
               {paymentBreakdown.triggerRateHit && (
@@ -342,4 +384,3 @@ export function LogPaymentDialog({
     </Dialog>
   );
 }
-

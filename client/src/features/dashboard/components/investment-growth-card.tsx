@@ -20,4 +20,3 @@ export function InvestmentGrowthCard({ investmentChartData }: InvestmentGrowthCa
     </Card>
   );
 }
-

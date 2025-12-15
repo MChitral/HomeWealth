@@ -41,7 +41,9 @@ export function IncomeSection({
               onChange={(event) => setMonthlyIncome(Number(event.target.value) || 0)}
               data-testid="input-monthly-income"
             />
-            <p className="text-sm text-muted-foreground">Regular bi-weekly paycheques (2 per month)</p>
+            <p className="text-sm text-muted-foreground">
+              Regular bi-weekly paycheques (2 per month)
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="extra-paycheques">Extra Paycheques/Year</Label>
@@ -53,7 +55,9 @@ export function IncomeSection({
               onChange={(event) => setExtraPaycheques(Number(event.target.value) || 0)}
               data-testid="input-extra-paycheques"
             />
-            <p className="text-sm text-muted-foreground">Typical for bi-weekly pay (26 weeks = 2 extra)</p>
+            <p className="text-sm text-muted-foreground">
+              Typical for bi-weekly pay (26 weeks = 2 extra)
+            </p>
           </div>
         </div>
 
@@ -73,4 +77,3 @@ export function IncomeSection({
     </Card>
   );
 }
-

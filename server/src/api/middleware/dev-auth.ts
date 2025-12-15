@@ -9,4 +9,3 @@ export function devAuth(req: Request, _res: Response, next: NextFunction) {
   }
   next();
 }
-

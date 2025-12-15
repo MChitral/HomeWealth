@@ -193,6 +193,14 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
     res.json(mortgage);
   });
 
+  router.get("/mortgages/:id/trigger-status", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+
+    const status = await services.triggerRateMonitor.checkOne(req.params.id);
+    res.json(status); // Returns TriggerRateAlert or null
+  });
+
   router.post("/mortgages", async (req, res) => {
     const user = requireUser(req, res);
     if (!user) return;
@@ -324,7 +332,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       const { term, mortgage } = termData;
 
       // Get latest payment to find remaining balance
-      const payments = await services.mortgagePayments.listByTerm(term.id, user.id) || [];
+      const payments = (await services.mortgagePayments.listByTerm(term.id, user.id)) || [];
       const latestPayment =
         payments.length > 0
           ? payments.sort(

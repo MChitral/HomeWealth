@@ -68,4 +68,3 @@ export function useEmergencyFundState({ emergencyFund }: UseEmergencyFundStatePr
     saveMutation,
   };
 }
-

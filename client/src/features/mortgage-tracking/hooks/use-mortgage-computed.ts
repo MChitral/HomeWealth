@@ -26,13 +26,18 @@ export function useMortgageComputed({
   primeRate,
   filterYear,
 }: UseMortgageComputedProps) {
-  const uiCurrentTerm = useMemo(() => normalizeTerm(terms ? terms[terms.length - 1] : undefined), [terms]);
+  const uiCurrentTerm = useMemo(
+    () => normalizeTerm(terms ? terms[terms.length - 1] : undefined),
+    [terms]
+  );
   const paymentHistory = useMemo(() => normalizePayments(payments, terms), [payments, terms]);
 
   const lastKnownBalance =
-    paymentHistory[paymentHistory.length - 1]?.remainingBalance ?? Number(mortgage?.currentBalance || 0);
+    paymentHistory[paymentHistory.length - 1]?.remainingBalance ??
+    Number(mortgage?.currentBalance || 0);
   const lastKnownAmortizationMonths =
-    paymentHistory[paymentHistory.length - 1]?.remainingAmortizationMonths ?? (mortgage ? mortgage.amortizationYears * 12 : 0);
+    paymentHistory[paymentHistory.length - 1]?.remainingAmortizationMonths ??
+    (mortgage ? mortgage.amortizationYears * 12 : 0);
 
   // Always prefer current prime rate from API, never use stale values from term or payments
   // For variable rate mortgages, the prime rate changes over time, so we must use the current rate
@@ -40,7 +45,8 @@ export function useMortgageComputed({
     primeRateData?.primeRate ??
     parseFloat(primeRate) ??
     // Only fall back to term/payment rates if API data is unavailable (should rarely happen)
-    (uiCurrentTerm?.primeRate ?? null) ??
+    uiCurrentTerm?.primeRate ??
+    null ??
     paymentHistory[paymentHistory.length - 1]?.primeRate ??
     0;
 
@@ -72,7 +78,10 @@ export function useMortgageComputed({
   );
 
   const filteredPayments = useMemo(
-    () => (filterYear === "all" ? paymentHistory : paymentHistory.filter((p) => p.year.toString() === filterYear)),
+    () =>
+      filterYear === "all"
+        ? paymentHistory
+        : paymentHistory.filter((p) => p.year.toString() === filterYear),
     [paymentHistory, filterYear]
   );
 
@@ -91,7 +100,10 @@ export function useMortgageComputed({
 
   const monthsRemainingInTerm = useMemo(() => {
     if (!uiCurrentTerm) return 0;
-    return Math.round((new Date(uiCurrentTerm.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30));
+    return Math.round(
+      (new Date(uiCurrentTerm.endDate).getTime() - new Date().getTime()) /
+        (1000 * 60 * 60 * 24 * 30)
+    );
   }, [uiCurrentTerm]);
 
   return {
@@ -108,4 +120,3 @@ export function useMortgageComputed({
     monthsRemainingInTerm,
   };
 }
-

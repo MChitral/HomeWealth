@@ -13,7 +13,9 @@ interface MortgageSelectionContextValue {
   isLoading: boolean;
 }
 
-const MortgageSelectionContext = createContext<MortgageSelectionContextValue | undefined>(undefined);
+const MortgageSelectionContext = createContext<MortgageSelectionContextValue | undefined>(
+  undefined
+);
 
 export function MortgageSelectionProvider({ children }: { children: React.ReactNode }) {
   const [selectedMortgageId, setSelectedMortgageIdState] = useState<string | null>(() => {
@@ -24,10 +26,7 @@ export function MortgageSelectionProvider({ children }: { children: React.ReactN
     return null;
   });
 
-  const {
-    data: mortgages = [],
-    isLoading,
-  } = useQuery<Mortgage[]>({
+  const { data: mortgages = [], isLoading } = useQuery<Mortgage[]>({
     queryKey: mortgageQueryKeys.mortgages(),
     queryFn: mortgageApi.fetchMortgages,
   });

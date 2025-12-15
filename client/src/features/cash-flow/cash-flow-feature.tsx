@@ -144,63 +144,62 @@ export default function CashFlowFeature() {
         />
 
         <IncomeSection
-        monthlyIncome={monthlyIncome}
-        setMonthlyIncome={setMonthlyIncome}
-        extraPaycheques={extraPaycheques}
-        setExtraPaycheques={setExtraPaycheques}
-        annualBonus={annualBonus}
-        setAnnualBonus={setAnnualBonus}
-      />
+          monthlyIncome={monthlyIncome}
+          setMonthlyIncome={setMonthlyIncome}
+          extraPaycheques={extraPaycheques}
+          setExtraPaycheques={setExtraPaycheques}
+          annualBonus={annualBonus}
+          setAnnualBonus={setAnnualBonus}
+        />
 
-      <FixedExpensesSection
-        propertyTax={propertyTax}
-        setPropertyTax={setPropertyTax}
-        insurance={insurance}
-        setInsurance={setInsurance}
-        condoFees={condoFees}
-        setCondoFees={setCondoFees}
-        utilities={utilities}
-        setUtilities={setUtilities}
-        fixedHousingCosts={fixedHousingCosts}
-      />
+        <FixedExpensesSection
+          propertyTax={propertyTax}
+          setPropertyTax={setPropertyTax}
+          insurance={insurance}
+          setInsurance={setInsurance}
+          condoFees={condoFees}
+          setCondoFees={setCondoFees}
+          utilities={utilities}
+          setUtilities={setUtilities}
+          fixedHousingCosts={fixedHousingCosts}
+        />
 
-      <VariableExpensesSection
-        groceries={groceries}
-        setGroceries={setGroceries}
-        dining={dining}
-        setDining={setDining}
-        transportation={transportation}
-        setTransportation={setTransportation}
-        entertainment={entertainment}
-        setEntertainment={setEntertainment}
-        variableExpenses={variableExpenses}
-      />
+        <VariableExpensesSection
+          groceries={groceries}
+          setGroceries={setGroceries}
+          dining={dining}
+          setDining={setDining}
+          transportation={transportation}
+          setTransportation={setTransportation}
+          entertainment={entertainment}
+          setEntertainment={setEntertainment}
+          variableExpenses={variableExpenses}
+        />
 
-      <DebtSection
-        carLoan={carLoan}
-        setCarLoan={setCarLoan}
-        studentLoan={studentLoan}
-        setStudentLoan={setStudentLoan}
-        creditCard={creditCard}
-        setCreditCard={setCreditCard}
-        otherDebtPayments={otherDebtPayments}
-      />
+        <DebtSection
+          carLoan={carLoan}
+          setCarLoan={setCarLoan}
+          studentLoan={studentLoan}
+          setStudentLoan={setStudentLoan}
+          creditCard={creditCard}
+          setCreditCard={setCreditCard}
+          otherDebtPayments={otherDebtPayments}
+        />
 
-      <SummarySection
-        monthlyIncome={monthlyIncome}
-        extraPaychequesMonthly={extraPaychequesMonthly}
-        annualBonusMonthly={annualBonusMonthly}
-        totalMonthlyIncome={totalMonthlyIncome}
-        fixedHousingCosts={fixedHousingCosts}
-        mortgagePayment={mortgagePayment}
-        variableExpenses={variableExpenses}
-        otherDebtPayments={otherDebtPayments}
-        totalMonthlyExpenses={totalMonthlyExpenses}
-        monthlySurplus={monthlySurplus}
-        runwayMonths={runwayMonths}
-      />
+        <SummarySection
+          monthlyIncome={monthlyIncome}
+          extraPaychequesMonthly={extraPaychequesMonthly}
+          annualBonusMonthly={annualBonusMonthly}
+          totalMonthlyIncome={totalMonthlyIncome}
+          fixedHousingCosts={fixedHousingCosts}
+          mortgagePayment={mortgagePayment}
+          variableExpenses={variableExpenses}
+          otherDebtPayments={otherDebtPayments}
+          totalMonthlyExpenses={totalMonthlyExpenses}
+          monthlySurplus={monthlySurplus}
+          runwayMonths={runwayMonths}
+        />
       </div>
     </Form>
   );
 }
-

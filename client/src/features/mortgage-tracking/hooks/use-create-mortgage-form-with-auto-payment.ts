@@ -78,7 +78,10 @@ export function useCreateMortgageFormWithAutoPayment({
     loanAmount,
     amortizationYears: watchedValues.amortization || "25",
     frequency: (watchedValues.frequency || "monthly") as PaymentFrequency,
-    termType: (watchedValues.termType || "variable-fixed") as "fixed" | "variable-changing" | "variable-fixed",
+    termType: (watchedValues.termType || "variable-fixed") as
+      | "fixed"
+      | "variable-changing"
+      | "variable-fixed",
     fixedRateInput: watchedValues.fixedRate || "",
     spreadInput: watchedValues.spread || "",
     primeInput: watchedValues.primeRate || defaultPrimeRate,
@@ -112,7 +115,12 @@ export function useCreateMortgageFormWithAutoPayment({
     if (downPay > propPrice) return false;
 
     return true;
-  }, [watchedValues.propertyPrice, watchedValues.downPayment, watchedValues.startDate, watchedValues.amortization]);
+  }, [
+    watchedValues.propertyPrice,
+    watchedValues.downPayment,
+    watchedValues.startDate,
+    watchedValues.amortization,
+  ]);
 
   // Validate step 2
   const isStep2Valid = useMemo(() => {
@@ -170,4 +178,3 @@ export function useCreateMortgageFormWithAutoPayment({
     reset,
   };
 }
-

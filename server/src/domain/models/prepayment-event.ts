@@ -8,4 +8,3 @@ export type PrepaymentEventEntity = PrepaymentEvent;
 export type PrepaymentEventCreateInput = InsertPrepaymentEvent;
 
 export const prepaymentEventCreateSchema = insertPrepaymentEventSchema;
-

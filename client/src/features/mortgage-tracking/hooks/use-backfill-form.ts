@@ -49,9 +49,7 @@ const defaultValues: BackfillFormData = {
  * React Hook Form hook for backfill payments form
  * Replaces 3 useState calls with a single useForm hook
  */
-export function useBackfillForm({
-  defaultPaymentAmount = "",
-}: UseBackfillFormProps = {}) {
+export function useBackfillForm({ defaultPaymentAmount = "" }: UseBackfillFormProps = {}) {
   const form = useForm<BackfillFormData>({
     resolver: zodResolver(backfillFormSchema),
     defaultValues: {
@@ -63,4 +61,3 @@ export function useBackfillForm({
 
   return form;
 }
-

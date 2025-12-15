@@ -10,13 +10,7 @@ import { Button } from "@/shared/ui/button";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Info, Loader2 } from "lucide-react";
 import { FormProvider, useFormContext } from "react-hook-form";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/shared/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/shared/ui/form";
 import { Input } from "@/shared/ui/input";
 import type { PrimeRateResponse, CreatePaymentPayload } from "../api";
 import { mortgageApi } from "../api";
@@ -166,9 +160,10 @@ function BackfillFormFields({
             <p className="text-sm text-muted-foreground mt-1">
               Total:{" "}
               <span className="font-medium font-mono">
-                {(
-                  parseFloat(paymentAmount) * parseInt(numberOfPayments || "0")
-                ).toLocaleString("en-CA", { minimumFractionDigits: 2 })}
+                {(parseFloat(paymentAmount) * parseInt(numberOfPayments || "0")).toLocaleString(
+                  "en-CA",
+                  { minimumFractionDigits: 2 }
+                )}
               </span>
             </p>
           )}
@@ -199,7 +194,7 @@ export function BackfillPaymentsDialog({
   const handleBackfill = useCallback(async () => {
     const formData = form.getValues();
     const numPayments = parseInt(formData.numberOfPayments);
-    
+
     // Validate required data before proceeding
     if (!currentTerm || !formData.startDate || numPayments < 1) {
       return;
@@ -213,9 +208,8 @@ export function BackfillPaymentsDialog({
     }
 
     // Validate payment amount exists
-    const paymentAmount =
-      parseFloat(formData.paymentAmount) || currentTerm.regularPaymentAmount;
-    
+    const paymentAmount = parseFloat(formData.paymentAmount) || currentTerm.regularPaymentAmount;
+
     if (!paymentAmount) {
       // Payment amount is required
       console.error("Cannot backfill: Payment amount is missing");
@@ -236,7 +230,7 @@ export function BackfillPaymentsDialog({
       try {
         const ratesResponse = await mortgageApi.fetchHistoricalPrimeRates(
           queryStartDateStr,
-          endDateStr,
+          endDateStr
         );
         historicalRates = ratesResponse.rates || [];
       } catch (error) {
@@ -252,7 +246,7 @@ export function BackfillPaymentsDialog({
       // Sort rates ascending (oldest first) to find the most recent rate effective on or before payment date
       // Bank of Canada API returns rates only on change dates, so we need the most recent rate <= payment date
       const sortedRates = [...historicalRates].sort(
-        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
       );
 
       // Find the most recent rate that was effective on or before the payment date
@@ -276,7 +270,7 @@ export function BackfillPaymentsDialog({
       if (sortedRates.length > 0) {
         // Sort ascending to get oldest rate
         const oldestRate = [...sortedRates].sort(
-          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
         )[0];
         const effectiveRate = oldestRate.primeRate + (currentTerm.lockedSpread || 0);
         console.warn(
@@ -304,9 +298,7 @@ export function BackfillPaymentsDialog({
       const paymentDateStr = paymentDate.toISOString().split("T")[0];
       const effectiveRateValue = getRateForDate(paymentDateStr);
       const primeRateForPayment =
-        currentTerm.termType === "fixed"
-          ? 0
-          : effectiveRateValue - currentTerm.lockedSpread;
+        currentTerm.termType === "fixed" ? 0 : effectiveRateValue - currentTerm.lockedSpread;
 
       const breakdown = calculatePaymentBreakdown({
         balance: runningBalance,
@@ -320,11 +312,24 @@ export function BackfillPaymentsDialog({
 
       // Format payment period as "MMM-YYYY" (e.g., "Feb-2025")
       const paymentDateObj = new Date(paymentDateStr);
-      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const monthNames = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
       const month = monthNames[paymentDateObj.getMonth()];
       const year = paymentDateObj.getFullYear();
       const paymentPeriodLabel = `${month}-${year}`;
-      
+
       payments.push({
         termId: currentTerm.id,
         paymentDate: paymentDateStr,
@@ -363,10 +368,7 @@ export function BackfillPaymentsDialog({
           </DialogDescription>
         </DialogHeader>
         <FormProvider {...form}>
-          <BackfillFormFields
-            currentTerm={currentTerm}
-            primeRateData={primeRateData}
-          />
+          <BackfillFormFields currentTerm={currentTerm} primeRateData={primeRateData} />
         </FormProvider>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
@@ -385,4 +387,3 @@ export function BackfillPaymentsDialog({
     </Dialog>
   );
 }
-

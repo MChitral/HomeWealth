@@ -11,7 +11,7 @@ export class MortgageService {
   constructor(
     private readonly mortgages: MortgagesRepository,
     private readonly mortgageTerms: MortgageTermsRepository,
-    private readonly mortgagePayments: MortgagePaymentsRepository,
+    private readonly mortgagePayments: MortgagePaymentsRepository
   ) {}
 
   listByUserId(userId: string): Promise<Mortgage[]> {
@@ -36,7 +36,7 @@ export class MortgageService {
   async update(
     id: string,
     userId: string,
-    payload: Partial<Omit<MortgageUpdateInput, "userId">>,
+    payload: Partial<Omit<MortgageUpdateInput, "userId">>
   ): Promise<Mortgage | undefined> {
     const mortgage = await this.getByIdForUser(id, userId);
     if (!mortgage) {
@@ -60,7 +60,7 @@ export class MortgageService {
 
       // Finally delete the mortgage itself
       const deleted = await this.mortgages.delete(id, tx);
-      
+
       if (!deleted) {
         throw new Error("Failed to delete mortgage");
       }
@@ -69,4 +69,3 @@ export class MortgageService {
     });
   }
 }
-

@@ -170,7 +170,10 @@ export function percentage(value: number | string | null | undefined): Validatio
 /**
  * Validates interest rate (0-100, typically 0-20 for mortgages)
  */
-export function interestRate(value: number | string | null | undefined, max: number = 20): ValidationResult {
+export function interestRate(
+  value: number | string | null | undefined,
+  max: number = 20
+): ValidationResult {
   return numberRange(value, 0, max);
 }
 
@@ -229,4 +232,3 @@ export function combineValidations(...results: ValidationResult[]): ValidationRe
   }
   return { isValid: true };
 }
-

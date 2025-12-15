@@ -21,4 +21,3 @@ export function registerSeedRoutes(router: Router, repositories: Repositories) {
     }
   });
 }
-

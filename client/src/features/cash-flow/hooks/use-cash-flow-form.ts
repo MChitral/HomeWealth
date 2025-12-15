@@ -12,9 +12,7 @@ const numberField = (errorMessage: string) =>
   z
     .union([
       z.number(),
-      z
-        .string()
-        .transform((val) => (val === "" || val === undefined ? 0 : Number(val))),
+      z.string().transform((val) => (val === "" || val === undefined ? 0 : Number(val))),
     ])
     .pipe(z.number().min(0, errorMessage));
 
@@ -81,23 +79,29 @@ export function useCashFlowForm({ cashFlow }: UseCashFlowFormProps) {
     if (!cashFlow) return;
 
     form.reset({
-      monthlyIncome: cashFlow.monthlyIncome != null ? Number(cashFlow.monthlyIncome) : DEFAULTS.monthlyIncome,
+      monthlyIncome:
+        cashFlow.monthlyIncome != null ? Number(cashFlow.monthlyIncome) : DEFAULTS.monthlyIncome,
       extraPaycheques: cashFlow.extraPaycheques ?? DEFAULTS.extraPaycheques,
-      annualBonus: cashFlow.annualBonus != null ? Number(cashFlow.annualBonus) : DEFAULTS.annualBonus,
-      propertyTax: cashFlow.propertyTax != null ? Number(cashFlow.propertyTax) : DEFAULTS.propertyTax,
-      insurance: cashFlow.homeInsurance != null ? Number(cashFlow.homeInsurance) : DEFAULTS.insurance,
+      annualBonus:
+        cashFlow.annualBonus != null ? Number(cashFlow.annualBonus) : DEFAULTS.annualBonus,
+      propertyTax:
+        cashFlow.propertyTax != null ? Number(cashFlow.propertyTax) : DEFAULTS.propertyTax,
+      insurance:
+        cashFlow.homeInsurance != null ? Number(cashFlow.homeInsurance) : DEFAULTS.insurance,
       condoFees: cashFlow.condoFees != null ? Number(cashFlow.condoFees) : DEFAULTS.condoFees,
       utilities: cashFlow.utilities != null ? Number(cashFlow.utilities) : DEFAULTS.utilities,
       groceries: cashFlow.groceries != null ? Number(cashFlow.groceries) : DEFAULTS.groceries,
       dining: cashFlow.dining != null ? Number(cashFlow.dining) : DEFAULTS.dining,
-      transportation: cashFlow.transportation != null ? Number(cashFlow.transportation) : DEFAULTS.transportation,
-      entertainment: cashFlow.entertainment != null ? Number(cashFlow.entertainment) : DEFAULTS.entertainment,
+      transportation:
+        cashFlow.transportation != null ? Number(cashFlow.transportation) : DEFAULTS.transportation,
+      entertainment:
+        cashFlow.entertainment != null ? Number(cashFlow.entertainment) : DEFAULTS.entertainment,
       carLoan: cashFlow.carLoan != null ? Number(cashFlow.carLoan) : DEFAULTS.carLoan,
-      studentLoan: cashFlow.studentLoan != null ? Number(cashFlow.studentLoan) : DEFAULTS.studentLoan,
+      studentLoan:
+        cashFlow.studentLoan != null ? Number(cashFlow.studentLoan) : DEFAULTS.studentLoan,
       creditCard: cashFlow.creditCard != null ? Number(cashFlow.creditCard) : DEFAULTS.creditCard,
     });
   }, [cashFlow, form]);
 
   return form;
 }
-

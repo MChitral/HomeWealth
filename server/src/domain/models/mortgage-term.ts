@@ -12,4 +12,3 @@ export type MortgageTermUpdateInput = UpdateMortgageTerm;
 
 export const mortgageTermCreateSchema = insertMortgageTermSchema;
 export const mortgageTermUpdateSchema = updateMortgageTermSchema;
-

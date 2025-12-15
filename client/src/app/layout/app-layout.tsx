@@ -24,4 +24,3 @@ export function AppLayout({ children }: PropsWithChildren) {
     </SidebarProvider>
   );
 }
-

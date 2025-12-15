@@ -56,4 +56,3 @@ export function useScenarioBasicInfoForm({
 
   return form;
 }
-

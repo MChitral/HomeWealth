@@ -23,11 +23,17 @@ export type ProjectionRequest = {
   currentBalance: number;
   annualRate: number; // As decimal, e.g., 0.0549 for 5.49%
   amortizationMonths: number;
-  paymentFrequency?: 'monthly' | 'semi-monthly' | 'biweekly' | 'accelerated-biweekly' | 'weekly' | 'accelerated-weekly';
+  paymentFrequency?:
+    | "monthly"
+    | "semi-monthly"
+    | "biweekly"
+    | "accelerated-biweekly"
+    | "weekly"
+    | "accelerated-weekly";
   actualPaymentAmount?: number; // User's actual payment amount (use instead of recalculating)
   monthlyPrepayAmount?: number;
   prepaymentEvents?: Array<{
-    type: 'annual' | 'one-time' | 'monthly-percent';
+    type: "annual" | "one-time" | "monthly-percent";
     amount: number;
     startPaymentNumber?: number;
     recurrenceMonth?: number;
@@ -37,9 +43,15 @@ export type ProjectionRequest = {
     refinancingYear?: number;
     atTermEnd?: boolean;
     newRate: number; // As decimal, e.g., 0.0549 for 5.49%
-    termType: 'fixed' | 'variable-changing' | 'variable-fixed';
+    termType: "fixed" | "variable-changing" | "variable-fixed";
     newAmortizationMonths?: number;
-    paymentFrequency?: 'monthly' | 'semi-monthly' | 'biweekly' | 'accelerated-biweekly' | 'weekly' | 'accelerated-weekly';
+    paymentFrequency?:
+      | "monthly"
+      | "semi-monthly"
+      | "biweekly"
+      | "accelerated-biweekly"
+      | "weekly"
+      | "accelerated-weekly";
   }>;
   rateOverride?: number; // Optional rate override for scenario modeling (as decimal)
   mortgageId?: string; // Optional: include historical payments from this mortgage
@@ -90,7 +102,8 @@ export const scenarioQueryKeys = {
   scenariosWithMetrics: () => ["/api/scenarios/with-projections"] as const,
   scenario: (id: string | null) => ["/api/scenarios", id] as const,
   scenarioEvents: (id: string | null) => ["/api/scenarios", id, "prepayment-events"] as const,
-  scenarioRefinancingEvents: (id: string | null) => ["/api/scenarios", id, "refinancing-events"] as const,
+  scenarioRefinancingEvents: (id: string | null) =>
+    ["/api/scenarios", id, "refinancing-events"] as const,
 };
 
 export const scenarioApi = {
@@ -99,7 +112,8 @@ export const scenarioApi = {
   fetchScenario: (id: string) => apiRequest<Scenario>("GET", `/api/scenarios/${id}`),
   fetchPrepaymentEvents: (scenarioId: string) =>
     apiRequest<PrepaymentEvent[]>("GET", `/api/scenarios/${scenarioId}/prepayment-events`),
-  createScenario: (payload: ScenarioPayload) => apiRequest<Scenario>("POST", "/api/scenarios", payload),
+  createScenario: (payload: ScenarioPayload) =>
+    apiRequest<Scenario>("POST", "/api/scenarios", payload),
   updateScenario: (id: string, payload: ScenarioPayload) =>
     apiRequest<Scenario>("PATCH", `/api/scenarios/${id}`, payload),
   deleteScenario: (id: string) => apiRequest("DELETE", `/api/scenarios/${id}`),
@@ -112,7 +126,11 @@ export const scenarioApi = {
   fetchRefinancingEvents: (scenarioId: string) =>
     apiRequest<RefinancingEvent[]>("GET", `/api/scenarios/${scenarioId}/refinancing-events`),
   createRefinancingEvent: (scenarioId: string, payload: InsertRefinancingEvent) =>
-    apiRequest<RefinancingEvent>("POST", `/api/scenarios/${scenarioId}/refinancing-events`, payload),
+    apiRequest<RefinancingEvent>(
+      "POST",
+      `/api/scenarios/${scenarioId}/refinancing-events`,
+      payload
+    ),
   updateRefinancingEvent: (eventId: string, payload: Partial<InsertRefinancingEvent>) =>
     apiRequest<RefinancingEvent>("PATCH", `/api/refinancing-events/${eventId}`, payload),
   deleteRefinancingEvent: (eventId: string) =>
@@ -120,4 +138,3 @@ export const scenarioApi = {
   fetchProjection: (params: ProjectionRequest) =>
     apiRequest<ProjectionResponse>("POST", "/api/mortgages/projection", params),
 };
-

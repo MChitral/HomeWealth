@@ -265,8 +265,9 @@ export function MortgageContent({
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            <span className="font-medium">Trigger Rate Hit:</span> {summaryStats.triggerHitCount} payment(s) 
-            where interest exceeded regular payment amount. Consider lump-sum prepayment or payment increase.
+            <span className="font-medium">Trigger Rate Hit:</span> {summaryStats.triggerHitCount}{" "}
+            payment(s) where interest exceeded regular payment amount. Consider lump-sum prepayment
+            or payment increase.
           </AlertDescription>
         </Alert>
       )}
@@ -296,4 +297,3 @@ export function MortgageContent({
     </div>
   );
 }
-

@@ -1,5 +1,12 @@
 import type { Mortgage, MortgageTerm, MortgagePayment } from "@shared/schema";
-import { calculateInterestPayment, calculatePrincipalPayment, calculateRemainingBalance, getEffectivePeriodicRate, getPaymentsPerYear, PaymentFrequency } from "./mortgage";
+import {
+  calculateInterestPayment,
+  calculatePrincipalPayment,
+  calculateRemainingBalance,
+  getEffectivePeriodicRate,
+  getPaymentsPerYear,
+  PaymentFrequency,
+} from "./mortgage";
 import { getTermEffectiveRate } from "./term-helpers";
 
 interface PaymentValidationInput {
@@ -23,20 +30,27 @@ export interface PaymentValidationResult {
 
 /**
  * Recalculate principal/interest split and remaining balance using authoritative Canadian mortgage rules.
- * 
+ *
  * Rounding: All monetary amounts are rounded to nearest cent (2 decimal places) using .toFixed(2),
  * which matches the convention used by major Canadian lenders.
  */
 export function validateMortgagePayment(input: PaymentValidationInput): PaymentValidationResult {
-  const { mortgage, term, previousPayment, paymentAmount, regularPaymentAmount, prepaymentAmount, effectiveRateOverride } = input;
+  const {
+    mortgage,
+    term,
+    previousPayment,
+    paymentAmount,
+    regularPaymentAmount,
+    prepaymentAmount,
+    effectiveRateOverride,
+  } = input;
   const frequency = term.paymentFrequency as PaymentFrequency;
   const amortizationMonths = mortgage.amortizationYears * 12 + (mortgage.amortizationMonths ?? 0);
-  
+
   // Use provided rate override (for historical/backfilled payments) or fall back to term's current rate
   // effectiveRateOverride is expected to be a percentage (e.g., 5.49), convert to decimal
-  const annualRate = effectiveRateOverride !== undefined
-    ? effectiveRateOverride / 100
-    : getTermEffectiveRate(term);
+  const annualRate =
+    effectiveRateOverride !== undefined ? effectiveRateOverride / 100 : getTermEffectiveRate(term);
 
   const balanceBeforePayment = previousPayment
     ? Number(previousPayment.remainingBalance)
@@ -45,7 +59,11 @@ export function validateMortgagePayment(input: PaymentValidationInput): PaymentV
   const interestPayment = calculateInterestPayment(balanceBeforePayment, annualRate, frequency);
   const principalPayment = calculatePrincipalPayment(paymentAmount, interestPayment);
   const totalPrincipalPayment = principalPayment + prepaymentAmount;
-  const remainingBalance = calculateRemainingBalance(balanceBeforePayment, principalPayment, prepaymentAmount);
+  const remainingBalance = calculateRemainingBalance(
+    balanceBeforePayment,
+    principalPayment,
+    prepaymentAmount
+  );
 
   const periodicRate = getEffectivePeriodicRate(annualRate, frequency);
   const interestOnlyPayment = balanceBeforePayment * periodicRate;
@@ -57,7 +75,9 @@ export function validateMortgagePayment(input: PaymentValidationInput): PaymentV
     // Use total payment amount (regular + prepayment) for accurate amortization calculation
     // Prepayments reduce the payoff timeline, so they should be included in the calculation
     const effectivePaymentAmount = paymentAmount; // paymentAmount already includes prepayments
-    const remainingPayments = -Math.log(1 - (periodicRate * remainingBalance / effectivePaymentAmount)) / Math.log(1 + periodicRate);
+    const remainingPayments =
+      -Math.log(1 - (periodicRate * remainingBalance) / effectivePaymentAmount) /
+      Math.log(1 + periodicRate);
     remainingAmortizationMonths = Math.round((remainingPayments / paymentsPerYear) * 12);
   }
 
@@ -69,4 +89,3 @@ export function validateMortgagePayment(input: PaymentValidationInput): PaymentV
     remainingAmortizationMonths,
   };
 }
-

@@ -25,7 +25,9 @@ export function ProjectionsHeader({
     <section className="flex flex-wrap items-center justify-between gap-4">
       <div>
         <h2 className="text-2xl font-semibold">Projections</h2>
-        <p className="text-sm text-muted-foreground">{selectedHorizon}-year forecast based on selected scenario</p>
+        <p className="text-sm text-muted-foreground">
+          {selectedHorizon}-year forecast based on selected scenario
+        </p>
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <span className="text-sm text-muted-foreground">Time Horizon:</span>
@@ -61,4 +63,3 @@ export function ProjectionsHeader({
     </section>
   );
 }
-
