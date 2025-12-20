@@ -1,5 +1,7 @@
 import { AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import { AnalyticsDashboard } from "@/features/analytics/analytics-dashboard";
 import type { Mortgage } from "@shared/schema";
 import type { UseFormReturn } from "react-hook-form";
 import type { UseMutationResult } from "@tanstack/react-query";
@@ -233,67 +235,80 @@ export function MortgageContent({
         }}
       />
 
-      <TermDetailsSection
-        currentTerm={uiCurrentTerm}
-        monthsRemainingInTerm={monthsRemainingInTerm}
-        summaryStats={{
-          currentPrimeRate: summaryStats.currentPrimeRate,
-          currentRate: summaryStats.currentRate,
-        }}
-        isEditTermOpen={isEditTermOpen}
-        setIsEditTermOpen={setIsEditTermOpen}
-        editTermForm={editTermFormState.form}
-        editTermOnSubmit={editTermFormState.handleSubmit}
-        editTermIsSubmitting={editTermFormState.updateTermMutation.isPending}
-        editTermIsValid={editTermFormState.isValid}
-        isTermRenewalOpen={isTermRenewalOpen}
-        setIsTermRenewalOpen={onTermRenewalDialogOpenChange}
-        renewalForm={renewalFormState.form}
-        renewalOnSubmit={renewalFormState.handleSubmit}
-        renewalIsSubmitting={renewalFormState.createTermMutation.isPending}
-        renewalIsValid={renewalFormState.isValid}
-        renewalAutoPaymentAmount={renewalFormState.autoPayment}
-        renewalPaymentEdited={renewalFormState.paymentEdited}
-        renewalOnPaymentAmountChange={renewalFormState.handlePaymentAmountChange}
-        renewalOnUseAutoPayment={renewalFormState.useAutoPayment}
-        primeRateData={primeRateData}
-        isPrimeRateLoading={isPrimeRateLoading}
-        refetchPrimeRate={refetchPrimeRate}
-      />
+      <Tabs defaultValue="details" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="risk">Risk & Analytics</TabsTrigger>
+        </TabsList>
 
-      {summaryStats.triggerHitCount > 0 && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            <span className="font-medium">Trigger Rate Hit:</span> {summaryStats.triggerHitCount}{" "}
-            payment(s) where interest exceeded regular payment amount. Consider lump-sum prepayment
-            or payment increase.
-          </AlertDescription>
-        </Alert>
-      )}
+        <TabsContent value="details" className="space-y-8">
+          <TermDetailsSection
+            currentTerm={uiCurrentTerm}
+            monthsRemainingInTerm={monthsRemainingInTerm}
+            summaryStats={{
+              currentPrimeRate: summaryStats.currentPrimeRate,
+              currentRate: summaryStats.currentRate,
+            }}
+            isEditTermOpen={isEditTermOpen}
+            setIsEditTermOpen={setIsEditTermOpen}
+            editTermForm={editTermFormState.form}
+            editTermOnSubmit={editTermFormState.handleSubmit}
+            editTermIsSubmitting={editTermFormState.updateTermMutation.isPending}
+            editTermIsValid={editTermFormState.isValid}
+            isTermRenewalOpen={isTermRenewalOpen}
+            setIsTermRenewalOpen={onTermRenewalDialogOpenChange}
+            renewalForm={renewalFormState.form}
+            renewalOnSubmit={renewalFormState.handleSubmit}
+            renewalIsSubmitting={renewalFormState.createTermMutation.isPending}
+            renewalIsValid={renewalFormState.isValid}
+            renewalAutoPaymentAmount={renewalFormState.autoPayment}
+            renewalPaymentEdited={renewalFormState.paymentEdited}
+            renewalOnPaymentAmountChange={renewalFormState.handlePaymentAmountChange}
+            renewalOnUseAutoPayment={renewalFormState.useAutoPayment}
+            primeRateData={primeRateData}
+            isPrimeRateLoading={isPrimeRateLoading}
+            refetchPrimeRate={refetchPrimeRate}
+          />
 
-      <MortgageSummaryPanels
-        stats={{
-          totalPayments: summaryStats.totalPayments,
-          totalPaid: summaryStats.totalPaid,
-          totalPrincipal: summaryStats.totalPrincipal,
-          totalInterest: summaryStats.totalInterest,
-          currentBalance: summaryStats.currentBalance,
-          amortizationYears: summaryStats.amortizationYears,
-        }}
-        formatAmortization={formatAmortization}
-      />
+          {summaryStats.triggerHitCount > 0 && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <span className="font-medium">Trigger Rate Hit:</span>{" "}
+                {summaryStats.triggerHitCount} payment(s) where interest exceeded regular payment
+                amount. Consider lump-sum prepayment or payment increase.
+              </AlertDescription>
+            </Alert>
+          )}
 
-      <PaymentHistorySection
-        filteredPayments={filteredPayments}
-        availableYears={availableYears}
-        filterYear={filterYear}
-        onFilterYearChange={onFilterYearChange}
-        formatAmortization={formatAmortization}
-        deletePaymentMutation={deletePaymentMutation}
-      />
+          <MortgageSummaryPanels
+            stats={{
+              totalPayments: summaryStats.totalPayments,
+              totalPaid: summaryStats.totalPaid,
+              totalPrincipal: summaryStats.totalPrincipal,
+              totalInterest: summaryStats.totalInterest,
+              currentBalance: summaryStats.currentBalance,
+              amortizationYears: summaryStats.amortizationYears,
+            }}
+            formatAmortization={formatAmortization}
+          />
 
-      <EducationSidebar />
+          <PaymentHistorySection
+            filteredPayments={filteredPayments}
+            availableYears={availableYears}
+            filterYear={filterYear}
+            onFilterYearChange={onFilterYearChange}
+            formatAmortization={formatAmortization}
+            deletePaymentMutation={deletePaymentMutation}
+          />
+
+          <EducationSidebar />
+        </TabsContent>
+
+        <TabsContent value="risk">
+          <AnalyticsDashboard mortgageId={mortgage.id} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { PageHeader } from "@/shared/ui/page-header";
 import { useMortgageData } from "@/features/mortgage-tracking/hooks";
@@ -8,15 +8,17 @@ import { ProbabilityChart } from "./components/probability-chart";
 import { runTriggerRateSimulation, SimulationResult, SimulationParams } from "./api/simulation-api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Alert, AlertTitle, AlertDescription } from "@/shared/ui/alert";
-import { TrendingUp, AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { formatCurrency } from "@/shared/lib/utils";
 
-export function AnalyticsDashboard() {
+interface AnalyticsDashboardProps {
+  mortgageId?: string;
+}
+
+export function AnalyticsDashboard({ mortgageId: propMortgageId }: AnalyticsDashboardProps) {
   const params = useParams<{ id: string }>();
-  // Assuming route is /mortgages/:id/analytics, so params.id exists.
-  // If route is /analytics, we need logic to select mortgage (like scenario editor).
-  // For MVP, letting it be per mortgage.
-  const mortgageId = params.id || "";
+  // Use prop if available (Tabs mode), otherwise param (Direct Link mode)
+  const mortgageId = propMortgageId || params.id || "";
 
   const { mortgage, isLoading: isMortgageLoading } = useMortgageData(mortgageId);
   const [result, setResult] = useState<SimulationResult | null>(null);
