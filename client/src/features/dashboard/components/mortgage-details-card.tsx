@@ -29,17 +29,17 @@ export function MortgageDetailsCard({
         <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-6">
           <CurrentStatusStat
             label="Projected Payoff"
-            value={`${selectedScenario.metrics.mortgagePayoffYear.toFixed(1)} years`}
+            value={`${(selectedScenario.metrics?.mortgagePayoffYear ?? 0).toFixed(1)} years`}
             testId="text-payoff-year"
           />
           <CurrentStatusStat
             label="Total Interest"
-            value={`$${selectedScenario.metrics.totalInterestPaid.toLocaleString()}`}
+            value={`$${(selectedScenario.metrics?.totalInterestPaid ?? 0).toLocaleString()}`}
             testId="text-total-interest"
           />
           <CurrentStatusStat
             label="Avg Monthly Surplus"
-            value={`$${selectedScenario.metrics.avgMonthlySurplus.toLocaleString()}`}
+            value={`$${(selectedScenario.metrics?.avgMonthlySurplus ?? 0).toLocaleString()}`}
             testId="text-avg-surplus"
           />
         </div>

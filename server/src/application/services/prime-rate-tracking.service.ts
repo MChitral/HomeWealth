@@ -3,8 +3,12 @@ import type {
   MortgageTermsRepository,
   MortgagesRepository,
 } from "@infrastructure/repositories";
+import { MortgageTerm } from "@shared/schema";
 import { fetchLatestPrimeRate } from "@server-shared/services/prime-rate";
+import { ImpactCalculator } from "./impact-calculator.service";
+// ... imports
 
+// Result of checking for prime rate changes
 export interface PrimeRateChangeResult {
   changed: boolean;
   previousRate?: number;
@@ -14,20 +18,12 @@ export interface PrimeRateChangeResult {
   errors: Array<{ termId: string; error: string }>;
 }
 
-/**
- * Service to track prime rate changes and automatically update variable rate mortgages
- *
- * **Canadian Mortgage Rule:**
- * - Bank of Canada announces prime rate changes periodically
- * - Variable rate mortgages (VRM) need to be updated when prime rate changes
- * - VRM-Changing: Payment recalculates when prime rate changes
- * - VRM-Fixed: Payment stays same, but trigger rate check needed
- */
 export class PrimeRateTrackingService {
   constructor(
     private readonly primeRateHistory: PrimeRateHistoryRepository,
     private readonly mortgageTerms: MortgageTermsRepository,
-    private readonly mortgages: MortgagesRepository
+    private readonly mortgages: MortgagesRepository,
+    private readonly impactCalculator: ImpactCalculator
   ) {}
 
   /**
@@ -68,7 +64,7 @@ export class PrimeRateTrackingService {
       const alreadyExists = await this.primeRateHistory.existsForDate(effectiveDate);
       if (!alreadyExists) {
         await this.primeRateHistory.create({
-          primeRate: newRate,
+          primeRate: newRate.toFixed(3),
           effectiveDate,
           source: "Bank of Canada",
         });
@@ -91,23 +87,37 @@ export class PrimeRateTrackingService {
 
       // Update each active VRM term
       const errors: Array<{ termId: string; error: string }> = [];
+      const updatedTerms: MortgageTerm[] = []; // Store terms for impact calc
       let termsUpdated = 0;
 
       for (const term of activeVrmTerms) {
         try {
           // Update the term's prime rate directly
-          // Note: Payment recalculation should be triggered manually by users via the recalculate-payment endpoint
-          // This ensures proper authorization and allows users to review changes before applying
           await this.mortgageTerms.update(term.id, {
             primeRate: newRate.toFixed(3),
           });
           termsUpdated++;
+          updatedTerms.push(term);
         } catch (error: any) {
           errors.push({
             termId: term.id,
             error: error.message || String(error),
           });
         }
+      }
+
+      // Calculate Impact immediately
+      if (updatedTerms.length > 0 && previousRate !== undefined) {
+        // Run async, don't block return
+        this.impactCalculator
+          .calculateImpacts(updatedTerms, previousRate, newRate)
+          .then((impacts) => {
+            // For MVP: Log impacts. Future: Create notifications.
+            console.log(`[PrimeRateTracking] Calculated ${impacts.length} impacts`);
+            impacts.forEach((i) => console.log(`Impact for term ${i.termId}: ${i.message}`));
+            // TODO: Persist alerts
+          })
+          .catch((err) => console.error("Error calculating impacts:", err));
       }
 
       return {

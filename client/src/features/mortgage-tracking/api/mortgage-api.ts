@@ -137,4 +137,58 @@ export const mortgageApi = {
     }),
   deletePayment: (paymentId: string) =>
     apiRequest<{ success: boolean }>("DELETE", `/api/mortgage-payments/${paymentId}`),
+
+  // Impact Analysis
+  fetchLatestImpact: (mortgageId: string) =>
+    apiRequest<ImpactResult | null>("GET", `/api/impact/${mortgageId}`),
+  calculateImpacts: (payload: { oldRate: number; newRate: number }) =>
+    apiRequest<{ message: string; impacts: ImpactResult[] }>(
+      "POST",
+      "/api/impact/calculate",
+      payload
+    ),
+
+  // Renewal Planning
+  fetchRenewalStatus: (mortgageId: string) =>
+    apiRequest<RenewalStatusResponse | null>("GET", `/api/mortgages/${mortgageId}/renewal-status`),
+
+  // Refinancing Analysis
+  fetchRefinanceAnalysis: (mortgageId: string) =>
+    apiRequest<RefinanceAnalysisResponse | null>(
+      "GET",
+      `/api/mortgages/${mortgageId}/refinance-analysis`
+    ),
+};
+
+export type RenewalStatusResponse = {
+  mortgageId: string;
+  daysUntilRenewal: number;
+  renewalDate: string;
+  status: "urgent" | "soon" | "upcoming" | "safe";
+  currentRate: number;
+  estimatedPenalty: {
+    amount: number;
+    method: "IRD" | "3-Month Interest";
+  };
+};
+
+export type ImpactResult = {
+  termId: string;
+  mortgageId: string;
+  impactType: "payment_increase" | "trigger_risk";
+  oldValue: number;
+  newValue: number;
+  delta: number;
+  message: string;
+};
+
+export type RefinanceAnalysisResponse = {
+  currentRate: number;
+  marketRate: number;
+  marketRateType: "fixed" | "variable";
+  penalty: number;
+  monthlySavings: number;
+  breakEvenMonths: number;
+  isBeneficial: boolean;
+  totalTermSavings: number;
 };

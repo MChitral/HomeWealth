@@ -102,7 +102,7 @@ export function useScenarioEditorState(
       id: event.id,
       scenarioId: event.scenarioId,
       refinancingYear: event.refinancingYear ?? null,
-      atTermEnd: event.atTermEnd === 1 || event.atTermEnd === true,
+      atTermEnd: event.atTermEnd === 1,
       newRate: event.newRate, // Already stored as decimal string in DB
       termType: event.termType as "fixed" | "variable-changing" | "variable-fixed",
       newAmortizationMonths: event.newAmortizationMonths ?? null,
@@ -248,7 +248,7 @@ export function useScenarioEditorState(
       () => {
         saveMutation.mutate();
       },
-      (errors) => {
+      () => {
         // Form validation errors are handled by React Hook Form automatically
         toast({
           title: "Validation Error",
@@ -290,7 +290,7 @@ export function useScenarioEditorState(
           title: "Event added",
           description: "Prepayment event has been saved.",
         });
-      } catch (error) {
+      } catch {
         toast({
           title: "Error adding event",
           description: "Please try again.",
@@ -345,7 +345,7 @@ export function useScenarioEditorState(
           title: "Event updated",
           description: "Prepayment event has been saved.",
         });
-      } catch (error) {
+      } catch {
         toast({
           title: "Error updating event",
           description: "Please try again.",
@@ -371,7 +371,7 @@ export function useScenarioEditorState(
           title: "Event deleted",
           description: "Prepayment event has been removed.",
         });
-      } catch (error) {
+      } catch {
         toast({
           title: "Error deleting event",
           description: "Please try again.",
@@ -447,7 +447,7 @@ export function useScenarioEditorState(
           title: "Event added",
           description: "Refinancing event has been saved.",
         });
-      } catch (error) {
+      } catch {
         toast({
           title: "Error adding event",
           description: "Please try again.",
@@ -521,7 +521,7 @@ export function useScenarioEditorState(
           title: "Event updated",
           description: "Refinancing event has been saved.",
         });
-      } catch (error) {
+      } catch {
         toast({
           title: "Error updating event",
           description: "Please try again.",
@@ -551,7 +551,7 @@ export function useScenarioEditorState(
           title: "Event deleted",
           description: "Refinancing event has been removed.",
         });
-      } catch (error) {
+      } catch {
         toast({
           title: "Error deleting event",
           description: "Please try again.",

@@ -1,0 +1,2430 @@
+
+> rest-express@1.0.0 test
+> tsx --test server/src/**/__tests__/**/*.test.ts
+
+TAP version 13
+# Payment Delta: 486.65999999999985
+# Subtest: ImpactCalculator
+    # Subtest: calculates payment increase for VRM-Adjustable
+    ok 1 - calculates payment increase for VRM-Adjustable
+      ---
+      duration_ms: 1.2194
+      ...
+    # Subtest: calculates trigger risk for VRM-Fixed
+    ok 2 - calculates trigger risk for VRM-Fixed
+      ---
+      duration_ms: 0.236
+      ...
+    1..2
+ok 1 - ImpactCalculator
+  ---
+  duration_ms: 2.0362
+  type: 'suite'
+  ...
+# C:\\Users\\MasroorHussainSyed\\projectX\\HW\\HomeWealth\\server\\src\\infrastructure\\db\\connection.ts:11
+#   throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
+#         ^
+# Error: DATABASE_URL must be set. Did you forget to provision a database?
+#     at <anonymous> (C:\\Users\\MasroorHussainSyed\\projectX\\HW\\HomeWealth\\server\\src\\infrastructure\\db\\connection.ts:11:9)
+#     at ModuleJob.run (node:internal/modules/esm/module_job:271:25)
+#     at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:547:26)
+#     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:116:5)
+# Node.js v22.12.0
+# Subtest: server\\src\\application\\services\\__tests__\\mortgage-payment-validation.test.ts
+not ok 2 - server\\src\\application\\services\\__tests__\\mortgage-payment-validation.test.ts
+  ---
+  duration_ms: 575.0825
+  location: 'C:\\Users\\MasroorHussainSyed\\projectX\\HW\\HomeWealth\\server\\src\\application\\services\\__tests__\\mortgage-payment-validation.test.ts:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: MortgageTermService - Term Date Validation
+    # Subtest: allows valid 3-year term
+    ok 1 - allows valid 3-year term
+      ---
+      duration_ms: 0.7804
+      ...
+    # Subtest: allows valid 5-year term
+    ok 2 - allows valid 5-year term
+      ---
+      duration_ms: 0.1733
+      ...
+    # Subtest: rejects term shorter than 2.5 years
+    ok 3 - rejects term shorter than 2.5 years
+      ---
+      duration_ms: 0.2333
+      ...
+    # Subtest: rejects term longer than 6 years
+    ok 4 - rejects term longer than 6 years
+      ---
+      duration_ms: 0.2102
+      ...
+    # Subtest: rejects term where end date is before start date
+    ok 5 - rejects term where end date is before start date
+      ---
+      duration_ms: 0.3183
+      ...
+    # Subtest: rejects term where end date equals start date
+    ok 6 - rejects term where end date equals start date
+      ---
+      duration_ms: 0.1478
+      ...
+    # Subtest: validates term length on update
+    ok 7 - validates term length on update
+      ---
+      duration_ms: 0.2903
+      ...
+    # Subtest: allows updating to valid term length
+    ok 8 - allows updating to valid term length
+      ---
+      duration_ms: 0.247
+      ...
+    1..8
+ok 3 - MortgageTermService - Term Date Validation
+  ---
+  duration_ms: 3.1501
+  type: 'suite'
+  ...
+# Subtest: MortgageTermService - Payment Frequency Change
+    # Subtest: changes frequency from monthly to biweekly and recalculates payment
+    ok 1 - changes frequency from monthly to biweekly and recalculates payment
+      ---
+      duration_ms: 1.2882
+      ...
+    # Subtest: changes frequency from monthly to accelerated-biweekly
+    ok 2 - changes frequency from monthly to accelerated-biweekly
+      ---
+      duration_ms: 0.3484
+      ...
+    # Subtest: changes frequency from biweekly to monthly
+    ok 3 - changes frequency from biweekly to monthly
+      ---
+      duration_ms: 0.3033
+      ...
+    # Subtest: uses remaining amortization from latest payment if available
+    ok 4 - uses remaining amortization from latest payment if available
+      ---
+      duration_ms: 0.2822
+      ...
+    # Subtest: uses mortgage current balance when no payments exist
+    ok 5 - uses mortgage current balance when no payments exist
+      ---
+      duration_ms: 0.4348
+      ...
+    # Subtest: handles variable rate mortgages
+    ok 6 - handles variable rate mortgages
+      ---
+      duration_ms: 0.3146
+      ...
+    # Subtest: returns undefined for non-existent term
+    ok 7 - returns undefined for non-existent term
+      ---
+      duration_ms: 0.127
+      ...
+    # Subtest: returns undefined for unauthorized user
+    ok 8 - returns undefined for unauthorized user
+      ---
+      duration_ms: 0.2172
+      ...
+    1..8
+ok 4 - MortgageTermService - Payment Frequency Change
+  ---
+  duration_ms: 4.2319
+  type: 'suite'
+  ...
+# Subtest: MortgageTermService - VRM Payment Recalculation
+    # Subtest: rejects recalculation for fixed rate mortgages
+    ok 1 - rejects recalculation for fixed rate mortgages
+      ---
+      duration_ms: 1.0838
+      ...
+    # Subtest: recalculates payment for VRM-Changing when prime rate changes
+    ok 2 - recalculates payment for VRM-Changing when prime rate changes
+      ---
+      duration_ms: 0.473
+      ...
+    # Subtest: checks trigger rate for VRM-Fixed when prime rate changes
+    ok 3 - checks trigger rate for VRM-Fixed when prime rate changes
+      ---
+      duration_ms: 0.3501
+      ...
+    # Subtest: uses forced prime rate when provided
+    ok 4 - uses forced prime rate when provided
+      ---
+      duration_ms: 0.2705
+      ...
+    # Subtest: handles prime rate fetch failure gracefully
+    ok 5 - handles prime rate fetch failure gracefully
+      ---
+      duration_ms: 0.3371
+      ...
+    1..5
+ok 5 - MortgageTermService - VRM Payment Recalculation
+  ---
+  duration_ms: 3.4589
+  type: 'suite'
+  ...
+# Subtest: MortgageTermService - Term Overlap Validation
+    # Subtest: allows non-overlapping terms
+    ok 1 - allows non-overlapping terms
+      ---
+      duration_ms: 0.8169
+      ...
+    # Subtest: rejects overlapping terms
+    ok 2 - rejects overlapping terms
+      ---
+      duration_ms: 0.1942
+      ...
+    # Subtest: rejects terms that start before previous term ends
+    ok 3 - rejects terms that start before previous term ends
+      ---
+      duration_ms: 0.1453
+      ...
+    # Subtest: allows updating term to non-overlapping dates
+    ok 4 - allows updating term to non-overlapping dates
+      ---
+      duration_ms: 0.3254
+      ...
+    # Subtest: rejects updating term to overlapping dates
+    ok 5 - rejects updating term to overlapping dates
+      ---
+      duration_ms: 1.4425
+      ...
+    1..5
+ok 6 - MortgageTermService - Term Overlap Validation
+  ---
+  duration_ms: 3.7241
+  type: 'suite'
+  ...
+# C:\\Users\\MasroorHussainSyed\\projectX\\HW\\HomeWealth\\server\\src\\infrastructure\\db\\connection.ts:11
+#   throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
+#         ^
+# Error: DATABASE_URL must be set. Did you forget to provision a database?
+#     at <anonymous> (C:\\Users\\MasroorHussainSyed\\projectX\\HW\\HomeWealth\\server\\src\\infrastructure\\db\\connection.ts:11:9)
+#     at ModuleJob.run (node:internal/modules/esm/module_job:271:25)
+#     at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:547:26)
+#     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:116:5)
+# Node.js v22.12.0
+# Subtest: server\\src\\application\\services\\__tests__\\prepayment-limit-year-boundary.test.ts
+not ok 7 - server\\src\\application\\services\\__tests__\\prepayment-limit-year-boundary.test.ts
+  ---
+  duration_ms: 553.012
+  location: 'C:\\Users\\MasroorHussainSyed\\projectX\\HW\\HomeWealth\\server\\src\\application\\services\\__tests__\\prepayment-limit-year-boundary.test.ts:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: PrepaymentService
+    # Subtest: calculateSurplus
+        # Subtest: should correctly calculate surplus
+        ok 1 - should correctly calculate surplus
+          ---
+          duration_ms: 0.5637
+          ...
+        # Subtest: should return 0 if expenses exceed income
+        ok 2 - should return 0 if expenses exceed income
+          ---
+          duration_ms: 0.1579
+          ...
+        1..2
+    ok 1 - calculateSurplus
+      ---
+      duration_ms: 1.0893
+      type: 'suite'
+      ...
+    # Subtest: calculatePrepaymentRoom
+        # Subtest: should correctly calculate remaining room
+        ok 1 - should correctly calculate remaining room
+          ---
+          duration_ms: 0.1812
+          ...
+        1..1
+    ok 2 - calculatePrepaymentRoom
+      ---
+      duration_ms: 0.2409
+      type: 'suite'
+      ...
+    # Subtest: getPrepaymentOpportunity
+        # Subtest: should return recommendation to focus on cash flow if no surplus
+        ok 1 - should return recommendation to focus on cash flow if no surplus
+          ---
+          duration_ms: 0.9397
+          ...
+        # Subtest: should return recommendation to prepay if surplus exists
+        ok 2 - should return recommendation to prepay if surplus exists
+          ---
+          duration_ms: 0.3496
+          ...
+        1..2
+    ok 3 - getPrepaymentOpportunity
+      ---
+      duration_ms: 1.456
+      type: 'suite'
+      ...
+    1..3
+ok 8 - PrepaymentService
+  ---
+  duration_ms: 3.1447
+  type: 'suite'
+  ...
+# Subtest: PrimeRateTrackingService
+    # Subtest: checkAndUpdatePrimeRate
+        # Subtest: detects prime rate change and updates VRM terms
+        not ok 1 - detects prime rate change and updates VRM terms
+          ---
+          duration_ms: 2.1437
+          location: 'C:\\Users\\MasroorHussainSyed\\projectX\\HW\\HomeWealth\\server\\src\\application\\services\\__tests__\\prime-rate-tracking.test.ts:1:2011'
+          failureType: 'testCodeFailure'
+          error: "Failed to check and update prime rate: Cannot read properties of undefined (reading 'calculateImpacts')"
+          code: 'ERR_TEST_FAILURE'
+          stack: |-
+            PrimeRateTrackingService.checkAndUpdatePrimeRate (C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\services\prime-rate-tracking.service.ts:132:13)
+            async TestContext.<anonymous> (C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\services\__tests__\prime-rate-tracking.test.ts:159:22)
+            async Test.run (node:internal/test_runner/test:935:9)
+            async Promise.all (index 0)
+            async Suite.run (node:internal/test_runner/test:1320:7)
+            async Promise.all (index 0)
+            async Suite.run (node:internal/test_runner/test:1320:7)
+            async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+          ...
+        # Subtest: returns unchanged when prime rate is the same
+        ok 2 - returns unchanged when prime rate is the same
+          ---
+          duration_ms: 0.4692
+          ...
+        # Subtest: records new prime rate in history when changed
+        ok 3 - records new prime rate in history when changed
+          ---
+          duration_ms: 0.3473
+          ...
+        # Subtest: only updates active VRM terms
+        not ok 4 - only updates active VRM terms
+          ---
+          duration_ms: 0.5607
+          location: 'C:\\Users\\MasroorHussainSyed\\projectX\\HW\\HomeWealth\\server\\src\\application\\services\\__tests__\\prime-rate-tracking.test.ts:1:5094'
+          failureType: 'testCodeFailure'
+          error: "Failed to check and update prime rate: Cannot read properties of undefined (reading 'calculateImpacts')"
+          code: 'ERR_TEST_FAILURE'
+          stack: |-
+            PrimeRateTrackingService.checkAndUpdatePrimeRate (C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\services\prime-rate-tracking.service.ts:132:13)
+            async TestContext.<anonymous> (C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\services\__tests__\prime-rate-tracking.test.ts:310:22)
+            async Test.run (node:internal/test_runner/test:935:9)
+            async Suite.processPendingSubtests (node:internal/test_runner/test:633:7)
+          ...
+        # Subtest: handles errors gracefully when updating terms
+        ok 5 - handles errors gracefully when updating terms
+          ---
+          duration_ms: 0.5489
+          ...
+        1..5
+    not ok 1 - checkAndUpdatePrimeRate
+      ---
+      duration_ms: 4.847
+      type: 'suite'
+      location: 'C:\\Users\\MasroorHussainSyed\\projectX\\HW\\HomeWealth\\server\\src\\application\\services\\__tests__\\prime-rate-tracking.test.ts:1:1971'
+      failureType: 'subtestsFailed'
+      error: '2 subtests failed'
+      code: 'ERR_TEST_FAILURE'
+      stack: |-
+        async Promise.all (index 0)
+      ...
+    # Subtest: getHistory
+        # Subtest: returns prime rate history for date range
+        ok 1 - returns prime rate history for date range
+          ---
+          duration_ms: 0.2817
+          ...
+        1..1
+    ok 2 - getHistory
+      ---
+      duration_ms: 0.4554
+      type: 'suite'
+      ...
+    # Subtest: getLatest
+        # Subtest: returns latest prime rate from history
+        ok 1 - returns latest prime rate from history
+          ---
+          duration_ms: 0.3047
+          ...
+        # Subtest: returns undefined when no history exists
+        ok 2 - returns undefined when no history exists
+          ---
+          duration_ms: 0.1323
+          ...
+        1..2
+    ok 3 - getLatest
+      ---
+      duration_ms: 0.6182
+      type: 'suite'
+      ...
+    1..3
+not ok 9 - PrimeRateTrackingService
+  ---
+  duration_ms: 6.4122
+  type: 'suite'
+  location: 'C:\\Users\\MasroorHussainSyed\\projectX\\HW\\HomeWealth\\server\\src\\application\\services\\__tests__\\prime-rate-tracking.test.ts:1:1628'
+  failureType: 'subtestsFailed'
+  error: '1 subtest failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: RefinancingService
+    # Subtest: should calculate refinance benefit correctly when beneficial
+    not ok 1 - should calculate refinance benefit correctly when beneficial
+      ---
+      duration_ms: 3.1767
+      location: 'C:\\Users\\MasroorHussainSyed\\projectX\\HW\\HomeWealth\\server\\src\\application\\services\\__tests__\\refinancing.service.test.ts:1:312'
+      failureType: 'testCodeFailure'
+      error: |-
+        Expected values to be strictly equal:
+        
+        0.05 !== 5
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: 5
+      actual: 0.05
+      operator: 'strictEqual'
+      stack: |-
+        TestContext.<anonymous> (C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\services\__tests__\refinancing.service.test.ts:59:12)
+        async Test.run (node:internal/test_runner/test:935:9)
+        async Promise.all (index 0)
+        async Suite.run (node:internal/test_runner/test:1320:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    # Subtest: should identify when refinancing is NOT beneficial
+    not ok 2 - should identify when refinancing is NOT beneficial
+      ---
+      duration_ms: 0.6831
+      location: 'C:\\Users\\MasroorHussainSyed\\projectX\\HW\\HomeWealth\\server\\src\\application\\services\\__tests__\\refinancing.service.test.ts:1:1276'
+      failureType: 'testCodeFailure'
+      error: |-
+        Expected values to be strictly equal:
+        + actual - expected
+        
+        + -822.3599999999999
+        - 0
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: 0
+      actual: -822.3599999999999
+      operator: 'strictEqual'
+      stack: |-
+        TestContext.<anonymous> (C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\services\__tests__\refinancing.service.test.ts:120:12)
+        async Test.run (node:internal/test_runner/test:935:9)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:633:7)
+      ...
+    1..2
+not ok 10 - RefinancingService
+  ---
+  duration_ms: 4.6878
+  type: 'suite'
+  location: 'C:\\Users\\MasroorHussainSyed\\projectX\\HW\\HomeWealth\\server\\src\\application\\services\\__tests__\\refinancing.service.test.ts:1:277'
+  failureType: 'subtestsFailed'
+  error: '2 subtests failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: Renewal Feature
+    # Subtest: Penalty Calculations (Domain)
+        # Subtest: should calculate 3-month interest correctly
+        ok 1 - should calculate 3-month interest correctly
+          ---
+          duration_ms: 0.4898
+          ...
+        # Subtest: should calculate IRD correctly when current rate > market rate
+        ok 2 - should calculate IRD correctly when current rate > market rate
+          ---
+          duration_ms: 0.1345
+          ...
+        # Subtest: should return 0 IRD if market rate >= current rate
+        ok 3 - should return 0 IRD if market rate >= current rate
+          ---
+          duration_ms: 0.076
+          ...
+        1..3
+    ok 1 - Penalty Calculations (Domain)
+      ---
+      duration_ms: 1.132
+      type: 'suite'
+      ...
+    # Subtest: RenewalService
+        # Subtest: should return 'urgent' status if renewal is within 90 days
+        ok 1 - should return 'urgent' status if renewal is within 90 days
+          ---
+          duration_ms: 1.0806
+          ...
+        # Subtest: should return 'safe' status if renewal is far away (> 1 year)
+        ok 2 - should return 'safe' status if renewal is far away (> 1 year)
+          ---
+          duration_ms: 0.2733
+          ...
+        1..2
+    ok 2 - RenewalService
+      ---
+      duration_ms: 1.582
+      type: 'suite'
+      ...
+    1..2
+ok 11 - Renewal Feature
+  ---
+  duration_ms: 3.0361
+  type: 'suite'
+  ...
+# Subtest: TriggerRateMonitor
+    # Subtest: checkOne
+        # Subtest: returns null if mortgage not found
+        ok 1 - returns null if mortgage not found
+          ---
+          duration_ms: 0.7014
+          ...
+        # Subtest: returns null if no active term
+        ok 2 - returns null if no active term
+          ---
+          duration_ms: 0.7977
+          ...
+        # Subtest: returns null if active term is not VRM (variable-fixed)
+        ok 3 - returns null if active term is not VRM (variable-fixed)
+          ---
+          duration_ms: 0.2455
+          ...
+        # Subtest: identifies when trigger rate is hit
+        ok 4 - identifies when trigger rate is hit
+          ---
+          duration_ms: 0.3667
+          ...
+        # Subtest: identifies when approaching trigger rate (risk)
+        ok 5 - identifies when approaching trigger rate (risk)
+          ---
+          duration_ms: 0.3763
+          ...
+        1..5
+    ok 1 - checkOne
+      ---
+      duration_ms: 2.9987
+      type: 'suite'
+      ...
+    # Subtest: checkAll
+        # Subtest: checks all mortgages and returns alerts
+        ok 1 - checks all mortgages and returns alerts
+          ---
+          duration_ms: 0.3057
+          ...
+        1..1
+    ok 2 - checkAll
+      ---
+      duration_ms: 0.4548
+      type: 'suite'
+      ...
+    1..2
+ok 12 - TriggerRateMonitor
+  ---
+  duration_ms: 3.7873
+  type: 'suite'
+  ...
+# 10k iterations took 34.81ms
+# Subtest: MonteCarloEngine
+    # Subtest: should run a simulation and return results
+    ok 1 - should run a simulation and return results
+      ---
+      duration_ms: 1.0697
+      ...
+    # Subtest: should reflect higher volatility with wider distribution
+    ok 2 - should reflect higher volatility with wider distribution
+      ---
+      duration_ms: 4.6171
+      ...
+    # Subtest: should complete 10,000 iterations within reasonable time (Performance Limit)
+    ok 3 - should complete 10,000 iterations within reasonable time (Performance Limit)
+      ---
+      duration_ms: 36.337
+      ...
+    1..3
+ok 13 - MonteCarloEngine
+  ---
+  duration_ms: 42.6968
+  type: 'suite'
+  ...
+# [Prime Rate Scheduler] Starting with schedule: 0 9 * * *
+# [Prime Rate Scheduler] Scheduled job started successfully
+# [Prime Rate Scheduler] Disabled (set ENABLE_PRIME_RATE_SCHEDULER=true to enable)
+# [Prime Rate Scheduler] Starting with schedule: 0 10 * * *
+# [Prime Rate Scheduler] Scheduled job started successfully
+# [Prime Rate Scheduler] Disabled (set ENABLE_PRIME_RATE_SCHEDULER=true to enable)
+# [Prime Rate Scheduler] Starting with schedule: 0 9 * * *
+# [Prime Rate Scheduler] Scheduled job started successfully
+# Subtest: Prime Rate Scheduler
+    # Subtest: starts scheduler when enabled
+    ok 1 - starts scheduler when enabled
+      ---
+      duration_ms: 27.091
+      ...
+    # Subtest: does not start scheduler when disabled
+    ok 2 - does not start scheduler when disabled
+      ---
+      duration_ms: 0.4284
+      ...
+    # Subtest: uses custom schedule from environment variable
+    ok 3 - uses custom schedule from environment variable
+      ---
+      duration_ms: 3.6088
+      ...
+    # Subtest: is disabled by default in development
+    ok 4 - is disabled by default in development
+      ---
+      duration_ms: 1.4869
+      ...
+    # Subtest: is enabled by default in production
+    ok 5 - is enabled by default in production
+      ---
+      duration_ms: 3.7656
+      ...
+    1..5
+ok 14 - Prime Rate Scheduler
+  ---
+  duration_ms: 37.3573
+  type: 'suite'
+  ...
+# C:\\Users\\MasroorHussainSyed\\projectX\\HW\\HomeWealth\\server\\src\\infrastructure\\db\\connection.ts:11
+#   throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
+#         ^
+# Error: DATABASE_URL must be set. Did you forget to provision a database?
+#     at <anonymous> (C:\\Users\\MasroorHussainSyed\\projectX\\HW\\HomeWealth\\server\\src\\infrastructure\\db\\connection.ts:11:9)
+#     at ModuleJob.run (node:internal/modules/esm/module_job:271:25)
+#     at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:547:26)
+#     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:116:5)
+# Node.js v22.12.0
+# Subtest: server\\src\\infrastructure\\repositories\\__tests__\\prime-rate-history.repository.test.ts
+not ok 15 - server\\src\\infrastructure\\repositories\\__tests__\\prime-rate-history.repository.test.ts
+  ---
+  duration_ms: 549.2374
+  location: 'C:\\Users\\MasroorHussainSyed\\projectX\\HW\\HomeWealth\\server\\src\\infrastructure\\repositories\\__tests__\\prime-rate-history.repository.test.ts:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: Accelerated Payment Calculation
+    # Subtest: Accelerated Biweekly Calculation
+        # Subtest: calculates accelerated biweekly as exactly half of monthly payment
+        ok 1 - calculates accelerated biweekly as exactly half of monthly payment
+          ---
+          duration_ms: 0.732
+          ...
+        # Subtest: rounds accelerated biweekly to nearest cent
+        ok 2 - rounds accelerated biweekly to nearest cent
+          ---
+          duration_ms: 0.209
+          ...
+        # Subtest: produces higher annual payment than monthly
+        ok 3 - produces higher annual payment than monthly
+          ---
+          duration_ms: 0.2473
+          ...
+        # Subtest: works with different principal amounts
+        ok 4 - works with different principal amounts
+          ---
+          duration_ms: 0.2001
+          ...
+        1..4
+    ok 1 - Accelerated Biweekly Calculation
+      ---
+      duration_ms: 2.1135
+      type: 'suite'
+      ...
+    # Subtest: Accelerated Weekly Calculation
+        # Subtest: calculates accelerated weekly as exactly quarter of monthly payment
+        ok 1 - calculates accelerated weekly as exactly quarter of monthly payment
+          ---
+          duration_ms: 0.1742
+          ...
+        # Subtest: rounds accelerated weekly to nearest cent
+        ok 2 - rounds accelerated weekly to nearest cent
+          ---
+          duration_ms: 0.1452
+          ...
+        # Subtest: produces higher annual payment than monthly
+        ok 3 - produces higher annual payment than monthly
+          ---
+          duration_ms: 0.1079
+          ...
+        # Subtest: works with different principal amounts
+        ok 4 - works with different principal amounts
+          ---
+          duration_ms: 0.2247
+          ...
+        1..4
+    ok 2 - Accelerated Weekly Calculation
+      ---
+      duration_ms: 0.9283
+      type: 'suite'
+      ...
+    # Subtest: Comparison with Standard Frequencies
+        # Subtest: accelerated biweekly pays more annually than standard biweekly
+        ok 1 - accelerated biweekly pays more annually than standard biweekly
+          ---
+          duration_ms: 0.1539
+          ...
+        # Subtest: accelerated weekly pays more annually than standard weekly
+        ok 2 - accelerated weekly pays more annually than standard weekly
+          ---
+          duration_ms: 0.1952
+          ...
+        1..2
+    ok 3 - Comparison with Standard Frequencies
+      ---
+      duration_ms: 0.4588
+      type: 'suite'
+      ...
+    # Subtest: Real-World Scenarios
+        # Subtest: matches typical Canadian lender calculation for $500K mortgage
+        ok 1 - matches typical Canadian lender calculation for $500K mortgage
+          ---
+          duration_ms: 0.1485
+          ...
+        # Subtest: verifies payoff acceleration benefit
+        ok 2 - verifies payoff acceleration benefit
+          ---
+          duration_ms: 0.0937
+          ...
+        1..2
+    ok 4 - Real-World Scenarios
+      ---
+      duration_ms: 0.3603
+      type: 'suite'
+      ...
+    1..4
+ok 16 - Accelerated Payment Calculation
+  ---
+  duration_ms: 4.4981
+  type: 'suite'
+  ...
+# [DEBUG] paymentNumber: 1, currentDate: Wed Jan 01 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Jan 02 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 2, currentDate: Sat Feb 01 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Feb 03 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 3, currentDate: Sun Mar 01 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 02 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 4, currentDate: Wed Apr 01 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Apr 01 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 5, currentDate: Fri May 01 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri May 01 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 6, currentDate: Mon Jun 01 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jun 01 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 7, currentDate: Wed Jul 01 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Jul 02 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 8, currentDate: Sat Aug 01 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Aug 03 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 9, currentDate: Tue Sep 01 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Sep 01 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 10, currentDate: Thu Oct 01 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Oct 01 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 11, currentDate: Sun Nov 01 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Nov 02 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 12, currentDate: Tue Dec 01 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Dec 01 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 13, currentDate: Fri Jan 01 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Jan 04 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 14, currentDate: Mon Feb 01 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Feb 01 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 15, currentDate: Mon Mar 01 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 01 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 16, currentDate: Thu Apr 01 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Apr 01 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 17, currentDate: Sat May 01 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon May 03 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 18, currentDate: Tue Jun 01 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Jun 01 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 19, currentDate: Thu Jul 01 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Jul 02 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 20, currentDate: Sun Aug 01 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Aug 02 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 21, currentDate: Wed Sep 01 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Sep 01 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 22, currentDate: Fri Oct 01 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Oct 01 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 23, currentDate: Mon Nov 01 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Nov 01 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 24, currentDate: Wed Dec 01 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Wed Dec 01 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# Subtest: Amortization Calculation with Prepayments
+    # Subtest: calculates shorter amortization when prepayments are included
+    ok 1 - calculates shorter amortization when prepayments are included
+      ---
+      duration_ms: 0.4781
+      ...
+    # Subtest: validateMortgagePayment uses total payment amount for amortization
+    ok 2 - validateMortgagePayment uses total payment amount for amortization
+      ---
+      duration_ms: 0.2068
+      ...
+    # Subtest: amortization schedule accounts for prepayments in remaining amortization
+    ok 3 - amortization schedule accounts for prepayments in remaining amortization
+      ---
+      duration_ms: 2.1357
+      ...
+    # Subtest: amortization calculation correctly handles zero prepayments
+    ok 4 - amortization calculation correctly handles zero prepayments
+      ---
+      duration_ms: 0.1484
+      ...
+    1..4
+ok 17 - Amortization Calculation with Prepayments
+  ---
+  duration_ms: 3.6164
+  type: 'suite'
+  ...
+# Subtest: Blend-and-Extend Calculations
+    # Subtest: calculateBlendedRate
+        # Subtest: calculates blended rate as weighted average
+        ok 1 - calculates blended rate as weighted average
+          ---
+          duration_ms: 0.6786
+          ...
+        # Subtest: gives more weight to old rate when more time remains
+        ok 2 - gives more weight to old rate when more time remains
+          ---
+          duration_ms: 0.194
+          ...
+        # Subtest: rounds to 3 decimal places
+        ok 3 - rounds to 3 decimal places
+          ---
+          duration_ms: 0.1082
+          ...
+        # Subtest: handles edge case: no time remaining
+        ok 4 - handles edge case: no time remaining
+          ---
+          duration_ms: 0.0831
+          ...
+        1..4
+    ok 1 - calculateBlendedRate
+      ---
+      duration_ms: 1.7172
+      type: 'suite'
+      ...
+    # Subtest: calculateExtendedAmortization
+        # Subtest: defaults to original amortization if not specified
+        ok 1 - defaults to original amortization if not specified
+          ---
+          duration_ms: 0.2291
+          ...
+        # Subtest: allows extending beyond original amortization
+        ok 2 - allows extending beyond original amortization
+          ---
+          duration_ms: 0.1188
+          ...
+        # Subtest: throws error if extended period is less than remaining
+        ok 3 - throws error if extended period is less than remaining
+          ---
+          duration_ms: 0.3706
+          ...
+        # Subtest: throws error if extended period exceeds 30 years
+        ok 4 - throws error if extended period exceeds 30 years
+          ---
+          duration_ms: 0.2684
+          ...
+        1..4
+    ok 2 - calculateExtendedAmortization
+      ---
+      duration_ms: 1.2336
+      type: 'suite'
+      ...
+    # Subtest: calculateBlendAndExtend
+        # Subtest: calculates blend-and-extend with extended amortization
+        ok 1 - calculates blend-and-extend with extended amortization
+          ---
+          duration_ms: 0.3285
+          ...
+        # Subtest: produces lower payment with extended amortization
+        ok 2 - produces lower payment with extended amortization
+          ---
+          duration_ms: 0.2249
+          ...
+        # Subtest: calculates interest savings vs market rate
+        ok 3 - calculates interest savings vs market rate
+          ---
+          duration_ms: 0.1525
+          ...
+        # Subtest: works with different payment frequencies
+        ok 4 - works with different payment frequencies
+          ---
+          duration_ms: 0.1482
+          ...
+        # Subtest: handles scenario: extending beyond original amortization
+        ok 5 - handles scenario: extending beyond original amortization
+          ---
+          duration_ms: 0.0951
+          ...
+        1..5
+    ok 3 - calculateBlendAndExtend
+      ---
+      duration_ms: 1.1204
+      type: 'suite'
+      ...
+    # Subtest: Real-World Scenarios
+        # Subtest: models typical blend-and-extend renewal
+        ok 1 - models typical blend-and-extend renewal
+          ---
+          duration_ms: 0.109
+          ...
+        1..1
+    ok 4 - Real-World Scenarios
+      ---
+      duration_ms: 0.2025
+      type: 'suite'
+      ...
+    1..4
+ok 18 - Blend-and-Extend Calculations
+  ---
+  duration_ms: 4.7352
+  type: 'suite'
+  ...
+# Subtest: Negative Amortization Handling
+    # Subtest: balance increases when trigger rate is hit for VRM-Fixed Payment
+    ok 1 - balance increases when trigger rate is hit for VRM-Fixed Payment
+      ---
+      duration_ms: 1.6523
+      ...
+    # Subtest: principal payment is zero when trigger rate is hit
+    ok 2 - principal payment is zero when trigger rate is hit
+      ---
+      duration_ms: 0.2019
+      ...
+    # Subtest: prepayments reduce negative amortization when trigger rate is hit
+    ok 3 - prepayments reduce negative amortization when trigger rate is hit
+      ---
+      duration_ms: 0.1696
+      ...
+    # Subtest: remaining amortization is -1 when trigger rate is hit
+    ok 4 - remaining amortization is -1 when trigger rate is hit
+      ---
+      duration_ms: 0.101
+      ...
+    1..4
+ok 19 - Negative Amortization Handling
+  ---
+  duration_ms: 2.7749
+  type: 'suite'
+  ...
+# Subtest: Payment Skipping Calculations
+    # Subtest: calculateSkippedPayment
+        # Subtest: calculates interest accrued during skipped payment
+        ok 1 - calculates interest accrued during skipped payment
+          ---
+          duration_ms: 0.7447
+          ...
+        # Subtest: increases balance by accrued interest
+        ok 2 - increases balance by accrued interest
+          ---
+          duration_ms: 0.1687
+          ...
+        # Subtest: extends amortization period
+        ok 3 - extends amortization period
+          ---
+          duration_ms: 0.0973
+          ...
+        # Subtest: works with different payment frequencies
+        ok 4 - works with different payment frequencies
+          ---
+          duration_ms: 0.1181
+          ...
+        # Subtest: rounds amounts to nearest cent
+        ok 5 - rounds amounts to nearest cent
+          ---
+          duration_ms: 0.0971
+          ...
+        1..5
+    ok 1 - calculateSkippedPayment
+      ---
+      duration_ms: 1.9872
+      type: 'suite'
+      ...
+    # Subtest: canSkipPayment
+        # Subtest: allows skipping if under limit
+        ok 1 - allows skipping if under limit
+          ---
+          duration_ms: 0.1818
+          ...
+        # Subtest: prevents skipping if at limit
+        ok 2 - prevents skipping if at limit
+          ---
+          duration_ms: 0.081
+          ...
+        # Subtest: allows custom skip limits
+        ok 3 - allows custom skip limits
+          ---
+          duration_ms: 0.1649
+          ...
+        1..3
+    ok 2 - canSkipPayment
+      ---
+      duration_ms: 0.6669
+      type: 'suite'
+      ...
+    # Subtest: countSkippedPaymentsInYear
+        # Subtest: counts skipped payments in a given year
+        ok 1 - counts skipped payments in a given year
+          ---
+          duration_ms: 0.9414
+          ...
+        # Subtest: handles boolean isSkipped values
+        ok 2 - handles boolean isSkipped values
+          ---
+          duration_ms: 0.2342
+          ...
+        # Subtest: defaults to current year if year not specified
+        ok 3 - defaults to current year if year not specified
+          ---
+          duration_ms: 0.1192
+          ...
+        # Subtest: returns 0 if no skipped payments in year
+        ok 4 - returns 0 if no skipped payments in year
+          ---
+          duration_ms: 0.0791
+          ...
+        1..4
+    ok 3 - countSkippedPaymentsInYear
+      ---
+      duration_ms: 1.5506
+      type: 'suite'
+      ...
+    # Subtest: calculateTotalSkippedInterest
+        # Subtest: calculates total interest from skipped payments
+        ok 1 - calculates total interest from skipped payments
+          ---
+          duration_ms: 0.1958
+          ...
+        # Subtest: handles numeric values
+        ok 2 - handles numeric values
+          ---
+          duration_ms: 0.0739
+          ...
+        # Subtest: returns 0 if no skipped payments
+        ok 3 - returns 0 if no skipped payments
+          ---
+          duration_ms: 0.0583
+          ...
+        # Subtest: handles missing or null values
+        ok 4 - handles missing or null values
+          ---
+          duration_ms: 0.068
+          ...
+        1..4
+    ok 4 - calculateTotalSkippedInterest
+      ---
+      duration_ms: 0.5567
+      type: 'suite'
+      ...
+    # Subtest: Real-World Scenarios
+        # Subtest: models typical payment skip scenario
+        ok 1 - models typical payment skip scenario
+          ---
+          duration_ms: 0.1558
+          ...
+        # Subtest: validates skip limits for calendar year
+        ok 2 - validates skip limits for calendar year
+          ---
+          duration_ms: 0.075
+          ...
+        1..2
+    ok 5 - Real-World Scenarios
+      ---
+      duration_ms: 0.3033
+      type: 'suite'
+      ...
+    1..5
+ok 20 - Payment Skipping Calculations
+  ---
+  duration_ms: 5.5905
+  type: 'suite'
+  ...
+# Subtest: validateMortgagePayment
+    # Subtest: calculates expected principal/interest split
+    ok 1 - calculates expected principal/interest split
+      ---
+      duration_ms: 0.6444
+      ...
+    # Subtest: flags trigger rate when payment < interest
+    ok 2 - flags trigger rate when payment < interest
+      ---
+      duration_ms: 0.1284
+      ...
+    1..2
+ok 21 - validateMortgagePayment
+  ---
+  duration_ms: 1.3944
+  type: 'suite'
+  ...
+# [DEBUG] paymentNumber: 1, currentDate: Sat Dec 31 2022 17:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Jan 02 2023 17:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 2, currentDate: Tue Jan 31 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Jan 31 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 3, currentDate: Tue Feb 28 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Feb 28 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 4, currentDate: Tue Mar 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Mar 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 5, currentDate: Fri Apr 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Apr 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 6, currentDate: Sun May 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon May 29 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 7, currentDate: Wed Jun 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Jun 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 8, currentDate: Fri Jul 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Jul 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 9, currentDate: Mon Aug 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Aug 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 10, currentDate: Thu Sep 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Sep 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 11, currentDate: Sat Oct 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Oct 30 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 12, currentDate: Tue Nov 28 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Nov 28 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 13, currentDate: Thu Dec 28 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Dec 28 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 14, currentDate: Sun Jan 28 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Jan 29 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 15, currentDate: Wed Feb 28 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Wed Feb 28 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 16, currentDate: Thu Mar 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Mar 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 17, currentDate: Sun Apr 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Apr 29 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 18, currentDate: Tue May 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue May 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 19, currentDate: Fri Jun 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Jun 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 20, currentDate: Sun Jul 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jul 29 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 21, currentDate: Wed Aug 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Aug 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 22, currentDate: Sat Sep 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Sep 30 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 23, currentDate: Mon Oct 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Oct 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 24, currentDate: Thu Nov 28 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Nov 28 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 25, currentDate: Sat Dec 28 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Dec 30 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 26, currentDate: Tue Jan 28 2025 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Jan 28 2025 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 27, currentDate: Fri Feb 28 2025 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Feb 28 2025 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 28, currentDate: Fri Mar 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Mar 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 29, currentDate: Mon Apr 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Apr 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 30, currentDate: Wed May 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed May 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 31, currentDate: Sat Jun 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jun 30 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 32, currentDate: Mon Jul 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jul 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 33, currentDate: Thu Aug 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Aug 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 34, currentDate: Sun Sep 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Sep 29 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 35, currentDate: Tue Oct 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Oct 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 36, currentDate: Fri Nov 28 2025 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Nov 28 2025 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 37, currentDate: Sun Dec 28 2025 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Dec 29 2025 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 38, currentDate: Wed Jan 28 2026 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Wed Jan 28 2026 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 39, currentDate: Sat Feb 28 2026 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 02 2026 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 40, currentDate: Sat Mar 28 2026 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 30 2026 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 41, currentDate: Tue Apr 28 2026 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Apr 28 2026 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 42, currentDate: Thu May 28 2026 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu May 28 2026 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 43, currentDate: Sun Jun 28 2026 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jun 29 2026 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 44, currentDate: Tue Jul 28 2026 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Jul 28 2026 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 45, currentDate: Fri Aug 28 2026 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Aug 28 2026 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 46, currentDate: Mon Sep 28 2026 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Sep 28 2026 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 47, currentDate: Wed Oct 28 2026 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Oct 28 2026 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 48, currentDate: Sat Nov 28 2026 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Nov 30 2026 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 49, currentDate: Mon Dec 28 2026 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Dec 28 2026 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 50, currentDate: Thu Jan 28 2027 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Jan 28 2027 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 51, currentDate: Sun Feb 28 2027 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 01 2027 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 52, currentDate: Sun Mar 28 2027 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Mar 30 2027 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 53, currentDate: Wed Apr 28 2027 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Apr 28 2027 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 54, currentDate: Fri May 28 2027 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri May 28 2027 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 55, currentDate: Mon Jun 28 2027 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jun 28 2027 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 56, currentDate: Wed Jul 28 2027 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Jul 28 2027 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 57, currentDate: Sat Aug 28 2027 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Aug 30 2027 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 58, currentDate: Tue Sep 28 2027 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Sep 28 2027 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 59, currentDate: Thu Oct 28 2027 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Oct 28 2027 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 60, currentDate: Sun Nov 28 2027 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Nov 29 2027 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 61, currentDate: Tue Dec 28 2027 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Dec 28 2027 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 62, currentDate: Fri Jan 28 2028 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Jan 28 2028 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 63, currentDate: Mon Feb 28 2028 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Feb 28 2028 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 64, currentDate: Tue Mar 28 2028 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Mar 28 2028 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 65, currentDate: Fri Apr 28 2028 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Apr 28 2028 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 66, currentDate: Sun May 28 2028 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon May 29 2028 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 67, currentDate: Wed Jun 28 2028 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Jun 28 2028 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 68, currentDate: Fri Jul 28 2028 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Jul 28 2028 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 69, currentDate: Mon Aug 28 2028 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Aug 28 2028 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 70, currentDate: Thu Sep 28 2028 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Sep 28 2028 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 71, currentDate: Sat Oct 28 2028 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Oct 30 2028 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 72, currentDate: Tue Nov 28 2028 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Nov 28 2028 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 73, currentDate: Thu Dec 28 2028 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Dec 28 2028 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 74, currentDate: Sun Jan 28 2029 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Jan 29 2029 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 75, currentDate: Wed Feb 28 2029 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Wed Feb 28 2029 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 76, currentDate: Wed Mar 28 2029 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Mar 28 2029 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 77, currentDate: Sat Apr 28 2029 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Apr 30 2029 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 78, currentDate: Mon May 28 2029 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon May 28 2029 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 79, currentDate: Thu Jun 28 2029 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Jun 28 2029 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 80, currentDate: Sat Jul 28 2029 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jul 30 2029 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 81, currentDate: Tue Aug 28 2029 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Aug 28 2029 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 82, currentDate: Fri Sep 28 2029 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Sep 28 2029 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 83, currentDate: Sun Oct 28 2029 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Oct 29 2029 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 84, currentDate: Wed Nov 28 2029 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Wed Nov 28 2029 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 85, currentDate: Fri Dec 28 2029 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Dec 28 2029 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 86, currentDate: Mon Jan 28 2030 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Jan 28 2030 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 87, currentDate: Thu Feb 28 2030 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Feb 28 2030 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 88, currentDate: Thu Mar 28 2030 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Mar 28 2030 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 89, currentDate: Sun Apr 28 2030 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Apr 29 2030 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 90, currentDate: Tue May 28 2030 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue May 28 2030 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 91, currentDate: Fri Jun 28 2030 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Jun 28 2030 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 92, currentDate: Sun Jul 28 2030 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jul 29 2030 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 93, currentDate: Wed Aug 28 2030 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Aug 28 2030 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 94, currentDate: Sat Sep 28 2030 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Sep 30 2030 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 95, currentDate: Mon Oct 28 2030 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Oct 28 2030 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 96, currentDate: Thu Nov 28 2030 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Nov 28 2030 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 97, currentDate: Sat Dec 28 2030 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Dec 30 2030 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 98, currentDate: Tue Jan 28 2031 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Jan 28 2031 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 99, currentDate: Fri Feb 28 2031 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Feb 28 2031 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 100, currentDate: Fri Mar 28 2031 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Mar 28 2031 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 101, currentDate: Mon Apr 28 2031 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Apr 28 2031 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 102, currentDate: Wed May 28 2031 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed May 28 2031 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 103, currentDate: Sat Jun 28 2031 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jun 30 2031 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 104, currentDate: Mon Jul 28 2031 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jul 28 2031 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 105, currentDate: Thu Aug 28 2031 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Aug 28 2031 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 106, currentDate: Sun Sep 28 2031 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Sep 29 2031 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 107, currentDate: Tue Oct 28 2031 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Oct 28 2031 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 108, currentDate: Fri Nov 28 2031 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Nov 28 2031 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 109, currentDate: Sun Dec 28 2031 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Dec 29 2031 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 110, currentDate: Wed Jan 28 2032 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Wed Jan 28 2032 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 111, currentDate: Sat Feb 28 2032 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 01 2032 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 112, currentDate: Sun Mar 28 2032 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Mar 30 2032 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 113, currentDate: Wed Apr 28 2032 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Apr 28 2032 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 114, currentDate: Fri May 28 2032 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri May 28 2032 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 115, currentDate: Mon Jun 28 2032 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jun 28 2032 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 116, currentDate: Wed Jul 28 2032 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Jul 28 2032 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 117, currentDate: Sat Aug 28 2032 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Aug 30 2032 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 118, currentDate: Tue Sep 28 2032 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Sep 28 2032 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 119, currentDate: Thu Oct 28 2032 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Oct 28 2032 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 120, currentDate: Sun Nov 28 2032 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Nov 29 2032 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 121, currentDate: Tue Dec 28 2032 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Dec 28 2032 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 122, currentDate: Fri Jan 28 2033 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Jan 28 2033 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 123, currentDate: Mon Feb 28 2033 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Feb 28 2033 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 124, currentDate: Mon Mar 28 2033 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 28 2033 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 125, currentDate: Thu Apr 28 2033 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Apr 28 2033 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 126, currentDate: Sat May 28 2033 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon May 30 2033 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 127, currentDate: Tue Jun 28 2033 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Jun 28 2033 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 128, currentDate: Thu Jul 28 2033 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Jul 28 2033 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 129, currentDate: Sun Aug 28 2033 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Aug 29 2033 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 130, currentDate: Wed Sep 28 2033 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Sep 28 2033 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 131, currentDate: Fri Oct 28 2033 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Oct 28 2033 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 132, currentDate: Mon Nov 28 2033 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Nov 28 2033 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 133, currentDate: Wed Dec 28 2033 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Wed Dec 28 2033 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 134, currentDate: Sat Jan 28 2034 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Jan 30 2034 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 135, currentDate: Tue Feb 28 2034 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Feb 28 2034 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 136, currentDate: Tue Mar 28 2034 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Mar 28 2034 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 137, currentDate: Fri Apr 28 2034 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Apr 28 2034 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 138, currentDate: Sun May 28 2034 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon May 29 2034 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 139, currentDate: Wed Jun 28 2034 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Jun 28 2034 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 140, currentDate: Fri Jul 28 2034 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Jul 28 2034 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 141, currentDate: Mon Aug 28 2034 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Aug 28 2034 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 142, currentDate: Thu Sep 28 2034 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Sep 28 2034 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 143, currentDate: Sat Oct 28 2034 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Oct 30 2034 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 144, currentDate: Tue Nov 28 2034 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Nov 28 2034 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 145, currentDate: Thu Dec 28 2034 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Dec 28 2034 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 146, currentDate: Sun Jan 28 2035 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Jan 29 2035 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 147, currentDate: Wed Feb 28 2035 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Wed Feb 28 2035 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 148, currentDate: Wed Mar 28 2035 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Mar 28 2035 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 149, currentDate: Sat Apr 28 2035 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Apr 30 2035 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 150, currentDate: Mon May 28 2035 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon May 28 2035 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 151, currentDate: Thu Jun 28 2035 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Jun 28 2035 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 152, currentDate: Sat Jul 28 2035 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jul 30 2035 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 153, currentDate: Tue Aug 28 2035 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Aug 28 2035 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 154, currentDate: Fri Sep 28 2035 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Sep 28 2035 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 155, currentDate: Sun Oct 28 2035 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Oct 29 2035 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 156, currentDate: Wed Nov 28 2035 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Wed Nov 28 2035 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 157, currentDate: Fri Dec 28 2035 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Dec 28 2035 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 158, currentDate: Mon Jan 28 2036 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Jan 28 2036 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 159, currentDate: Thu Feb 28 2036 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Feb 28 2036 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 160, currentDate: Fri Mar 28 2036 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Mar 28 2036 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 161, currentDate: Mon Apr 28 2036 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Apr 28 2036 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 162, currentDate: Wed May 28 2036 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed May 28 2036 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 163, currentDate: Sat Jun 28 2036 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jun 30 2036 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 164, currentDate: Mon Jul 28 2036 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jul 28 2036 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 165, currentDate: Thu Aug 28 2036 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Aug 28 2036 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 166, currentDate: Sun Sep 28 2036 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Sep 29 2036 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 167, currentDate: Tue Oct 28 2036 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Oct 28 2036 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 168, currentDate: Fri Nov 28 2036 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Nov 28 2036 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 169, currentDate: Sun Dec 28 2036 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Dec 29 2036 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 170, currentDate: Wed Jan 28 2037 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Wed Jan 28 2037 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 171, currentDate: Sat Feb 28 2037 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 02 2037 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 172, currentDate: Sat Mar 28 2037 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 30 2037 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 173, currentDate: Tue Apr 28 2037 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Apr 28 2037 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 174, currentDate: Thu May 28 2037 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu May 28 2037 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 175, currentDate: Sun Jun 28 2037 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jun 29 2037 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 176, currentDate: Tue Jul 28 2037 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Jul 28 2037 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 177, currentDate: Fri Aug 28 2037 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Aug 28 2037 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 178, currentDate: Mon Sep 28 2037 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Sep 28 2037 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 179, currentDate: Wed Oct 28 2037 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Oct 28 2037 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 180, currentDate: Sat Nov 28 2037 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Nov 30 2037 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 181, currentDate: Mon Dec 28 2037 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Dec 28 2037 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 182, currentDate: Thu Jan 28 2038 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Jan 28 2038 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 183, currentDate: Sun Feb 28 2038 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 01 2038 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 184, currentDate: Sun Mar 28 2038 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 29 2038 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 185, currentDate: Wed Apr 28 2038 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Apr 28 2038 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 186, currentDate: Fri May 28 2038 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri May 28 2038 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 187, currentDate: Mon Jun 28 2038 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jun 28 2038 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 188, currentDate: Wed Jul 28 2038 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Jul 28 2038 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 189, currentDate: Sat Aug 28 2038 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Aug 30 2038 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 190, currentDate: Tue Sep 28 2038 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Sep 28 2038 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 191, currentDate: Thu Oct 28 2038 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Oct 28 2038 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 192, currentDate: Sun Nov 28 2038 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Nov 29 2038 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 193, currentDate: Tue Dec 28 2038 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Dec 28 2038 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 194, currentDate: Fri Jan 28 2039 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Jan 28 2039 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 195, currentDate: Mon Feb 28 2039 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Feb 28 2039 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 196, currentDate: Mon Mar 28 2039 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 28 2039 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 197, currentDate: Thu Apr 28 2039 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Apr 28 2039 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 198, currentDate: Sat May 28 2039 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon May 30 2039 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 199, currentDate: Tue Jun 28 2039 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Jun 28 2039 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 200, currentDate: Thu Jul 28 2039 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Jul 28 2039 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 201, currentDate: Sun Aug 28 2039 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Aug 29 2039 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 202, currentDate: Wed Sep 28 2039 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Sep 28 2039 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 203, currentDate: Fri Oct 28 2039 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Oct 28 2039 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 204, currentDate: Mon Nov 28 2039 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Nov 28 2039 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 205, currentDate: Wed Dec 28 2039 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Wed Dec 28 2039 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 206, currentDate: Sat Jan 28 2040 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Jan 30 2040 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 207, currentDate: Tue Feb 28 2040 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Feb 28 2040 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 208, currentDate: Wed Mar 28 2040 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Mar 28 2040 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 209, currentDate: Sat Apr 28 2040 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Apr 30 2040 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 210, currentDate: Mon May 28 2040 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon May 28 2040 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 211, currentDate: Thu Jun 28 2040 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Jun 28 2040 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 212, currentDate: Sat Jul 28 2040 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jul 30 2040 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 213, currentDate: Tue Aug 28 2040 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Aug 28 2040 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 214, currentDate: Fri Sep 28 2040 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Sep 28 2040 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 215, currentDate: Sun Oct 28 2040 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Oct 29 2040 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 216, currentDate: Wed Nov 28 2040 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Wed Nov 28 2040 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 217, currentDate: Fri Dec 28 2040 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Dec 28 2040 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 218, currentDate: Mon Jan 28 2041 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Jan 28 2041 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 219, currentDate: Thu Feb 28 2041 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Feb 28 2041 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 220, currentDate: Thu Mar 28 2041 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Mar 28 2041 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 221, currentDate: Sun Apr 28 2041 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Apr 29 2041 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 222, currentDate: Tue May 28 2041 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue May 28 2041 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 223, currentDate: Fri Jun 28 2041 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Jun 28 2041 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 224, currentDate: Sun Jul 28 2041 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jul 29 2041 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 225, currentDate: Wed Aug 28 2041 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Aug 28 2041 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 226, currentDate: Sat Sep 28 2041 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Sep 30 2041 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 227, currentDate: Mon Oct 28 2041 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Oct 28 2041 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 228, currentDate: Thu Nov 28 2041 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Nov 28 2041 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 229, currentDate: Sat Dec 28 2041 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Dec 30 2041 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 230, currentDate: Tue Jan 28 2042 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Jan 28 2042 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 231, currentDate: Fri Feb 28 2042 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Feb 28 2042 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 232, currentDate: Fri Mar 28 2042 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Mar 28 2042 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 233, currentDate: Mon Apr 28 2042 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Apr 28 2042 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 234, currentDate: Wed May 28 2042 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed May 28 2042 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 235, currentDate: Sat Jun 28 2042 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jun 30 2042 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 236, currentDate: Mon Jul 28 2042 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jul 28 2042 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 237, currentDate: Thu Aug 28 2042 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Aug 28 2042 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 238, currentDate: Sun Sep 28 2042 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Sep 29 2042 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 239, currentDate: Tue Oct 28 2042 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Oct 28 2042 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 240, currentDate: Fri Nov 28 2042 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Nov 28 2042 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 241, currentDate: Sun Dec 28 2042 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Dec 29 2042 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 242, currentDate: Wed Jan 28 2043 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Wed Jan 28 2043 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 243, currentDate: Sat Feb 28 2043 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 02 2043 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 244, currentDate: Sat Mar 28 2043 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Mar 31 2043 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 245, currentDate: Tue Apr 28 2043 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Apr 28 2043 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 246, currentDate: Thu May 28 2043 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu May 28 2043 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 247, currentDate: Sun Jun 28 2043 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jun 29 2043 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 248, currentDate: Tue Jul 28 2043 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Jul 28 2043 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 249, currentDate: Fri Aug 28 2043 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Aug 28 2043 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 250, currentDate: Mon Sep 28 2043 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Sep 28 2043 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 251, currentDate: Wed Oct 28 2043 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Oct 28 2043 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 252, currentDate: Sat Nov 28 2043 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Nov 30 2043 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 253, currentDate: Mon Dec 28 2043 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Dec 28 2043 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 254, currentDate: Thu Jan 28 2044 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Jan 28 2044 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 255, currentDate: Sun Feb 28 2044 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Feb 29 2044 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 256, currentDate: Mon Mar 28 2044 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 28 2044 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 257, currentDate: Thu Apr 28 2044 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Apr 28 2044 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 258, currentDate: Sat May 28 2044 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon May 30 2044 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 259, currentDate: Tue Jun 28 2044 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Jun 28 2044 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 260, currentDate: Thu Jul 28 2044 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Jul 28 2044 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 261, currentDate: Sun Aug 28 2044 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Aug 29 2044 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 262, currentDate: Wed Sep 28 2044 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Sep 28 2044 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 263, currentDate: Fri Oct 28 2044 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Oct 28 2044 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 264, currentDate: Mon Nov 28 2044 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Nov 28 2044 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 265, currentDate: Wed Dec 28 2044 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Wed Dec 28 2044 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 266, currentDate: Sat Jan 28 2045 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Jan 30 2045 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 267, currentDate: Tue Feb 28 2045 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Feb 28 2045 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 268, currentDate: Tue Mar 28 2045 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Mar 28 2045 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 269, currentDate: Fri Apr 28 2045 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Apr 28 2045 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 270, currentDate: Sun May 28 2045 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon May 29 2045 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 271, currentDate: Wed Jun 28 2045 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Jun 28 2045 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 272, currentDate: Fri Jul 28 2045 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Jul 28 2045 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 273, currentDate: Mon Aug 28 2045 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Aug 28 2045 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 274, currentDate: Thu Sep 28 2045 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Sep 28 2045 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 275, currentDate: Sat Oct 28 2045 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Oct 30 2045 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 276, currentDate: Tue Nov 28 2045 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Nov 28 2045 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 277, currentDate: Thu Dec 28 2045 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Dec 28 2045 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 278, currentDate: Sun Jan 28 2046 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Jan 29 2046 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 279, currentDate: Wed Feb 28 2046 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Wed Feb 28 2046 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 280, currentDate: Wed Mar 28 2046 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Mar 28 2046 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 281, currentDate: Sat Apr 28 2046 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Apr 30 2046 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 282, currentDate: Mon May 28 2046 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon May 28 2046 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 283, currentDate: Thu Jun 28 2046 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Jun 28 2046 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 284, currentDate: Sat Jul 28 2046 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jul 30 2046 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 285, currentDate: Tue Aug 28 2046 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Aug 28 2046 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 286, currentDate: Fri Sep 28 2046 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Sep 28 2046 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 287, currentDate: Sun Oct 28 2046 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Oct 29 2046 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 288, currentDate: Wed Nov 28 2046 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Wed Nov 28 2046 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 289, currentDate: Fri Dec 28 2046 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Dec 28 2046 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 290, currentDate: Mon Jan 28 2047 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Jan 28 2047 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 291, currentDate: Thu Feb 28 2047 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Feb 28 2047 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 292, currentDate: Thu Mar 28 2047 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Mar 28 2047 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 293, currentDate: Sun Apr 28 2047 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Apr 29 2047 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 294, currentDate: Tue May 28 2047 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue May 28 2047 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 295, currentDate: Fri Jun 28 2047 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Jun 28 2047 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 296, currentDate: Sun Jul 28 2047 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jul 29 2047 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 297, currentDate: Wed Aug 28 2047 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Aug 28 2047 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 298, currentDate: Sat Sep 28 2047 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Sep 30 2047 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 299, currentDate: Mon Oct 28 2047 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Oct 28 2047 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 300, currentDate: Thu Nov 28 2047 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Nov 28 2047 00:00:00 GMT-0700 (Mountain Standard Time)
+# Subtest: Scenario projections prepayment allocation
+    # Subtest: applies prepayment percent against surplus, not entire payment
+    ok 1 - applies prepayment percent against surplus, not entire payment
+      ---
+      duration_ms: 6.8626
+      ...
+    1..1
+ok 22 - Scenario projections prepayment allocation
+  ---
+  duration_ms: 7.3952
+  type: 'suite'
+  ...
+# [DEBUG] paymentNumber: 1, currentDate: Wed Nov 01 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Nov 01 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 2, currentDate: Wed Nov 15 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Wed Nov 15 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 3, currentDate: Fri Dec 01 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Dec 01 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 4, currentDate: Fri Dec 15 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Dec 15 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 5, currentDate: Mon Jan 01 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Jan 02 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 6, currentDate: Mon Jan 15 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Jan 15 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 7, currentDate: Thu Feb 01 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Feb 01 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 8, currentDate: Thu Feb 15 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Feb 15 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 9, currentDate: Fri Mar 01 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Mar 01 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 10, currentDate: Fri Mar 15 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Mar 15 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 11, currentDate: Mon Apr 01 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Apr 02 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 12, currentDate: Mon Apr 15 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Apr 15 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 13, currentDate: Wed May 01 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed May 01 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 14, currentDate: Wed May 15 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed May 15 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 15, currentDate: Sat Jun 01 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jun 03 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 16, currentDate: Sat Jun 15 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jun 17 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 17, currentDate: Mon Jul 01 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Jul 02 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 18, currentDate: Mon Jul 15 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jul 15 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 19, currentDate: Thu Aug 01 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Aug 01 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 20, currentDate: Thu Aug 15 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Aug 15 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 21, currentDate: Sun Sep 01 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Sep 03 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 22, currentDate: Sun Sep 15 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Sep 16 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 23, currentDate: Tue Oct 01 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Oct 01 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 24, currentDate: Tue Oct 15 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Oct 15 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 1, currentDate: Wed Nov 15 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Wed Nov 15 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 2, currentDate: Fri Dec 01 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Dec 01 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 3, currentDate: Fri Dec 15 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Dec 15 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 4, currentDate: Mon Jan 01 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Jan 02 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 5, currentDate: Mon Jan 15 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Jan 15 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 6, currentDate: Thu Feb 01 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Feb 01 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 1, currentDate: Fri Nov 10 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Nov 10 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 2, currentDate: Wed Nov 15 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Wed Nov 15 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 3, currentDate: Fri Dec 01 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Dec 01 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 4, currentDate: Fri Dec 15 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Dec 15 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 5, currentDate: Mon Jan 01 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Jan 02 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 6, currentDate: Mon Jan 15 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Jan 15 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 1, currentDate: Mon Nov 20 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Nov 20 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 2, currentDate: Fri Dec 01 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Dec 01 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 3, currentDate: Fri Dec 15 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Dec 15 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 4, currentDate: Mon Jan 01 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Jan 02 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 5, currentDate: Mon Jan 15 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Jan 15 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 6, currentDate: Thu Feb 01 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Feb 01 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# Subtest: Semi-Monthly Date Alignment
+    # Subtest: aligns payments to 1st and 15th of each month
+    ok 1 - aligns payments to 1st and 15th of each month
+      ---
+      duration_ms: 3.6923
+      ...
+    # Subtest: handles start date on 15th correctly
+    ok 2 - handles start date on 15th correctly
+      ---
+      duration_ms: 0.3107
+      ...
+    # Subtest: handles start date between 1st and 15th
+    ok 3 - handles start date between 1st and 15th
+      ---
+      duration_ms: 0.2103
+      ...
+    # Subtest: handles start date after 15th
+    ok 4 - handles start date after 15th
+      ---
+      duration_ms: 0.2793
+      ...
+    1..4
+ok 23 - Semi-Monthly Date Alignment
+  ---
+  duration_ms: 5.2962
+  type: 'suite'
+  ...
+# Subtest: term helper calculations
+    # Subtest: calculates effective rate for fixed terms
+    ok 1 - calculates effective rate for fixed terms
+      ---
+      duration_ms: 0.8162
+      ...
+    # Subtest: calculates effective rate for variable terms using prime + spread
+    ok 2 - calculates effective rate for variable terms using prime + spread
+      ---
+      duration_ms: 0.1355
+      ...
+    # Subtest: detects when payment amounts remain fixed
+    ok 3 - detects when payment amounts remain fixed
+      ---
+      duration_ms: 0.1419
+      ...
+    1..3
+ok 24 - term helper calculations
+  ---
+  duration_ms: 1.9656
+  type: 'suite'
+  ...
+# [DEBUG] paymentNumber: 1, currentDate: Tue Dec 31 2019 17:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Dec 31 2019 17:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 2, currentDate: Fri Jan 31 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Jan 31 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 3, currentDate: Sat Feb 29 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 02 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 4, currentDate: Sun Mar 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 30 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 5, currentDate: Wed Apr 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Apr 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 6, currentDate: Fri May 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri May 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 7, currentDate: Mon Jun 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jun 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 8, currentDate: Wed Jul 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Jul 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 9, currentDate: Sat Aug 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Aug 31 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 10, currentDate: Tue Sep 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Sep 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 11, currentDate: Thu Oct 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Oct 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 12, currentDate: Sun Nov 29 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Nov 30 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 13, currentDate: Tue Dec 29 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Dec 29 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 14, currentDate: Fri Jan 29 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Jan 29 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 15, currentDate: Sun Feb 28 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 01 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 16, currentDate: Sun Mar 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 29 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 17, currentDate: Wed Apr 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Apr 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 18, currentDate: Fri May 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri May 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 19, currentDate: Mon Jun 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jun 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 20, currentDate: Wed Jul 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Jul 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 21, currentDate: Sat Aug 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Aug 30 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 22, currentDate: Tue Sep 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Sep 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 23, currentDate: Thu Oct 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Oct 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 24, currentDate: Sun Nov 28 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Nov 29 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 25, currentDate: Tue Dec 28 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Dec 28 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 26, currentDate: Fri Jan 28 2022 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Jan 28 2022 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 27, currentDate: Mon Feb 28 2022 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Feb 28 2022 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 28, currentDate: Mon Mar 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 29, currentDate: Thu Apr 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Apr 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 30, currentDate: Sat May 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon May 30 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 31, currentDate: Tue Jun 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Jun 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 32, currentDate: Thu Jul 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Jul 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 33, currentDate: Sun Aug 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Aug 29 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 34, currentDate: Wed Sep 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Sep 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 35, currentDate: Fri Oct 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Oct 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 36, currentDate: Mon Nov 28 2022 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Nov 28 2022 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 37, currentDate: Wed Dec 28 2022 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Wed Dec 28 2022 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 38, currentDate: Sat Jan 28 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Jan 30 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 39, currentDate: Tue Feb 28 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Feb 28 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 40, currentDate: Tue Mar 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Mar 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 41, currentDate: Fri Apr 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Apr 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 42, currentDate: Sun May 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon May 29 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 43, currentDate: Wed Jun 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Jun 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 44, currentDate: Fri Jul 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Jul 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 45, currentDate: Mon Aug 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Aug 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 46, currentDate: Thu Sep 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Sep 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 47, currentDate: Sat Oct 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Oct 30 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 48, currentDate: Tue Nov 28 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Nov 28 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 49, currentDate: Thu Dec 28 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Dec 28 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 50, currentDate: Sun Jan 28 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Jan 29 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 51, currentDate: Wed Feb 28 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Wed Feb 28 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 52, currentDate: Thu Mar 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Mar 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 53, currentDate: Sun Apr 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Apr 29 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 54, currentDate: Tue May 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue May 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 55, currentDate: Fri Jun 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Jun 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 56, currentDate: Sun Jul 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jul 29 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 57, currentDate: Wed Aug 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Aug 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 58, currentDate: Sat Sep 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Sep 30 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 59, currentDate: Mon Oct 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Oct 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 60, currentDate: Thu Nov 28 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Nov 28 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 61, currentDate: Sat Dec 28 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Dec 30 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 62, currentDate: Tue Jan 28 2025 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Jan 28 2025 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 63, currentDate: Fri Feb 28 2025 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Feb 28 2025 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 64, currentDate: Fri Mar 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Mar 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 65, currentDate: Mon Apr 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Apr 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 66, currentDate: Wed May 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed May 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 67, currentDate: Sat Jun 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jun 30 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 68, currentDate: Mon Jul 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jul 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 69, currentDate: Thu Aug 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Aug 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 70, currentDate: Sun Sep 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Sep 29 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 71, currentDate: Tue Oct 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Oct 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 72, currentDate: Fri Nov 28 2025 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Nov 28 2025 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 1, currentDate: Tue Dec 31 2019 17:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Dec 31 2019 17:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 2, currentDate: Fri Jan 31 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Jan 31 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 3, currentDate: Sat Feb 29 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 02 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 4, currentDate: Sun Mar 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 30 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 5, currentDate: Wed Apr 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Apr 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 6, currentDate: Fri May 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri May 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 7, currentDate: Mon Jun 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jun 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 8, currentDate: Wed Jul 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Jul 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 9, currentDate: Sat Aug 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Aug 31 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 10, currentDate: Tue Sep 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Sep 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 11, currentDate: Thu Oct 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Oct 29 2020 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 12, currentDate: Sun Nov 29 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Nov 30 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 13, currentDate: Tue Dec 29 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Dec 29 2020 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 14, currentDate: Fri Jan 29 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Jan 29 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 15, currentDate: Sun Feb 28 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 01 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 16, currentDate: Sun Mar 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 29 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 17, currentDate: Wed Apr 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Apr 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 18, currentDate: Fri May 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri May 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 19, currentDate: Mon Jun 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jun 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 20, currentDate: Wed Jul 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Jul 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 21, currentDate: Sat Aug 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Aug 30 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 22, currentDate: Tue Sep 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Sep 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 23, currentDate: Thu Oct 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Oct 28 2021 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 24, currentDate: Sun Nov 28 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Nov 29 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 25, currentDate: Tue Dec 28 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Dec 28 2021 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 26, currentDate: Fri Jan 28 2022 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Jan 28 2022 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 27, currentDate: Mon Feb 28 2022 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Feb 28 2022 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 28, currentDate: Mon Mar 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Mar 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 29, currentDate: Thu Apr 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Apr 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 30, currentDate: Sat May 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon May 30 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 31, currentDate: Tue Jun 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Jun 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 32, currentDate: Thu Jul 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Jul 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 33, currentDate: Sun Aug 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Aug 29 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 34, currentDate: Wed Sep 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Sep 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 35, currentDate: Fri Oct 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Oct 28 2022 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 36, currentDate: Mon Nov 28 2022 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Nov 28 2022 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 37, currentDate: Wed Dec 28 2022 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Wed Dec 28 2022 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 38, currentDate: Sat Jan 28 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Jan 30 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 39, currentDate: Tue Feb 28 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Feb 28 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 40, currentDate: Tue Mar 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Mar 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 41, currentDate: Fri Apr 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Apr 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 42, currentDate: Sun May 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon May 29 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 43, currentDate: Wed Jun 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Jun 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 44, currentDate: Fri Jul 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Jul 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 45, currentDate: Mon Aug 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Aug 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 46, currentDate: Thu Sep 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Sep 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 47, currentDate: Sat Oct 28 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Oct 30 2023 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 48, currentDate: Tue Nov 28 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Nov 28 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 49, currentDate: Thu Dec 28 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Dec 28 2023 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 50, currentDate: Sun Jan 28 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Jan 29 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 51, currentDate: Wed Feb 28 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Wed Feb 28 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 52, currentDate: Thu Mar 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Mar 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 53, currentDate: Sun Apr 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Apr 29 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 54, currentDate: Tue May 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue May 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 55, currentDate: Fri Jun 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Jun 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 56, currentDate: Sun Jul 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jul 29 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 57, currentDate: Wed Aug 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed Aug 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 58, currentDate: Sat Sep 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Sep 30 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 59, currentDate: Mon Oct 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Oct 28 2024 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 60, currentDate: Thu Nov 28 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Thu Nov 28 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 61, currentDate: Sat Dec 28 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Mon Dec 30 2024 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 62, currentDate: Tue Jan 28 2025 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Tue Jan 28 2025 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 63, currentDate: Fri Feb 28 2025 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Feb 28 2025 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] paymentNumber: 64, currentDate: Fri Mar 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Fri Mar 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 65, currentDate: Mon Apr 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Apr 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 66, currentDate: Wed May 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Wed May 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 67, currentDate: Sat Jun 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jun 30 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 68, currentDate: Mon Jul 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Jul 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 69, currentDate: Thu Aug 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Thu Aug 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 70, currentDate: Sun Sep 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Mon Sep 29 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 71, currentDate: Tue Oct 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] adjustedPaymentDate: Tue Oct 28 2025 00:00:00 GMT-0600 (Mountain Daylight Time)
+# [DEBUG] paymentNumber: 72, currentDate: Fri Nov 28 2025 00:00:00 GMT-0700 (Mountain Standard Time)
+# [DEBUG] adjustedPaymentDate: Fri Nov 28 2025 00:00:00 GMT-0700 (Mountain Standard Time)
+# Subtest: Term Renewal Amortization Reset
+    # Subtest: uses original amortization period at term renewal (Canadian convention)
+    ok 1 - uses original amortization period at term renewal (Canadian convention)
+      ---
+      duration_ms: 4.4204
+      ...
+    # Subtest: VRM-Fixed Payment keeps same payment amount at renewal
+    ok 2 - VRM-Fixed Payment keeps same payment amount at renewal
+      ---
+      duration_ms: 0.9124
+      ...
+    # Subtest: VRM-Changing recalculates payment using original amortization
+    ok 3 - VRM-Changing recalculates payment using original amortization
+      ---
+      duration_ms: 1.4203
+      ...
+    1..3
+ok 25 - Term Renewal Amortization Reset
+  ---
+  duration_ms: 7.3782
+  type: 'suite'
+  ...
+# Subtest: Trigger Rate Calculation
+    # Subtest: calculateTriggerRate - Reverse Calculation Verification
+        # Subtest: verifies reverse calculation for monthly payments
+        ok 1 - verifies reverse calculation for monthly payments
+          ---
+          duration_ms: 0.5381
+          ...
+        # Subtest: verifies reverse calculation for biweekly payments
+        ok 2 - verifies reverse calculation for biweekly payments
+          ---
+          duration_ms: 0.2232
+          ...
+        # Subtest: verifies reverse calculation for accelerated-biweekly payments
+        ok 3 - verifies reverse calculation for accelerated-biweekly payments
+          ---
+          duration_ms: 0.1616
+          ...
+        # Subtest: verifies reverse calculation for weekly payments
+        ok 4 - verifies reverse calculation for weekly payments
+          ---
+          duration_ms: 0.1018
+          ...
+        # Subtest: verifies reverse calculation for semi-monthly payments
+        ok 5 - verifies reverse calculation for semi-monthly payments
+          ---
+          duration_ms: 0.0725
+          ...
+        # Subtest: verifies reverse calculation with different balance amounts
+        ok 6 - verifies reverse calculation with different balance amounts
+          ---
+          duration_ms: 0.1548
+          ...
+        # Subtest: verifies reverse calculation with high payment-to-balance ratio
+        ok 7 - verifies reverse calculation with high payment-to-balance ratio
+          ---
+          duration_ms: 0.2092
+          ...
+        # Subtest: verifies reverse calculation with low payment-to-balance ratio
+        ok 8 - verifies reverse calculation with low payment-to-balance ratio
+          ---
+          duration_ms: 0.0924
+          ...
+        1..8
+    ok 1 - calculateTriggerRate - Reverse Calculation Verification
+      ---
+      duration_ms: 2.3087
+      type: 'suite'
+      ...
+    # Subtest: calculateTriggerRate - Mathematical Properties
+        # Subtest: returns higher trigger rate for higher payment amounts
+        ok 1 - returns higher trigger rate for higher payment amounts
+          ---
+          duration_ms: 0.1415
+          ...
+        # Subtest: returns lower trigger rate for higher balance amounts
+        ok 2 - returns lower trigger rate for higher balance amounts
+          ---
+          duration_ms: 0.1533
+          ...
+        # Subtest: returns positive trigger rate for valid inputs
+        ok 3 - returns positive trigger rate for valid inputs
+          ---
+          duration_ms: 0.0642
+          ...
+        # Subtest: handles edge case where payment equals balance
+        ok 4 - handles edge case where payment equals balance
+          ---
+          duration_ms: 0.0414
+          ...
+        1..4
+    ok 2 - calculateTriggerRate - Mathematical Properties
+      ---
+      duration_ms: 0.5155
+      type: 'suite'
+      ...
+    # Subtest: isTriggerRateHit - Integration with calculateTriggerRate
+        # Subtest: correctly identifies when trigger rate is hit
+        ok 1 - correctly identifies when trigger rate is hit
+          ---
+          duration_ms: 0.099
+          ...
+        # Subtest: correctly identifies trigger rate for different frequencies
+        ok 2 - correctly identifies trigger rate for different frequencies
+          ---
+          duration_ms: 0.0741
+          ...
+        # Subtest: handles VRM-Fixed Payment scenario correctly
+        ok 3 - handles VRM-Fixed Payment scenario correctly
+          ---
+          duration_ms: 0.0467
+          ...
+        1..3
+    ok 3 - isTriggerRateHit - Integration with calculateTriggerRate
+      ---
+      duration_ms: 0.3001
+      type: 'suite'
+      ...
+    # Subtest: Real-World Scenarios
+        # Subtest: verifies trigger rate calculation for typical Canadian mortgage
+        ok 1 - verifies trigger rate calculation for typical Canadian mortgage
+          ---
+          duration_ms: 0.073
+          ...
+        # Subtest: verifies trigger rate for high-balance mortgage
+        ok 2 - verifies trigger rate for high-balance mortgage
+          ---
+          duration_ms: 0.0466
+          ...
+        # Subtest: verifies trigger rate calculation consistency across multiple calculations
+        ok 3 - verifies trigger rate calculation consistency across multiple calculations
+          ---
+          duration_ms: 0.0595
+          ...
+        1..3
+    ok 4 - Real-World Scenarios
+      ---
+      duration_ms: 0.275
+      type: 'suite'
+      ...
+    1..4
+ok 26 - Trigger Rate Calculation
+  ---
+  duration_ms: 3.8051
+  type: 'suite'
+  ...
+# Subtest: Business Day Utilities
+    # Subtest: isWeekend
+        # Subtest: identifies Saturday as weekend
+        ok 1 - identifies Saturday as weekend
+          ---
+          duration_ms: 0.8487
+          ...
+        # Subtest: identifies Sunday as weekend
+        ok 2 - identifies Sunday as weekend
+          ---
+          duration_ms: 0.0778
+          ...
+        # Subtest: identifies weekdays as not weekend
+        ok 3 - identifies weekdays as not weekend
+          ---
+          duration_ms: 0.0581
+          ...
+        1..3
+    ok 1 - isWeekend
+      ---
+      duration_ms: 1.4135
+      type: 'suite'
+      ...
+    # Subtest: isCanadianHoliday
+        # Subtest: identifies New Year's Day
+        ok 1 - identifies New Year's Day
+          ---
+          duration_ms: 0.1722
+          ...
+        # Subtest: identifies Canada Day
+        ok 2 - identifies Canada Day
+          ---
+          duration_ms: 0.115
+          ...
+        # Subtest: identifies Christmas
+        ok 3 - identifies Christmas
+          ---
+          duration_ms: 0.1148
+          ...
+        # Subtest: identifies Boxing Day
+        ok 4 - identifies Boxing Day
+          ---
+          duration_ms: 0.0573
+          ...
+        # Subtest: identifies Remembrance Day
+        ok 5 - identifies Remembrance Day
+          ---
+          duration_ms: 0.1515
+          ...
+        # Subtest: identifies Labour Day (1st Monday in September)
+        ok 6 - identifies Labour Day (1st Monday in September)
+          ---
+          duration_ms: 0.0853
+          ...
+        # Subtest: identifies Thanksgiving (2nd Monday in October)
+        ok 7 - identifies Thanksgiving (2nd Monday in October)
+          ---
+          duration_ms: 0.1332
+          ...
+        # Subtest: identifies Victoria Day (Monday before May 25)
+        ok 8 - identifies Victoria Day (Monday before May 25)
+          ---
+          duration_ms: 0.0568
+          ...
+        # Subtest: identifies regular weekdays as not holidays
+        ok 9 - identifies regular weekdays as not holidays
+          ---
+          duration_ms: 0.05
+          ...
+        1..9
+    ok 2 - isCanadianHoliday
+      ---
+      duration_ms: 1.159
+      type: 'suite'
+      ...
+    # Subtest: isBusinessDay
+        # Subtest: identifies regular weekdays as business days
+        ok 1 - identifies regular weekdays as business days
+          ---
+          duration_ms: 0.1055
+          ...
+        # Subtest: identifies weekends as not business days
+        ok 2 - identifies weekends as not business days
+          ---
+          duration_ms: 0.0363
+          ...
+        # Subtest: identifies holidays as not business days
+        ok 3 - identifies holidays as not business days
+          ---
+          duration_ms: 0.0349
+          ...
+        1..3
+    ok 3 - isBusinessDay
+      ---
+      duration_ms: 0.2341
+      type: 'suite'
+      ...
+    # Subtest: adjustToBusinessDay
+        # Subtest: adjusts Saturday to next Monday
+        ok 1 - adjusts Saturday to next Monday
+          ---
+          duration_ms: 0.0995
+          ...
+        # Subtest: adjusts Sunday to next Monday
+        ok 2 - adjusts Sunday to next Monday
+          ---
+          duration_ms: 0.058
+          ...
+        # Subtest: adjusts holiday to next business day
+        ok 3 - adjusts holiday to next business day
+          ---
+          duration_ms: 0.0747
+          ...
+        # Subtest: keeps business days unchanged
+        ok 4 - keeps business days unchanged
+          ---
+          duration_ms: 0.0459
+          ...
+        # Subtest: handles consecutive non-business days
+        ok 5 - handles consecutive non-business days
+          ---
+          duration_ms: 0.0363
+          ...
+        1..5
+    ok 4 - adjustToBusinessDay
+      ---
+      duration_ms: 0.3995
+      type: 'suite'
+      ...
+    # Subtest: daysBetween
+        # Subtest: calculates days between two dates
+        ok 1 - calculates days between two dates
+          ---
+          duration_ms: 0.0607
+          ...
+        # Subtest: handles same day
+        ok 2 - handles same day
+          ---
+          duration_ms: 0.0353
+          ...
+        # Subtest: handles reverse order (negative days)
+        ok 3 - handles reverse order (negative days)
+          ---
+          duration_ms: 0.0354
+          ...
+        1..3
+    ok 5 - daysBetween
+      ---
+      duration_ms: 0.1805
+      type: 'suite'
+      ...
+    # Subtest: Real-World Scenarios
+        # Subtest: handles payment on Saturday
+        ok 1 - handles payment on Saturday
+          ---
+          duration_ms: 0.06
+          ...
+        # Subtest: handles payment on holiday
+        ok 2 - handles payment on holiday
+          ---
+          duration_ms: 0.0435
+          ...
+        # Subtest: handles payment on weekend before holiday
+        ok 3 - handles payment on weekend before holiday
+          ---
+          duration_ms: 0.0354
+          ...
+        1..3
+    ok 6 - Real-World Scenarios
+      ---
+      duration_ms: 0.1874
+      type: 'suite'
+      ...
+    1..6
+ok 27 - Business Day Utilities
+  ---
+  duration_ms: 3.9547
+  type: 'suite'
+  ...
+1..27
+# tests 174
+# suites 57
+# pass 167
+# fail 7
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 626.0873

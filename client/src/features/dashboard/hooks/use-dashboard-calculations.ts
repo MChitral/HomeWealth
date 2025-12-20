@@ -1,5 +1,11 @@
 import { useMemo } from "react";
-import type { Mortgage, Term, Payment, EmergencyFund, CashFlow } from "@shared/schema";
+import type {
+  Mortgage,
+  MortgageTerm as Term,
+  MortgagePayment as Payment,
+  EmergencyFund,
+  CashFlow,
+} from "@shared/schema";
 import {
   calculatePayment,
   calculatePaymentBreakdown,

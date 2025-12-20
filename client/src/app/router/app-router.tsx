@@ -5,6 +5,8 @@ import { PageSkeleton } from "@/shared/components/page-skeleton";
 // ✅ Route-level code splitting: lazy load pages to reduce initial bundle size
 const DashboardPage = lazy(() => import("@/pages/dashboard-page"));
 const MortgagePage = lazy(() => import("@/pages/mortgage-page"));
+const PrepaymentPage = lazy(() => import("@/pages/prepayment-page"));
+const AnalyticsPage = lazy(() => import("@/pages/analytics-page"));
 const ScenarioListPage = lazy(() => import("@/pages/scenario-list-page"));
 const ScenarioEditorPage = lazy(() => import("@/pages/scenario-editor-page"));
 const ComparisonPage = lazy(() => import("@/pages/comparison-page"));
@@ -18,6 +20,8 @@ export function AppRouter() {
       <Switch>
         <Route path="/" component={DashboardPage} />
         <Route path="/mortgage" component={MortgagePage} />
+        <Route path="/mortgages/:id/prepay" component={PrepaymentPage} />
+        <Route path="/mortgages/:id/analytics" component={AnalyticsPage} />
         <Route path="/scenarios" component={ScenarioListPage} />
         <Route path="/scenarios/:id" component={ScenarioEditorPage} />
         <Route path="/scenarios/new" component={ScenarioEditorPage} />

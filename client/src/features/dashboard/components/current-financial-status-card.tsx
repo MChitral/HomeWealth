@@ -26,7 +26,7 @@ interface CurrentFinancialStatusCardProps {
 export function CurrentFinancialStatusCard({
   homeValue,
   mortgageBalance,
-  originalMortgageBalance,
+  originalMortgageBalance: _originalMortgageBalance,
   efBalance,
   efTargetAmount,
   activeMortgage,
@@ -61,6 +61,7 @@ export function CurrentFinancialStatusCard({
             label="Home Equity"
             value={`$${(homeValue - mortgageBalance).toLocaleString()}`}
             testId="text-current-equity"
+            className="text-4xl font-bold tracking-tight text-foreground"
           />
           <CurrentStatusStat
             label="Emergency Fund"

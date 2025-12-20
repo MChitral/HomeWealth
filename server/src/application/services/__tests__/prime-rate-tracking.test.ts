@@ -20,17 +20,17 @@ class MockPrimeRateHistoryRepository {
 
   async findLatest() {
     if (this.history.length === 0) return undefined;
-    return this.history.sort((a, b) => 
-      new Date(b.effectiveDate).getTime() - new Date(a.effectiveDate).getTime()
+    return this.history.sort(
+      (a, b) => new Date(b.effectiveDate).getTime() - new Date(a.effectiveDate).getTime()
     )[0];
   }
 
   async existsForDate(date: string) {
-    return this.history.some(h => h.effectiveDate === date);
+    return this.history.some((h) => h.effectiveDate === date);
   }
 
   async findByDateRange(startDate: string, endDate: string) {
-    return this.history.filter(h => {
+    return this.history.filter((h) => {
       const date = h.effectiveDate;
       return date >= startDate && date <= endDate;
     });
@@ -77,21 +77,33 @@ class MockMortgagesRepository {
 const originalFetchLatestPrimeRate = fetchLatestPrimeRate;
 let mockPrimeRate: { primeRate: number; effectiveDate: string } | null = null;
 
+class MockImpactCalculator {
+  async calculateImpacts(mortgageId: string, oldRate: number, newRate: number) {
+    return {
+      paymentIncrease: 100,
+      triggerRateRisk: "low",
+    };
+  }
+}
+
 describe("PrimeRateTrackingService", () => {
   let service: PrimeRateTrackingService;
   let historyRepo: MockPrimeRateHistoryRepository;
   let termsRepo: MockMortgageTermsRepository;
   let mortgagesRepo: MockMortgagesRepository;
+  let impactCalculator: MockImpactCalculator;
 
   beforeEach(() => {
     historyRepo = new MockPrimeRateHistoryRepository();
     termsRepo = new MockMortgageTermsRepository();
     mortgagesRepo = new MockMortgagesRepository();
+    impactCalculator = new MockImpactCalculator();
 
     service = new PrimeRateTrackingService(
       historyRepo as any,
       termsRepo as any,
       mortgagesRepo as any,
+      impactCalculator as any
     );
 
     // Reset mock
@@ -142,17 +154,19 @@ describe("PrimeRateTrackingService", () => {
       termsRepo.setTerm(term);
 
       // Mock new prime rate
-      mockPrimeRate = { primeRate: 6.750, effectiveDate: "2024-03-15" };
+      mockPrimeRate = { primeRate: 6.75, effectiveDate: "2024-03-15" };
 
       // Mock fetchLatestPrimeRate
       const originalFetch = (global as any).fetch;
       (global as any).fetch = async () => ({
         ok: true,
         json: async () => ({
-          observations: [{
-            d: mockPrimeRate!.effectiveDate,
-            V121796: { v: mockPrimeRate!.primeRate.toString() },
-          }],
+          observations: [
+            {
+              d: mockPrimeRate!.effectiveDate,
+              V121796: { v: mockPrimeRate!.primeRate.toString() },
+            },
+          ],
         }),
       });
 
@@ -163,8 +177,8 @@ describe("PrimeRateTrackingService", () => {
 
       assert.ok(result, "Should return result");
       assert.equal(result.changed, true, "Should detect change");
-      assert.equal(result.previousRate, 6.450, "Should have previous rate");
-      assert.equal(result.newRate, 6.750, "Should have new rate");
+      assert.equal(result.previousRate, 6.45, "Should have previous rate");
+      assert.equal(result.newRate, 6.75, "Should have new rate");
       assert.equal(result.termsUpdated, 1, "Should update 1 term");
 
       // Verify term was updated
@@ -182,17 +196,19 @@ describe("PrimeRateTrackingService", () => {
       });
 
       // Mock same prime rate
-      mockPrimeRate = { primeRate: 6.450, effectiveDate: "2024-01-15" };
+      mockPrimeRate = { primeRate: 6.45, effectiveDate: "2024-01-15" };
 
       // Mock fetchLatestPrimeRate
       const originalFetch = (global as any).fetch;
       (global as any).fetch = async () => ({
         ok: true,
         json: async () => ({
-          observations: [{
-            d: mockPrimeRate!.effectiveDate,
-            V121796: { v: mockPrimeRate!.primeRate.toString() },
-          }],
+          observations: [
+            {
+              d: mockPrimeRate!.effectiveDate,
+              V121796: { v: mockPrimeRate!.primeRate.toString() },
+            },
+          ],
         }),
       });
 
@@ -203,23 +219,25 @@ describe("PrimeRateTrackingService", () => {
 
       assert.ok(result, "Should return result");
       assert.equal(result.changed, false, "Should not detect change");
-      assert.equal(result.newRate, 6.450, "Should have same rate");
+      assert.equal(result.newRate, 6.45, "Should have same rate");
       assert.equal(result.termsUpdated, 0, "Should not update any terms");
     });
 
     it("records new prime rate in history when changed", async () => {
       // No existing history
-      mockPrimeRate = { primeRate: 6.750, effectiveDate: "2024-03-15" };
+      mockPrimeRate = { primeRate: 6.75, effectiveDate: "2024-03-15" };
 
       // Mock fetchLatestPrimeRate
       const originalFetch = (global as any).fetch;
       (global as any).fetch = async () => ({
         ok: true,
         json: async () => ({
-          observations: [{
-            d: mockPrimeRate!.effectiveDate,
-            V121796: { v: mockPrimeRate!.primeRate.toString() },
-          }],
+          observations: [
+            {
+              d: mockPrimeRate!.effectiveDate,
+              V121796: { v: mockPrimeRate!.primeRate.toString() },
+            },
+          ],
         }),
       });
 
@@ -231,8 +249,12 @@ describe("PrimeRateTrackingService", () => {
       const latest = await historyRepo.findLatest();
       assert.ok(latest, "Should record in history");
       // Prime rate is stored as string in database
-      const latestRate = typeof latest.primeRate === 'string' ? latest.primeRate : latest.primeRate.toString();
-      assert.ok(latestRate === "6.750" || parseFloat(latestRate) === 6.750, `Prime rate should be 6.750, got ${latestRate}`);
+      const latestRate =
+        typeof latest.primeRate === "string" ? latest.primeRate : latest.primeRate.toString();
+      assert.ok(
+        latestRate === "6.750" || parseFloat(latestRate) === 6.75,
+        `Prime rate should be 6.750, got ${latestRate}`
+      );
       assert.equal(latest.effectiveDate, "2024-03-15");
     });
 
@@ -293,17 +315,19 @@ describe("PrimeRateTrackingService", () => {
         source: "Bank of Canada",
       });
 
-      mockPrimeRate = { primeRate: 6.750, effectiveDate: "2024-03-15" };
+      mockPrimeRate = { primeRate: 6.75, effectiveDate: "2024-03-15" };
 
       // Mock fetchLatestPrimeRate
       const originalFetch = (global as any).fetch;
       (global as any).fetch = async () => ({
         ok: true,
         json: async () => ({
-          observations: [{
-            d: mockPrimeRate!.effectiveDate,
-            V121796: { v: mockPrimeRate!.primeRate.toString() },
-          }],
+          observations: [
+            {
+              d: mockPrimeRate!.effectiveDate,
+              V121796: { v: mockPrimeRate!.primeRate.toString() },
+            },
+          ],
         }),
       });
 
@@ -313,7 +337,7 @@ describe("PrimeRateTrackingService", () => {
       (global as any).fetch = originalFetch;
 
       assert.equal(result.termsUpdated, 1, "Should only update active VRM term");
-      
+
       const updatedActive = await termsRepo.update("term-active", {});
       assert.equal(updatedActive?.primeRate, "6.750", "Active term should be updated");
 
@@ -348,17 +372,19 @@ describe("PrimeRateTrackingService", () => {
         source: "Bank of Canada",
       });
 
-      mockPrimeRate = { primeRate: 6.750, effectiveDate: "2024-03-15" };
+      mockPrimeRate = { primeRate: 6.75, effectiveDate: "2024-03-15" };
 
       // Mock fetchLatestPrimeRate
       const originalFetch = (global as any).fetch;
       (global as any).fetch = async () => ({
         ok: true,
         json: async () => ({
-          observations: [{
-            d: mockPrimeRate!.effectiveDate,
-            V121796: { v: mockPrimeRate!.primeRate.toString() },
-          }],
+          observations: [
+            {
+              d: mockPrimeRate!.effectiveDate,
+              V121796: { v: mockPrimeRate!.primeRate.toString() },
+            },
+          ],
         }),
       });
 
@@ -418,7 +444,7 @@ describe("PrimeRateTrackingService", () => {
       const latest = await service.getLatest();
 
       assert.ok(latest, "Should return latest");
-      assert.equal(latest.rate, 6.750, "Should return most recent rate");
+      assert.equal(latest.rate, 6.75, "Should return most recent rate");
       assert.equal(latest.effectiveDate, "2024-03-15");
     });
 
@@ -428,4 +454,3 @@ describe("PrimeRateTrackingService", () => {
     });
   });
 });
-

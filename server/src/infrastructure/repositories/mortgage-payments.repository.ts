@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "@infrastructure/db/connection";
-import type { NeonDatabase, NodePgDatabase } from "drizzle-orm";
+import type { NeonDatabase } from "drizzle-orm/neon-serverless";
+import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type * as schema from "@shared/schema";
 import {
   mortgagePayments,

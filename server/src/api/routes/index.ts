@@ -9,6 +9,10 @@ import { registerPrepaymentEventRoutes } from "./prepayment-event.routes";
 import { registerRefinancingEventRoutes } from "./refinancing-event.routes";
 import { registerSeedRoutes } from "./seed.routes";
 import { registerPrimeRateRoutes } from "./prime-rate.routes";
+import { createImpactRoutes } from "./impact.routes";
+import { createPrepaymentRoutes } from "./prepayment.routes";
+import { createSimulationRoutes } from "./simulation.routes";
+import { createHealthRoutes } from "./health.routes";
 
 export function buildApiRouter(services: ApplicationServices, repositories: Repositories): Router {
   const router = Router();
@@ -21,6 +25,10 @@ export function buildApiRouter(services: ApplicationServices, repositories: Repo
   registerPrepaymentEventRoutes(router, services);
   registerRefinancingEventRoutes(router, services);
   registerPrimeRateRoutes(router, services);
+  router.use("/impact", createImpactRoutes(services, repositories));
+  router.use("/prepayment", createPrepaymentRoutes(services));
+  router.use("/simulations", createSimulationRoutes(services.simulationService));
+  router.use("/mortgages", createHealthRoutes(services.healthScoreService)); // Mounting under /api/mortgages for consistency with REST
 
   return router;
 }

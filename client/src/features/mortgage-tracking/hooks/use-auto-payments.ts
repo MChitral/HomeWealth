@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import type { Mortgage } from "@shared/schema";
 import type { UiPayment, UiTerm } from "../types";
 import { calculatePayment, type PaymentFrequency } from "../utils/mortgage-math";
 
-type MortgageTermType = "fixed" | "variable-changing" | "variable-fixed";
+export type MortgageTermType = "fixed" | "variable-changing" | "variable-fixed";
 
-type UseAutoCreatePaymentOptions = {
+export type UseAutoCreatePaymentOptions = {
   loanAmount: number;
   amortizationYears: string;
   frequency: PaymentFrequency;
@@ -32,21 +32,14 @@ export function useAutoCreatePayment({
   paymentEdited,
   setPaymentAmount,
 }: UseAutoCreatePaymentOptions): string {
-  const [autoPayment, setAutoPayment] = useState("");
-
-  useEffect(() => {
+  const autoPayment = useMemo(() => {
     if (!Number.isFinite(loanAmount) || loanAmount <= 0 || !startDate) {
-      setAutoPayment("");
-      if (!paymentEdited) {
-        setPaymentAmount("");
-      }
-      return;
+      return "";
     }
 
     const amortMonths = parseInt(amortizationYears, 10) * 12;
     if (!Number.isFinite(amortMonths) || amortMonths <= 0) {
-      setAutoPayment("");
-      return;
+      return "";
     }
 
     const effectiveRatePercent =
@@ -56,8 +49,7 @@ export function useAutoCreatePayment({
           (parseFloat(spreadInput || "0") || 0);
 
     if (!Number.isFinite(effectiveRatePercent) || effectiveRatePercent <= 0) {
-      setAutoPayment("");
-      return;
+      return "";
     }
 
     const paymentValue = calculatePayment(
@@ -68,14 +60,9 @@ export function useAutoCreatePayment({
     );
 
     if (Number.isFinite(paymentValue)) {
-      const formatted = paymentValue.toFixed(2);
-      setAutoPayment(formatted);
-      if (!paymentEdited) {
-        setPaymentAmount(formatted);
-      }
-    } else {
-      setAutoPayment("");
+      return paymentValue.toFixed(2);
     }
+    return "";
   }, [
     loanAmount,
     amortizationYears,
@@ -86,14 +73,23 @@ export function useAutoCreatePayment({
     primeInput,
     fallbackPrime,
     startDate,
-    paymentEdited,
-    setPaymentAmount,
   ]);
+
+  // Sync with form state if not edited manually
+  useEffect(() => {
+    if (!paymentEdited && autoPayment) {
+      setPaymentAmount(autoPayment);
+    } else if (!paymentEdited && !autoPayment) {
+      // Optional: clear payment if calculation becomes invalid?
+      // Better to check if it WAS valid before. For now, matching previous behavior loosely.
+      setPaymentAmount("");
+    }
+  }, [autoPayment, paymentEdited, setPaymentAmount]);
 
   return autoPayment;
 }
 
-type UseAutoRenewalPaymentOptions = {
+export type UseAutoRenewalPaymentOptions = {
   mortgage: Mortgage | null;
   currentTerm: UiTerm | null;
   paymentHistory: UiPayment[];
@@ -128,12 +124,9 @@ export function useAutoRenewalPayment({
   paymentEdited,
   setPaymentAmount,
 }: UseAutoRenewalPaymentOptions): string {
-  const [autoPayment, setAutoPayment] = useState("");
-
-  useEffect(() => {
+  const autoPayment = useMemo(() => {
     if (!mortgage || !currentTerm) {
-      setAutoPayment("");
-      return;
+      return "";
     }
 
     const balance =
@@ -142,8 +135,7 @@ export function useAutoRenewalPayment({
       Number(mortgage.currentBalance || 0);
 
     if (!Number.isFinite(balance) || balance <= 0) {
-      setAutoPayment("");
-      return;
+      return "";
     }
 
     const remainingMonths =
@@ -152,8 +144,7 @@ export function useAutoRenewalPayment({
       mortgage.amortizationYears * 12;
 
     if (!Number.isFinite(remainingMonths) || remainingMonths <= 0) {
-      setAutoPayment("");
-      return;
+      return "";
     }
 
     const effectiveRatePercent =
@@ -163,8 +154,7 @@ export function useAutoRenewalPayment({
           (parseFloat(renewalSpreadInput || fallbackSpread?.toString() || "0") || 0);
 
     if (!Number.isFinite(effectiveRatePercent) || effectiveRatePercent <= 0) {
-      setAutoPayment("");
-      return;
+      return "";
     }
 
     const paymentValue = calculatePayment(
@@ -175,14 +165,9 @@ export function useAutoRenewalPayment({
     );
 
     if (Number.isFinite(paymentValue)) {
-      const formatted = paymentValue.toFixed(2);
-      setAutoPayment(formatted);
-      if (!paymentEdited) {
-        setPaymentAmount(formatted);
-      }
-    } else {
-      setAutoPayment("");
+      return paymentValue.toFixed(2);
     }
+    return "";
   }, [
     mortgage,
     currentTerm,
@@ -197,9 +182,16 @@ export function useAutoRenewalPayment({
     fallbackSpread,
     fallbackFixedRate,
     frequency,
-    paymentEdited,
-    setPaymentAmount,
   ]);
+
+  // Sync with form state if not edited manually
+  useEffect(() => {
+    if (!paymentEdited && autoPayment) {
+      setPaymentAmount(autoPayment);
+    } else if (!paymentEdited && !autoPayment) {
+      setPaymentAmount("");
+    }
+  }, [autoPayment, paymentEdited, setPaymentAmount]);
 
   return autoPayment;
 }

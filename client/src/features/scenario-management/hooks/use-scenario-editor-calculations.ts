@@ -4,7 +4,7 @@ import {
   calculatePaymentBreakdown,
   type PaymentFrequency,
 } from "@/features/mortgage-tracking/utils/mortgage-math";
-import type { Mortgage, Term, Payment } from "@shared/schema";
+import type { Mortgage, MortgageTerm as Term, MortgagePayment as Payment } from "@shared/schema";
 import type { CashFlow } from "@shared/schema";
 
 interface UseScenarioEditorCalculationsProps {

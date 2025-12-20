@@ -13,8 +13,8 @@ import {
   calculateSkippedPayment,
   canSkipPayment,
   countSkippedPaymentsInYear,
-  type PaymentFrequency,
 } from "@server-shared/calculations/payment-skipping";
+import type { PaymentFrequency } from "@server-shared/calculations/mortgage";
 import { adjustToBusinessDay } from "@server-shared/utils/business-days";
 
 class PrepaymentLimitError extends Error {

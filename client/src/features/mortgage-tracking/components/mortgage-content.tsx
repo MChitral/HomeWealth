@@ -44,7 +44,7 @@ interface MortgageContentProps {
   // Form states
   editMortgageForm: UseFormReturn<EditMortgageFormData>;
   firstTermFormState: {
-    form: UseFormReturn<CreateMortgageFormData>;
+    form: UseFormReturn<TermRenewalFormData>;
     isValid: boolean;
     autoPayment: string;
     paymentEdited: boolean;

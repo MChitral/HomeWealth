@@ -42,7 +42,9 @@ export function useScenarioBasicInfoFormState({
         // These will need to come from parent component or be preserved from existing scenario
         prepaymentMonthlyPercent: scenario?.prepaymentMonthlyPercent ?? 50,
         investmentMonthlyPercent: scenario?.investmentMonthlyPercent ?? 50,
-        expectedReturnRate: scenario?.expectedReturnRate ?? 6.0,
+        expectedReturnRate: scenario?.expectedReturnRate
+          ? Number(scenario.expectedReturnRate)
+          : 6.0,
         efPriorityPercent: scenario?.efPriorityPercent ?? 0,
       };
 

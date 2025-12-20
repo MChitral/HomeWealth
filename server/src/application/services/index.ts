@@ -10,6 +10,13 @@ import { RefinancingEventService } from "./refinancing-event.service";
 import { ScenarioProjectionService } from "./scenario-projection.service";
 import { PrimeRateTrackingService } from "./prime-rate-tracking.service";
 import { TriggerRateMonitor } from "./trigger-rate-monitor";
+import { ImpactCalculator } from "./impact-calculator.service";
+import { RenewalService } from "./renewal.service";
+import { MarketRateService } from "./market-rate.service";
+import { RefinancingService } from "./refinancing.service";
+import { PrepaymentService } from "./prepayment.service";
+import { SimulationService } from "./simulation.service";
+import { HealthScoreService } from "./health-score.service";
 
 export interface ApplicationServices {
   cashFlows: CashFlowService;
@@ -23,9 +30,37 @@ export interface ApplicationServices {
   scenarioProjections: ScenarioProjectionService;
   primeRateTracking: PrimeRateTrackingService;
   triggerRateMonitor: TriggerRateMonitor;
+  impactCalculator: ImpactCalculator;
+  renewalService: RenewalService;
+  marketRateService: MarketRateService;
+  refinancingService: RefinancingService;
+  prepaymentService: PrepaymentService;
+  simulationService: SimulationService;
+  healthScoreService: HealthScoreService;
 }
 
 export function createServices(repositories: Repositories): ApplicationServices {
+  const triggerRateMonitor = new TriggerRateMonitor(
+    repositories.mortgages,
+    repositories.mortgageTerms,
+    repositories.mortgagePayments
+  );
+
+  const impactCalculator = new ImpactCalculator(
+    repositories.mortgages,
+    repositories.mortgagePayments,
+    triggerRateMonitor
+  );
+
+  const renewalService = new RenewalService(repositories.mortgages, repositories.mortgageTerms);
+
+  const marketRateService = new MarketRateService();
+  const refinancingService = new RefinancingService(
+    repositories.mortgages,
+    repositories.mortgageTerms,
+    marketRateService
+  );
+
   return {
     cashFlows: new CashFlowService(repositories.cashFlows),
     emergencyFunds: new EmergencyFundService(repositories.emergencyFunds),
@@ -62,12 +97,24 @@ export function createServices(repositories: Repositories): ApplicationServices 
     primeRateTracking: new PrimeRateTrackingService(
       repositories.primeRateHistory,
       repositories.mortgageTerms,
-      repositories.mortgages
+      repositories.mortgages,
+      impactCalculator
     ),
-    triggerRateMonitor: new TriggerRateMonitor(
+    triggerRateMonitor,
+    impactCalculator,
+    renewalService,
+    marketRateService,
+    refinancingService,
+    prepaymentService: new PrepaymentService(
+      repositories.cashFlows,
+      repositories.mortgages,
+      repositories.mortgagePayments
+    ),
+    simulationService: new SimulationService(repositories.mortgages, repositories.mortgageTerms),
+    healthScoreService: new HealthScoreService(
       repositories.mortgages,
       repositories.mortgageTerms,
-      repositories.mortgagePayments
+      marketRateService
     ),
   };
 }
@@ -83,3 +130,10 @@ export * from "./refinancing-event.service";
 export * from "./scenario-projection.service";
 export * from "./prime-rate-tracking.service";
 export * from "./trigger-rate-monitor";
+export * from "./impact-calculator.service";
+export * from "./renewal.service";
+export * from "./market-rate.service";
+export * from "./refinancing.service";
+export * from "./prepayment.service";
+export * from "./simulation.service";
+export * from "./health-score.service";

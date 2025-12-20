@@ -9,7 +9,7 @@ export function errorHandler(err: any, _req: Request, res: Response, _next: Next
 
   res.status(status).json({
     error: sanitized.message,
-    ...(sanitized.details && { details: sanitized.details }),
+    ...(sanitized.details ? { details: sanitized.details } : {}),
   });
 
   // Always log full error details server-side for debugging

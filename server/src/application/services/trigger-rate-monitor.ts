@@ -10,7 +10,6 @@ import {
   calculateRemainingBalance,
   type PaymentFrequency,
 } from "@server-shared/calculations/mortgage";
-import type { PaymentFrequency as PaymentFrequencyType } from "@shared/schema";
 
 export interface TriggerRateAlert {
   mortgageId: string;
@@ -89,7 +88,7 @@ export class TriggerRateMonitor {
     if (isHit || isRisk) {
       return {
         mortgageId: mortgage.id,
-        mortgageName: mortgage.name || "Mortgage",
+        mortgageName: "Mortgage",
         userId: mortgage.userId,
         currentRate: currentRateDecimal,
         triggerRate,

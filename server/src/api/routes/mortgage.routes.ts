@@ -201,6 +201,53 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
     res.json(status); // Returns TriggerRateAlert or null
   });
 
+  router.get("/mortgages/:id/renewal-status", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+
+    try {
+      const status = await services.renewalService.getRenewalStatus(req.params.id);
+      if (!status) {
+        // Not finding status (e.g., no active term) isn't necessarily a 404 on the whole mortgage/endpoint,
+        // but let's return null or 404. Let's return 200 with null for "no active renewal info".
+        res.json(null);
+        return;
+      }
+      res.json(status);
+    } catch (error) {
+      sendError(res, 400, "Failed to fetch renewal status", error);
+    }
+  });
+
+  router.get("/market-rates", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+
+    try {
+      const rates = await services.marketRateService.getMarketRates();
+      res.json(rates);
+    } catch (error) {
+      sendError(res, 500, "Failed to fetch market rates", error);
+    }
+  });
+
+  router.get("/mortgages/:id/refinance-analysis", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+
+    try {
+      const analysis = await services.refinancingService.analyzeRefinanceOpportunity(req.params.id);
+      if (!analysis) {
+        // Return null or 404. Let's return null to signify no analysis possible (e.g. no active term)
+        res.json(null);
+        return;
+      }
+      res.json(analysis);
+    } catch (error) {
+      sendError(res, 400, "Failed to analyze refinance opportunity", error);
+    }
+  });
+
   router.post("/mortgages", async (req, res) => {
     const user = requireUser(req, res);
     if (!user) return;
