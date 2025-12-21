@@ -114,10 +114,7 @@ describe("Payment Skipping Calculations", () => {
           currentAmortizationMonths
         );
 
-        assert.ok(
-          result.interestAccrued > 0,
-          `Interest should accrue for ${frequency} frequency`
-        );
+        assert.ok(result.interestAccrued > 0, `Interest should accrue for ${frequency} frequency`);
         assert.ok(
           result.newBalance > currentBalance,
           `Balance should increase for ${frequency} frequency`
@@ -126,22 +123,17 @@ describe("Payment Skipping Calculations", () => {
     });
 
     it("rounds amounts to nearest cent", () => {
-      const result = calculateSkippedPayment(
-        400000,
-        0.0549,
-        "monthly",
-        240
-      );
+      const result = calculateSkippedPayment(400000, 0.0549, "monthly", 240);
 
       // Check interest is rounded
-      const interestDecimalPlaces = (result.interestAccrued.toString().split('.')[1] || '').length;
+      const interestDecimalPlaces = (result.interestAccrued.toString().split(".")[1] || "").length;
       assert.ok(
         interestDecimalPlaces <= 2,
         `Interest should be rounded to 2 decimal places. Got: ${result.interestAccrued} (${interestDecimalPlaces} places)`
       );
 
       // Check balance is rounded
-      const balanceDecimalPlaces = (result.newBalance.toString().split('.')[1] || '').length;
+      const balanceDecimalPlaces = (result.newBalance.toString().split(".")[1] || "").length;
       assert.ok(
         balanceDecimalPlaces <= 2,
         `Balance should be rounded to 2 decimal places. Got: ${result.newBalance} (${balanceDecimalPlaces} places)`
@@ -151,36 +143,18 @@ describe("Payment Skipping Calculations", () => {
 
   describe("canSkipPayment", () => {
     it("allows skipping if under limit", () => {
-      assert.ok(
-        canSkipPayment(0, 2),
-        "Should allow skipping when no payments skipped yet"
-      );
-      assert.ok(
-        canSkipPayment(1, 2),
-        "Should allow skipping when 1 payment already skipped"
-      );
+      assert.ok(canSkipPayment(0, 2), "Should allow skipping when no payments skipped yet");
+      assert.ok(canSkipPayment(1, 2), "Should allow skipping when 1 payment already skipped");
     });
 
     it("prevents skipping if at limit", () => {
-      assert.ok(
-        !canSkipPayment(2, 2),
-        "Should not allow skipping when at limit (2 skips)"
-      );
-      assert.ok(
-        !canSkipPayment(3, 2),
-        "Should not allow skipping when over limit"
-      );
+      assert.ok(!canSkipPayment(2, 2), "Should not allow skipping when at limit (2 skips)");
+      assert.ok(!canSkipPayment(3, 2), "Should not allow skipping when over limit");
     });
 
     it("allows custom skip limits", () => {
-      assert.ok(
-        canSkipPayment(0, 1),
-        "Should allow skipping with limit of 1"
-      );
-      assert.ok(
-        !canSkipPayment(1, 1),
-        "Should not allow skipping when at limit of 1"
-      );
+      assert.ok(canSkipPayment(0, 1), "Should allow skipping with limit of 1");
+      assert.ok(!canSkipPayment(1, 1), "Should not allow skipping when at limit of 1");
     });
   });
 
@@ -195,18 +169,10 @@ describe("Payment Skipping Calculations", () => {
       ];
 
       const count2024 = countSkippedPaymentsInYear(payments, 2024);
-      assert.strictEqual(
-        count2024,
-        2,
-        "Should count 2 skipped payments in 2024"
-      );
+      assert.strictEqual(count2024, 2, "Should count 2 skipped payments in 2024");
 
       const count2025 = countSkippedPaymentsInYear(payments, 2025);
-      assert.strictEqual(
-        count2025,
-        1,
-        "Should count 1 skipped payment in 2025"
-      );
+      assert.strictEqual(count2025, 1, "Should count 1 skipped payment in 2025");
     });
 
     it("handles boolean isSkipped values", () => {
@@ -217,11 +183,7 @@ describe("Payment Skipping Calculations", () => {
       ];
 
       const count = countSkippedPaymentsInYear(payments, 2024);
-      assert.strictEqual(
-        count,
-        2,
-        "Should count skipped payments with boolean values"
-      );
+      assert.strictEqual(count, 2, "Should count skipped payments with boolean values");
     });
 
     it("defaults to current year if year not specified", () => {
@@ -233,11 +195,7 @@ describe("Payment Skipping Calculations", () => {
       ];
 
       const count = countSkippedPaymentsInYear(payments);
-      assert.strictEqual(
-        count,
-        2,
-        "Should count skipped payments in current year"
-      );
+      assert.strictEqual(count, 2, "Should count skipped payments in current year");
     });
 
     it("returns 0 if no skipped payments in year", () => {
@@ -248,11 +206,7 @@ describe("Payment Skipping Calculations", () => {
       ];
 
       const count = countSkippedPaymentsInYear(payments, 2024);
-      assert.strictEqual(
-        count,
-        0,
-        "Should return 0 if no skipped payments"
-      );
+      assert.strictEqual(count, 0, "Should return 0 if no skipped payments");
     });
   });
 
@@ -265,7 +219,7 @@ describe("Payment Skipping Calculations", () => {
       ];
 
       const total = calculateTotalSkippedInterest(payments);
-      const expected = 1830.00 + 1850.50 + 1800.25;
+      const expected = 1830.0 + 1850.5 + 1800.25;
 
       assert.ok(
         Math.abs(total - expected) < 0.01,
@@ -274,32 +228,19 @@ describe("Payment Skipping Calculations", () => {
     });
 
     it("handles numeric values", () => {
-      const payments = [
-        { skippedInterestAccrued: 1830.00 },
-        { skippedInterestAccrued: 1850.50 },
-      ];
+      const payments = [{ skippedInterestAccrued: 1830.0 }, { skippedInterestAccrued: 1850.5 }];
 
       const total = calculateTotalSkippedInterest(payments);
-      const expected = 1830.00 + 1850.50;
+      const expected = 1830.0 + 1850.5;
 
-      assert.ok(
-        Math.abs(total - expected) < 0.01,
-        "Should handle numeric values"
-      );
+      assert.ok(Math.abs(total - expected) < 0.01, "Should handle numeric values");
     });
 
     it("returns 0 if no skipped payments", () => {
-      const payments = [
-        { skippedInterestAccrued: "0.00" },
-        { skippedInterestAccrued: "0.00" },
-      ];
+      const payments = [{ skippedInterestAccrued: "0.00" }, { skippedInterestAccrued: "0.00" }];
 
       const total = calculateTotalSkippedInterest(payments);
-      assert.strictEqual(
-        total,
-        0,
-        "Should return 0 if no skipped interest"
-      );
+      assert.strictEqual(total, 0, "Should return 0 if no skipped interest");
     });
 
     it("handles missing or null values", () => {
@@ -310,11 +251,7 @@ describe("Payment Skipping Calculations", () => {
       ];
 
       const total = calculateTotalSkippedInterest(payments);
-      assert.strictEqual(
-        total,
-        1830.00,
-        "Should ignore null/undefined values"
-      );
+      assert.strictEqual(total, 1830.0, "Should ignore null/undefined values");
     });
   });
 
@@ -364,18 +301,10 @@ describe("Payment Skipping Calculations", () => {
       ];
 
       const skippedCount = countSkippedPaymentsInYear(payments2024, 2024);
-      assert.strictEqual(
-        skippedCount,
-        2,
-        "Should count 2 skipped payments"
-      );
+      assert.strictEqual(skippedCount, 2, "Should count 2 skipped payments");
 
       // Should not be able to skip another payment
-      assert.ok(
-        !canSkipPayment(skippedCount, 2),
-        "Should not allow skipping when at limit"
-      );
+      assert.ok(!canSkipPayment(skippedCount, 2), "Should not allow skipping when at limit");
     });
   });
 });
-

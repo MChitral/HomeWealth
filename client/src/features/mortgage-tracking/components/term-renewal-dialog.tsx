@@ -30,7 +30,6 @@ interface TermRenewalDialogProps {
   description?: string;
   showAlert?: boolean;
   alertMessage?: string;
-  defaultStartDate?: string;
   triggerButton?: React.ReactNode;
   // Auto payment feature (optional)
   autoPaymentAmount?: string;
@@ -74,8 +73,6 @@ function TermRenewalFormFields({
 
   const termType = watch("termType");
   const termYears = watch("termYears");
-  const primeRate = watch("primeRate");
-  const spread = watch("spread");
 
   return (
     <div className="space-y-4 py-4">
@@ -375,7 +372,6 @@ export function TermRenewalDialog({
   description = "Start a new term with a new rate or spread (typically every 3-5 years)",
   showAlert = true,
   alertMessage,
-  defaultStartDate,
   triggerButton,
   autoPaymentAmount,
   paymentEdited,

@@ -40,7 +40,7 @@ describe("Scenario projections prepayment allocation", () => {
         mortgage: mockMortgage,
       },
       1,
-      0.05,
+      0.05
     );
 
     assert.ok(projections.length > 0);
@@ -49,4 +49,3 @@ describe("Scenario projections prepayment allocation", () => {
     assert.ok(year1.cumulativePrepayments <= year1.cumulativePrincipal);
   });
 });
-

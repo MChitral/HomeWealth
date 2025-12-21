@@ -18,22 +18,28 @@ describe("mortgage-math payment helpers", () => {
       principal,
       annualRate,
       amortizationMonths,
-      "accelerated-biweekly",
+      "accelerated-biweekly"
     );
     const accelWeekly = calculatePayment(
       principal,
       annualRate,
       amortizationMonths,
-      "accelerated-weekly",
+      "accelerated-weekly"
     );
 
-    assert.ok(Math.abs(accelBiweekly - monthly / 2) < 0.01, "accelerated bi-weekly halves the monthly");
-    assert.ok(Math.abs(accelWeekly - monthly / 4) < 0.01, "accelerated weekly quarters the monthly");
+    assert.ok(
+      Math.abs(accelBiweekly - monthly / 2) < 0.01,
+      "accelerated bi-weekly halves the monthly"
+    );
+    assert.ok(
+      Math.abs(accelWeekly - monthly / 4) < 0.01,
+      "accelerated weekly quarters the monthly"
+    );
   });
 
   it("splits a scheduled payment into principal and interest with Canadian compounding", () => {
     const paymentAmount = Number(
-      calculatePayment(principal, annualRate, amortizationMonths, "monthly").toFixed(2),
+      calculatePayment(principal, annualRate, amortizationMonths, "monthly").toFixed(2)
     );
     const breakdown = calculatePaymentBreakdown({
       balance: principal,
@@ -47,7 +53,7 @@ describe("mortgage-math payment helpers", () => {
     assert.equal(breakdown.remainingBalance, Number((principal - breakdown.principal).toFixed(2)));
     assert.ok(
       breakdown.remainingAmortizationMonths > 0 &&
-        breakdown.remainingAmortizationMonths <= amortizationMonths,
+        breakdown.remainingAmortizationMonths <= amortizationMonths
     );
   });
 
@@ -72,7 +78,7 @@ describe("mortgage-math payment helpers", () => {
 
   it("applies extra prepayments directly against principal", () => {
     const paymentAmount = Number(
-      calculatePayment(principal, annualRate, amortizationMonths, "monthly").toFixed(2),
+      calculatePayment(principal, annualRate, amortizationMonths, "monthly").toFixed(2)
     );
     const baseBreakdown = calculatePaymentBreakdown({
       balance: principal,
@@ -95,4 +101,3 @@ describe("mortgage-math payment helpers", () => {
     assert.ok(boostedBreakdown.remainingBalance < baseBreakdown.remainingBalance);
   });
 });
-

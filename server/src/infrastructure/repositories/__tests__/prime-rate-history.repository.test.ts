@@ -174,4 +174,3 @@ describe("PrimeRateHistoryRepository", () => {
     assert.ok(all.length >= 2, "Should include all created entries");
   });
 });
-

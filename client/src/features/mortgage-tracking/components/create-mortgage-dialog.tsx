@@ -8,7 +8,6 @@ import {
   DialogTitle,
 } from "@/shared/ui/dialog";
 import { Input } from "@/shared/ui/input";
-import { Label } from "@/shared/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { InfoTooltip } from "@/shared/ui/info-tooltip";
 import { Loader2, RefreshCw } from "lucide-react";
@@ -217,7 +216,7 @@ function Step2Fields({
 
       // Only fetch historical rate if startDate is in the past
       if (startDateObj < today) {
-        setIsLoadingHistorical(true);
+        if (!isLoadingHistorical) setIsLoadingHistorical(true);
         const queryStartDate = new Date(startDateObj);
         queryStartDate.setMonth(queryStartDate.getMonth() - 3);
         const queryEndDate = new Date(startDateObj);

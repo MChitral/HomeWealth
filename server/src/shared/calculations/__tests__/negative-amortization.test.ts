@@ -1,9 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import {
-  generateAmortizationScheduleWithPayment,
-  type PaymentFrequency,
-} from "../mortgage";
+import { generateAmortizationScheduleWithPayment, type PaymentFrequency } from "../mortgage";
 
 describe("Negative Amortization Handling", () => {
   it("balance increases when trigger rate is hit for VRM-Fixed Payment", () => {
@@ -43,8 +40,11 @@ describe("Negative Amortization Handling", () => {
 
     const firstPayment = schedule.payments[0];
     assert.ok(firstPayment.triggerRateHit, "Trigger rate should be hit");
-    assert.ok(firstPayment.interestPayment > firstPayment.paymentAmount, "Interest should exceed payment");
-    
+    assert.ok(
+      firstPayment.interestPayment > firstPayment.paymentAmount,
+      "Interest should exceed payment"
+    );
+
     // Balance should increase (negative amortization)
     const secondPayment = schedule.payments[1];
     assert.ok(
@@ -54,7 +54,8 @@ describe("Negative Amortization Handling", () => {
 
     // Verify unpaid interest is added to balance
     const unpaidInterest = firstPayment.interestPayment - firstPayment.paymentAmount;
-    const expectedBalanceIncrease = firstPayment.remainingBalance + unpaidInterest - firstPayment.remainingBalance;
+    const expectedBalanceIncrease =
+      firstPayment.remainingBalance + unpaidInterest - firstPayment.remainingBalance;
     assert.ok(expectedBalanceIncrease > 0, "Balance should increase by unpaid interest");
   });
 
@@ -80,7 +81,11 @@ describe("Negative Amortization Handling", () => {
 
     const firstPayment = schedule.payments[0];
     if (firstPayment.triggerRateHit) {
-      assert.equal(firstPayment.principalPayment, 0, "Principal payment should be zero when trigger rate hit");
+      assert.equal(
+        firstPayment.principalPayment,
+        0,
+        "Principal payment should be zero when trigger rate hit"
+      );
     }
   });
 
@@ -93,11 +98,13 @@ describe("Negative Amortization Handling", () => {
     const startDate = new Date("2024-01-01");
 
     // Add prepayment that covers unpaid interest
-    const prepayments = [{
-      type: 'one-time' as const,
-      amount: 500, // Large prepayment
-      startPaymentNumber: 1,
-    }];
+    const prepayments = [
+      {
+        type: "one-time" as const,
+        amount: 500, // Large prepayment
+        startPaymentNumber: 1,
+      },
+    ];
 
     const schedule = generateAmortizationScheduleWithPayment(
       principal,
@@ -113,16 +120,13 @@ describe("Negative Amortization Handling", () => {
 
     const firstPayment = schedule.payments[0];
     assert.ok(firstPayment.triggerRateHit, "Trigger rate should still be hit");
-    
+
     // With prepayment, balance should decrease or increase less
     const unpaidInterest = firstPayment.interestPayment - firstPayment.paymentAmount;
     const netChange = firstPayment.remainingBalance - principal;
-    
+
     // Prepayment should reduce the negative amortization
-    assert.ok(
-      netChange < unpaidInterest,
-      "Prepayment should reduce negative amortization"
-    );
+    assert.ok(netChange < unpaidInterest, "Prepayment should reduce negative amortization");
   });
 
   it("remaining amortization is -1 when trigger rate is hit", () => {
@@ -155,4 +159,3 @@ describe("Negative Amortization Handling", () => {
     }
   });
 });
-

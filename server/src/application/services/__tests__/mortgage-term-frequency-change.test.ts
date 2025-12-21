@@ -32,8 +32,8 @@ class MockMortgageTermsRepository {
   async update(id: string, payload: any): Promise<MortgageTerm | undefined> {
     const term = this.terms.get(id);
     if (!term) return undefined;
-    const updated: MortgageTerm = { 
-      ...term, 
+    const updated: MortgageTerm = {
+      ...term,
       ...payload,
       id: term.id,
       mortgageId: term.mortgageId,
@@ -41,7 +41,7 @@ class MockMortgageTermsRepository {
     };
     this.terms.set(id, updated);
     const existing = this.mortgageTerms.get(term.mortgageId) || [];
-    const index = existing.findIndex(t => t.id === id);
+    const index = existing.findIndex((t) => t.id === id);
     if (index >= 0) {
       existing[index] = updated;
       this.mortgageTerms.set(term.mortgageId, existing);
@@ -54,7 +54,7 @@ class MockMortgageTermsRepository {
   setTerm(term: MortgageTerm): void {
     this.terms.set(term.id, term);
     const existing = this.mortgageTerms.get(term.mortgageId) || [];
-    if (!existing.find(t => t.id === term.id)) {
+    if (!existing.find((t) => t.id === term.id)) {
       this.mortgageTerms.set(term.mortgageId, [...existing, term]);
     }
   }
@@ -98,14 +98,10 @@ describe("MortgageTermService - Payment Frequency Change", () => {
     mortgagesRepo = new MockMortgagesRepository();
     termsRepo = new MockMortgageTermsRepository();
     paymentsRepo = new MockMortgagePaymentsRepository();
-    
+
     mortgagesRepo.setMortgage(mockMortgage);
-    
-    service = new MortgageTermService(
-      mortgagesRepo as any,
-      termsRepo as any,
-      paymentsRepo as any,
-    );
+
+    service = new MortgageTermService(mortgagesRepo as any, termsRepo as any, paymentsRepo as any);
   });
 
   it("changes frequency from monthly to biweekly and recalculates payment", async () => {
@@ -126,12 +122,14 @@ describe("MortgageTermService - Payment Frequency Change", () => {
     termsRepo.setTerm(monthlyTerm);
 
     // Set a payment to establish current balance
-    paymentsRepo.setPayments("term-1", [{
-      id: "payment-1",
-      remainingBalance: "550000.00",
-      remainingAmortizationMonths: 280,
-      paymentDate: "2023-06-01",
-    }]);
+    paymentsRepo.setPayments("term-1", [
+      {
+        id: "payment-1",
+        remainingBalance: "550000.00",
+        remainingAmortizationMonths: 280,
+        paymentDate: "2023-06-01",
+      },
+    ]);
 
     const result = await service.changePaymentFrequency("term-1", "user-1", "biweekly");
 
@@ -142,10 +140,7 @@ describe("MortgageTermService - Payment Frequency Change", () => {
       "biweekly",
       "Payment frequency should be updated to biweekly"
     );
-    assert.ok(
-      result.newPaymentAmount > 0,
-      "New payment amount should be calculated"
-    );
+    assert.ok(result.newPaymentAmount > 0, "New payment amount should be calculated");
     assert.ok(
       result.newPaymentAmount !== 3500,
       "Payment amount should change when frequency changes"
@@ -169,12 +164,14 @@ describe("MortgageTermService - Payment Frequency Change", () => {
     };
     termsRepo.setTerm(monthlyTerm);
 
-    paymentsRepo.setPayments("term-1", [{
-      id: "payment-1",
-      remainingBalance: "550000.00",
-      remainingAmortizationMonths: 280,
-      paymentDate: "2023-06-01",
-    }]);
+    paymentsRepo.setPayments("term-1", [
+      {
+        id: "payment-1",
+        remainingBalance: "550000.00",
+        remainingAmortizationMonths: 280,
+        paymentDate: "2023-06-01",
+      },
+    ]);
 
     const result = await service.changePaymentFrequency("term-1", "user-1", "accelerated-biweekly");
 
@@ -184,7 +181,7 @@ describe("MortgageTermService - Payment Frequency Change", () => {
       "accelerated-biweekly",
       "Payment frequency should be updated to accelerated-biweekly"
     );
-    
+
     // Accelerated biweekly is calculated from current balance and remaining amortization
     // It should be approximately half of what the monthly payment would be for the same balance
     // But since we're recalculating based on current state, it may differ slightly
@@ -192,7 +189,7 @@ describe("MortgageTermService - Payment Frequency Change", () => {
       result.newPaymentAmount > 0 && result.newPaymentAmount < 2000,
       `Accelerated biweekly payment should be reasonable. Got ${result.newPaymentAmount}`
     );
-    
+
     // Verify it's approximately half of monthly (allowing for recalculation differences)
     const monthlyPaymentForBalance = 3500; // Original monthly payment
     const expectedRange = monthlyPaymentForBalance / 2; // ~$1,750
@@ -219,12 +216,14 @@ describe("MortgageTermService - Payment Frequency Change", () => {
     };
     termsRepo.setTerm(biweeklyTerm);
 
-    paymentsRepo.setPayments("term-1", [{
-      id: "payment-1",
-      remainingBalance: "550000.00",
-      remainingAmortizationMonths: 280,
-      paymentDate: "2023-06-01",
-    }]);
+    paymentsRepo.setPayments("term-1", [
+      {
+        id: "payment-1",
+        remainingBalance: "550000.00",
+        remainingAmortizationMonths: 280,
+        paymentDate: "2023-06-01",
+      },
+    ]);
 
     const result = await service.changePaymentFrequency("term-1", "user-1", "monthly");
 
@@ -234,10 +233,7 @@ describe("MortgageTermService - Payment Frequency Change", () => {
       "monthly",
       "Payment frequency should be updated to monthly"
     );
-    assert.ok(
-      result.newPaymentAmount > 0,
-      "New payment amount should be calculated"
-    );
+    assert.ok(result.newPaymentAmount > 0, "New payment amount should be calculated");
   });
 
   it("uses remaining amortization from latest payment if available", async () => {
@@ -258,12 +254,14 @@ describe("MortgageTermService - Payment Frequency Change", () => {
     termsRepo.setTerm(term);
 
     // Set payment with specific remaining amortization
-    paymentsRepo.setPayments("term-1", [{
-      id: "payment-1",
-      remainingBalance: "500000.00",
-      remainingAmortizationMonths: 250, // 20.8 years remaining
-      paymentDate: "2023-06-01",
-    }]);
+    paymentsRepo.setPayments("term-1", [
+      {
+        id: "payment-1",
+        remainingBalance: "500000.00",
+        remainingAmortizationMonths: 250, // 20.8 years remaining
+        paymentDate: "2023-06-01",
+      },
+    ]);
 
     const result = await service.changePaymentFrequency("term-1", "user-1", "biweekly");
 
@@ -321,21 +319,19 @@ describe("MortgageTermService - Payment Frequency Change", () => {
     };
     termsRepo.setTerm(vrmTerm);
 
-    paymentsRepo.setPayments("term-1", [{
-      id: "payment-1",
-      remainingBalance: "550000.00",
-      remainingAmortizationMonths: 280,
-      paymentDate: "2023-06-01",
-    }]);
+    paymentsRepo.setPayments("term-1", [
+      {
+        id: "payment-1",
+        remainingBalance: "550000.00",
+        remainingAmortizationMonths: 280,
+        paymentDate: "2023-06-01",
+      },
+    ]);
 
     const result = await service.changePaymentFrequency("term-1", "user-1", "biweekly");
 
     assert.ok(result, "Frequency change should succeed for variable rate mortgages");
-    assert.equal(
-      result.term.paymentFrequency,
-      "biweekly",
-      "Payment frequency should be updated"
-    );
+    assert.equal(result.term.paymentFrequency, "biweekly", "Payment frequency should be updated");
   });
 
   it("returns undefined for non-existent term", async () => {
@@ -364,4 +360,3 @@ describe("MortgageTermService - Payment Frequency Change", () => {
     assert.equal(result, undefined, "Should return undefined for unauthorized user");
   });
 });
-

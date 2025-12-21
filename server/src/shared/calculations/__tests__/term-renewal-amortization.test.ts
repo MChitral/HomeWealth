@@ -20,7 +20,8 @@ describe("Term Renewal Amortization Reset", () => {
     const startDate = new Date("2020-01-01");
 
     // Calculate initial payment
-    const initialPayment = (principal * (initialRate / 12) * Math.pow(1 + initialRate / 12, 300)) /
+    const initialPayment =
+      (principal * (initialRate / 12) * Math.pow(1 + initialRate / 12, 300)) /
       (Math.pow(1 + initialRate / 12, 300) - 1);
 
     // After 60 payments (5 years), term renews with new rate
@@ -30,18 +31,20 @@ describe("Term Renewal Amortization Reset", () => {
     // Calculate what balance would be after 60 payments
     let remainingBalance = principal;
     for (let i = 0; i < 60; i++) {
-      const monthlyRate = Math.pow(1 + initialRate / 2, 1/6) - 1; // Approximate
+      const monthlyRate = Math.pow(1 + initialRate / 2, 1 / 6) - 1; // Approximate
       const interest = remainingBalance * monthlyRate;
       const principalPayment = initialPayment - interest;
       remainingBalance -= principalPayment;
     }
 
     // Term renewal: should use original amortization (300 months), not remaining (~240 months)
-    const termRenewals: TermRenewal[] = [{
-      startPaymentNumber: renewalPaymentNumber,
-      newRate: renewalRate,
-      originalAmortizationMonths: originalAmortizationMonths, // Original 25 years
-    }];
+    const termRenewals: TermRenewal[] = [
+      {
+        startPaymentNumber: renewalPaymentNumber,
+        newRate: renewalRate,
+        originalAmortizationMonths: originalAmortizationMonths, // Original 25 years
+      },
+    ];
 
     const schedule = generateAmortizationSchedule(
       principal,
@@ -55,12 +58,14 @@ describe("Term Renewal Amortization Reset", () => {
     );
 
     // Find the renewal payment
-    const renewalPayment = schedule.payments.find(p => p.paymentNumber === renewalPaymentNumber);
+    const renewalPayment = schedule.payments.find((p) => p.paymentNumber === renewalPaymentNumber);
     assert.ok(renewalPayment, "Renewal payment should exist");
 
     // Payment after renewal should be calculated using original amortization
     // This means the payment will be higher than if we used remaining amortization
-    const paymentAfterRenewal = schedule.payments.find(p => p.paymentNumber === renewalPaymentNumber + 1);
+    const paymentAfterRenewal = schedule.payments.find(
+      (p) => p.paymentNumber === renewalPaymentNumber + 1
+    );
     assert.ok(paymentAfterRenewal, "Payment after renewal should exist");
 
     // Verify the payment amount is recalculated (not just continuing with old payment)
@@ -80,12 +85,14 @@ describe("Term Renewal Amortization Reset", () => {
 
     const initialPayment = 3000; // Fixed payment amount
 
-    const termRenewals: TermRenewal[] = [{
-      startPaymentNumber: 61,
-      newRate: 0.06, // Rate increases
-      newPaymentAmount: initialPayment, // VRM-Fixed: payment stays same
-      originalAmortizationMonths: originalAmortizationMonths,
-    }];
+    const termRenewals: TermRenewal[] = [
+      {
+        startPaymentNumber: 61,
+        newRate: 0.06, // Rate increases
+        newPaymentAmount: initialPayment, // VRM-Fixed: payment stays same
+        originalAmortizationMonths: originalAmortizationMonths,
+      },
+    ];
 
     const schedule = generateAmortizationScheduleWithPayment(
       principal,
@@ -99,8 +106,8 @@ describe("Term Renewal Amortization Reset", () => {
       72
     );
 
-    const renewalPayment = schedule.payments.find(p => p.paymentNumber === 61);
-    const paymentAfterRenewal = schedule.payments.find(p => p.paymentNumber === 62);
+    const renewalPayment = schedule.payments.find((p) => p.paymentNumber === 61);
+    const paymentAfterRenewal = schedule.payments.find((p) => p.paymentNumber === 62);
 
     assert.ok(renewalPayment, "Renewal payment should exist");
     assert.ok(paymentAfterRenewal, "Payment after renewal should exist");
@@ -120,12 +127,14 @@ describe("Term Renewal Amortization Reset", () => {
     const frequency: PaymentFrequency = "monthly";
     const startDate = new Date("2020-01-01");
 
-    const termRenewals: TermRenewal[] = [{
-      startPaymentNumber: 61,
-      newRate: 0.06, // Rate increases
-      // newPaymentAmount not set = VRM-Changing, recalculate
-      originalAmortizationMonths: originalAmortizationMonths,
-    }];
+    const termRenewals: TermRenewal[] = [
+      {
+        startPaymentNumber: 61,
+        newRate: 0.06, // Rate increases
+        // newPaymentAmount not set = VRM-Changing, recalculate
+        originalAmortizationMonths: originalAmortizationMonths,
+      },
+    ];
 
     const schedule = generateAmortizationSchedule(
       principal,
@@ -138,15 +147,15 @@ describe("Term Renewal Amortization Reset", () => {
       72
     );
 
-    const renewalPayment = schedule.payments.find(p => p.paymentNumber === 61);
-    const paymentAfterRenewal = schedule.payments.find(p => p.paymentNumber === 62);
+    const renewalPayment = schedule.payments.find((p) => p.paymentNumber === 61);
+    const paymentAfterRenewal = schedule.payments.find((p) => p.paymentNumber === 62);
 
     assert.ok(renewalPayment, "Renewal payment should exist");
     assert.ok(paymentAfterRenewal, "Payment after renewal should exist");
 
     // VRM-Changing: payment should be recalculated
     // With higher rate, payment should increase
-    const paymentBeforeRenewal = schedule.payments.find(p => p.paymentNumber === 60);
+    const paymentBeforeRenewal = schedule.payments.find((p) => p.paymentNumber === 60);
     assert.ok(paymentBeforeRenewal, "Payment before renewal should exist");
 
     // Payment should change (likely increase due to higher rate)
@@ -156,4 +165,3 @@ describe("Term Renewal Amortization Reset", () => {
     );
   });
 });
-

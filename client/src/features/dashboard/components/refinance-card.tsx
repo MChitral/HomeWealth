@@ -1,4 +1,4 @@
-import { ArrowDownRight, TrendingDown, DollarSign, AlertCircle, CheckCircle2 } from "lucide-react";
+import { ArrowDownRight, TrendingDown, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
 import { RefinanceAnalysisResponse } from "@/features/mortgage-tracking/api";

@@ -32,8 +32,8 @@ class MockMortgageTermsRepository {
     const term = this.terms.get(id);
     if (!term) return undefined;
     // Deep merge to ensure all properties are updated
-    const updated: MortgageTerm = { 
-      ...term, 
+    const updated: MortgageTerm = {
+      ...term,
       ...payload,
       // Ensure all required fields are preserved
       id: term.id,
@@ -43,7 +43,7 @@ class MockMortgageTermsRepository {
     this.terms.set(id, updated);
     // Also update in mortgageTerms map
     const existing = this.mortgageTerms.get(term.mortgageId) || [];
-    const index = existing.findIndex(t => t.id === id);
+    const index = existing.findIndex((t) => t.id === id);
     if (index >= 0) {
       existing[index] = updated;
       this.mortgageTerms.set(term.mortgageId, existing);
@@ -58,7 +58,7 @@ class MockMortgageTermsRepository {
     this.terms.set(term.id, term);
     // Also add to mortgageTerms map
     const existing = this.mortgageTerms.get(term.mortgageId) || [];
-    if (!existing.find(t => t.id === term.id)) {
+    if (!existing.find((t) => t.id === term.id)) {
       this.mortgageTerms.set(term.mortgageId, [...existing, term]);
     }
   }
@@ -107,14 +107,10 @@ describe("MortgageTermService - VRM Payment Recalculation", () => {
     mortgagesRepo = new MockMortgagesRepository();
     termsRepo = new MockMortgageTermsRepository();
     paymentsRepo = new MockMortgagePaymentsRepository();
-    
+
     mortgagesRepo.setMortgage(mockMortgage);
-    
-    service = new MortgageTermService(
-      mortgagesRepo as any,
-      termsRepo as any,
-      paymentsRepo as any,
-    );
+
+    service = new MortgageTermService(mortgagesRepo as any, termsRepo as any, paymentsRepo as any);
   });
 
   it("rejects recalculation for fixed rate mortgages", async () => {
@@ -138,10 +134,7 @@ describe("MortgageTermService - VRM Payment Recalculation", () => {
       await service.recalculatePayment("term-1", "user-1");
       assert.fail("Should have thrown error for fixed rate mortgage");
     } catch (error: any) {
-      assert.ok(
-        error.message.includes("fixed rate"),
-        "Error message should mention fixed rate"
-      );
+      assert.ok(error.message.includes("fixed rate"), "Error message should mention fixed rate");
     }
   });
 
@@ -168,12 +161,13 @@ describe("MortgageTermService - VRM Payment Recalculation", () => {
 
     assert.ok(result, "Recalculation should succeed");
     assert.ok(result.term, "Result should include updated term");
-    
+
     // Prime rate should be updated (check the returned term)
     // The service updates the term and returns it
     const updatedTermFromRepo = await termsRepo.findById("term-1");
     assert.ok(
-      updatedTermFromRepo && (updatedTermFromRepo.primeRate === "6.750" || updatedTermFromRepo.primeRate === "6.75"),
+      updatedTermFromRepo &&
+        (updatedTermFromRepo.primeRate === "6.750" || updatedTermFromRepo.primeRate === "6.75"),
       `Prime rate should be updated to 6.750, got ${updatedTermFromRepo?.primeRate}`
     );
 
@@ -182,10 +176,7 @@ describe("MortgageTermService - VRM Payment Recalculation", () => {
       result.newPaymentAmount !== undefined,
       "New payment amount should be calculated for VRM-Changing"
     );
-    assert.ok(
-      result.newPaymentAmount! > 0,
-      "New payment amount should be positive"
-    );
+    assert.ok(result.newPaymentAmount! > 0, "New payment amount should be positive");
 
     // Updated term should have new payment amount
     const updatedTerm = await termsRepo.findById("term-1");
@@ -216,20 +207,24 @@ describe("MortgageTermService - VRM Payment Recalculation", () => {
     termsRepo.setTerm(vrmFixedTerm);
 
     // Set a payment to establish current balance
-    paymentsRepo.setPayments("term-1", [{
-      id: "payment-1",
-      remainingBalance: "200000.00",
-      paymentDate: "2023-06-01",
-    }]);
+    paymentsRepo.setPayments("term-1", [
+      {
+        id: "payment-1",
+        remainingBalance: "200000.00",
+        paymentDate: "2023-06-01",
+      },
+    ]);
 
-    const result = await service.recalculatePayment("term-1", "user-1", 7.50); // Force high prime rate
+    const result = await service.recalculatePayment("term-1", "user-1", 7.5); // Force high prime rate
 
     assert.ok(result, "Recalculation should succeed");
     assert.ok(result.term, "Result should include updated term");
-    
+
     // Prime rate should be updated - check the result term directly
     assert.ok(
-      result.term.primeRate === "7.500" || result.term.primeRate === "7.50" || result.term.primeRate === "7.5000",
+      result.term.primeRate === "7.500" ||
+        result.term.primeRate === "7.50" ||
+        result.term.primeRate === "7.5000",
       `Prime rate should be updated to 7.500, got ${result.term.primeRate}`
     );
 
@@ -243,10 +238,7 @@ describe("MortgageTermService - VRM Payment Recalculation", () => {
     // Trigger rate status should be checked
     // With high prime rate (7.5%) and spread (-0.8%), effective rate = 6.7%
     // For balance of 200k and payment of 3500, trigger rate check should be performed
-    assert.ok(
-      result.triggerRateHit !== undefined,
-      "Trigger rate status should be checked"
-    );
+    assert.ok(result.triggerRateHit !== undefined, "Trigger rate status should be checked");
   });
 
   it("uses forced prime rate when provided", async () => {
@@ -266,14 +258,10 @@ describe("MortgageTermService - VRM Payment Recalculation", () => {
     };
     termsRepo.setTerm(vrmChangingTerm);
 
-    const result = await service.recalculatePayment("term-1", "user-1", 7.00);
+    const result = await service.recalculatePayment("term-1", "user-1", 7.0);
 
     assert.ok(result, "Recalculation should succeed");
-    assert.equal(
-      result.term.primeRate,
-      "7.000",
-      "Prime rate should use forced value"
-    );
+    assert.equal(result.term.primeRate, "7.000", "Prime rate should use forced value");
   });
 
   it("handles prime rate fetch failure gracefully", async () => {
@@ -298,8 +286,7 @@ describe("MortgageTermService - VRM Payment Recalculation", () => {
 
     // When forced rate is provided, it works. Without forced rate and with API failure,
     // the service would throw. For this test, we verify the forced rate path works.
-    const result = await service.recalculatePayment("term-1", "user-1", 6.50);
+    const result = await service.recalculatePayment("term-1", "user-1", 6.5);
     assert.ok(result, "Recalculation should work with forced prime rate");
   });
 });
-

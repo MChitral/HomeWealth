@@ -93,10 +93,7 @@ describe("Amortization Calculation with Prepayments", () => {
 
     // The amortization should be calculated using the total payment (3000), not just regular (2500)
     // This means it should be shorter than if we only used regularPaymentAmount
-    assert.ok(
-      result.remainingAmortizationMonths > 0,
-      "Remaining amortization should be positive"
-    );
+    assert.ok(result.remainingAmortizationMonths > 0, "Remaining amortization should be positive");
     assert.ok(
       result.remainingAmortizationMonths < 300,
       "Remaining amortization should be less than original 25 years (300 months)"
@@ -111,11 +108,13 @@ describe("Amortization Calculation with Prepayments", () => {
     const startDate = new Date(2020, 0, 1);
 
     // Create schedule with monthly prepayments
-    const prepayments = [{
-      type: 'monthly-percent' as const,
-      monthlyPercent: 20, // 20% of regular payment as prepayment
-      startPaymentNumber: 1,
-    }];
+    const prepayments = [
+      {
+        type: "monthly-percent" as const,
+        monthlyPercent: 20, // 20% of regular payment as prepayment
+        startPaymentNumber: 1,
+      },
+    ];
 
     const schedule = generateAmortizationSchedule(
       principal,
@@ -175,4 +174,3 @@ describe("Amortization Calculation with Prepayments", () => {
     );
   });
 });
-

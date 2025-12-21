@@ -108,7 +108,7 @@ describe("Business Day Utilities", () => {
     it("adjusts Saturday to next Monday", () => {
       const saturday = new Date(2024, 0, 6); // January 6, 2024 (Saturday)
       const adjusted = adjustToBusinessDay(saturday);
-      
+
       assert.strictEqual(
         adjusted.getDay(),
         1, // Monday
@@ -124,7 +124,7 @@ describe("Business Day Utilities", () => {
     it("adjusts Sunday to next Monday", () => {
       const sunday = new Date(2024, 0, 7); // January 7, 2024 (Sunday)
       const adjusted = adjustToBusinessDay(sunday);
-      
+
       assert.strictEqual(
         adjusted.getDay(),
         1, // Monday
@@ -140,7 +140,7 @@ describe("Business Day Utilities", () => {
     it("adjusts holiday to next business day", () => {
       const newYears = new Date(2024, 0, 1); // January 1, 2024 (Monday, New Year's Day)
       const adjusted = adjustToBusinessDay(newYears);
-      
+
       // New Year's Day 2024 is a Monday, so it should adjust to Tuesday
       assert.strictEqual(
         adjusted.getDay(),
@@ -157,11 +157,8 @@ describe("Business Day Utilities", () => {
     it("keeps business days unchanged", () => {
       const tuesday = new Date(2024, 0, 2); // January 2, 2024 (Tuesday)
       const adjusted = adjustToBusinessDay(tuesday);
-      
-      assert.ok(
-        adjusted.getTime() === tuesday.getTime(),
-        "Business day should remain unchanged"
-      );
+
+      assert.ok(adjusted.getTime() === tuesday.getTime(), "Business day should remain unchanged");
     });
 
     it("handles consecutive non-business days", () => {
@@ -169,7 +166,7 @@ describe("Business Day Utilities", () => {
       // it should adjust to Monday
       const saturday = new Date(2024, 0, 6); // Saturday
       const adjusted = adjustToBusinessDay(saturday);
-      
+
       assert.strictEqual(
         adjusted.getDay(),
         1, // Monday
@@ -182,35 +179,23 @@ describe("Business Day Utilities", () => {
     it("calculates days between two dates", () => {
       const start = new Date(2024, 0, 1); // January 1
       const end = new Date(2024, 0, 8); // January 8
-      
+
       const days = daysBetween(start, end);
-      assert.strictEqual(
-        days,
-        7,
-        "Should calculate 7 days between Jan 1 and Jan 8"
-      );
+      assert.strictEqual(days, 7, "Should calculate 7 days between Jan 1 and Jan 8");
     });
 
     it("handles same day", () => {
       const date = new Date(2024, 0, 1);
       const days = daysBetween(date, date);
-      assert.strictEqual(
-        days,
-        0,
-        "Same day should return 0 days"
-      );
+      assert.strictEqual(days, 0, "Same day should return 0 days");
     });
 
     it("handles reverse order (negative days)", () => {
       const start = new Date(2024, 0, 8);
       const end = new Date(2024, 0, 1);
-      
+
       const days = daysBetween(start, end);
-      assert.strictEqual(
-        days,
-        -7,
-        "Reverse order should return negative days"
-      );
+      assert.strictEqual(days, -7, "Reverse order should return negative days");
     });
   });
 
@@ -219,25 +204,17 @@ describe("Business Day Utilities", () => {
       // Scenario: Payment scheduled for Saturday, January 6, 2024
       const saturday = new Date(2024, 0, 6);
       const adjusted = adjustToBusinessDay(saturday);
-      
+
       // Should adjust to Monday, January 8
-      assert.strictEqual(
-        adjusted.getDay(),
-        1,
-        "Saturday payment should adjust to Monday"
-      );
-      assert.strictEqual(
-        adjusted.getMonth(),
-        0,
-        "Should remain in January"
-      );
+      assert.strictEqual(adjusted.getDay(), 1, "Saturday payment should adjust to Monday");
+      assert.strictEqual(adjusted.getMonth(), 0, "Should remain in January");
     });
 
     it("handles payment on holiday", () => {
       // Scenario: Payment scheduled for Canada Day (July 1, 2024)
       const canadaDay = new Date(2024, 6, 1);
       const adjusted = adjustToBusinessDay(canadaDay);
-      
+
       // July 1, 2024 is a Monday (holiday), so should adjust to Tuesday
       assert.strictEqual(
         adjusted.getDay(),
@@ -251,7 +228,7 @@ describe("Business Day Utilities", () => {
       // This tests that it skips both weekend and holiday
       const saturday = new Date(2024, 0, 6); // Saturday
       const adjusted = adjustToBusinessDay(saturday);
-      
+
       // Should skip Saturday, Sunday, and any Monday holiday
       assert.strictEqual(
         adjusted.getDay(),
@@ -261,4 +238,3 @@ describe("Business Day Utilities", () => {
     });
   });
 });
-

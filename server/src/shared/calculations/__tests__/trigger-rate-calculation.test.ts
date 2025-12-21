@@ -20,8 +20,8 @@ describe("Trigger Rate Calculation", () => {
      * 4. Verify it equals original paymentAmount (within tolerance)
      */
     it("verifies reverse calculation for monthly payments", () => {
-      const paymentAmount = 3500.00;
-      const remainingBalance = 500000.00;
+      const paymentAmount = 3500.0;
+      const remainingBalance = 500000.0;
       const frequency: PaymentFrequency = "monthly";
 
       // Step 1: Calculate trigger rate (reverse calculation)
@@ -41,8 +41,8 @@ describe("Trigger Rate Calculation", () => {
     });
 
     it("verifies reverse calculation for biweekly payments", () => {
-      const paymentAmount = 1750.00;
-      const remainingBalance = 500000.00;
+      const paymentAmount = 1750.0;
+      const remainingBalance = 500000.0;
       const frequency: PaymentFrequency = "biweekly";
 
       const triggerRate = calculateTriggerRate(paymentAmount, remainingBalance, frequency);
@@ -56,8 +56,8 @@ describe("Trigger Rate Calculation", () => {
     });
 
     it("verifies reverse calculation for accelerated-biweekly payments", () => {
-      const paymentAmount = 1750.00; // Half of monthly
-      const remainingBalance = 500000.00;
+      const paymentAmount = 1750.0; // Half of monthly
+      const remainingBalance = 500000.0;
       const frequency: PaymentFrequency = "accelerated-biweekly";
 
       const triggerRate = calculateTriggerRate(paymentAmount, remainingBalance, frequency);
@@ -71,8 +71,8 @@ describe("Trigger Rate Calculation", () => {
     });
 
     it("verifies reverse calculation for weekly payments", () => {
-      const paymentAmount = 875.00;
-      const remainingBalance = 500000.00;
+      const paymentAmount = 875.0;
+      const remainingBalance = 500000.0;
       const frequency: PaymentFrequency = "weekly";
 
       const triggerRate = calculateTriggerRate(paymentAmount, remainingBalance, frequency);
@@ -86,8 +86,8 @@ describe("Trigger Rate Calculation", () => {
     });
 
     it("verifies reverse calculation for semi-monthly payments", () => {
-      const paymentAmount = 1750.00;
-      const remainingBalance = 500000.00;
+      const paymentAmount = 1750.0;
+      const remainingBalance = 500000.0;
       const frequency: PaymentFrequency = "semi-monthly";
 
       const triggerRate = calculateTriggerRate(paymentAmount, remainingBalance, frequency);
@@ -102,18 +102,14 @@ describe("Trigger Rate Calculation", () => {
 
     it("verifies reverse calculation with different balance amounts", () => {
       const testCases = [
-        { payment: 2000.00, balance: 300000.00 },
-        { payment: 5000.00, balance: 750000.00 },
-        { payment: 1000.00, balance: 150000.00 },
-        { payment: 10000.00, balance: 1500000.00 },
+        { payment: 2000.0, balance: 300000.0 },
+        { payment: 5000.0, balance: 750000.0 },
+        { payment: 1000.0, balance: 150000.0 },
+        { payment: 10000.0, balance: 1500000.0 },
       ];
 
       for (const testCase of testCases) {
-        const triggerRate = calculateTriggerRate(
-          testCase.payment,
-          testCase.balance,
-          "monthly"
-        );
+        const triggerRate = calculateTriggerRate(testCase.payment, testCase.balance, "monthly");
         const periodicRate = getEffectivePeriodicRate(triggerRate, "monthly");
         const calculatedPayment = periodicRate * testCase.balance;
 
@@ -126,8 +122,8 @@ describe("Trigger Rate Calculation", () => {
 
     it("verifies reverse calculation with high payment-to-balance ratio", () => {
       // High payment relative to balance (aggressive payment)
-      const paymentAmount = 10000.00;
-      const remainingBalance = 100000.00;
+      const paymentAmount = 10000.0;
+      const remainingBalance = 100000.0;
       const frequency: PaymentFrequency = "monthly";
 
       const triggerRate = calculateTriggerRate(paymentAmount, remainingBalance, frequency);
@@ -142,8 +138,8 @@ describe("Trigger Rate Calculation", () => {
 
     it("verifies reverse calculation with low payment-to-balance ratio", () => {
       // Low payment relative to balance (interest-only scenario)
-      const paymentAmount = 500.00;
-      const remainingBalance = 500000.00;
+      const paymentAmount = 500.0;
+      const remainingBalance = 500000.0;
       const frequency: PaymentFrequency = "monthly";
 
       const triggerRate = calculateTriggerRate(paymentAmount, remainingBalance, frequency);
@@ -159,11 +155,11 @@ describe("Trigger Rate Calculation", () => {
 
   describe("calculateTriggerRate - Mathematical Properties", () => {
     it("returns higher trigger rate for higher payment amounts", () => {
-      const balance = 500000.00;
+      const balance = 500000.0;
       const frequency: PaymentFrequency = "monthly";
 
-      const triggerRate1 = calculateTriggerRate(3000.00, balance, frequency);
-      const triggerRate2 = calculateTriggerRate(4000.00, balance, frequency);
+      const triggerRate1 = calculateTriggerRate(3000.0, balance, frequency);
+      const triggerRate2 = calculateTriggerRate(4000.0, balance, frequency);
 
       assert.ok(
         triggerRate2 > triggerRate1,
@@ -172,11 +168,11 @@ describe("Trigger Rate Calculation", () => {
     });
 
     it("returns lower trigger rate for higher balance amounts", () => {
-      const payment = 3500.00;
+      const payment = 3500.0;
       const frequency: PaymentFrequency = "monthly";
 
-      const triggerRate1 = calculateTriggerRate(payment, 400000.00, frequency);
-      const triggerRate2 = calculateTriggerRate(payment, 600000.00, frequency);
+      const triggerRate1 = calculateTriggerRate(payment, 400000.0, frequency);
+      const triggerRate2 = calculateTriggerRate(payment, 600000.0, frequency);
 
       assert.ok(
         triggerRate2 < triggerRate1,
@@ -185,8 +181,8 @@ describe("Trigger Rate Calculation", () => {
     });
 
     it("returns positive trigger rate for valid inputs", () => {
-      const payment = 3500.00;
-      const balance = 500000.00;
+      const payment = 3500.0;
+      const balance = 500000.0;
       const frequency: PaymentFrequency = "monthly";
 
       const triggerRate = calculateTriggerRate(payment, balance, frequency);
@@ -196,8 +192,8 @@ describe("Trigger Rate Calculation", () => {
     });
 
     it("handles edge case where payment equals balance", () => {
-      const payment = 500000.00;
-      const balance = 500000.00;
+      const payment = 500000.0;
+      const balance = 500000.0;
       const frequency: PaymentFrequency = "monthly";
 
       const triggerRate = calculateTriggerRate(payment, balance, frequency);
@@ -209,15 +205,20 @@ describe("Trigger Rate Calculation", () => {
 
   describe("isTriggerRateHit - Integration with calculateTriggerRate", () => {
     it("correctly identifies when trigger rate is hit", () => {
-      const paymentAmount = 3500.00;
-      const remainingBalance = 500000.00;
+      const paymentAmount = 3500.0;
+      const remainingBalance = 500000.0;
       const frequency: PaymentFrequency = "monthly";
 
       // Calculate trigger rate
       const triggerRate = calculateTriggerRate(paymentAmount, remainingBalance, frequency);
 
       // Test with rate exactly at trigger rate
-      const hitAtTrigger = isTriggerRateHit(triggerRate, paymentAmount, remainingBalance, frequency);
+      const hitAtTrigger = isTriggerRateHit(
+        triggerRate,
+        paymentAmount,
+        remainingBalance,
+        frequency
+      );
       assert.ok(hitAtTrigger, "Should hit trigger rate at exact trigger rate");
 
       // Test with rate slightly above trigger rate
@@ -240,8 +241,8 @@ describe("Trigger Rate Calculation", () => {
     });
 
     it("correctly identifies trigger rate for different frequencies", () => {
-      const paymentAmount = 3500.00;
-      const remainingBalance = 500000.00;
+      const paymentAmount = 3500.0;
+      const remainingBalance = 500000.0;
 
       const frequencies: PaymentFrequency[] = [
         "monthly",
@@ -267,7 +268,10 @@ describe("Trigger Rate Calculation", () => {
 
         // Verify trigger rate is hit at exact rate
         const hit = isTriggerRateHit(triggerRate, adjustedPayment, remainingBalance, frequency);
-        assert.ok(hit, `Trigger rate should be hit for ${frequency} at calculated rate ${triggerRate}`);
+        assert.ok(
+          hit,
+          `Trigger rate should be hit for ${frequency} at calculated rate ${triggerRate}`
+        );
       }
     });
 
@@ -276,8 +280,8 @@ describe("Trigger Rate Calculation", () => {
       // Payment: $3,500/month (fixed)
       // Balance: $500,000
       // Current rate: 6.5% (above trigger rate)
-      const paymentAmount = 3500.00;
-      const remainingBalance = 500000.00;
+      const paymentAmount = 3500.0;
+      const remainingBalance = 500000.0;
       const frequency: PaymentFrequency = "monthly";
 
       const triggerRate = calculateTriggerRate(paymentAmount, remainingBalance, frequency);
@@ -300,8 +304,8 @@ describe("Trigger Rate Calculation", () => {
       // - $500,000 mortgage
       // - $3,500/month payment
       // - Monthly frequency
-      const paymentAmount = 3500.00;
-      const remainingBalance = 500000.00;
+      const paymentAmount = 3500.0;
+      const remainingBalance = 500000.0;
       const frequency: PaymentFrequency = "monthly";
 
       const triggerRate = calculateTriggerRate(paymentAmount, remainingBalance, frequency);
@@ -317,7 +321,7 @@ describe("Trigger Rate Calculation", () => {
 
       // Trigger rate should be reasonable (typically 6-8% for this scenario)
       assert.ok(
-        triggerRate >= 0.05 && triggerRate <= 0.10,
+        triggerRate >= 0.05 && triggerRate <= 0.1,
         `Trigger rate ${triggerRate} seems unreasonable for this scenario`
       );
     });
@@ -326,8 +330,8 @@ describe("Trigger Rate Calculation", () => {
       // High-balance scenario:
       // - $1,000,000 mortgage
       // - $6,000/month payment
-      const paymentAmount = 6000.00;
-      const remainingBalance = 1000000.00;
+      const paymentAmount = 6000.0;
+      const remainingBalance = 1000000.0;
       const frequency: PaymentFrequency = "monthly";
 
       const triggerRate = calculateTriggerRate(paymentAmount, remainingBalance, frequency);
@@ -344,8 +348,8 @@ describe("Trigger Rate Calculation", () => {
 
     it("verifies trigger rate calculation consistency across multiple calculations", () => {
       // Test that calculating trigger rate multiple times gives same result
-      const paymentAmount = 3500.00;
-      const remainingBalance = 500000.00;
+      const paymentAmount = 3500.0;
+      const remainingBalance = 500000.0;
       const frequency: PaymentFrequency = "monthly";
 
       const triggerRate1 = calculateTriggerRate(paymentAmount, remainingBalance, frequency);
@@ -357,4 +361,3 @@ describe("Trigger Rate Calculation", () => {
     });
   });
 });
-

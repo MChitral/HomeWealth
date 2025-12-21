@@ -51,7 +51,7 @@ class MockMortgageTermsRepository {
   setTerm(term: MortgageTerm): void {
     this.terms.set(term.id, term);
     const existing = this.mortgageTerms.get(term.mortgageId) || [];
-    if (!existing.find(t => t.id === term.id)) {
+    if (!existing.find((t) => t.id === term.id)) {
       this.mortgageTerms.set(term.mortgageId, [...existing, term]);
     }
   }
@@ -93,14 +93,10 @@ describe("MortgageTermService - Term Overlap Validation", () => {
     mortgagesRepo = new MockMortgagesRepository();
     termsRepo = new MockMortgageTermsRepository();
     paymentsRepo = new MockMortgagePaymentsRepository();
-    
+
     mortgagesRepo.setMortgage(mockMortgage);
-    
-    service = new MortgageTermService(
-      mortgagesRepo as any,
-      termsRepo as any,
-      paymentsRepo as any,
-    );
+
+    service = new MortgageTermService(mortgagesRepo as any, termsRepo as any, paymentsRepo as any);
   });
 
   it("allows non-overlapping terms", async () => {
@@ -156,10 +152,7 @@ describe("MortgageTermService - Term Overlap Validation", () => {
       });
       assert.fail("Should have thrown error for overlapping terms");
     } catch (error: any) {
-      assert.ok(
-        error.message.includes("overlap"),
-        "Error message should mention overlap"
-      );
+      assert.ok(error.message.includes("overlap"), "Error message should mention overlap");
     }
   });
 
@@ -188,10 +181,7 @@ describe("MortgageTermService - Term Overlap Validation", () => {
       });
       assert.fail("Should have thrown error for overlapping terms");
     } catch (error: any) {
-      assert.ok(
-        error.message.includes("overlap"),
-        "Error message should mention overlap"
-      );
+      assert.ok(error.message.includes("overlap"), "Error message should mention overlap");
     }
   });
 
@@ -254,11 +244,7 @@ describe("MortgageTermService - Term Overlap Validation", () => {
       });
       assert.fail("Should have thrown error for overlapping terms");
     } catch (error: any) {
-      assert.ok(
-        error.message.includes("overlap"),
-        "Error message should mention overlap"
-      );
+      assert.ok(error.message.includes("overlap"), "Error message should mention overlap");
     }
   });
 });
-

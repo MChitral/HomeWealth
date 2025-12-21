@@ -482,7 +482,7 @@ export function generateAmortizationSchedule(
         // Create new date with target month/year and clamped day
         return new Date(targetYear, targetMonth, clampedDay);
       }
-      case "semi-monthly":
+      case "semi-monthly": {
         // Semi-monthly: Align to 1st and 15th of each month (Canadian lender convention)
         const currentDay = newDate.getDate();
         const currentMonth = newDate.getMonth();
@@ -497,6 +497,7 @@ export function generateAmortizationSchedule(
           const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
           return new Date(nextYear, nextMonth, 1);
         }
+      }
       case "biweekly":
       case "accelerated-biweekly":
         // Add 14 days (every 2 weeks)
@@ -682,9 +683,7 @@ export function generateAmortizationSchedule(
 
     // Adjust payment date to business day if it falls on weekend/holiday
     // Interest accrues until the adjusted payment date
-    console.log(`[DEBUG] paymentNumber: ${paymentNumber}, currentDate: ${currentDate.toString()}`);
     const adjustedPaymentDate = adjustToBusinessDay(new Date(currentDate));
-    console.log(`[DEBUG] adjustedPaymentDate: ${adjustedPaymentDate.toString()}`);
 
     // Create payment entry
     payments.push({
@@ -793,7 +792,7 @@ export function generateAmortizationScheduleWithPayment(
         const clampedDay = Math.min(originalDay, lastDayOfTargetMonth);
         return new Date(targetYear, targetMonth, clampedDay);
       }
-      case "semi-monthly":
+      case "semi-monthly": {
         // Semi-monthly: Align to 1st and 15th of each month (Canadian lender convention)
         const currentDay = newDate.getDate();
         const currentMonth = newDate.getMonth();
@@ -808,6 +807,7 @@ export function generateAmortizationScheduleWithPayment(
           const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
           return new Date(nextYear, nextMonth, 1);
         }
+      }
       case "biweekly":
       case "accelerated-biweekly":
         newDate.setDate(newDate.getDate() + 14);

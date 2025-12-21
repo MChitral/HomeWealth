@@ -10,11 +10,11 @@ describe("Prime Rate Scheduler", () => {
 
   beforeEach(() => {
     originalEnv = { ...process.env };
-    
+
     mockPrimeRateTracking = {
       checkAndUpdatePrimeRate: async () => ({
         changed: false,
-        newRate: 6.450,
+        newRate: 6.45,
         effectiveDate: "2024-01-15",
         termsUpdated: 0,
         errors: [],
@@ -25,7 +25,7 @@ describe("Prime Rate Scheduler", () => {
   afterEach(() => {
     process.env = originalEnv;
     // Clean up any scheduled tasks
-    cron.getTasks().forEach(task => task.stop());
+    cron.getTasks().forEach((task) => task.stop());
   });
 
   it("starts scheduler when enabled", () => {
@@ -71,7 +71,11 @@ describe("Prime Rate Scheduler", () => {
     startPrimeRateScheduler(mockPrimeRateTracking);
 
     const finalTaskCount = cron.getTasks().size;
-    assert.equal(finalTaskCount, initialTaskCount, "Should not create tasks in development by default");
+    assert.equal(
+      finalTaskCount,
+      initialTaskCount,
+      "Should not create tasks in development by default"
+    );
   });
 
   it("is enabled by default in production", () => {
@@ -84,4 +88,3 @@ describe("Prime Rate Scheduler", () => {
     assert.ok(tasks.size > 0, "Should create tasks in production by default");
   });
 });
-

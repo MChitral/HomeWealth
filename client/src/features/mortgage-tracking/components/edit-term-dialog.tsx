@@ -47,7 +47,6 @@ function EditTermFormFields({
   const { control, watch, setValue } = useFormContext<EditTermFormData>();
   const termType = watch("termType");
   const startDate = watch("startDate");
-  const termYears = watch("termYears");
   const primeRate = watch("primeRate");
   const spread = watch("spread");
 

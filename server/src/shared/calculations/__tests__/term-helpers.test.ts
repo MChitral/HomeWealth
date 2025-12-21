@@ -49,5 +49,3 @@ describe("term helper calculations", () => {
     assert.equal(shouldUpdatePaymentAmount(vrmFixed), false);
   });
 });
-
-

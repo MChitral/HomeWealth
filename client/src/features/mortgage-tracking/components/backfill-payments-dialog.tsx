@@ -43,13 +43,7 @@ type BackfillPaymentsDialogProps = {
 /**
  * Backfill Form Fields Component
  */
-function BackfillFormFields({
-  currentTerm,
-  primeRateData,
-}: {
-  currentTerm: UiTerm;
-  primeRateData?: PrimeRateResponse;
-}) {
+function BackfillFormFields({ currentTerm }: { currentTerm: UiTerm }) {
   const { control, watch } = useFormContext<BackfillFormData>();
   const numberOfPayments = watch("numberOfPayments");
   const paymentAmount = watch("paymentAmount");
@@ -368,7 +362,7 @@ export function BackfillPaymentsDialog({
           </DialogDescription>
         </DialogHeader>
         <FormProvider {...form}>
-          <BackfillFormFields currentTerm={currentTerm} primeRateData={primeRateData} />
+          <BackfillFormFields currentTerm={currentTerm} />
         </FormProvider>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>

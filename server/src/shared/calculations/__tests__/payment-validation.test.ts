@@ -89,4 +89,3 @@ describe("validateMortgagePayment", () => {
     assert.equal(result.remainingAmortizationMonths, previous.remainingAmortizationMonths);
   });
 });
-

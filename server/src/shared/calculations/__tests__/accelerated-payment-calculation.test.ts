@@ -1,10 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import {
-  calculatePayment,
-  calculateMonthlyPayment,
-  type PaymentFrequency,
-} from "../mortgage";
+import { calculatePayment, calculateMonthlyPayment, type PaymentFrequency } from "../mortgage";
 
 describe("Accelerated Payment Calculation", () => {
   /**
@@ -12,14 +8,14 @@ describe("Accelerated Payment Calculation", () => {
    * Accelerated payments are calculated by taking the monthly payment and dividing by:
    * - 2 for accelerated-biweekly (26 payments/year)
    * - 4 for accelerated-weekly (52 payments/year)
-   * 
+   *
    * This is the standard method used by major Canadian lenders:
    * - RBC (Royal Bank of Canada)
    * - TD (Toronto-Dominion Bank)
    * - BMO (Bank of Montreal)
    * - Scotiabank
    * - CIBC (Canadian Imperial Bank of Commerce)
-   * 
+   *
    * **Why This Works:**
    * - Monthly payment: $3,500
    * - Accelerated biweekly: $3,500 / 2 = $1,750
@@ -34,7 +30,12 @@ describe("Accelerated Payment Calculation", () => {
       const amortizationMonths = 300; // 25 years
 
       const monthlyPayment = calculateMonthlyPayment(principal, annualRate, amortizationMonths);
-      const acceleratedBiweekly = calculatePayment(principal, annualRate, amortizationMonths, "accelerated-biweekly");
+      const acceleratedBiweekly = calculatePayment(
+        principal,
+        annualRate,
+        amortizationMonths,
+        "accelerated-biweekly"
+      );
 
       // Accelerated biweekly should be exactly half of monthly
       const expected = monthlyPayment / 2;
@@ -49,10 +50,15 @@ describe("Accelerated Payment Calculation", () => {
       const annualRate = 0.0549;
       const amortizationMonths = 300;
 
-      const acceleratedBiweekly = calculatePayment(principal, annualRate, amortizationMonths, "accelerated-biweekly");
+      const acceleratedBiweekly = calculatePayment(
+        principal,
+        annualRate,
+        amortizationMonths,
+        "accelerated-biweekly"
+      );
 
       // Should be rounded to 2 decimal places
-      const decimalPlaces = (acceleratedBiweekly.toString().split('.')[1] || '').length;
+      const decimalPlaces = (acceleratedBiweekly.toString().split(".")[1] || "").length;
       assert.ok(
         decimalPlaces <= 2,
         `Should be rounded to 2 decimal places. Got: ${acceleratedBiweekly}`
@@ -65,7 +71,12 @@ describe("Accelerated Payment Calculation", () => {
       const amortizationMonths = 300;
 
       const monthlyPayment = calculateMonthlyPayment(principal, annualRate, amortizationMonths);
-      const acceleratedBiweekly = calculatePayment(principal, annualRate, amortizationMonths, "accelerated-biweekly");
+      const acceleratedBiweekly = calculatePayment(
+        principal,
+        annualRate,
+        amortizationMonths,
+        "accelerated-biweekly"
+      );
 
       // Annual totals
       const monthlyAnnual = monthlyPayment * 12;
@@ -88,7 +99,7 @@ describe("Accelerated Payment Calculation", () => {
       const testCases = [
         { principal: 300000, rate: 0.0549, amort: 300 },
         { principal: 750000, rate: 0.0549, amort: 300 },
-        { principal: 500000, rate: 0.0650, amort: 300 },
+        { principal: 500000, rate: 0.065, amort: 300 },
         { principal: 500000, rate: 0.0549, amort: 180 },
       ];
 
@@ -121,7 +132,12 @@ describe("Accelerated Payment Calculation", () => {
       const amortizationMonths = 300;
 
       const monthlyPayment = calculateMonthlyPayment(principal, annualRate, amortizationMonths);
-      const acceleratedWeekly = calculatePayment(principal, annualRate, amortizationMonths, "accelerated-weekly");
+      const acceleratedWeekly = calculatePayment(
+        principal,
+        annualRate,
+        amortizationMonths,
+        "accelerated-weekly"
+      );
 
       // Accelerated weekly should be exactly quarter of monthly
       const expected = monthlyPayment / 4;
@@ -136,10 +152,15 @@ describe("Accelerated Payment Calculation", () => {
       const annualRate = 0.0549;
       const amortizationMonths = 300;
 
-      const acceleratedWeekly = calculatePayment(principal, annualRate, amortizationMonths, "accelerated-weekly");
+      const acceleratedWeekly = calculatePayment(
+        principal,
+        annualRate,
+        amortizationMonths,
+        "accelerated-weekly"
+      );
 
       // Should be rounded to 2 decimal places
-      const decimalPlaces = (acceleratedWeekly.toString().split('.')[1] || '').length;
+      const decimalPlaces = (acceleratedWeekly.toString().split(".")[1] || "").length;
       assert.ok(
         decimalPlaces <= 2,
         `Should be rounded to 2 decimal places. Got: ${acceleratedWeekly}`
@@ -152,7 +173,12 @@ describe("Accelerated Payment Calculation", () => {
       const amortizationMonths = 300;
 
       const monthlyPayment = calculateMonthlyPayment(principal, annualRate, amortizationMonths);
-      const acceleratedWeekly = calculatePayment(principal, annualRate, amortizationMonths, "accelerated-weekly");
+      const acceleratedWeekly = calculatePayment(
+        principal,
+        annualRate,
+        amortizationMonths,
+        "accelerated-weekly"
+      );
 
       // Annual totals
       const monthlyAnnual = monthlyPayment * 12;
@@ -178,7 +204,7 @@ describe("Accelerated Payment Calculation", () => {
       const testCases = [
         { principal: 300000, rate: 0.0549, amort: 300 },
         { principal: 750000, rate: 0.0549, amort: 300 },
-        { principal: 500000, rate: 0.0650, amort: 300 },
+        { principal: 500000, rate: 0.065, amort: 300 },
       ];
 
       for (const testCase of testCases) {
@@ -209,8 +235,18 @@ describe("Accelerated Payment Calculation", () => {
       const annualRate = 0.0549;
       const amortizationMonths = 300;
 
-      const standardBiweekly = calculatePayment(principal, annualRate, amortizationMonths, "biweekly");
-      const acceleratedBiweekly = calculatePayment(principal, annualRate, amortizationMonths, "accelerated-biweekly");
+      const standardBiweekly = calculatePayment(
+        principal,
+        annualRate,
+        amortizationMonths,
+        "biweekly"
+      );
+      const acceleratedBiweekly = calculatePayment(
+        principal,
+        annualRate,
+        amortizationMonths,
+        "accelerated-biweekly"
+      );
 
       // Annual totals
       const standardAnnual = standardBiweekly * 26;
@@ -228,7 +264,12 @@ describe("Accelerated Payment Calculation", () => {
       const amortizationMonths = 300;
 
       const standardWeekly = calculatePayment(principal, annualRate, amortizationMonths, "weekly");
-      const acceleratedWeekly = calculatePayment(principal, annualRate, amortizationMonths, "accelerated-weekly");
+      const acceleratedWeekly = calculatePayment(
+        principal,
+        annualRate,
+        amortizationMonths,
+        "accelerated-weekly"
+      );
 
       // Annual totals
       const standardAnnual = standardWeekly * 52;
@@ -248,7 +289,12 @@ describe("Accelerated Payment Calculation", () => {
       const amortizationMonths = 300; // 25 years
 
       const monthlyPayment = calculateMonthlyPayment(principal, annualRate, amortizationMonths);
-      const acceleratedBiweekly = calculatePayment(principal, annualRate, amortizationMonths, "accelerated-biweekly");
+      const acceleratedBiweekly = calculatePayment(
+        principal,
+        annualRate,
+        amortizationMonths,
+        "accelerated-biweekly"
+      );
 
       // Typical monthly payment for this scenario: ~$3,000-$3,500
       assert.ok(
@@ -270,7 +316,12 @@ describe("Accelerated Payment Calculation", () => {
       const amortizationMonths = 300;
 
       const monthlyPayment = calculateMonthlyPayment(principal, annualRate, amortizationMonths);
-      const acceleratedBiweekly = calculatePayment(principal, annualRate, amortizationMonths, "accelerated-biweekly");
+      const acceleratedBiweekly = calculatePayment(
+        principal,
+        annualRate,
+        amortizationMonths,
+        "accelerated-biweekly"
+      );
 
       // Calculate annual difference
       const monthlyAnnual = monthlyPayment * 12;
@@ -293,4 +344,3 @@ describe("Accelerated Payment Calculation", () => {
     });
   });
 });
-

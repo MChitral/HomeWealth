@@ -92,21 +92,21 @@ describe("MortgagePaymentService - Payment Date Validation", () => {
     mortgagesRepo = new MockMortgagesRepository();
     termsRepo = new MockMortgageTermsRepository();
     paymentsRepo = new MockMortgagePaymentsRepository();
-    
+
     mortgagesRepo.setMortgage(mockMortgage);
     termsRepo.setTerm(mockTerm);
-    
+
     service = new MortgagePaymentService(
       mortgagesRepo as any,
       termsRepo as any,
-      paymentsRepo as any,
+      paymentsRepo as any
     );
   });
 
   it("rejects payment date in the future", async () => {
     const futureDate = new Date();
     futureDate.setMonth(futureDate.getMonth() + 2);
-    const futureDateStr = futureDate.toISOString().split('T')[0];
+    const futureDateStr = futureDate.toISOString().split("T")[0];
 
     try {
       await service.create("mortgage-1", "user-1", {
@@ -118,10 +118,7 @@ describe("MortgagePaymentService - Payment Date Validation", () => {
       });
       assert.fail("Should have thrown error for future payment date");
     } catch (error: any) {
-      assert.ok(
-        error.message.includes("future"),
-        "Error message should mention future date"
-      );
+      assert.ok(error.message.includes("future"), "Error message should mention future date");
     }
   });
 
@@ -203,9 +200,11 @@ describe("MortgagePaymentService - Payment Date Validation", () => {
     } catch (error: any) {
       // If error is NOT about date validation, that's fine
       // We're just checking that date validation doesn't reject valid dates
-      if (error.message.includes("future") || 
-          error.message.includes("before mortgage") || 
-          error.message.includes("within term period")) {
+      if (
+        error.message.includes("future") ||
+        error.message.includes("before mortgage") ||
+        error.message.includes("within term period")
+      ) {
         throw error; // Re-throw if it's a date validation error
       }
       // Otherwise, it's a different validation error, which is expected
@@ -215,7 +214,7 @@ describe("MortgagePaymentService - Payment Date Validation", () => {
   it("validates payment dates in bulk creation", async () => {
     const futureDate = new Date();
     futureDate.setMonth(futureDate.getMonth() + 2);
-    const futureDateStr = futureDate.toISOString().split('T')[0];
+    const futureDateStr = futureDate.toISOString().split("T")[0];
 
     try {
       await service.createBulk("mortgage-1", "user-1", [
@@ -236,11 +235,7 @@ describe("MortgagePaymentService - Payment Date Validation", () => {
       ]);
       assert.fail("Should have thrown error for future payment date in bulk");
     } catch (error: any) {
-      assert.ok(
-        error.message.includes("future"),
-        "Error message should mention future date"
-      );
+      assert.ok(error.message.includes("future"), "Error message should mention future date");
     }
   });
 });
-

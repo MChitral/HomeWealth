@@ -51,7 +51,7 @@ class MockMortgageTermsRepository {
   setTerm(term: MortgageTerm): void {
     this.terms.set(term.id, term);
     const existing = this.mortgageTerms.get(term.mortgageId) || [];
-    if (!existing.find(t => t.id === term.id)) {
+    if (!existing.find((t) => t.id === term.id)) {
       this.mortgageTerms.set(term.mortgageId, [...existing, term]);
     }
   }
@@ -93,14 +93,10 @@ describe("MortgageTermService - Term Date Validation", () => {
     mortgagesRepo = new MockMortgagesRepository();
     termsRepo = new MockMortgageTermsRepository();
     paymentsRepo = new MockMortgagePaymentsRepository();
-    
+
     mortgagesRepo.setMortgage(mockMortgage);
-    
-    service = new MortgageTermService(
-      mortgagesRepo as any,
-      termsRepo as any,
-      paymentsRepo as any,
-    );
+
+    service = new MortgageTermService(mortgagesRepo as any, termsRepo as any, paymentsRepo as any);
   });
 
   it("allows valid 3-year term", async () => {
@@ -261,4 +257,3 @@ describe("MortgageTermService - Term Date Validation", () => {
     assert.ok(updated, "Term should be updated to valid length");
   });
 });
-

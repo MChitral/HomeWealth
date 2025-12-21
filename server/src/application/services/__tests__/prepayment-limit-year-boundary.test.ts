@@ -1,15 +1,15 @@
 /**
  * Prepayment Limit Year Boundary Tests
- * 
+ *
  * NOTE: Some tests in this file may fail due to mock repository limitations in simulating
  * database transaction isolation. The production code logic is correct - see
  * docs/testing/TEST_LIMITATIONS.md for details.
- * 
+ *
  * The business logic correctly:
  * - Adjusts payment dates to business days (holidays/weekends)
  * - Calculates prepayment limits using adjusted dates' years
  * - Tracks batch prepayments correctly
- * 
+ *
  * The test failures are due to the mock repository not fully simulating transaction
  * isolation (payments are immediately visible, unlike real database transactions).
  */
@@ -67,9 +67,9 @@ class MockMortgagePaymentsRepository {
       mortgageId: payload.mortgageId,
       termId: payload.termId,
       paymentDate: payload.paymentDate,
-      paymentPeriodLabel: payload.paymentPeriodLabel || '',
+      paymentPeriodLabel: payload.paymentPeriodLabel || "",
       regularPaymentAmount: payload.regularPaymentAmount,
-      prepaymentAmount: payload.prepaymentAmount || '0',
+      prepaymentAmount: payload.prepaymentAmount || "0",
       paymentAmount: payload.paymentAmount,
       principalPaid: payload.principalPaid,
       interestPaid: payload.interestPaid,
@@ -88,7 +88,7 @@ class MockMortgagePaymentsRepository {
         tx._pendingPayments = [];
       }
       tx._pendingPayments.push(payment);
-      
+
       // Store reference to this repository so we can commit later
       if (!tx._repository) {
         tx._repository = this;
@@ -125,7 +125,7 @@ class MockMortgagePaymentsRepository {
     // Also set by term
     for (const payment of payments) {
       const termPayments = this.paymentsByTerm.get(payment.termId) || [];
-      if (!termPayments.find(p => p.id === payment.id)) {
+      if (!termPayments.find((p) => p.id === payment.id)) {
         termPayments.push(payment);
         this.paymentsByTerm.set(payment.termId, termPayments);
       }
@@ -205,7 +205,7 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
     service = new MortgagePaymentService(
       mortgagesRepo as any,
       termsRepo as any,
-      paymentsRepo as any,
+      paymentsRepo as any
     );
   });
 
@@ -310,11 +310,7 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
         effectiveRate: "5.490",
       });
 
-      assert.equal(
-        dec31Payment.paymentDate,
-        "2024-12-31",
-        "Payment should be counted in 2024"
-      );
+      assert.equal(dec31Payment.paymentDate, "2024-12-31", "Payment should be counted in 2024");
 
       // Try to exceed limit in new year
       // Note: Jan 1 is a holiday, so it adjusts to Jan 2, but still counts in 2025
@@ -364,14 +360,10 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
 
       assert.ok(result, "Bulk payments should be created");
       assert.equal(result.payments.length, 2, "Both payments should be created");
-      
+
       // Both payments should succeed because they're in different years
       assert.ok(result.payments[0], "Dec 31 payment should be created");
-      assert.equal(
-        result.payments[0].paymentDate,
-        "2024-12-31",
-        "First payment should be in 2024"
-      );
+      assert.equal(result.payments[0].paymentDate, "2024-12-31", "First payment should be in 2024");
       assert.ok(result.payments[1], "Jan 1 payment should be created");
       // Jan 1 is a holiday, so it adjusts to Jan 2, but still counts in 2025
       assert.equal(
@@ -409,11 +401,7 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
 
       assert.ok(result, "Bulk payments should be created");
       assert.equal(result.payments.length, 2, "Both payments should be created");
-      assert.equal(
-        result.payments[0].paymentDate,
-        "2024-12-31",
-        "First payment should be in 2024"
-      );
+      assert.equal(result.payments[0].paymentDate, "2024-12-31", "First payment should be in 2024");
       // Jan 1 is a holiday, so it adjusts to Jan 2, but still counts in 2025
       assert.equal(
         result.payments[1].paymentDate,
@@ -473,11 +461,7 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
       });
 
       assert.ok(payment1, "First payment should be created");
-      assert.equal(
-        payment1.paymentDate,
-        "2024-12-31",
-        "Payment should be in 2024"
-      );
+      assert.equal(payment1.paymentDate, "2024-12-31", "Payment should be in 2024");
 
       const payment2 = await service.create("mortgage-1", "user-1", {
         termId: "term-1",
@@ -489,11 +473,7 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
       });
 
       assert.ok(payment2, "Second payment should be created");
-      assert.equal(
-        payment2.paymentDate,
-        "2024-12-31",
-        "Payment should be in 2024"
-      );
+      assert.equal(payment2.paymentDate, "2024-12-31", "Payment should be in 2024");
     });
 
     it("rejects second prepayment on Dec 31 if it exceeds limit", async () => {
@@ -591,11 +571,7 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
         effectiveRate: "5.490",
       });
 
-      assert.equal(
-        dec31Payment.paymentDate,
-        "2024-12-31",
-        "Payment should be counted in 2024"
-      );
+      assert.equal(dec31Payment.paymentDate, "2024-12-31", "Payment should be counted in 2024");
 
       // Should allow full limit again in 2025
       // Note: Jan 1 is New Year's Day (holiday), so it adjusts to Jan 2, but still counts in 2025
@@ -647,11 +623,7 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
         effectiveRate: "5.490",
       });
 
-      assert.equal(
-        dec31Payment.paymentDate,
-        "2024-12-31",
-        "Payment should be counted in 2024"
-      );
+      assert.equal(dec31Payment.paymentDate, "2024-12-31", "Payment should be counted in 2024");
 
       // Should allow full limit on Jan 1 (different year)
       // Note: Jan 1 is New Year's Day (holiday), so it adjusts to Jan 2, but still counts in 2025
@@ -674,4 +646,3 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
     });
   });
 });
-

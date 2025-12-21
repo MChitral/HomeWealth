@@ -19,7 +19,7 @@ describe("Blend-and-Extend Calculations", () => {
   describe("calculateBlendedRate", () => {
     it("calculates blended rate as weighted average", () => {
       const oldRate = 0.0549; // 5.49%
-      const newMarketRate = 0.0650; // 6.50%
+      const newMarketRate = 0.065; // 6.50%
       const remainingTermMonths = 12; // 1 year remaining
       const newTermMonths = 60; // 5-year new term
 
@@ -33,7 +33,7 @@ describe("Blend-and-Extend Calculations", () => {
       // Weight: 12 / (12 + 60) = 0.1667
       // Expected: 0.0549 * 0.1667 + 0.0650 * 0.8333 = 0.0628
       const expectedWeight = remainingTermMonths / (remainingTermMonths + newTermMonths);
-      const expectedRate = (oldRate * expectedWeight) + (newMarketRate * (1 - expectedWeight));
+      const expectedRate = oldRate * expectedWeight + newMarketRate * (1 - expectedWeight);
 
       assert.ok(
         Math.abs(blendedRate - expectedRate) < 0.001,
@@ -58,10 +58,10 @@ describe("Blend-and-Extend Calculations", () => {
     });
 
     it("rounds to 3 decimal places", () => {
-      const blendedRate = calculateBlendedRate(0.0549, 0.0650, 12, 60);
-      
+      const blendedRate = calculateBlendedRate(0.0549, 0.065, 12, 60);
+
       // Should have at most 3 decimal places
-      const decimalPlaces = (blendedRate.toString().split('.')[1] || '').length;
+      const decimalPlaces = (blendedRate.toString().split(".")[1] || "").length;
       assert.ok(
         decimalPlaces <= 3,
         `Blended rate should be rounded to 3 decimal places. Got: ${blendedRate} (${decimalPlaces} decimal places)`
@@ -69,11 +69,11 @@ describe("Blend-and-Extend Calculations", () => {
     });
 
     it("handles edge case: no time remaining", () => {
-      const blendedRate = calculateBlendedRate(0.0549, 0.0650, 0, 60);
-      
+      const blendedRate = calculateBlendedRate(0.0549, 0.065, 0, 60);
+
       // No time remaining = should be close to new market rate
       assert.ok(
-        Math.abs(blendedRate - 0.0650) < 0.001,
+        Math.abs(blendedRate - 0.065) < 0.001,
         `No time remaining should result in new market rate. Expected: 0.0650, Got: ${blendedRate}`
       );
     });
@@ -86,11 +86,7 @@ describe("Blend-and-Extend Calculations", () => {
 
       const extended = calculateExtendedAmortization(remaining, original);
 
-      assert.strictEqual(
-        extended,
-        original,
-        "Should default to original amortization"
-      );
+      assert.strictEqual(extended, original, "Should default to original amortization");
     });
 
     it("allows extending beyond original amortization", () => {
@@ -100,11 +96,7 @@ describe("Blend-and-Extend Calculations", () => {
 
       const extended = calculateExtendedAmortization(remaining, original, extendTo);
 
-      assert.strictEqual(
-        extended,
-        extendTo,
-        "Should allow extending beyond original amortization"
-      );
+      assert.strictEqual(extended, extendTo, "Should allow extending beyond original amortization");
     });
 
     it("throws error if extended period is less than remaining", () => {
@@ -134,7 +126,7 @@ describe("Blend-and-Extend Calculations", () => {
     it("calculates blend-and-extend with extended amortization", () => {
       const input: BlendAndExtendInput = {
         oldRate: 0.0549, // 5.49%
-        newMarketRate: 0.0650, // 6.50%
+        newMarketRate: 0.065, // 6.50%
         remainingBalance: 400000,
         remainingTermMonths: 12,
         originalAmortizationMonths: 300, // 25 years
@@ -167,7 +159,7 @@ describe("Blend-and-Extend Calculations", () => {
     it("produces lower payment with extended amortization", () => {
       const input: BlendAndExtendInput = {
         oldRate: 0.0549,
-        newMarketRate: 0.0650,
+        newMarketRate: 0.065,
         remainingBalance: 400000,
         remainingTermMonths: 12,
         originalAmortizationMonths: 300,
@@ -189,7 +181,7 @@ describe("Blend-and-Extend Calculations", () => {
     it("calculates interest savings vs market rate", () => {
       const input: BlendAndExtendInput = {
         oldRate: 0.0549,
-        newMarketRate: 0.0650,
+        newMarketRate: 0.065,
         remainingBalance: 400000,
         remainingTermMonths: 12,
         originalAmortizationMonths: 300,
@@ -217,7 +209,7 @@ describe("Blend-and-Extend Calculations", () => {
     it("works with different payment frequencies", () => {
       const baseInput: Omit<BlendAndExtendInput, "frequency"> = {
         oldRate: 0.0549,
-        newMarketRate: 0.0650,
+        newMarketRate: 0.065,
         remainingBalance: 400000,
         remainingTermMonths: 12,
         originalAmortizationMonths: 300,
@@ -243,7 +235,7 @@ describe("Blend-and-Extend Calculations", () => {
     it("handles scenario: extending beyond original amortization", () => {
       const input: BlendAndExtendInput = {
         oldRate: 0.0549,
-        newMarketRate: 0.0650,
+        newMarketRate: 0.065,
         remainingBalance: 400000,
         remainingTermMonths: 12,
         originalAmortizationMonths: 300, // 25 years
@@ -255,10 +247,7 @@ describe("Blend-and-Extend Calculations", () => {
       const result = calculateBlendAndExtend(input);
 
       // Payment with 30-year amortization should be lower than with 25-year
-      assert.ok(
-        result.newPaymentAmount > 0,
-        "Payment should be positive"
-      );
+      assert.ok(result.newPaymentAmount > 0, "Payment should be positive");
 
       // Verify it's using the extended amortization (30 years)
       // Payment with 30 years should be lower than with 25 years
@@ -281,7 +270,7 @@ describe("Blend-and-Extend Calculations", () => {
       // Extend back to 25 years (from 20 remaining)
       const input: BlendAndExtendInput = {
         oldRate: 0.0549,
-        newMarketRate: 0.0650,
+        newMarketRate: 0.065,
         remainingBalance: 450000, // After 5 years
         remainingTermMonths: 12, // 1 year left in term
         originalAmortizationMonths: 300, // 25 years
@@ -294,7 +283,7 @@ describe("Blend-and-Extend Calculations", () => {
 
       // Blended rate should be between old and new
       assert.ok(
-        result.blendedRate > 0.0549 && result.blendedRate < 0.0650,
+        result.blendedRate > 0.0549 && result.blendedRate < 0.065,
         `Blended rate should be between old (5.49%) and new (6.50%). Got: ${(result.blendedRate * 100).toFixed(3)}%`
       );
 
@@ -305,11 +294,7 @@ describe("Blend-and-Extend Calculations", () => {
       );
 
       // Should save money vs market rate
-      assert.ok(
-        result.interestSavingsPerPayment > 0,
-        "Should save money vs market rate"
-      );
+      assert.ok(result.interestSavingsPerPayment > 0, "Should save money vs market rate");
     });
   });
 });
-
