@@ -15,13 +15,14 @@ import { useToast } from "@/shared/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { format, addMonths } from "date-fns";
 
-export default function PrepaymentFeature() {
+interface PrepaymentFeatureProps {
+  isEmbedded?: boolean;
+}
+
+export default function PrepaymentFeature({ isEmbedded = false }: PrepaymentFeatureProps) {
   const { mortgage, uiCurrentTerm, summaryStats, createPaymentMutation, isLoading } =
     useMortgageTrackingState();
   const { toast } = useToast();
-
-  // Redirect if no mortgage selected (handled by layout/parent usually, but good safe guard)
-  // For now we assume context is loaded.
 
   // --- State ---
   const [simulationType, setSimulationType] = useState<"lump-sum" | "payment-increase">("lump-sum");
@@ -29,10 +30,6 @@ export default function PrepaymentFeature() {
   const [date, setDate] = useState<string>(new Date().toISOString().split("T")[0]);
 
   // --- Data Fetching ---
-  // Fetch prepayment opportunity data to get surplus
-  // We reuse the hook or fetch logic from PrepaymentCard if possible,
-  // but simpler to just fetch surplus here or pass it in.
-  // For now, we'll fetch it directly to be self-contained.
   const { data: opportunityData } = useQuery({
     queryKey: ["prepayment-opportunity", mortgage?.id],
     queryFn: async () => {
@@ -50,11 +47,8 @@ export default function PrepaymentFeature() {
     if (!summaryStats) return null;
     const today = new Date();
     // Crude estimate based on amortization years remaining
-    // Better: use the math utils.
-    // Let's use currentBalance, rate, payment.
     if (!mortgage || !uiCurrentTerm) return null;
 
-    // We already have summaryStats.amortizationYears
     const months = Math.round(summaryStats.amortizationYears * 12);
     return addMonths(today, months);
   }, [summaryStats, mortgage, uiCurrentTerm]);
@@ -132,10 +126,6 @@ export default function PrepaymentFeature() {
       // Assume pure principal prepayment for this simplified view
       const newBalance = Math.max(0, currentBalance - numAmount);
 
-      // Calculate remaining amortization for the payload
-      // We can use the simulation logic's result or a quick re-calc
-      // Re-using the simulation logic from useMemo if available would be best, but it might be null.
-      // Let's do a quick calc:
       const rate = summaryStats?.currentRate ? summaryStats.currentRate / 100 : 0;
       let months = 0;
       if (newBalance > 0 && rate > 0) {
@@ -175,7 +165,6 @@ export default function PrepaymentFeature() {
         }
       );
     } else {
-      // Payment Increase logic would go here (requires updateTermMutation or new logic)
       toast({
         title: "Coming Soon",
         description: "Update your term details to change regular payments.",
@@ -186,7 +175,7 @@ export default function PrepaymentFeature() {
   const handleUseSurplus = () => {
     if (opportunityData?.monthlySurplus) {
       setAmount(opportunityData.monthlySurplus.toString());
-      setSimulationType("payment-increase"); // Surplus implies monthly usually, but could be lump sum accumulated
+      setSimulationType("payment-increase");
     }
   };
 
@@ -204,21 +193,23 @@ export default function PrepaymentFeature() {
     );
 
   return (
-    <div className="container mx-auto py-8 max-w-5xl space-y-8">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Prepayment Simulator</h1>
-          <p className="text-muted-foreground">
-            Visualize the impact of extra payments on your mortgage freedom date.
-          </p>
+    <div className={isEmbedded ? "space-y-6" : "container mx-auto py-8 max-w-5xl space-y-8"}>
+      {/* Header - Hidden if embedded */}
+      {!isEmbedded && (
+        <div className="flex items-center gap-4">
+          <Link href="/">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Prepayment Simulator</h1>
+            <p className="text-muted-foreground">
+              Visualize the impact of extra payments on your mortgage freedom date.
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="grid gap-6 md:grid-cols-12">
         {/* Left Column: Context & Input */}

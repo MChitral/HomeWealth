@@ -2,6 +2,9 @@ import { AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { AnalyticsDashboard } from "@/features/analytics/analytics-dashboard";
+import PrepaymentFeature from "../prepayment-feature";
+import { RenewalTab } from "./renewal-tab";
+import { RefinanceTab } from "./refinance-tab";
 import type { Mortgage } from "@shared/schema";
 import type { UseFormReturn } from "react-hook-form";
 import type { UseMutationResult } from "@tanstack/react-query";
@@ -236,9 +239,12 @@ export function MortgageContent({
       />
 
       <Tabs defaultValue="details" className="w-full">
-        <TabsList className="mb-4">
+        <TabsList className="mb-4 flex flex-wrap h-auto gap-2">
           <TabsTrigger value="details">Details</TabsTrigger>
           <TabsTrigger value="risk">Risk & Analytics</TabsTrigger>
+          <TabsTrigger value="prepayments">Prepayments</TabsTrigger>
+          <TabsTrigger value="renewals">Renewals</TabsTrigger>
+          <TabsTrigger value="refinance">Refinance</TabsTrigger>
         </TabsList>
 
         <TabsContent value="details" className="space-y-8">
@@ -307,6 +313,18 @@ export function MortgageContent({
 
         <TabsContent value="risk">
           <AnalyticsDashboard mortgageId={mortgage.id} />
+        </TabsContent>
+
+        <TabsContent value="prepayments">
+          <PrepaymentFeature isEmbedded />
+        </TabsContent>
+
+        <TabsContent value="renewals">
+          <RenewalTab mortgageId={mortgage.id} />
+        </TabsContent>
+
+        <TabsContent value="refinance">
+          <RefinanceTab mortgageId={mortgage.id} />
         </TabsContent>
       </Tabs>
     </div>
