@@ -97,8 +97,7 @@ function EditTermFormFields({
               setHistoricalPrimeRate(null);
             }
           })
-          .catch((error) => {
-            console.error("Failed to fetch historical prime rate:", error);
+          .catch((_error) => {
             setHistoricalPrimeRate(null);
           })
           .finally(() => {
@@ -151,8 +150,8 @@ function EditTermFormFields({
               setValue("primeRate", rate.primeRate.toFixed(2), { shouldValidate: false });
             }
           }
-        } catch (error) {
-          console.error("Failed to fetch historical prime rate:", error);
+        } catch {
+          // Ignore error
         } finally {
           setIsLoadingHistorical(false);
         }

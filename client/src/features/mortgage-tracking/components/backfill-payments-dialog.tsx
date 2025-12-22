@@ -197,7 +197,7 @@ export function BackfillPaymentsDialog({
     // Validate mortgage balance exists (required for accurate backfill)
     if (!mortgage?.currentBalance) {
       // This should not happen in normal flow, but validate to prevent data corruption
-      console.error("Cannot backfill: Mortgage current balance is missing");
+      return;
       return;
     }
 
@@ -206,7 +206,7 @@ export function BackfillPaymentsDialog({
 
     if (!paymentAmount) {
       // Payment amount is required
-      console.error("Cannot backfill: Payment amount is missing");
+      return;
       return;
     }
 
@@ -227,8 +227,8 @@ export function BackfillPaymentsDialog({
           endDateStr
         );
         historicalRates = ratesResponse.rates || [];
-      } catch (error) {
-        console.error("Failed to fetch historical rates:", error);
+      } catch {
+        // Ignore error
       }
     }
 
@@ -262,23 +262,16 @@ export function BackfillPaymentsDialog({
       // If no historical rate found, check if we have rates but payment date is before all of them
       // In this case, use the oldest rate we have (closest to payment date)
       if (sortedRates.length > 0) {
-        // Sort ascending to get oldest rate
         const oldestRate = [...sortedRates].sort(
           (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
         )[0];
         const effectiveRate = oldestRate.primeRate + (currentTerm.lockedSpread || 0);
-        console.warn(
-          `[Backfill] Payment date ${dateStr} is before all historical rates. Using oldest available rate: Prime ${oldestRate.primeRate}% (date: ${oldestRate.date}) + Spread ${currentTerm.lockedSpread || 0}% = Effective ${effectiveRate}%`
-        );
         return effectiveRate;
       }
 
       // Last resort: use current prime rate (should rarely happen)
       const fallbackPrime = primeRateData?.primeRate || 5.45;
       const effectiveRate = fallbackPrime + (currentTerm.lockedSpread || 0);
-      console.warn(
-        `[Backfill] No historical rates available for ${dateStr}. Using current rate: Prime ${fallbackPrime}% + Spread ${currentTerm.lockedSpread || 0}% = Effective ${effectiveRate}%`
-      );
       return effectiveRate;
     };
 

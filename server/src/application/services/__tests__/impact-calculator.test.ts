@@ -19,7 +19,9 @@ describe("ImpactCalculator", () => {
 
   beforeEach(() => {
     service = new ImpactCalculator(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mockMortgagesRepo as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mockPaymentsRepo as any,
       mockTriggerMonitor
     );
@@ -54,13 +56,14 @@ describe("ImpactCalculator", () => {
     // Old Prime: 7.20 -> Rate 6.70%
     // New Prime: 7.45 -> Rate 6.95% (+0.25%)
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const impacts = await service.calculateImpacts([term as any], 7.2, 7.45);
 
     assert.equal(impacts.length, 1);
     assert.equal(impacts[0].impactType, "payment_increase");
     assert.ok(impacts[0].delta > 0);
     assert.ok(impacts[0].newValue > impacts[0].oldValue);
-    console.log("Payment Delta:", impacts[0].delta);
+    // console.log("Payment Delta:", impacts[0].delta);
   });
 
   it("calculates trigger risk for VRM-Fixed", async () => {
@@ -88,6 +91,7 @@ describe("ImpactCalculator", () => {
       })
     );
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const impacts = await service.calculateImpacts([term as any], 7.2, 7.45);
 
     assert.equal(impacts.length, 1);

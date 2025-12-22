@@ -14,7 +14,7 @@ import { Loader2, RefreshCw } from "lucide-react";
 import { FormProvider, useFormContext, type UseFormReturn } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/shared/ui/form";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-// import type { CreateMortgageFormData } from "../hooks/use-create-mortgage-form";
+import type { CreateMortgageFormData } from "../hooks/use-create-mortgage-form";
 import type { PrimeRateResponse } from "../api";
 import { useEffect, useState } from "react";
 import { mortgageApi } from "../api";
@@ -248,8 +248,7 @@ function Step2Fields({
               setHistoricalPrimeRate(null);
             }
           })
-          .catch((error) => {
-            console.error("Failed to fetch historical prime rate:", error);
+          .catch((_error) => {
             setHistoricalPrimeRate(null);
           })
           .finally(() => {

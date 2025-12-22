@@ -1,6 +1,4 @@
 import type { Repositories } from "@infrastructure/repositories";
-// import { db } from "@infrastructure/db/connection";
-// import { users } from "@shared/schema";
 
 const DEMO_USER_ID = "dev-user-123";
 
@@ -8,11 +6,9 @@ export async function autoSeedDemoData(repositories: Repositories) {
   try {
     const existing = await repositories.scenarios.findByUserId(DEMO_USER_ID);
     if (existing.length > 0) {
-      console.log(`✅ Demo data already exists (${existing.length} scenarios)`);
       return null;
     }
 
-    console.log("🌱 Auto-seeding demo data on startup...");
     return await seedDemoData(repositories);
   } catch (error) {
     console.error("❌ Error auto-seeding demo data:", error);
@@ -22,11 +18,8 @@ export async function autoSeedDemoData(repositories: Repositories) {
 
 export async function seedDemoData(repositories: Repositories) {
   try {
-    console.log("🌱 Seeding demo data...");
-
     let user = await repositories.users.getUser(DEMO_USER_ID);
     if (!user) {
-      console.log("📝 Creating demo user...");
       user = await repositories.users.upsertUser({
         id: DEMO_USER_ID,
         email: "demo@example.com",
@@ -34,7 +27,6 @@ export async function seedDemoData(repositories: Repositories) {
         lastName: "User",
         profileImageUrl: null,
       });
-      console.log(`✅ Created demo user: ${user.firstName} ${user.lastName} (${user.id})`);
     }
 
     const mortgage = await repositories.mortgages.create({
@@ -50,8 +42,6 @@ export async function seedDemoData(repositories: Repositories) {
       annualPrepaymentLimitPercent: 20,
     });
 
-    console.log(`✅ Created demo mortgage: $${mortgage.currentBalance} balance`);
-
     const scenario1 = await repositories.scenarios.create({
       userId: DEMO_USER_ID,
       name: "Aggressive Prepayment",
@@ -63,8 +53,6 @@ export async function seedDemoData(repositories: Repositories) {
       efPriorityPercent: 0,
     });
 
-    console.log(`✅ Created scenario: "${scenario1.name}" (80% prepay / 20% invest)`);
-
     const scenario2 = await repositories.scenarios.create({
       userId: DEMO_USER_ID,
       name: "Balanced Builder",
@@ -75,8 +63,6 @@ export async function seedDemoData(repositories: Repositories) {
       expectedReturnRate: "7.000",
       efPriorityPercent: 0,
     });
-
-    console.log(`✅ Created scenario: "${scenario2.name}" (50% prepay / 50% invest)`);
 
     const term = await repositories.mortgageTerms.create({
       mortgageId: mortgage.id,
