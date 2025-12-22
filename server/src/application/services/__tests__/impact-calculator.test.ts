@@ -63,7 +63,6 @@ describe("ImpactCalculator", () => {
     assert.equal(impacts[0].impactType, "payment_increase");
     assert.ok(impacts[0].delta > 0);
     assert.ok(impacts[0].newValue > impacts[0].oldValue);
-    // console.log("Payment Delta:", impacts[0].delta);
   });
 
   it("calculates trigger risk for VRM-Fixed", async () => {

@@ -11,7 +11,7 @@ import type { UseMutationResult } from "@tanstack/react-query";
 import type { PrimeRateResponse } from "../api";
 import type { UiTerm, UiPayment } from "../types";
 import type { EditMortgageFormData } from "../hooks/use-edit-mortgage-form";
-// import type { CreateMortgageFormData } from "../hooks/use-create-mortgage-form";
+
 import type { BackfillFormData } from "../hooks/use-backfill-form";
 import type { EditTermFormData } from "../hooks/use-edit-term-form";
 import type { TermRenewalFormData } from "../hooks/use-term-renewal-form";

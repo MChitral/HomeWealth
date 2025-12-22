@@ -1,7 +1,6 @@
 import { describe, it, mock } from "node:test";
 import assert from "node:assert";
 import { RefinancingService } from "../refinancing.service";
-// import { calculateStandardPenalty } from "../../../domain/calculations/penalty";
 
 // Mock dependencies
 const mockMortgagesRepo: any = {
