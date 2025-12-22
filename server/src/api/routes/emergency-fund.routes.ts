@@ -19,7 +19,7 @@ export function registerEmergencyFundRoutes(router: Router, services: Applicatio
 
     try {
       const data = emergencyFundCreateSchema.parse({ ...req.body, userId: user.id });
-      const { userId, ...payload } = data;
+      const { userId: _userId, ...payload } = data;
       const created = await services.emergencyFunds.create(user.id, payload);
       res.json(created);
     } catch (error) {

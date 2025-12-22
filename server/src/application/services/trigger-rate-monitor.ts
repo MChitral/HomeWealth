@@ -1,15 +1,11 @@
 // Touched for tsx refresh
-import type { Mortgage, MortgageTerm, MortgagePayment } from "@shared/schema";
+import type { Mortgage, MortgageTerm } from "@shared/schema";
 import {
   MortgagesRepository,
   MortgageTermsRepository,
   MortgagePaymentsRepository,
 } from "@infrastructure/repositories";
-import {
-  calculateTriggerRate,
-  calculateRemainingBalance,
-  type PaymentFrequency,
-} from "@server-shared/calculations/mortgage";
+import { calculateTriggerRate, type PaymentFrequency } from "@server-shared/calculations/mortgage";
 
 export interface TriggerRateAlert {
   mortgageId: string;

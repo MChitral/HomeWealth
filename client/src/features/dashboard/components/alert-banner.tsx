@@ -10,17 +10,13 @@ export function AlertBanner({ alert }: AlertBannerProps) {
   if (!alert.isHit && !alert.isRisk) return null;
 
   const isCritical = alert.isHit;
-  const variant = isCritical ? "destructive" : "warning"; // "warning" variant might not exist in default shadcn, usually it's "default" or customized.
+  // The 'variant' variable is declared but not used in the final JSX.
+  // const variant = isCritical ? "destructive" : "warning"; // "warning" variant might not exist in default shadcn, usually it's "default" or customized.
   // If "warning" variant doesn't exist, use "destructive" for hit and default with yellow styling for risk?
   // Let's assume standard variants: default, destructive.
   // For MVP, if hit -> destructive. If risk -> default (maybe add class for color).
 
   const title = isCritical ? "Trigger Rate Hit!" : "Approaching Trigger Rate";
-  const icon = isCritical ? (
-    <AlertCircle className="h-4 w-4" />
-  ) : (
-    <AlertTriangle className="h-4 w-4" />
-  );
 
   const gap = ((alert.triggerRate - alert.currentRate) * 100).toFixed(2);
   const triggerRatePct = (alert.triggerRate * 100).toFixed(2);

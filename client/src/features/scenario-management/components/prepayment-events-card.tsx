@@ -137,7 +137,7 @@ function PrepaymentEventFormFields() {
                   />
                 </FormControl>
                 <p className="text-sm text-muted-foreground">
-                  E.g., "2" means this annual prepayment starts in Year 2 and repeats every year
+                  Each year, make a &quot;lump sum&quot; payment of $5,000
                 </p>
                 <FormMessage />
               </FormItem>
@@ -164,7 +164,7 @@ function PrepaymentEventFormFields() {
                 />
               </FormControl>
               <p className="text-sm text-muted-foreground">
-                E.g., "5" means 5 years from when your mortgage started
+                E.g., &quot;5&quot; means 5 years from when your mortgage started
               </p>
               <FormMessage />
             </FormItem>

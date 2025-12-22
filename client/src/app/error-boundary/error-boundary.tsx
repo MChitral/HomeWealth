@@ -78,10 +78,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <CardHeader>
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-destructive" />
-                <CardTitle>Something went wrong</CardTitle>
+                <CardTitle>
+                  We&apos;re sorry, but something went wrong. Please try refreshing the page.
+                </CardTitle>
               </div>
               <CardDescription>
-                An unexpected error occurred. Don't worry, your data is safe.
+                It&apos;s a safety net for unexpected expenses like job loss, medical emergencies,
+                or car repairs. safe.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

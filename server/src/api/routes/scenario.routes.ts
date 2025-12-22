@@ -42,7 +42,7 @@ export function registerScenarioRoutes(router: Router, services: ApplicationServ
 
     try {
       const data = scenarioCreateSchema.parse({ ...req.body, userId: user.id });
-      const { userId, ...payload } = data;
+      const { userId: _unusedUserId, ...payload } = data;
       const scenario = await services.scenarios.create(user.id, payload);
       res.json(scenario);
     } catch (error) {

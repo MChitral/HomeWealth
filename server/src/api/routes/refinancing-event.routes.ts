@@ -30,7 +30,7 @@ export function registerRefinancingEventRoutes(router: Router, services: Applica
         ...req.body,
         scenarioId: req.params.scenarioId,
       });
-      const { scenarioId, ...payload } = data;
+      const { scenarioId: _scenarioId, ...payload } = data;
       const event = await services.refinancingEvents.create(
         req.params.scenarioId,
         user.id,

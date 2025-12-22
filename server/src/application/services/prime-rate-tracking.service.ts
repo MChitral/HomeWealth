@@ -98,10 +98,10 @@ export class PrimeRateTrackingService {
           });
           termsUpdated++;
           updatedTerms.push(term);
-        } catch (error: any) {
+        } catch (error: unknown) {
           errors.push({
             termId: term.id,
-            error: error.message || String(error),
+            error: error instanceof Error ? error.message : String(error),
           });
         }
       }
@@ -111,10 +111,9 @@ export class PrimeRateTrackingService {
         // Run async, don't block return
         this.impactCalculator
           .calculateImpacts(updatedTerms, previousRate, newRate)
-          .then((impacts) => {
+          .then(() => {
             // For MVP: Log impacts. Future: Create notifications.
-            console.log(`[PrimeRateTracking] Calculated ${impacts.length} impacts`);
-            impacts.forEach((i) => console.log(`Impact for term ${i.termId}: ${i.message}`));
+            // Rate change detected
             // TODO: Persist alerts
           })
           .catch((err) => console.error("Error calculating impacts:", err));
@@ -128,8 +127,9 @@ export class PrimeRateTrackingService {
         termsUpdated,
         errors,
       };
-    } catch (error: any) {
-      throw new Error(`Failed to check and update prime rate: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to check and update prime rate: ${message}`);
     }
   }
 

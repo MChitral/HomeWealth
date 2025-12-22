@@ -215,7 +215,7 @@ export class MortgageTermService {
       try {
         const { primeRate } = await fetchLatestPrimeRate();
         newPrimeRate = primeRate;
-      } catch (error) {
+      } catch {
         throw new Error("Failed to fetch latest prime rate from Bank of Canada");
       }
     }
@@ -271,7 +271,7 @@ export class MortgageTermService {
     } else {
       // VRM-Fixed: Payment stays same, but check trigger rate
       const currentPaymentAmount = Number(term.regularPaymentAmount);
-      const triggerRate = calculateTriggerRate(currentPaymentAmount, currentBalance, frequency);
+      const _triggerRate = calculateTriggerRate(currentPaymentAmount, currentBalance, frequency);
       const triggerRateHit = isTriggerRateHit(
         newEffectiveRate,
         currentPaymentAmount,

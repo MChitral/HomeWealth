@@ -18,10 +18,17 @@ export function useEmergencyFundState({ emergencyFund }: UseEmergencyFundStatePr
 
   useEffect(() => {
     if (!emergencyFund) return;
-    setTargetMonths(emergencyFund.targetMonths.toString());
-    setCurrentBalance(emergencyFund.currentBalance);
-    setMonthlyContribution(emergencyFund.monthlyContribution);
-  }, [emergencyFund]);
+
+    // Derived updates to local state
+    const newTarget = emergencyFund.targetMonths.toString();
+    if (newTarget !== targetMonths) setTargetMonths(newTarget);
+
+    if (emergencyFund.currentBalance !== currentBalance)
+      setCurrentBalance(emergencyFund.currentBalance);
+    if (emergencyFund.monthlyContribution !== monthlyContribution)
+      setMonthlyContribution(emergencyFund.monthlyContribution);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+  }, [emergencyFund, targetMonths, currentBalance, monthlyContribution]);
 
   const saveMutation = useMutation({
     mutationFn: (payload: EmergencyFundPayload) => {

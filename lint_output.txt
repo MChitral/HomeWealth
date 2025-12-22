@@ -3,9 +3,6 @@
 > eslint . --ext .ts,.tsx
 
 
-C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\app\error-boundary\error-boundary.tsx
-  84:50  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
-
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\analytics\components\probability-chart.tsx
    9:3   error    'ReferenceLine' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
   34:15  warning  Unexpected any. Specify a different type                                         @typescript-eslint/no-explicit-any
@@ -43,11 +40,10 @@ C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\emergency
   48:24  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
 
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\emergency-fund\components\emergency-fund-target-card.tsx
-   52:26  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
-  101:27  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  52:31  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
 
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\emergency-fund\hooks\use-emergency-fund-state.ts
-  21:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+  24:37  error  Error: Calling setState synchronously within an effect can trigger cascading renders
 
 Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
 * Update external systems with the latest state from React.
@@ -55,14 +51,14 @@ Effects are intended to synchronize state between React and external systems suc
 
 Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
 
-C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\emergency-fund\hooks\use-emergency-fund-state.ts:21:5
-  19 |   useEffect(() => {
-  20 |     if (!emergencyFund) return;
-> 21 |     setTargetMonths(emergencyFund.targetMonths.toString());
-     |     ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
-  22 |     setCurrentBalance(emergencyFund.currentBalance);
-  23 |     setMonthlyContribution(emergencyFund.monthlyContribution);
-  24 |   }, [emergencyFund]);  react-hooks/set-state-in-effect
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\emergency-fund\hooks\use-emergency-fund-state.ts:24:37
+  22 |     // Derived updates to local state
+  23 |     const newTarget = emergencyFund.targetMonths.toString();
+> 24 |     if (newTarget !== targetMonths) setTargetMonths(newTarget);
+     |                                     ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  25 |
+  26 |     if (emergencyFund.currentBalance !== currentBalance)
+  27 |       setCurrentBalance(emergencyFund.currentBalance);  react-hooks/set-state-in-effect
 
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\components\create-mortgage-dialog.tsx
   219:35  error    Error: Calling setState synchronously within an effect can trigger cascading renders
@@ -162,33 +158,11 @@ C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\components\no-term-state.tsx
   13:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
-C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\components\payment-history-section.tsx
-  136:53  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
-  136:65  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
-
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\components\term-details-section.tsx
   41:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\components\term-renewal-dialog.tsx
   306:29  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
-
-C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\contexts\mortgage-selection-context.tsx
-  44:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
-
-Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
-* Update external systems with the latest state from React.
-* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
-
-Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
-
-C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\contexts\mortgage-selection-context.tsx:44:7
-  42 |   useEffect(() => {
-  43 |     if (mortgages.length === 0) {
-> 44 |       setSelectedMortgageIdState(null);
-     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
-  45 |       return;
-  46 |     }
-  47 |  react-hooks/set-state-in-effect
 
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\hooks\use-backfill-form-state.ts
   19:3  error  'onClose' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
@@ -250,24 +224,6 @@ C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\hooks\use-mortgage-mutations.ts
   39:3  error  'onMortgageCreated' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
 
-C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\hooks\use-prime-rate.ts
-  23:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
-
-Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
-* Update external systems with the latest state from React.
-* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
-
-Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
-
-C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\hooks\use-prime-rate.ts:23:5
-  21 |   useEffect(() => {
-  22 |     if (!primeRateData?.primeRate) return;
-> 23 |     setPrimeRate(primeRateData.primeRate.toString());
-     |     ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
-  24 |   }, [primeRateData?.primeRate]);
-  25 |
-  26 |   return {  react-hooks/set-state-in-effect
-
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\hooks\use-term-renewal-form-with-auto-payment.ts
   68:25  warning  Compilation Skipped: Use of incompatible library
 
@@ -305,9 +261,6 @@ C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\scenario-
   10:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
   11:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
   14:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-
-C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\scenario-comparison\components\time-horizon-selector.tsx
-  12:7  error  A form label must be associated with a control  jsx-a11y/label-has-associated-control
 
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\scenario-comparison\components\winner-card.tsx
   9:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
@@ -414,26 +367,14 @@ C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\scenario-
   138:5   warning  React Hook useMemo has a missing dependency: 'generateChartData'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        react-hooks/exhaustive-deps
 
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\scenario-management\components\emergency-fund-strategy-card.tsx
-  135:15  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
-  135:21  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
-
-C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\scenario-management\components\prepayment-events-card.tsx
-  140:25  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
-  140:27  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
-  167:23  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
-  167:25  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
-
-C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\scenario-management\components\refinancing-events-card.tsx
-  34:9   error  'termType' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
-  93:23  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                      react/no-unescaped-entities
-  93:25  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                      react/no-unescaped-entities
+  137:15  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  137:21  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
 
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\scenario-management\components\scenario-list-empty-state.tsx
   2:20  error  'Plus' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
 
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\scenario-management\scenario-editor.tsx
-   49:65  error  'selectedMortgage' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
-  167:16  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                              react/no-unescaped-entities
+  166:16  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
 
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\shared\api\query-client.ts
   10:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
@@ -449,28 +390,8 @@ C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\shared\hooks\use-f
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\shared\hooks\use-toast.ts
   15:7  error  'actionTypes' is assigned a value but only used as a type. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
 
-C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\shared\ui\alert.tsx
-  32:5  error  Headings must have content and the content must be accessible by a screen reader  jsx-a11y/heading-has-content
-
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\shared\ui\command.tsx
   40:52  error  Unknown property 'cmdk-input-wrapper' found  react/no-unknown-property
-
-C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\shared\ui\pagination.tsx
-  35:3  error  Anchors must have content and the content must be accessible by a screen reader  jsx-a11y/anchor-has-content
-
-C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\shared\ui\sidebar.tsx
-  582:26  error  Error: Cannot call impure function during render
-
-`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
-
-C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\shared\ui\sidebar.tsx:582:26
-  580 |   // Random width between 50 to 90%.
-  581 |   const width = React.useMemo(() => {
-> 582 |     return `${Math.floor(Math.random() * 40) + 50}%`;
-      |                          ^^^^^^^^^^^^^ Cannot call impure function
-  583 |   }, []);
-  584 |
-  585 |   return (  react-hooks/purity
 
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\shared\utils\form-validation.ts
   6:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
@@ -536,8 +457,7 @@ C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\api\routes\simulat
   25:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\api\utils\auth.ts
-  24:7   warning  Unexpected console statement              no-console
-  41:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  40:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\seed\seed-demo.ts
    2:10  error    'db' is defined but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
@@ -720,9 +640,7 @@ C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\servic
 
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\services\prime-rate-tracking.service.ts
   101:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  116:13  warning  Unexpected console statement              no-console
-  117:36  warning  Unexpected console statement              no-console
-  131:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  130:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\services\refinancing-event.service.ts
   10:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
@@ -743,7 +661,6 @@ C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\infrastructure\job
   22:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\infrastructure\jobs\daily-trigger-check.ts
-  19:5   warning  Unexpected console statement  no-console
   25:3   warning  Unexpected console statement  no-console
   31:9   warning  Unexpected console statement  no-console
   36:11  warning  Unexpected console statement  no-console
@@ -753,13 +670,11 @@ C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\infrastructure\job
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\infrastructure\jobs\prime-rate-scheduler.ts
   26:5   warning  Unexpected console statement              no-console
   35:3   warning  Unexpected console statement              no-console
-  42:9   warning  Unexpected console statement              no-console
-  46:11  warning  Unexpected console statement              no-console
-  49:11  warning  Unexpected console statement              no-console
-  58:11  warning  Unexpected console statement              no-console
-  62:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  72:3   warning  Unexpected console statement              no-console
-  81:3   warning  Unexpected console statement              no-console
+  45:11  warning  Unexpected console statement              no-console
+  56:11  warning  Unexpected console statement              no-console
+  60:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  70:3   warning  Unexpected console statement              no-console
+  79:3   warning  Unexpected console statement              no-console
 
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\infrastructure\repositories\__tests__\prime-rate-history.repository.test.ts
   10:23  warning  Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
@@ -768,10 +683,11 @@ C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\infrastructure\rep
   24:21  warning  Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
   25:22  error    'args' is defined but never used. Allowed unused args must match /^_/u                                               @typescript-eslint/no-unused-vars
   25:28  warning  Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
-  36:17  error    'condition' is defined but never used. Allowed unused args must match /^_/u                                          @typescript-eslint/no-unused-vars
-  36:28  warning  Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
-  59:5   error    Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
-  61:34  warning  Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  39:29  warning  Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  45:17  error    'condition' is defined but never used. Allowed unused args must match /^_/u                                          @typescript-eslint/no-unused-vars
+  45:28  warning  Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  68:5   error    Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+  70:34  warning  Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
 
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\infrastructure\vite.ts
   19:3  warning  Unexpected console statement  no-console
@@ -793,5 +709,5 @@ C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\shared\calculation
 C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\shared\calculations\__tests__\trigger-rate-calculation.test.ts
   12:9  error  'RATE_TOLERANCE' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
 
-Γ£û 334 problems (106 errors, 228 warnings)
+Γ£û 311 problems (88 errors, 223 warnings)
 

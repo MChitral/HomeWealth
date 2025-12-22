@@ -23,7 +23,6 @@ export function startPrimeRateScheduler(primeRateTracking: PrimeRateTrackingServ
     isEnabled && (isProduction || process.env.ENABLE_PRIME_RATE_SCHEDULER === "true");
 
   if (!shouldRun) {
-    console.log("[Prime Rate Scheduler] Disabled (set ENABLE_PRIME_RATE_SCHEDULER=true to enable)");
     return;
   }
 
@@ -32,32 +31,20 @@ export function startPrimeRateScheduler(primeRateTracking: PrimeRateTrackingServ
   // "0 9 * * *" = 9:00 AM every day
   const schedule = process.env.PRIME_RATE_SCHEDULE || "0 9 * * *";
 
-  console.log(`[Prime Rate Scheduler] Starting with schedule: ${schedule}`);
-
   // Schedule the job
   cron.schedule(
     schedule,
     async () => {
       try {
-        console.log("[Prime Rate Scheduler] Checking for prime rate changes...");
         const result = await primeRateTracking.checkAndUpdatePrimeRate();
 
         if (result.changed) {
-          console.log(
-            `[Prime Rate Scheduler] Prime rate changed from ${result.previousRate}% to ${result.newRate}%`
-          );
-          console.log(`[Prime Rate Scheduler] Updated ${result.termsUpdated} VRM terms`);
-
           if (result.errors.length > 0) {
             console.warn(
               `[Prime Rate Scheduler] ${result.errors.length} errors occurred during update:`,
               result.errors
             );
           }
-        } else {
-          console.log(
-            `[Prime Rate Scheduler] No change detected. Current rate: ${result.newRate}%`
-          );
         }
       } catch (error: any) {
         console.error("[Prime Rate Scheduler] Error checking prime rate:", error);
@@ -68,8 +55,6 @@ export function startPrimeRateScheduler(primeRateTracking: PrimeRateTrackingServ
       timezone: "America/Toronto", // Eastern Time (Bank of Canada timezone)
     }
   );
-
-  console.log("[Prime Rate Scheduler] Scheduled job started successfully");
 }
 
 /**
@@ -78,5 +63,4 @@ export function startPrimeRateScheduler(primeRateTracking: PrimeRateTrackingServ
 export function stopPrimeRateScheduler(): void {
   // node-cron doesn't have a built-in stop method for all tasks
   // In a real implementation, you'd track the task and call destroy()
-  console.log("[Prime Rate Scheduler] Stopping scheduler");
 }

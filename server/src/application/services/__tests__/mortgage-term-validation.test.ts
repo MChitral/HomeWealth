@@ -1,4 +1,5 @@
-import { describe, it, beforeEach, mock } from "node:test";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { describe, it, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { MortgageTermService } from "../mortgage-term.service";
 import type { Mortgage, MortgageTerm } from "@shared/schema";
@@ -58,11 +59,11 @@ class MockMortgageTermsRepository {
 }
 
 class MockMortgagePaymentsRepository {
-  async findByTermId(termId: string): Promise<any[]> {
+  async findByTermId(_termId: string): Promise<any[]> {
     return [];
   }
 
-  async deleteByTermId(termId: string): Promise<void> {
+  async deleteByTermId(_termId: string): Promise<void> {
     // Mock implementation
   }
 }
@@ -85,8 +86,8 @@ describe("MortgageTermService - Term Overlap Validation", () => {
     amortizationMonths: 0,
     paymentFrequency: "monthly",
     annualPrepaymentLimitPercent: 20,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   beforeEach(() => {
@@ -187,7 +188,7 @@ describe("MortgageTermService - Term Overlap Validation", () => {
 
   it("allows updating term to non-overlapping dates", async () => {
     // Create two non-overlapping terms
-    const term1 = await service.create("mortgage-1", "user-1", {
+    const _term1 = await service.create("mortgage-1", "user-1", {
       termType: "fixed",
       startDate: "2020-01-01",
       endDate: "2025-01-01",
@@ -217,7 +218,7 @@ describe("MortgageTermService - Term Overlap Validation", () => {
 
   it("rejects updating term to overlapping dates", async () => {
     // Create two non-overlapping terms
-    const term1 = await service.create("mortgage-1", "user-1", {
+    const _term1 = await service.create("mortgage-1", "user-1", {
       termType: "fixed",
       startDate: "2020-01-01",
       endDate: "2025-01-01",

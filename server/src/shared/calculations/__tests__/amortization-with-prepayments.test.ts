@@ -21,8 +21,8 @@ describe("Amortization Calculation with Prepayments", () => {
     amortizationMonths: 0,
     paymentFrequency: "monthly",
     annualPrepaymentLimitPercent: 20,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   const mockTerm: MortgageTerm = {
@@ -37,15 +37,13 @@ describe("Amortization Calculation with Prepayments", () => {
     primeRate: null,
     paymentFrequency: "monthly",
     regularPaymentAmount: "2500.00",
-    createdAt: new Date().toISOString(),
+    createdAt: new Date(),
   };
 
   it("calculates shorter amortization when prepayments are included", () => {
     const principal = 400000;
     const annualRate = 0.0549; // 5.49%
-    const amortizationMonths = 300; // 25 years
     const frequency: PaymentFrequency = "monthly";
-    const startDate = new Date(2020, 0, 1);
 
     // Calculate regular payment
     const regularPayment = 2500;
@@ -111,6 +109,7 @@ describe("Amortization Calculation with Prepayments", () => {
     const prepayments = [
       {
         type: "monthly-percent" as const,
+        amount: 0,
         monthlyPercent: 20, // 20% of regular payment as prepayment
         startPaymentNumber: 1,
       },

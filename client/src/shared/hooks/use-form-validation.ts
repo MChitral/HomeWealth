@@ -23,7 +23,7 @@ export interface FormFieldOptions<T> {
  * Hook for managing a single form field with validation
  */
 export function useFormField<T>(options: FormFieldOptions<T>) {
-  const { initialValue, validate, required: isRequired } = options;
+  const { initialValue, validate } = options;
 
   const [value, setValue] = useState<T>(initialValue);
   const [touched, setTouched] = useState(false);
@@ -65,7 +65,8 @@ export function useFormField<T>(options: FormFieldOptions<T>) {
  * Note: This is a convenience wrapper. For better performance and flexibility,
  * use individual useFormField hooks for each field.
  */
-export function useFormFields<T extends Record<string, any>>(fields: {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+export function useFormFields<T extends Record<string, any>>(_fields: {
   [K in keyof T]: FormFieldOptions<T[K]>;
 }) {
   // This hook is a pattern example. In practice, call useFormField for each field individually

@@ -1,7 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { generateAmortizationSchedule, type PaymentFrequency } from "../mortgage";
-import { isBusinessDay } from "../../utils/business-days";
 
 describe("Semi-Monthly Date Alignment", () => {
   it("aligns payments to 1st and 15th of each month", () => {

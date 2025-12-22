@@ -1,5 +1,5 @@
 import type { ScenarioWithMetrics } from "@/entities";
-import type { EmergencyFund, Mortgage, CashFlow } from "@shared/schema";
+import type { EmergencyFund, CashFlow } from "@shared/schema";
 
 export type { ScenarioWithMetrics } from "@/entities";
 

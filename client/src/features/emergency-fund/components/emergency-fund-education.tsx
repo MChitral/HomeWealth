@@ -13,8 +13,8 @@ export function EmergencyFundEducation() {
             <div>
               <p className="font-medium text-sm mb-1">Avoid High-Interest Debt</p>
               <p className="text-sm text-muted-foreground">
-                With an emergency fund, you won't need to use credit cards or loans at 20%+ interest
-                when unexpected expenses arise.
+                With an emergency fund, you won&apos;t need to use credit cards or loans at 20%+
+                interest when unexpected expenses arise.
               </p>
             </div>
           </div>
@@ -45,7 +45,7 @@ export function EmergencyFundEducation() {
         <CardContent className="p-4">
           <p className="text-sm">
             <span className="font-medium">Note:</span> How quickly you fill this fund and what you
-            do after it's full is configured in each scenario. Different scenarios can have
+            do after it&apos;s full is configured in each scenario. Different scenarios can have
             different contribution strategies while targeting the same amount.
           </p>
         </CardContent>

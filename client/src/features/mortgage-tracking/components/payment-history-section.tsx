@@ -133,7 +133,8 @@ export function PaymentHistorySection({
               {filteredPayments.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={13} className="text-center text-muted-foreground py-8">
-                    No payments recorded yet. Click "Log Payment" to add your first payment.
+                    Try clicking the &quot;Log Payment&quot; button to add your first
+                    record.payment.
                   </TableCell>
                 </TableRow>
               ) : (

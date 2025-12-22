@@ -2,7 +2,7 @@ import { describe, it, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { PrimeRateTrackingService } from "../prime-rate-tracking.service";
 import type { MortgageTerm, Mortgage } from "@shared/schema";
-import { fetchLatestPrimeRate } from "@server-shared/services/prime-rate";
+// import { fetchLatestPrimeRate } from "@server-shared/services/prime-rate";
 
 // Mock repositories
 class MockPrimeRateHistoryRepository {
@@ -74,11 +74,11 @@ class MockMortgagesRepository {
 }
 
 // Mock fetchLatestPrimeRate
-const originalFetchLatestPrimeRate = fetchLatestPrimeRate;
+// const originalFetchLatestPrimeRate = fetchLatestPrimeRate;
 let mockPrimeRate: { primeRate: number; effectiveDate: string } | null = null;
 
 class MockImpactCalculator {
-  async calculateImpacts(mortgageId: string, oldRate: number, newRate: number) {
+  async calculateImpacts(_mortgageId: string, _oldRate: number, _newRate: number) {
     return {
       paymentIncrease: 100,
       triggerRateRisk: "low",
@@ -132,8 +132,8 @@ describe("PrimeRateTrackingService", () => {
         amortizationMonths: 0,
         paymentFrequency: "monthly",
         annualPrepaymentLimitPercent: 20,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
       mortgagesRepo.setMortgage(mortgage);
 
@@ -149,7 +149,7 @@ describe("PrimeRateTrackingService", () => {
         primeRate: "6.450", // Old rate
         paymentFrequency: "monthly",
         regularPaymentAmount: "3500.00",
-        createdAt: new Date().toISOString(),
+        createdAt: new Date(),
       };
       termsRepo.setTerm(term);
 
@@ -272,7 +272,7 @@ describe("PrimeRateTrackingService", () => {
         primeRate: "6.450",
         paymentFrequency: "monthly",
         regularPaymentAmount: "3500.00",
-        createdAt: new Date().toISOString(),
+        createdAt: new Date(),
       };
 
       const expiredTerm: MortgageTerm = {
@@ -287,7 +287,7 @@ describe("PrimeRateTrackingService", () => {
         primeRate: "6.450",
         paymentFrequency: "monthly",
         regularPaymentAmount: "3500.00",
-        createdAt: new Date().toISOString(),
+        createdAt: new Date(),
       };
 
       const fixedTerm: MortgageTerm = {
@@ -302,7 +302,7 @@ describe("PrimeRateTrackingService", () => {
         primeRate: null,
         paymentFrequency: "monthly",
         regularPaymentAmount: "3500.00",
-        createdAt: new Date().toISOString(),
+        createdAt: new Date(),
       };
 
       termsRepo.setTerm(activeTerm);
@@ -362,7 +362,7 @@ describe("PrimeRateTrackingService", () => {
         primeRate: "6.450",
         paymentFrequency: "monthly",
         regularPaymentAmount: "3500.00",
-        createdAt: new Date().toISOString(),
+        createdAt: new Date(),
       };
       termsRepo.setTerm(term);
 

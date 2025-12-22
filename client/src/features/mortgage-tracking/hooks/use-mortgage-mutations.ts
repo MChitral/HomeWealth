@@ -20,7 +20,6 @@ interface UseMortgageMutationsProps {
   onBackfillReset?: () => void;
   onEditMortgageDialogClose?: () => void;
   onEditTermDialogClose?: () => void;
-  onMortgageCreated?: (mortgageId: string) => void;
 }
 
 /**
@@ -36,7 +35,6 @@ export function useMortgageMutations({
   onBackfillReset,
   onEditMortgageDialogClose,
   onEditTermDialogClose,
-  onMortgageCreated,
 }: UseMortgageMutationsProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -187,7 +185,7 @@ export function useMortgageMutations({
     mutationFn: ({ termId, updates }: { termId: string; updates: UpdateTermPayload }) => {
       return mortgageApi.updateTerm(termId, updates);
     },
-    onSuccess: async () => {
+    onSuccess: async (_onMortgageCreated) => {
       await queryClient.refetchQueries({
         queryKey: mortgageQueryKeys.mortgageTerms(mortgage?.id ?? null),
       });

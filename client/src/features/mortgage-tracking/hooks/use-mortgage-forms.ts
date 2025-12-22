@@ -4,7 +4,7 @@ import { useEditMortgageForm } from "./use-edit-mortgage-form";
 import { useTermRenewalFormState } from "./use-term-renewal-form-state";
 import type { Mortgage } from "@shared/schema";
 import type { PrimeRateResponse } from "../api";
-import type { UiTerm, UiPayment } from "../types";
+import type { UiPayment } from "../types";
 
 interface UseMortgageFormsProps {
   // Dialog states
@@ -45,7 +45,6 @@ export function useMortgageForms({
   setPrimeRate,
   setSelectedMortgageId,
   setIsCreateMortgageOpen,
-  setIsEditMortgageOpen,
   setIsTermRenewalOpen,
   paymentHistory = [],
   lastKnownBalance = 0,

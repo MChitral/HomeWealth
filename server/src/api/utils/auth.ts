@@ -21,7 +21,6 @@ async function ensureDevUserExists(): Promise<void> {
         lastName: "User",
         profileImageUrl: null,
       });
-      console.log(`✅ Created dev user: ${DEV_USER_ID}`);
     }
   } catch (error) {
     // Log but don't throw - allow the request to continue

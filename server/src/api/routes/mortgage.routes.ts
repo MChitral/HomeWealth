@@ -50,9 +50,15 @@ async function ensurePrimeRate<
             // Get the most recent rate on or before startDate
             const payloadStartDate = payload.startDate;
             const rates = data.observations
-              .map((obs: any) => ({ date: obs.d, rate: parseFloat(obs.V121796.v) }))
-              .filter((r: any) => r.date <= payloadStartDate)
-              .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+              .map((obs: { d: string; V121796: { v: string } }) => ({
+                date: obs.d,
+                rate: parseFloat(obs.V121796.v),
+              }))
+              .filter((r: { date: string; rate: number }) => r.date <= payloadStartDate)
+              .sort(
+                (a: { date: string }, b: { date: string }) =>
+                  new Date(b.date).getTime() - new Date(a.date).getTime()
+              );
 
             if (rates.length > 0) {
               return { ...payload, primeRate: rates[0].rate.toFixed(3) };
@@ -71,9 +77,15 @@ async function ensurePrimeRate<
           if (wideData.observations && wideData.observations.length > 0) {
             const payloadStartDate = payload.startDate;
             const rates = wideData.observations
-              .map((obs: any) => ({ date: obs.d, rate: parseFloat(obs.V121796.v) }))
-              .filter((r: any) => r.date <= payloadStartDate)
-              .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+              .map((obs: { d: string; V121796: { v: string } }) => ({
+                date: obs.d,
+                rate: parseFloat(obs.V121796.v),
+              }))
+              .filter((r: { date: string; rate: number }) => r.date <= payloadStartDate)
+              .sort(
+                (a: { date: string }, b: { date: string }) =>
+                  new Date(b.date).getTime() - new Date(a.date).getTime()
+              );
 
             if (rates.length > 0) {
               return { ...payload, primeRate: rates[0].rate.toFixed(3) };
@@ -254,7 +266,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
     try {
       const data = mortgageCreateSchema.parse({ ...req.body, userId: user.id });
-      const { userId, ...payload } = data;
+      const { userId: _userId, ...payload } = data;
       const created = await services.mortgages.create(user.id, payload);
       res.json(created);
     } catch (error) {
@@ -313,7 +325,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         mortgageId: req.params.mortgageId,
       });
       const data = mortgageTermCreateSchema.parse(requestWithPrime);
-      const { mortgageId, ...payload } = data;
+      const { mortgageId: _mortgageId, ...payload } = data;
       const term = await services.mortgageTerms.create(req.params.mortgageId, user.id, payload);
       if (!term) {
         sendError(res, 404, "Mortgage not found");
@@ -474,7 +486,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         ...req.body,
         mortgageId: req.params.mortgageId,
       });
-      const { mortgageId, ...payload } = data;
+      const { mortgageId: _mortgageId, ...payload } = data;
       const payment = await services.mortgagePayments.create(
         req.params.mortgageId,
         user.id,
@@ -514,7 +526,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
           ...paymentData,
           mortgageId: req.params.mortgageId,
         });
-        const { mortgageId, ...payload } = data;
+        const { mortgageId: _mortgageId, ...payload } = data;
         validatedPayments.push(payload);
       }
 
@@ -807,8 +819,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         }
 
         // Calculate new payment amount if term type changes
-        let newPaymentAmount: number | undefined;
-        const refinancingFrequency = refinancingEvent.paymentFrequency ?? projectionFrequency;
+        // const refinancingFrequency = refinancingEvent.paymentFrequency ?? projectionFrequency;
         const refinancingAmortization =
           refinancingEvent.newAmortizationMonths ?? data.amortizationMonths;
 
@@ -821,7 +832,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         // Note: We don't set newPaymentAmount here because we don't know the exact balance at the
         // refinancing point. The amortization schedule generation will recalculate it correctly using
         // the actual remaining balance when it reaches that payment number.
-        newPaymentAmount = undefined;
+        const newPaymentAmount = undefined;
 
         refinancingTermRenewals.push({
           startPaymentNumber,
@@ -1155,7 +1166,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
       // Ensure final point is included
       if (schedule.payments.length > 0) {
-        const lastPayment = schedule.payments[schedule.payments.length - 1];
+        // const lastPayment = schedule.payments[schedule.payments.length - 1];
         const finalYears = schedule.payments.length / paymentsPerYear;
         const finalYearsRounded = Math.round(finalYears * 10) / 10;
 

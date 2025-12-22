@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { calculatePayment, calculateMonthlyPayment, type PaymentFrequency } from "../mortgage";
+import { calculatePayment, calculateMonthlyPayment } from "../mortgage";
 
 describe("Accelerated Payment Calculation", () => {
   /**

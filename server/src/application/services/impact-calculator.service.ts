@@ -1,5 +1,5 @@
 import { MortgageTerm, Mortgage } from "@shared/schema";
-import { calculatePayment } from "@server-shared/calculations/mortgage";
+import { calculatePayment, type PaymentFrequency } from "@server-shared/calculations/mortgage";
 import { TriggerRateMonitor } from "./trigger-rate-monitor";
 import { MortgagesRepository, MortgagePaymentsRepository } from "@infrastructure/repositories";
 
@@ -121,7 +121,7 @@ export class ImpactCalculator {
       balance,
       newRateDecimal,
       remainingMonths,
-      term.paymentFrequency as any // TODO: Fix PaymentFrequency type mismatch in shared utils
+      term.paymentFrequency as PaymentFrequency
     );
 
     const oldPayment = Number(term.regularPaymentAmount);
@@ -141,7 +141,7 @@ export class ImpactCalculator {
   private async calculateTriggerImpact(
     term: MortgageTerm,
     mortgage: Mortgage,
-    newPrime: number
+    _newPrime: number
   ): Promise<ImpactResult | null> {
     // Check new trigger status
     // Reuse TriggerRateMonitor logic?

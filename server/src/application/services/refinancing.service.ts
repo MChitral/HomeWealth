@@ -2,7 +2,7 @@ import { MortgagesRepository } from "../../infrastructure/repositories/mortgages
 import { MortgageTermsRepository } from "../../infrastructure/repositories/mortgage-terms.repository";
 import { MarketRateService } from "./market-rate.service";
 import { calculateStandardPenalty } from "../../domain/calculations/penalty";
-import { calculateRefinanceBenefit, RefinanceResult } from "../../domain/calculations/refinance";
+import { calculateRefinanceBenefit } from "../../domain/calculations/refinance";
 
 export interface RefinanceAnalysis {
   currentRate: number;

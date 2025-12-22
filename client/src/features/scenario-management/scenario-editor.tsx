@@ -46,8 +46,7 @@ export function ScenarioEditorFeature() {
   } = useScenarioDetail(scenarioId);
 
   // Use global mortgage selection
-  const { selectedMortgageId, setSelectedMortgageId, mortgages, selectedMortgage } =
-    useMortgageSelection();
+  const { selectedMortgageId, setSelectedMortgageId, mortgages } = useMortgageSelection();
 
   // Fetch real mortgage data from the database
   const {
@@ -164,7 +163,7 @@ export function ScenarioEditorFeature() {
         <Info className="h-4 w-4" />
         <AlertDescription>
           Your current mortgage data is pre-loaded from Mortgage History. Projections start from
-          today's position.
+          today&apos;s position.
         </AlertDescription>
       </Alert>
 
@@ -195,7 +194,8 @@ export function ScenarioEditorFeature() {
             and apply to all scenarios. Here you only configure what differs between strategies.
             {!cashFlow && (
               <span className="block mt-2 text-orange-600 font-medium">
-                ⚠️ Set up Cash Flow to enable accurate surplus calculations and projections.
+                A scenario is a &apos;what-if&apos; plan. Add events to see how they affect your
+                wealth.
               </span>
             )}
           </p>

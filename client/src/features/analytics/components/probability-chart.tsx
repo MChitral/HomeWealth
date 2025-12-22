@@ -6,7 +6,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  ReferenceLine,
 } from "recharts";
 import { SimulationResult } from "../api/simulation-api";
 import { formatCurrency } from "@/shared/lib/utils";
@@ -31,7 +30,7 @@ export function ProbabilityChart({ simulationResult }: ProbabilityChartProps) {
   // [{ month: 0, path0: 100k, path1: 100k }, { month: 1, path0: 99k, path1: 98k }]
 
   // Transform data
-  const data: any[] = [];
+  const data: Record<string, number>[] = [];
   const maxMonths = 60; // Horizon from backend
 
   // Initialize data array

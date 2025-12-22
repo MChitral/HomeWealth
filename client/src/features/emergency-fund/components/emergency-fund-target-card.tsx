@@ -48,8 +48,8 @@ export function EmergencyFundTargetCard({
           <p className="text-sm font-medium mb-2">What is an Emergency Fund?</p>
           <p className="text-sm text-muted-foreground">
             An emergency fund is cash set aside to cover unexpected expenses or income loss.
-            Financial experts recommend 3-6 months of living expenses for most people, or 6-12
-            months if you're self-employed or have variable income.
+            It&apos;s recommended to have 3-6 months of essential expenses saved for most people, or
+            6-12 months if you&apos;re self-employed or have variable income.
           </p>
         </div>
 
@@ -98,7 +98,7 @@ export function EmergencyFundTargetCard({
               data-testid="input-monthly-contribution"
             />
             <p className="text-sm text-muted-foreground">
-              How much you'll add each month until target is reached
+              That&apos;s okay! Start small. Saving just $100/month helps build your safety net.
             </p>
           </div>
 

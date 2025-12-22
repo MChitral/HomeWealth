@@ -9,7 +9,6 @@ import {
 
 describe("Trigger Rate Calculation", () => {
   const ROUNDING_TOLERANCE = 0.01; // $0.01 tolerance for monetary calculations
-  const RATE_TOLERANCE = 0.0001; // 0.01 basis points for rate calculations
 
   describe("calculateTriggerRate - Reverse Calculation Verification", () => {
     /**

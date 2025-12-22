@@ -7,11 +7,13 @@ import {
 } from "@shared/schema";
 
 export class PrimeRateHistoryRepository {
+  private db = db;
+
   /**
    * Create a new prime rate history entry
    */
   async create(data: InsertPrimeRateHistory): Promise<PrimeRateHistory> {
-    const [created] = await db.insert(primeRateHistory).values(data).returning();
+    const [created] = await this.db.insert(primeRateHistory).values(data).returning();
     return created;
   }
 
@@ -19,7 +21,7 @@ export class PrimeRateHistoryRepository {
    * Get the latest prime rate from history
    */
   async findLatest(): Promise<PrimeRateHistory | undefined> {
-    const [latest] = await db
+    const [latest] = await this.db
       .select()
       .from(primeRateHistory)
       .orderBy(desc(primeRateHistory.effectiveDate), desc(primeRateHistory.createdAt))
@@ -31,7 +33,7 @@ export class PrimeRateHistoryRepository {
    * Get prime rate history within a date range
    */
   async findByDateRange(startDate: string, endDate: string): Promise<PrimeRateHistory[]> {
-    return await db
+    return await this.db
       .select()
       .from(primeRateHistory)
       .where(
@@ -47,7 +49,7 @@ export class PrimeRateHistoryRepository {
    * Get all prime rate history entries
    */
   async findAll(): Promise<PrimeRateHistory[]> {
-    return await db
+    return await this.db
       .select()
       .from(primeRateHistory)
       .orderBy(desc(primeRateHistory.effectiveDate), desc(primeRateHistory.createdAt));
@@ -57,7 +59,7 @@ export class PrimeRateHistoryRepository {
    * Check if a prime rate for a specific effective date already exists
    */
   async existsForDate(effectiveDate: string): Promise<boolean> {
-    const [existing] = await db
+    const [existing] = await this.db
       .select()
       .from(primeRateHistory)
       .where(eq(primeRateHistory.effectiveDate, effectiveDate))

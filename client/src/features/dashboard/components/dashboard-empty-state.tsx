@@ -1,5 +1,4 @@
 import { EmptyState } from "@/shared/components";
-import { Plus } from "lucide-react";
 
 export function DashboardEmptyState() {
   return (

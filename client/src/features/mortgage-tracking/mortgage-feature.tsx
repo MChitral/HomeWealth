@@ -39,7 +39,7 @@ export default function MortgageFeature() {
     mortgages,
     mortgage,
     terms,
-    payments,
+    // payments, // Unused
     isLoading,
     primeRateData,
     isPrimeRateLoading,
@@ -52,7 +52,7 @@ export default function MortgageFeature() {
     backfillPaymentsMutation,
     deletePaymentMutation,
     editMortgageMutation,
-    updateTermMutation,
+    // updateTermMutation, // Unused
     currentPrimeRateValue,
     currentEffectiveRate,
     summaryStats,

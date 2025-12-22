@@ -1,14 +1,11 @@
 import { useMemo } from "react";
 import { normalizePayments, normalizeTerm } from "../utils/normalize";
-import type { Mortgage } from "@shared/schema";
-import type { MortgageTerm } from "@shared/schema";
-import type { UiPayment, UiTerm } from "../types";
-import type { PrimeRateResponse } from "../api";
+import type { Mortgage, MortgageTerm, MortgagePayment } from "@shared/schema";
 
 interface UseMortgageComputedProps {
   mortgage: Mortgage | null;
   terms: MortgageTerm[] | undefined;
-  payments: any[] | undefined;
+  payments: MortgagePayment[] | undefined;
   primeRateData?: PrimeRateResponse;
   primeRate: string;
   filterYear: string;

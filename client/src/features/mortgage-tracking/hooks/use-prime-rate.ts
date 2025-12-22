@@ -20,8 +20,12 @@ export function usePrimeRate(initialPrime: string = DEFAULT_PRIME) {
 
   useEffect(() => {
     if (!primeRateData?.primeRate) return;
-    setPrimeRate(primeRateData.primeRate.toString());
-  }, [primeRateData?.primeRate]);
+    const newRate = primeRateData.primeRate.toString();
+    if (newRate !== primeRate) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPrimeRate(newRate);
+    }
+  }, [primeRateData, primeRate]);
 
   return {
     primeRate,

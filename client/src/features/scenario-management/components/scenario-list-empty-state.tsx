@@ -1,5 +1,5 @@
 import { EmptyState } from "@/shared/components";
-import { FileText, Plus } from "lucide-react";
+import { FileText } from "lucide-react";
 
 export function ScenarioListEmptyState() {
   return (

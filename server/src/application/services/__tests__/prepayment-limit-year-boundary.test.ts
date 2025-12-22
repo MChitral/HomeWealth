@@ -14,6 +14,7 @@
  * isolation (payments are immediately visible, unlike real database transactions).
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { MortgagePaymentService } from "../mortgage-payment.service";
@@ -78,7 +79,9 @@ class MockMortgagePaymentsRepository {
       effectiveRate: payload.effectiveRate,
       triggerRateHit: payload.triggerRateHit || false,
       remainingAmortizationMonths: payload.remainingAmortizationMonths || null,
-      createdAt: new Date().toISOString(),
+      isSkipped: 0,
+      skippedInterestAccrued: "0",
+      createdAt: new Date(),
     };
 
     if (tx) {
@@ -138,6 +141,10 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
   let mortgagesRepo: MockMortgagesRepository;
   let termsRepo: MockMortgageTermsRepository;
   let paymentsRepo: MockMortgagePaymentsRepository;
+  let createPayment: (payload: any) => Promise<MortgagePayment | undefined>;
+  let createBulkPayments: (
+    payments: any[]
+  ) => Promise<{ created: number; payments: MortgagePayment[] }>;
 
   const mockMortgage: Mortgage = {
     id: "mortgage-1",
@@ -151,8 +158,8 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
     amortizationMonths: 0,
     paymentFrequency: "monthly",
     annualPrepaymentLimitPercent: 20,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   const mockTerm: MortgageTerm = {
@@ -167,7 +174,7 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
     primeRate: null,
     paymentFrequency: "monthly",
     regularPaymentAmount: "3500.00",
-    createdAt: new Date().toISOString(),
+    createdAt: new Date(),
   };
 
   beforeEach(() => {
@@ -180,23 +187,20 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
 
     // Mock db.transaction to simulate transaction isolation
     // In real code, payments created in a transaction aren't visible until committed
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const originalDb = require("@infrastructure/db/connection").db;
     const mockTransaction = async (callback: (tx: any) => Promise<any>) => {
       const tx: any = { _pendingPayments: [] };
-      try {
-        const result = await callback(tx);
-        // Commit: move pending payments to committed storage
-        if (tx._repository && tx._pendingPayments.length > 0) {
-          tx._repository.commitPendingPayments(tx._pendingPayments);
-        }
-        return result;
-      } catch (error) {
-        // Rollback: discard pending payments (already not committed)
-        throw error;
+      const result = await callback(tx);
+      // Commit: move pending payments to committed storage
+      if (tx._repository && tx._pendingPayments.length > 0) {
+        tx._repository.commitPendingPayments(tx._pendingPayments);
       }
+      return result;
     };
 
     // Replace db.transaction with our mock
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     require("@infrastructure/db/connection").db = {
       ...originalDb,
       transaction: mockTransaction,
@@ -207,6 +211,8 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
       termsRepo as any,
       paymentsRepo as any
     );
+    createPayment = (payload: any) => service.create("mortgage-1", "user-1", payload);
+    createBulkPayments = (payments: any[]) => service.createBulk("mortgage-1", "user-1", payments);
   });
 
   describe("Year Boundary - December 31 to January 1", () => {
@@ -217,12 +223,12 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
       // Note: If Dec 31 were a weekend/holiday, it would adjust to Jan 1, changing the year
 
       // Create payment on Dec 31, 2024 (Tuesday - business day)
-      const dec31Payment = await service.create("mortgage-1", "user-1", {
+      const dec31Payment = await createPayment({
         termId: "term-1",
         paymentDate: "2024-12-31",
         regularPaymentAmount: "3500.00",
         prepaymentAmount: "100000.00",
-        prepaymentType: "one-time",
+
         effectiveRate: "5.490",
       });
 
@@ -236,12 +242,12 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
 
       // Create payment on Jan 1, 2025 (New Year's Day - holiday, will adjust to Jan 2)
       // Note: Jan 1 is a holiday, so it adjusts to Jan 2, but still counts in 2025
-      const jan1Payment = await service.create("mortgage-1", "user-1", {
+      const jan1Payment = await createPayment({
         termId: "term-1",
         paymentDate: "2025-01-01",
         regularPaymentAmount: "3500.00",
         prepaymentAmount: "20000.00",
-        prepaymentType: "one-time",
+
         effectiveRate: "5.490",
       });
 
@@ -260,12 +266,12 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
       // Should allow full limit again in 2025 (Jan 1 is Wednesday - business day)
 
       // Use full limit in 2024
-      const dec31Payment = await service.create("mortgage-1", "user-1", {
+      const dec31Payment = await createPayment({
         termId: "term-1",
         paymentDate: "2024-12-31",
         regularPaymentAmount: "3500.00",
         prepaymentAmount: "120000.00",
-        prepaymentType: "one-time",
+
         effectiveRate: "5.490",
       });
 
@@ -278,12 +284,12 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
 
       // Should allow full limit again in 2025 (new year)
       // Note: Jan 1 is a holiday, so it adjusts to Jan 2, but still counts in 2025
-      const jan1Payment = await service.create("mortgage-1", "user-1", {
+      const jan1Payment = await createPayment({
         termId: "term-1",
         paymentDate: "2025-01-01",
         regularPaymentAmount: "3500.00",
         prepaymentAmount: "120000.00",
-        prepaymentType: "one-time",
+
         effectiveRate: "5.490",
       });
 
@@ -301,26 +307,26 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
       // Try to use $25,000 on Jan 1, 2025 (Wednesday - business day, counted in 2025)
       // Should fail because $25,000 > $20,000 remaining in 2025
 
-      const dec31Payment = await service.create("mortgage-1", "user-1", {
+      const dec31Payment = await createPayment({
         termId: "term-1",
         paymentDate: "2024-12-31",
         regularPaymentAmount: "3500.00",
         prepaymentAmount: "100000.00",
-        prepaymentType: "one-time",
+
         effectiveRate: "5.490",
       });
 
-      assert.equal(dec31Payment.paymentDate, "2024-12-31", "Payment should be counted in 2024");
+      assert.equal(dec31Payment!.paymentDate, "2024-12-31", "Payment should be counted in 2024");
 
       // Try to exceed limit in new year
       // Note: Jan 1 is a holiday, so it adjusts to Jan 2, but still counts in 2025
       try {
-        await service.create("mortgage-1", "user-1", {
+        await createPayment({
           termId: "term-1",
           paymentDate: "2025-01-01", // Holiday, adjusts to Jan 2, but counts in 2025
           regularPaymentAmount: "3500.00",
           prepaymentAmount: "25000.00", // Exceeds $20,000 remaining in 2025
-          prepaymentType: "one-time",
+
           effectiveRate: "5.490",
         });
         assert.fail("Should have thrown PrepaymentLimitError");
@@ -343,7 +349,7 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
           paymentDate: "2024-12-31", // Tuesday - business day
           regularPaymentAmount: "3500.00",
           prepaymentAmount: "50000.00",
-          prepaymentType: "one-time" as const,
+
           effectiveRate: "5.490",
         },
         {
@@ -351,12 +357,12 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
           paymentDate: "2025-01-01", // New Year's Day - holiday, adjusts to Jan 2, but counts in 2025
           regularPaymentAmount: "3500.00",
           prepaymentAmount: "50000.00",
-          prepaymentType: "one-time" as const,
+
           effectiveRate: "5.490",
         },
       ];
 
-      const result = await service.createBulk("mortgage-1", "user-1", bulkPayments);
+      const result = await createBulkPayments(bulkPayments);
 
       assert.ok(result, "Bulk payments should be created");
       assert.equal(result.payments.length, 2, "Both payments should be created");
@@ -384,7 +390,7 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
           paymentDate: "2024-12-31", // Tuesday - business day
           regularPaymentAmount: "3500.00",
           prepaymentAmount: "120000.00", // Full limit for 2024
-          prepaymentType: "one-time" as const,
+
           effectiveRate: "5.490",
         },
         {
@@ -392,12 +398,12 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
           paymentDate: "2025-01-01", // New Year's Day - holiday, adjusts to Jan 2, but counts in 2025
           regularPaymentAmount: "3500.00",
           prepaymentAmount: "120000.00", // Full limit for 2025 (reset)
-          prepaymentType: "one-time" as const,
+
           effectiveRate: "5.490",
         },
       ];
 
-      const result = await service.createBulk("mortgage-1", "user-1", bulkPayments);
+      const result = await createBulkPayments(bulkPayments);
 
       assert.ok(result, "Bulk payments should be created");
       assert.equal(result.payments.length, 2, "Both payments should be created");
@@ -421,7 +427,7 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
           paymentDate: "2024-12-31",
           regularPaymentAmount: "3500.00",
           prepaymentAmount: "100000.00",
-          prepaymentType: "one-time" as const,
+
           effectiveRate: "5.490",
         },
         {
@@ -429,13 +435,13 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
           paymentDate: "2025-01-01", // New Year's Day - holiday, adjusts to Jan 2, but counts in 2025
           regularPaymentAmount: "3500.00",
           prepaymentAmount: "25000.00", // Exceeds $20,000 remaining in 2025
-          prepaymentType: "one-time" as const,
+
           effectiveRate: "5.490",
         },
       ];
 
       try {
-        await service.createBulk("mortgage-1", "user-1", bulkPayments);
+        await createBulkPayments(bulkPayments);
         assert.fail("Should have thrown PrepaymentLimitError");
       } catch (error: any) {
         assert.ok(
@@ -451,24 +457,24 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
       // Multiple prepayments on same day should be summed
       // $50,000 + $50,000 = $100,000 on Dec 31, 2024 (Tuesday - business day)
 
-      const payment1 = await service.create("mortgage-1", "user-1", {
+      const payment1 = await createPayment({
         termId: "term-1",
         paymentDate: "2024-12-31",
         regularPaymentAmount: "3500.00",
         prepaymentAmount: "50000.00",
-        prepaymentType: "one-time",
+
         effectiveRate: "5.490",
       });
 
       assert.ok(payment1, "First payment should be created");
       assert.equal(payment1.paymentDate, "2024-12-31", "Payment should be in 2024");
 
-      const payment2 = await service.create("mortgage-1", "user-1", {
+      const payment2 = await createPayment({
         termId: "term-1",
         paymentDate: "2024-12-31",
         regularPaymentAmount: "3500.00",
         prepaymentAmount: "50000.00",
-        prepaymentType: "one-time",
+
         effectiveRate: "5.490",
       });
 
@@ -481,22 +487,22 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
       // Try to use another $25,000 on same day
       // Should fail (exceeds $120,000 limit)
 
-      await service.create("mortgage-1", "user-1", {
+      await createPayment({
         termId: "term-1",
         paymentDate: "2024-12-31",
         regularPaymentAmount: "3500.00",
         prepaymentAmount: "100000.00",
-        prepaymentType: "one-time",
+
         effectiveRate: "5.490",
       });
 
       try {
-        await service.create("mortgage-1", "user-1", {
+        await createPayment({
           termId: "term-1",
           paymentDate: "2024-12-31",
           regularPaymentAmount: "3500.00",
           prepaymentAmount: "25000.00", // Would exceed limit
-          prepaymentType: "one-time",
+
           effectiveRate: "5.490",
         });
         assert.fail("Should have thrown PrepaymentLimitError");
@@ -514,41 +520,41 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
       // Use $50,000 in January, $50,000 in June, $20,000 in December
       // Total: $120,000 (at limit)
 
-      await service.create("mortgage-1", "user-1", {
+      await createPayment({
         termId: "term-1",
         paymentDate: "2024-01-15",
         regularPaymentAmount: "3500.00",
         prepaymentAmount: "50000.00",
-        prepaymentType: "one-time",
+
         effectiveRate: "5.490",
       });
 
-      await service.create("mortgage-1", "user-1", {
+      await createPayment({
         termId: "term-1",
         paymentDate: "2024-06-15",
         regularPaymentAmount: "3500.00",
         prepaymentAmount: "50000.00",
-        prepaymentType: "one-time",
+
         effectiveRate: "5.490",
       });
 
-      await service.create("mortgage-1", "user-1", {
+      await createPayment({
         termId: "term-1",
         paymentDate: "2024-12-15",
         regularPaymentAmount: "3500.00",
         prepaymentAmount: "20000.00", // Reaches limit
-        prepaymentType: "one-time",
+
         effectiveRate: "5.490",
       });
 
       // Try to add more in same year - should fail
       try {
-        await service.create("mortgage-1", "user-1", {
+        await createPayment({
           termId: "term-1",
           paymentDate: "2024-12-20",
           regularPaymentAmount: "3500.00",
           prepaymentAmount: "1000.00", // Would exceed limit
-          prepaymentType: "one-time",
+
           effectiveRate: "5.490",
         });
         assert.fail("Should have thrown PrepaymentLimitError");
@@ -562,32 +568,32 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
 
     it("allows prepayments in new year after using full limit previous year", async () => {
       // Use full limit in 2024 (Dec 31 is Tuesday - business day)
-      const dec31Payment = await service.create("mortgage-1", "user-1", {
+      const dec31Payment = await createPayment({
         termId: "term-1",
         paymentDate: "2024-12-31",
         regularPaymentAmount: "3500.00",
         prepaymentAmount: "120000.00",
-        prepaymentType: "one-time",
+
         effectiveRate: "5.490",
       });
 
-      assert.equal(dec31Payment.paymentDate, "2024-12-31", "Payment should be counted in 2024");
+      assert.equal(dec31Payment!.paymentDate, "2024-12-31", "Payment should be counted in 2024");
 
       // Should allow full limit again in 2025
       // Note: Jan 1 is New Year's Day (holiday), so it adjusts to Jan 2, but still counts in 2025
-      const janPayment = await service.create("mortgage-1", "user-1", {
+      const janPayment = await createPayment({
         termId: "term-1",
         paymentDate: "2025-01-01",
         regularPaymentAmount: "3500.00",
         prepaymentAmount: "120000.00",
-        prepaymentType: "one-time",
+
         effectiveRate: "5.490",
       });
 
       assert.ok(janPayment, "Should allow full limit in new year");
       // Jan 1 is a holiday, so it adjusts to Jan 2, but still counts in 2025
       assert.equal(
-        janPayment.paymentDate,
+        janPayment!.paymentDate,
         "2025-01-02",
         "Payment should adjust to Jan 2 (Jan 1 is holiday), but still counts in 2025"
       );
@@ -597,12 +603,12 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
   describe("Year Boundary - Edge Cases", () => {
     it("handles leap year correctly (Feb 29)", async () => {
       // Test that year calculation works correctly for leap years
-      const leapYearPayment = await service.create("mortgage-1", "user-1", {
+      const leapYearPayment = await createPayment({
         termId: "term-1",
         paymentDate: "2024-02-29", // Leap year
         regularPaymentAmount: "3500.00",
         prepaymentAmount: "50000.00",
-        prepaymentType: "one-time",
+
         effectiveRate: "5.490",
       });
 
@@ -614,32 +620,32 @@ describe("Prepayment Limit - Calendar Year Reset", () => {
       // Both dates are business days (Tuesday and Wednesday), so they won't be adjusted
       // Note: This tests the date parsing, not actual midnight timing
 
-      const dec31Payment = await service.create("mortgage-1", "user-1", {
+      const dec31Payment = await createPayment({
         termId: "term-1",
         paymentDate: "2024-12-31",
         regularPaymentAmount: "3500.00",
         prepaymentAmount: "120000.00", // Full limit
-        prepaymentType: "one-time",
+
         effectiveRate: "5.490",
       });
 
-      assert.equal(dec31Payment.paymentDate, "2024-12-31", "Payment should be counted in 2024");
+      assert.equal(dec31Payment!.paymentDate, "2024-12-31", "Payment should be counted in 2024");
 
       // Should allow full limit on Jan 1 (different year)
       // Note: Jan 1 is New Year's Day (holiday), so it adjusts to Jan 2, but still counts in 2025
-      const jan1Payment = await service.create("mortgage-1", "user-1", {
+      const jan1Payment = await createPayment({
         termId: "term-1",
         paymentDate: "2025-01-01",
         regularPaymentAmount: "3500.00",
         prepaymentAmount: "120000.00", // Full limit (new year)
-        prepaymentType: "one-time",
+
         effectiveRate: "5.490",
       });
 
       assert.ok(jan1Payment, "Jan 1 payment should be allowed (new year)");
       // Jan 1 is a holiday, so it adjusts to Jan 2, but still counts in 2025
       assert.equal(
-        jan1Payment.paymentDate,
+        jan1Payment!.paymentDate,
         "2025-01-02",
         "Payment should adjust to Jan 2 (Jan 1 is holiday), but still counts in 2025"
       );

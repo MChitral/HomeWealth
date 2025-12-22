@@ -31,7 +31,6 @@ interface RefinancingEventsCardProps {
 function RefinancingEventFormFields() {
   const { control, watch } = useFormContext<RefinancingEventFormData>();
   const timingType = watch("timingType");
-  const termType = watch("termType");
 
   return (
     <div className="space-y-4">
@@ -90,7 +89,7 @@ function RefinancingEventFormFields() {
                 />
               </FormControl>
               <p className="text-sm text-muted-foreground">
-                E.g., "5" means refinance in Year 5 from mortgage start
+                E.g., &quot;5&quot; means refinance in Year 5 from mortgage start
               </p>
               <FormMessage />
             </FormItem>
@@ -302,6 +301,7 @@ export function RefinancingEventsCard({
                     <Badge variant="outline" data-testid={`badge-${event.termType}`}>
                       {getTermTypeLabel(event.termType)}
                     </Badge>
+                    <span className="font-medium">Break &quot;Early&quot;:</span>
                     <span className="font-mono font-semibold text-lg">
                       {event.newRate ? (Number(event.newRate) * 100).toFixed(3) : "N/A"}%
                     </span>

@@ -303,7 +303,7 @@ function TermRenewalFormFields({
                 )}
                 <p className="text-sm text-muted-foreground">
                   Current Bank of Canada Prime rate. This will change during your term, but your
-                  spread won't.
+                  spread won&apos;t.
                 </p>
                 <FormMessage />
               </FormItem>

@@ -41,12 +41,19 @@ export function MortgageSelectionProvider({ children }: { children: React.ReactN
 
   useEffect(() => {
     if (mortgages.length === 0) {
-      setSelectedMortgageIdState(null);
+      if (selectedMortgageId !== null) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setSelectedMortgageIdState(null);
+      }
       return;
     }
 
     if (!selectedMortgageId || !mortgages.some((m) => m.id === selectedMortgageId)) {
-      setSelectedMortgageIdState(mortgages[0].id);
+      const defaultId = mortgages[0].id;
+      if (selectedMortgageId !== defaultId) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setSelectedMortgageIdState(defaultId);
+      }
     }
   }, [mortgages, selectedMortgageId]);
 

@@ -33,7 +33,7 @@ class MockMortgageTermsRepository {
 }
 
 class MockMortgagePaymentsRepository {
-  async findByTermId(termId: string): Promise<any[]> {
+  async findByTermId(_termId: string): Promise<any[]> {
     return []; // Return empty payments
   }
 }
@@ -64,8 +64,8 @@ describe("TriggerRateMonitor", () => {
     amortizationMonths: 0,
     paymentFrequency: "monthly",
     annualPrepaymentLimitPercent: 15,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
   });
 
   const createTerm = (
@@ -86,7 +86,7 @@ describe("TriggerRateMonitor", () => {
     primeRate: String(Number(rate) + 1.0), // Back-calculate prime from rate (Rate = Prime + Spread -> Prime = Rate - Spread = Rate + 1.00)
     paymentFrequency: "monthly",
     regularPaymentAmount: payment,
-    createdAt: new Date().toISOString(),
+    createdAt: new Date(),
   });
 
   describe("checkOne", () => {

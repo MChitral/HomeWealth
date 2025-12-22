@@ -7,7 +7,7 @@ export class RefinancingEventService {
     private readonly scenarios: ScenariosRepository
   ) {}
 
-  async list(scenarioId: string, userId: string): Promise<any[] | null> {
+  async list(scenarioId: string, userId: string): Promise<unknown[] | null> {
     // Verify scenario belongs to user
     const scenario = await this.scenarios.findById(scenarioId);
     if (!scenario || scenario.userId !== userId) {
@@ -21,7 +21,7 @@ export class RefinancingEventService {
     scenarioId: string,
     userId: string,
     payload: Omit<InsertRefinancingEvent, "scenarioId">
-  ): Promise<any | null> {
+  ): Promise<unknown | null> {
     // Verify scenario belongs to user
     const scenario = await this.scenarios.findById(scenarioId);
     if (!scenario || scenario.userId !== userId) {
@@ -38,7 +38,7 @@ export class RefinancingEventService {
     id: string,
     userId: string,
     payload: Partial<InsertRefinancingEvent>
-  ): Promise<any | null> {
+  ): Promise<unknown | null> {
     const event = await this.refinancingEvents.findById(id);
     if (!event) {
       return null;

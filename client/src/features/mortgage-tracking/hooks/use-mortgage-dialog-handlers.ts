@@ -22,7 +22,7 @@ export function useMortgageDialogHandlers({
   setIsEditMortgageOpen,
   setIsTermRenewalOpen,
   editMortgageForm,
-  createMortgageForm,
+  createMortgageForm: _createMortgageForm,
   firstTermFormState,
 }: UseMortgageDialogHandlersProps) {
   const handleCreateDialogOpenChange = (open: boolean) => {

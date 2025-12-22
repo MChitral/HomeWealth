@@ -88,7 +88,9 @@ export function EmergencyFundStrategyCard() {
                 className="mt-3"
                 data-testid="button-edit-ef-target"
               >
-                {targetAmount !== null ? "Edit Target" : "Set Target"}
+                {targetAmount !== null
+                  ? "Edit Target"
+                  : "For 12 months (or until &quot;target achieved&quot;)"}
               </Button>
             </Link>
           </div>

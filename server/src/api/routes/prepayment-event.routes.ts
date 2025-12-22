@@ -30,7 +30,7 @@ export function registerPrepaymentEventRoutes(router: Router, services: Applicat
         ...req.body,
         scenarioId: req.params.scenarioId,
       });
-      const { scenarioId, ...payload } = data;
+      const { scenarioId: _scenarioId, ...payload } = data;
       const event = await services.prepaymentEvents.create(req.params.scenarioId, user.id, payload);
       if (!event) {
         sendError(res, 404, "Scenario not found");

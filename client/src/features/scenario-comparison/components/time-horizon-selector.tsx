@@ -1,4 +1,5 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
+import { Label } from "@/shared/ui/label";
 import type { TimeHorizon } from "../types";
 
 interface TimeHorizonSelectorProps {
@@ -9,7 +10,9 @@ interface TimeHorizonSelectorProps {
 export function TimeHorizonSelector({ value, onValueChange }: TimeHorizonSelectorProps) {
   return (
     <div className="space-y-1">
-      <label className="text-sm text-muted-foreground">Time Horizon</label>
+      <Label htmlFor="time-horizon-select" className="text-sm font-medium text-muted-foreground">
+        Time Horizon
+      </Label>
       <Select value={value} onValueChange={(val) => onValueChange(val as TimeHorizon)}>
         <SelectTrigger className="w-32" data-testid="select-horizon">
           <SelectValue />

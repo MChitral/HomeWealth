@@ -12,15 +12,13 @@ import {
 interface NetWorthDataPoint {
   year: number;
   netWorth: number;
-  scenario?: string;
 }
 
 interface NetWorthChartProps {
   data: NetWorthDataPoint[];
-  scenarios?: string[];
 }
 
-export function NetWorthChart({ data, scenarios = ["Current"] }: NetWorthChartProps) {
+export function NetWorthChart({ data }: NetWorthChartProps) {
   const formatCurrency = (value: number) => {
     return `$${(value / 1000).toFixed(0)}K`;
   };

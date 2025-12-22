@@ -1,0 +1,329 @@
+
+> rest-express@1.0.0 lint
+> eslint . --ext .ts,.tsx --quiet
+
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\cash-flow\hooks\use-cash-flow-state.ts
+  53:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\cash-flow\hooks\use-cash-flow-state.ts:53:5
+  51 |     if (!cashFlow) return;
+  52 |
+> 53 |     setMonthlyIncome(
+     |     ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  54 |       cashFlow.monthlyIncome != null ? Number(cashFlow.monthlyIncome) : DEFAULTS.monthlyIncome
+  55 |     );
+  56 |     setExtraPaycheques(cashFlow.extraPaycheques ?? DEFAULTS.extraPaycheques);  react-hooks/set-state-in-effect
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\emergency-fund\hooks\use-emergency-fund-state.ts
+  24:37  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\emergency-fund\hooks\use-emergency-fund-state.ts:24:37
+  22 |     // Derived updates to local state
+  23 |     const newTarget = emergencyFund.targetMonths.toString();
+> 24 |     if (newTarget !== targetMonths) setTargetMonths(newTarget);
+     |                                     ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  25 |
+  26 |     if (emergencyFund.currentBalance !== currentBalance)
+  27 |       setCurrentBalance(emergencyFund.currentBalance);  react-hooks/set-state-in-effect
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\components\create-mortgage-dialog.tsx
+  219:35  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\components\create-mortgage-dialog.tsx:219:35
+  217 |       // Only fetch historical rate if startDate is in the past
+  218 |       if (startDateObj < today) {
+> 219 |         if (!isLoadingHistorical) setIsLoadingHistorical(true);
+      |                                   ^^^^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  220 |         const queryStartDate = new Date(startDateObj);
+  221 |         queryStartDate.setMonth(queryStartDate.getMonth() - 3);
+  222 |         const queryEndDate = new Date(startDateObj);  react-hooks/set-state-in-effect
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\components\log-payment-dialog.tsx
+   81:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\components\log-payment-dialog.tsx:81:9
+  79 |         const month = monthNames[paymentDateObj.getMonth()];
+  80 |         const year = paymentDateObj.getFullYear();
+> 81 |         setPaymentPeriodLabel(`${month}-${year}`);
+     |         ^^^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  82 |       } catch {
+  83 |         // Ignore invalid dates
+  84 |       }                               react-hooks/set-state-in-effect
+   92:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\components\log-payment-dialog.tsx:92:7
+  90 |   useEffect(() => {
+  91 |     if (open && currentTerm) {
+> 92 |       setRegularPaymentAmount(currentTerm.regularPaymentAmount.toString());
+     |       ^^^^^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  93 |       setPrepaymentAmount("0");
+  94 |       const today = new Date().toISOString().split("T")[0];
+  95 |       setPaymentDate(today);  react-hooks/set-state-in-effect
+  139:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\components\log-payment-dialog.tsx:139:9
+  137 |         const month = monthNames[paymentDateObj.getMonth()];
+  138 |         const year = paymentDateObj.getFullYear();
+> 139 |         setPaymentPeriodLabel(`${month}-${year}`);
+      |         ^^^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  140 |       } catch {
+  141 |         // Ignore invalid dates
+  142 |       }                       react-hooks/set-state-in-effect
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\components\mortgage-content.tsx
+  14:15  error  'CreateMortgageFormData' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\hooks\use-backfill-form-state.ts
+  19:3  error  'onClose' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\hooks\use-mortgage-computed.ts
+  5:15  error  'UiPayment' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  5:26  error  'UiTerm' is defined but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\hooks\use-mortgage-dialog-handlers.ts
+  25:3  error  'createMortgageForm' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\hooks\use-mortgage-forms.ts
+   7:15  error  'UiTerm' is defined but never used. Allowed unused vars must match /^_/u                 @typescript-eslint/no-unused-vars
+  48:3   error  'setIsEditMortgageOpen' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\hooks\use-mortgage-mutations.ts
+  39:3  error  'onMortgageCreated' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\mortgage-tracking\mortgage-feature.tsx
+  42:5  error  'payments' is assigned a value but never used. Allowed unused vars must match /^_/u            @typescript-eslint/no-unused-vars
+  55:5  error  'updateTermMutation' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\scenario-comparison\hooks\use-scenario-comparison.ts
+   41:7   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\scenario-comparison\hooks\use-scenario-comparison.ts:41:7
+  39 |         newScenarios.push(scenariosParam);
+  40 |       }
+> 41 |       setSelectedScenarios(newScenarios.slice(0, 4)); // Max 4 scenarios
+     |       ^^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  42 |     } else if (selectedScenarios.length === 0 && scenariosWithMetrics.length > 0) {
+  43 |       // Default: select first 2-4 scenarios (up to 4)
+  44 |       const defaultIds = scenariosWithMetrics.slice(0, 4).map((s) => s.id);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     react-hooks/set-state-in-effect
+   99:26  error  Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `getMetricForHorizon`, but the source dependencies were [selectedScenarioData, timeHorizon]. Inferred different dependency than source.
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\scenario-comparison\hooks\use-scenario-comparison.ts:99:26
+   97 |
+   98 |   // Calculate winner (best net worth at selected horizon)
+>  99 |   const winner = useMemo(() => {
+      |                          ^^^^^^^
+> 100 |     if (selectedScenarioData.length === 0) return null;
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 101 |     return selectedScenarioData.reduce((prev, current) =>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 102 |       getMetricForHorizon(current.metrics, "netWorth") >
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |       getMetricForHorizon(prev.metrics, "netWorth")
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 104 |         ? current
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 105 |         : prev
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 106 |     );
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 107 |   }, [selectedScenarioData, timeHorizon]);
+      | ^^^^ Could not preserve existing manual memoization
+  108 |
+  109 |   // Generate chart data from real projections
+  110 |   const generateChartData = (dataKey: "netWorth" | "mortgageBalance" | "investmentValue") => {  react-hooks/preserve-manual-memoization
+   99:26  error  Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `getMetricForHorizon`, but the source dependencies were [selectedScenarioData, timeHorizon]. Inferred different dependency than source.
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\scenario-comparison\hooks\use-scenario-comparison.ts:99:26
+   97 |
+   98 |   // Calculate winner (best net worth at selected horizon)
+>  99 |   const winner = useMemo(() => {
+      |                          ^^^^^^^
+> 100 |     if (selectedScenarioData.length === 0) return null;
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 101 |     return selectedScenarioData.reduce((prev, current) =>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 102 |       getMetricForHorizon(current.metrics, "netWorth") >
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |       getMetricForHorizon(prev.metrics, "netWorth")
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 104 |         ? current
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 105 |         : prev
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 106 |     );
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 107 |   }, [selectedScenarioData, timeHorizon]);
+      | ^^^^ Could not preserve existing manual memoization
+  108 |
+  109 |   // Generate chart data from real projections
+  110 |   const generateChartData = (dataKey: "netWorth" | "mortgageBalance" | "investmentValue") => {  react-hooks/preserve-manual-memoization
+  133:5   error  Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `generateChartData`, but the source dependencies were [selectedScenarioData, timeHorizon]. Inferred different dependency than source.
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\scenario-comparison\hooks\use-scenario-comparison.ts:133:5
+  131 |
+  132 |   const chartData = useMemo(
+> 133 |     () => ({
+      |     ^^^^^^^^
+> 134 |       netWorth: generateChartData("netWorth"),
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 135 |       mortgage: generateChartData("mortgageBalance"),
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 136 |       investment: generateChartData("investmentValue"),
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 137 |     }),
+      | ^^^^^^^ Could not preserve existing manual memoization
+  138 |     [selectedScenarioData, timeHorizon]
+  139 |   );
+  140 |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                react-hooks/preserve-manual-memoization
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\features\scenario-management\components\emergency-fund-strategy-card.tsx
+  137:15  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  137:21  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\client\src\shared\ui\command.tsx
+  40:52  error  Unknown property 'cmdk-input-wrapper' found  react/no-unknown-property
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\debug_dates.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): debug_dates.ts
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\api\routes\cash-flow.routes.ts
+  22:15  error  'userId' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\api\routes\emergency-fund.routes.ts
+  22:15  error  'userId' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\api\routes\mortgage.routes.ts
+   257:15  error  'userId' is assigned a value but never used. Allowed unused vars must match /^_/u                @typescript-eslint/no-unused-vars
+   316:15  error  'mortgageId' is assigned a value but never used. Allowed unused vars must match /^_/u            @typescript-eslint/no-unused-vars
+   477:15  error  'mortgageId' is assigned a value but never used. Allowed unused vars must match /^_/u            @typescript-eslint/no-unused-vars
+   517:17  error  'mortgageId' is assigned a value but never used. Allowed unused vars must match /^_/u            @typescript-eslint/no-unused-vars
+   811:15  error  'refinancingFrequency' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+   824:9   error  'newPaymentAmount' is never reassigned. Use 'const' instead                                      prefer-const
+  1158:15  error  'lastPayment' is assigned a value but never used. Allowed unused vars must match /^_/u           @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\api\routes\prepayment-event.routes.ts
+  33:15  error  'scenarioId' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\api\routes\refinancing-event.routes.ts
+  33:15  error  'scenarioId' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\api\routes\scenario.routes.ts
+  45:15  error  'userId' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\seed\seed-demo.ts
+  2:10  error  'db' is defined but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+  3:10  error  'users' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\services\__tests__\mortgage-payment-validation.test.ts
+  38:26  error  'mortgageId' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\services\__tests__\mortgage-term-date-validation.test.ts
+  61:22  error  'termId' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  65:24  error  'termId' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\services\__tests__\mortgage-term-frequency-change.test.ts
+  5:15  error  'PaymentFrequency' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\services\__tests__\mortgage-term-recalculation.test.ts
+  74:26  error  'mortgageId' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\services\__tests__\mortgage-term-validation.test.ts
+    1:36  error  'mock' is defined but never used. Allowed unused vars must match /^_/u            @typescript-eslint/no-unused-vars
+   61:22  error  'termId' is defined but never used. Allowed unused args must match /^_/u          @typescript-eslint/no-unused-vars
+   65:24  error  'termId' is defined but never used. Allowed unused args must match /^_/u          @typescript-eslint/no-unused-vars
+  190:11  error  'term1' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  220:11  error  'term1' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\services\__tests__\prepayment-limit-year-boundary.test.ts
+  183:24  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  186:7   error  Unnecessary try/catch wrapper            no-useless-catch
+  200:5   error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\services\__tests__\prime-rate-tracking.test.ts
+  77:7   error  'originalFetchLatestPrimeRate' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  81:26  error  'mortgageId' is defined but never used. Allowed unused args must match /^_/u                             @typescript-eslint/no-unused-vars
+  81:46  error  'oldRate' is defined but never used. Allowed unused args must match /^_/u                                @typescript-eslint/no-unused-vars
+  81:63  error  'newRate' is defined but never used. Allowed unused args must match /^_/u                                @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\services\__tests__\refinancing.service.test.ts
+  4:10  error  'calculateStandardPenalty' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\services\__tests__\trigger-rate-monitor.test.ts
+  36:22  error  'termId' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\services\impact-calculator.service.ts
+  144:5  error  'newPrime' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\services\mortgage-term.service.ts
+  218:16  error  'error' is defined but never used                                                       @typescript-eslint/no-unused-vars
+  274:13  error  'triggerRate' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\services\refinancing.service.ts
+  5:37  error  'RefinanceResult' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\application\services\trigger-rate-monitor.ts
+   2:39  error  'MortgagePayment' is defined but never used. Allowed unused vars must match /^_/u            @typescript-eslint/no-unused-vars
+  10:3   error  'calculateRemainingBalance' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\infrastructure\repositories\__tests__\prime-rate-history.repository.test.ts
+  90:5  error  Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\shared\calculations\__tests__\accelerated-payment-calculation.test.ts
+  3:58  error  'PaymentFrequency' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\MasroorHussainSyed\projectX\HW\HomeWealth\server\src\shared\calculations\__tests__\amortization-with-prepayments.test.ts
+  46:11  error  'amortizationMonths' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  48:11  error  'startDate' is assigned a value but never used. Allowed unused vars must match /^_/u           @typescript-eslint/no-unused-vars
+
+✖ 67 problems (67 errors, 0 warnings)
+
