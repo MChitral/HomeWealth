@@ -17,12 +17,11 @@
  * - Christmas (December 25)
  * - Boxing Day (December 26)
  */
-
 /**
  * Check if a date is a weekend (Saturday or Sunday)
  */
 export function isWeekend(date: Date): boolean {
-  const day = date.getDay();
+  const day = date.getUTCDay();
   return day === 0 || day === 6; // Sunday = 0, Saturday = 6
 }
 
@@ -33,9 +32,9 @@ export function isWeekend(date: Date): boolean {
  * like `date-holidays` or maintaining a comprehensive holiday calendar.
  */
 export function isCanadianHoliday(date: Date): boolean {
-  const month = date.getMonth();
-  const day = date.getDate();
-  const year = date.getFullYear();
+  const month = date.getUTCMonth();
+  const day = date.getUTCDate();
+  const year = date.getUTCFullYear();
 
   // New Year's Day (January 1)
   if (month === 0 && day === 1) return true;
@@ -45,12 +44,12 @@ export function isCanadianHoliday(date: Date): boolean {
   // For production, use a proper Easter calculation library
   const easter = calculateEaster(year);
   const goodFriday = new Date(easter);
-  goodFriday.setDate(easter.getDate() - 2);
+  goodFriday.setUTCDate(easter.getUTCDate() - 2);
   if (isSameDay(date, goodFriday)) return true;
 
   // Easter Monday (Monday after Easter)
   const easterMonday = new Date(easter);
-  easterMonday.setDate(easter.getDate() + 1);
+  easterMonday.setUTCDate(easter.getUTCDate() + 1);
   if (isSameDay(date, easterMonday)) return true;
 
   // Victoria Day (Monday before May 25)
@@ -85,9 +84,9 @@ export function isCanadianHoliday(date: Date): boolean {
  */
 function isSameDay(date1: Date, date2: Date): boolean {
   return (
-    date1.getFullYear() === date2.getFullYear() &&
-    date1.getMonth() === date2.getMonth() &&
-    date1.getDate() === date2.getDate()
+    date1.getUTCFullYear() === date2.getUTCFullYear() &&
+    date1.getUTCMonth() === date2.getUTCMonth() &&
+    date1.getUTCDate() === date2.getUTCDate()
   );
 }
 
@@ -113,7 +112,9 @@ function calculateEaster(year: number): Date {
   const month = Math.floor((h + l - 7 * m + 114) / 31);
   const day = ((h + l - 7 * m + 114) % 31) + 1;
 
-  return new Date(year, month - 1, day);
+  // Return UTC date
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date;
 }
 
 /**
@@ -121,15 +122,15 @@ function calculateEaster(year: number): Date {
  */
 function getVictoriaDay(year: number): Date {
   // Victoria Day is the Monday before May 25
-  const may25 = new Date(year, 4, 25); // May = month 4
-  const dayOfWeek = may25.getDay();
+  const may25 = new Date(Date.UTC(year, 4, 25)); // May = month 4
+  const dayOfWeek = may25.getUTCDay();
 
   // If May 25 is Monday (1), Victoria Day is May 25
   // If May 25 is Tuesday (2), Victoria Day is May 24 (Monday)
   // etc.
   const daysToSubtract = dayOfWeek === 1 ? 0 : dayOfWeek === 0 ? 6 : dayOfWeek - 1;
   const victoriaDay = new Date(may25);
-  victoriaDay.setDate(may25.getDate() - daysToSubtract);
+  victoriaDay.setUTCDate(may25.getUTCDate() - daysToSubtract);
 
   return victoriaDay;
 }
@@ -138,15 +139,15 @@ function getVictoriaDay(year: number): Date {
  * Get Labour Day (1st Monday in September) for a given year
  */
 function getLabourDay(year: number): Date {
-  const september1 = new Date(year, 8, 1); // September = month 8
-  const dayOfWeek = september1.getDay();
+  const september1 = new Date(Date.UTC(year, 8, 1)); // September = month 8
+  const dayOfWeek = september1.getUTCDay();
 
   // If Sept 1 is Monday (1), Labour Day is Sept 1
   // If Sept 1 is Tuesday (2), Labour Day is Sept 7 (next Monday)
   // etc.
   const daysToAdd = dayOfWeek === 1 ? 0 : dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
   const labourDay = new Date(september1);
-  labourDay.setDate(september1.getDate() + daysToAdd);
+  labourDay.setUTCDate(september1.getUTCDate() + daysToAdd);
 
   return labourDay;
 }
@@ -155,17 +156,17 @@ function getLabourDay(year: number): Date {
  * Get Thanksgiving (2nd Monday in October) for a given year
  */
 function getThanksgiving(year: number): Date {
-  const october1 = new Date(year, 9, 1); // October = month 9
-  const dayOfWeek = october1.getDay();
+  const october1 = new Date(Date.UTC(year, 9, 1)); // October = month 9
+  const dayOfWeek = october1.getUTCDay();
 
   // Find first Monday in October
   const daysToAdd = dayOfWeek === 1 ? 0 : dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
   const firstMonday = new Date(october1);
-  firstMonday.setDate(october1.getDate() + daysToAdd);
+  firstMonday.setUTCDate(october1.getUTCDate() + daysToAdd);
 
   // Second Monday is 7 days later
   const secondMonday = new Date(firstMonday);
-  secondMonday.setDate(firstMonday.getDate() + 7);
+  secondMonday.setUTCDate(firstMonday.getUTCDate() + 7);
 
   return secondMonday;
 }
@@ -193,7 +194,7 @@ export function adjustToBusinessDay(date: Date): Date {
 
   // Keep moving forward until we find a business day
   while (!isBusinessDay(adjusted)) {
-    adjusted.setDate(adjusted.getDate() + 1);
+    adjusted.setUTCDate(adjusted.getUTCDate() + 1);
   }
 
   return adjusted;

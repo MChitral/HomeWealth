@@ -13,12 +13,7 @@ interface UseBackfillFormStateProps {
  * Complete hook for backfill form state management
  * Handles form initialization and reset
  */
-export function useBackfillFormState({
-  currentTerm,
-  isOpen,
-  onClose,
-  onReset,
-}: UseBackfillFormStateProps) {
+export function useBackfillFormState({ currentTerm, isOpen, onReset }: UseBackfillFormStateProps) {
   const form = useBackfillForm({
     defaultPaymentAmount: currentTerm?.regularPaymentAmount?.toString() || "",
   });

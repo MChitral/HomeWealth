@@ -134,7 +134,7 @@ export function EmergencyFundStrategyCard() {
               </SelectContent>
             </Select>
             <p className="text-sm text-muted-foreground">
-              "Split" option uses the Surplus Allocation slider from Mortgage tab
+              &quot;Split&quot; option uses the Surplus Allocation slider from Mortgage tab
             </p>
           </div>
 

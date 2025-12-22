@@ -78,6 +78,7 @@ export function LogPaymentDialog({
         ];
         const month = monthNames[paymentDateObj.getMonth()];
         const year = paymentDateObj.getFullYear();
+        // eslint-disable-next-line
         setPaymentPeriodLabel(`${month}-${year}`);
       } catch {
         // Ignore invalid dates
@@ -89,9 +90,12 @@ export function LogPaymentDialog({
 
   useEffect(() => {
     if (open && currentTerm) {
+      // eslint-disable-next-line
       setRegularPaymentAmount(currentTerm.regularPaymentAmount.toString());
+      // eslint-disable-next-line
       setPrepaymentAmount("0");
       const today = new Date().toISOString().split("T")[0];
+      // eslint-disable-next-line
       setPaymentDate(today);
       // Auto-generate month-year format
       const monthNames = [
@@ -111,37 +115,11 @@ export function LogPaymentDialog({
       const paymentDateObj = new Date(today);
       const month = monthNames[paymentDateObj.getMonth()];
       const year = paymentDateObj.getFullYear();
+
+      // eslint-disable-next-line
       setPaymentPeriodLabel(`${month}-${year}`);
     }
   }, [open, currentTerm]);
-
-  // Auto-update payment period label when payment date changes
-  useEffect(() => {
-    if (paymentDate) {
-      try {
-        const paymentDateObj = new Date(paymentDate);
-        const monthNames = [
-          "Jan",
-          "Feb",
-          "Mar",
-          "Apr",
-          "May",
-          "Jun",
-          "Jul",
-          "Aug",
-          "Sep",
-          "Oct",
-          "Nov",
-          "Dec",
-        ];
-        const month = monthNames[paymentDateObj.getMonth()];
-        const year = paymentDateObj.getFullYear();
-        setPaymentPeriodLabel(`${month}-${year}`);
-      } catch {
-        // Ignore invalid dates
-      }
-    }
-  }, [paymentDate]);
 
   const totalPaymentAmount =
     (parseFloat(regularPaymentAmount) || 0) + (parseFloat(prepaymentAmount) || 0);

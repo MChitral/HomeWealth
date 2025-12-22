@@ -1,6 +1,6 @@
 import type { Repositories } from "@infrastructure/repositories";
-import { db } from "@infrastructure/db/connection";
-import { users } from "@shared/schema";
+// import { db } from "@infrastructure/db/connection";
+// import { users } from "@shared/schema";
 
 const DEMO_USER_ID = "dev-user-123";
 

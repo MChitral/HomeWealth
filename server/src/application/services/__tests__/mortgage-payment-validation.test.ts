@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { MortgagePaymentService } from "../mortgage-payment.service";
@@ -35,7 +36,7 @@ class MockMortgagePaymentsRepository {
     return this.payments.get(termId) || [];
   }
 
-  async findByMortgageId(mortgageId: string): Promise<any[]> {
+  async findByMortgageId(_mortgageId: string): Promise<any[]> {
     return [];
   }
 
@@ -43,7 +44,7 @@ class MockMortgagePaymentsRepository {
     const payment = {
       id: `payment-${Date.now()}`,
       ...payload,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     };
     const existing = this.payments.get(payload.termId) || [];
     this.payments.set(payload.termId, [...existing, payment]);
@@ -69,8 +70,8 @@ describe("MortgagePaymentService - Payment Date Validation", () => {
     amortizationMonths: 0,
     paymentFrequency: "monthly",
     annualPrepaymentLimitPercent: 20,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   const mockTerm: MortgageTerm = {
@@ -85,7 +86,7 @@ describe("MortgagePaymentService - Payment Date Validation", () => {
     primeRate: null,
     paymentFrequency: "monthly",
     regularPaymentAmount: "3500.00",
-    createdAt: new Date().toISOString(),
+    createdAt: new Date(),
   };
 
   beforeEach(() => {
@@ -115,7 +116,7 @@ describe("MortgagePaymentService - Payment Date Validation", () => {
         regularPaymentAmount: "3500.00",
         prepaymentAmount: "0",
         paymentAmount: "3500.00",
-      });
+      } as any);
       assert.fail("Should have thrown error for future payment date");
     } catch (error: any) {
       assert.ok(error.message.includes("future"), "Error message should mention future date");
@@ -130,7 +131,7 @@ describe("MortgagePaymentService - Payment Date Validation", () => {
         regularPaymentAmount: "3500.00",
         prepaymentAmount: "0",
         paymentAmount: "3500.00",
-      });
+      } as any);
       assert.fail("Should have thrown error for payment before mortgage start");
     } catch (error: any) {
       assert.ok(
@@ -157,7 +158,7 @@ describe("MortgagePaymentService - Payment Date Validation", () => {
         regularPaymentAmount: "3500.00",
         prepaymentAmount: "0",
         paymentAmount: "3500.00",
-      });
+      } as any);
       assert.fail("Should have thrown error for payment before term start");
     } catch (error: any) {
       assert.ok(
@@ -175,7 +176,7 @@ describe("MortgagePaymentService - Payment Date Validation", () => {
         regularPaymentAmount: "3500.00",
         prepaymentAmount: "0",
         paymentAmount: "3500.00",
-      });
+      } as any);
       assert.fail("Should have thrown error for payment after term end");
     } catch (error: any) {
       assert.ok(
@@ -195,7 +196,7 @@ describe("MortgagePaymentService - Payment Date Validation", () => {
         regularPaymentAmount: "3500.00",
         prepaymentAmount: "0",
         paymentAmount: "3500.00",
-      });
+      } as any);
       // If we get here, date validation passed (may fail on other validations)
     } catch (error: any) {
       // If error is NOT about date validation, that's fine
@@ -232,7 +233,7 @@ describe("MortgagePaymentService - Payment Date Validation", () => {
           prepaymentAmount: "0",
           paymentAmount: "3500.00",
         },
-      ]);
+      ] as any);
       assert.fail("Should have thrown error for future payment date in bulk");
     } catch (error: any) {
       assert.ok(error.message.includes("future"), "Error message should mention future date");

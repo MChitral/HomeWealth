@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { MortgageTermService } from "../mortgage-term.service";
@@ -32,7 +33,7 @@ class MockMortgageTermsRepository {
     const term: MortgageTerm = {
       id: `term-${Date.now()}`,
       ...payload,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     };
     this.terms.set(term.id, term);
     const existing = this.mortgageTerms.get(payload.mortgageId) || [];
@@ -58,11 +59,11 @@ class MockMortgageTermsRepository {
 }
 
 class MockMortgagePaymentsRepository {
-  async findByTermId(termId: string): Promise<any[]> {
+  async findByTermId(_termId: string): Promise<any[]> {
     return [];
   }
 
-  async deleteByTermId(termId: string): Promise<void> {
+  async deleteByTermId(_termId: string): Promise<void> {
     // Mock implementation
   }
 }
@@ -85,8 +86,8 @@ describe("MortgageTermService - Term Date Validation", () => {
     amortizationMonths: 0,
     paymentFrequency: "monthly",
     annualPrepaymentLimitPercent: 20,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   beforeEach(() => {

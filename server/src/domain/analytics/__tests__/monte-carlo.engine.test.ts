@@ -71,9 +71,6 @@ describe("MonteCarloEngine", () => {
     const end = performance.now();
     const duration = end - start;
 
-    // We aim for < 2 seconds for 10k iterations of 60 steps = 600k steps.
-    // Node.js is fast.
-    console.log(`10k iterations took ${duration.toFixed(2)}ms`);
     assert.ok(duration < 2000, `Simulation took too long: ${duration}ms`);
   });
 });

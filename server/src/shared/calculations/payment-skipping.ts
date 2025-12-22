@@ -16,6 +16,7 @@
  */
 
 import type { PaymentFrequency } from "./mortgage";
+export type { PaymentFrequency };
 import { calculateInterestPayment, getPaymentsPerYear } from "./mortgage";
 
 export interface SkippedPaymentCalculation {

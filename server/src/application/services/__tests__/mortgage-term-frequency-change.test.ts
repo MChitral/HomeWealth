@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { MortgageTermService } from "../mortgage-term.service";
 import type { Mortgage, MortgageTerm } from "@shared/schema";
-import type { PaymentFrequency } from "@server-shared/calculations/mortgage";
 
 // Mock repositories (same pattern as other tests)
 class MockMortgagesRepository {
@@ -90,8 +90,8 @@ describe("MortgageTermService - Payment Frequency Change", () => {
     amortizationMonths: 0,
     paymentFrequency: "monthly",
     annualPrepaymentLimitPercent: 20,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   beforeEach(() => {
@@ -117,7 +117,7 @@ describe("MortgageTermService - Payment Frequency Change", () => {
       primeRate: null,
       paymentFrequency: "monthly",
       regularPaymentAmount: "3500.00",
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     };
     termsRepo.setTerm(monthlyTerm);
 
@@ -160,7 +160,7 @@ describe("MortgageTermService - Payment Frequency Change", () => {
       primeRate: null,
       paymentFrequency: "monthly",
       regularPaymentAmount: "3500.00",
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     };
     termsRepo.setTerm(monthlyTerm);
 
@@ -212,7 +212,7 @@ describe("MortgageTermService - Payment Frequency Change", () => {
       primeRate: null,
       paymentFrequency: "biweekly",
       regularPaymentAmount: "1750.00",
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     };
     termsRepo.setTerm(biweeklyTerm);
 
@@ -249,7 +249,7 @@ describe("MortgageTermService - Payment Frequency Change", () => {
       primeRate: null,
       paymentFrequency: "monthly",
       regularPaymentAmount: "3500.00",
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     };
     termsRepo.setTerm(term);
 
@@ -286,7 +286,7 @@ describe("MortgageTermService - Payment Frequency Change", () => {
       primeRate: null,
       paymentFrequency: "monthly",
       regularPaymentAmount: "3500.00",
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     };
     termsRepo.setTerm(term);
 
@@ -315,7 +315,7 @@ describe("MortgageTermService - Payment Frequency Change", () => {
       primeRate: "6.450",
       paymentFrequency: "monthly",
       regularPaymentAmount: "3500.00",
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     };
     termsRepo.setTerm(vrmTerm);
 
@@ -352,7 +352,7 @@ describe("MortgageTermService - Payment Frequency Change", () => {
       primeRate: null,
       paymentFrequency: "monthly",
       regularPaymentAmount: "3500.00",
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     };
     termsRepo.setTerm(term);
 

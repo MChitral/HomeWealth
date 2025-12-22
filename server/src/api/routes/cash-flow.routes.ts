@@ -19,7 +19,7 @@ export function registerCashFlowRoutes(router: Router, services: ApplicationServ
 
     try {
       const data = cashFlowCreateSchema.parse({ ...req.body, userId: user.id });
-      const { userId, ...payload } = data;
+      const { userId: _userId, ...payload } = data;
       const created = await services.cashFlows.create(user.id, payload);
       res.json(created);
     } catch (error) {

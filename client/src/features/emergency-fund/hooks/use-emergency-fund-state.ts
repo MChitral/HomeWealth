@@ -21,6 +21,7 @@ export function useEmergencyFundState({ emergencyFund }: UseEmergencyFundStatePr
 
     // Derived updates to local state
     const newTarget = emergencyFund.targetMonths.toString();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (newTarget !== targetMonths) setTargetMonths(newTarget);
 
     if (emergencyFund.currentBalance !== currentBalance)

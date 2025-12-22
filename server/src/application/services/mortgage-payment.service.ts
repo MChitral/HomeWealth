@@ -76,7 +76,7 @@ export class MortgagePaymentService {
   private async getYearToDatePrepayments(mortgageId: string, year: number): Promise<number> {
     const payments = await this.mortgagePayments.findByMortgageId(mortgageId);
     return payments
-      .filter((payment) => new Date(payment.paymentDate).getFullYear() === year)
+      .filter((payment) => payment.paymentDate.startsWith(year.toString()))
       .reduce((sum, payment) => sum + Number(payment.prepaymentAmount || 0), 0);
   }
 
@@ -189,6 +189,9 @@ export class MortgagePaymentService {
     userId: string,
     payload: Omit<MortgagePaymentCreateInput, "mortgageId">
   ): Promise<MortgagePayment | undefined> {
+    console.error(
+      `[DEBUG] create called with payloadDate=${payload.paymentDate} termId=${payload.termId}`
+    );
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
     if (!mortgage) {
       return undefined;
@@ -217,7 +220,7 @@ export class MortgagePaymentService {
       { ...payload, paymentDate: finalPaymentDate },
       previousPayment
     );
-    const paymentYear = new Date(finalPaymentDate).getFullYear();
+    const paymentYear = parseInt(finalPaymentDate.split("-")[0], 10);
     const yearToDate = await this.getYearToDatePrepayments(mortgageId, paymentYear);
     this.enforcePrepaymentLimit(
       mortgage,

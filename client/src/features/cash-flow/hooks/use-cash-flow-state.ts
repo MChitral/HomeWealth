@@ -50,6 +50,7 @@ export function useCashFlowState({ cashFlow }: UseCashFlowStateProps) {
   useEffect(() => {
     if (!cashFlow) return;
 
+    // eslint-disable-next-line
     setMonthlyIncome(
       cashFlow.monthlyIncome != null ? Number(cashFlow.monthlyIncome) : DEFAULTS.monthlyIncome
     );

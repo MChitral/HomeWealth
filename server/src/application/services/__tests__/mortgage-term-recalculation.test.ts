@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { MortgageTermService } from "../mortgage-term.service";
@@ -71,7 +72,7 @@ class MockMortgagePaymentsRepository {
     return this.payments.get(termId) || [];
   }
 
-  async findByMortgageId(mortgageId: string): Promise<any[]> {
+  async findByMortgageId(_mortgageId: string): Promise<any[]> {
     // Return all payments for any mortgage (for this test)
     return Array.from(this.payments.values()).flat();
   }
@@ -99,8 +100,8 @@ describe("MortgageTermService - VRM Payment Recalculation", () => {
     amortizationMonths: 0,
     paymentFrequency: "monthly",
     annualPrepaymentLimitPercent: 20,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   beforeEach(() => {
@@ -126,7 +127,7 @@ describe("MortgageTermService - VRM Payment Recalculation", () => {
       primeRate: null,
       paymentFrequency: "monthly",
       regularPaymentAmount: "3500.00",
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     };
     termsRepo.setTerm(fixedTerm);
 
@@ -153,7 +154,7 @@ describe("MortgageTermService - VRM Payment Recalculation", () => {
       primeRate: "6.450", // Old prime rate
       paymentFrequency: "monthly",
       regularPaymentAmount: "3500.00",
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     };
     termsRepo.setTerm(vrmChangingTerm);
 
@@ -202,7 +203,7 @@ describe("MortgageTermService - VRM Payment Recalculation", () => {
       primeRate: "6.450", // Old prime rate
       paymentFrequency: "monthly",
       regularPaymentAmount: "3500.00", // Fixed payment
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     };
     termsRepo.setTerm(vrmFixedTerm);
 
@@ -254,7 +255,7 @@ describe("MortgageTermService - VRM Payment Recalculation", () => {
       primeRate: "6.450",
       paymentFrequency: "monthly",
       regularPaymentAmount: "3500.00",
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     };
     termsRepo.setTerm(vrmChangingTerm);
 
@@ -280,7 +281,7 @@ describe("MortgageTermService - VRM Payment Recalculation", () => {
       primeRate: "6.450",
       paymentFrequency: "monthly",
       regularPaymentAmount: "3500.00",
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     };
     termsRepo.setTerm(vrmChangingTerm);
 

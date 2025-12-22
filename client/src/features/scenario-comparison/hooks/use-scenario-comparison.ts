@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import type {
@@ -38,12 +38,14 @@ export function useScenarioComparison() {
       if (!newScenarios.includes(scenariosParam)) {
         newScenarios.push(scenariosParam);
       }
+      // eslint-disable-next-line
       setSelectedScenarios(newScenarios.slice(0, 4)); // Max 4 scenarios
     } else if (selectedScenarios.length === 0 && scenariosWithMetrics.length > 0) {
       // Default: select first 2-4 scenarios (up to 4)
       const defaultIds = scenariosWithMetrics.slice(0, 4).map((s) => s.id);
       setSelectedScenarios(defaultIds);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location, scenariosWithMetrics]);
 
   // Map scenarios with colors
@@ -90,10 +92,13 @@ export function useScenarioComparison() {
   };
 
   // Helper to get horizon-specific metrics
-  const getMetricForHorizon = (metrics: any, metricName: MetricName) => {
-    const suffix = timeHorizon === "10" ? "10yr" : timeHorizon === "20" ? "20yr" : "30yr";
-    return metrics?.[`${metricName}${suffix}`] || 0;
-  };
+  const getMetricForHorizon = useCallback(
+    (metrics: any, metricName: MetricName) => {
+      const suffix = timeHorizon === "10" ? "10yr" : timeHorizon === "20" ? "20yr" : "30yr";
+      return metrics?.[`${metricName}${suffix}`] || 0;
+    },
+    [timeHorizon]
+  );
 
   // Calculate winner (best net worth at selected horizon)
   const winner = useMemo(() => {
@@ -104,39 +109,38 @@ export function useScenarioComparison() {
         ? current
         : prev
     );
-  }, [selectedScenarioData, timeHorizon]);
+  }, [selectedScenarioData, getMetricForHorizon]);
 
-  // Generate chart data from real projections
-  const generateChartData = (dataKey: "netWorth" | "mortgageBalance" | "investmentValue") => {
-    if (!selectedScenarioData.length || !selectedScenarioData[0].projections) return [];
+  const chartData = useMemo(() => {
+    // Generate chart data from real projections
+    const generateChartData = (dataKey: "netWorth" | "mortgageBalance" | "investmentValue") => {
+      if (!selectedScenarioData.length || !selectedScenarioData[0].projections) return [];
 
-    const maxYears = parseInt(timeHorizon);
-    const data: any[] = [];
+      const maxYears = parseInt(timeHorizon);
+      const data: any[] = [];
 
-    // Sample every 2 years for chart readability (year 0, 2, 4, ... maxYears)
-    for (let displayYear = 0; displayYear <= maxYears; displayYear += 2) {
-      const dataPoint: any = { year: displayYear };
+      // Sample every 2 years for chart readability (year 0, 2, 4, ... maxYears)
+      for (let displayYear = 0; displayYear <= maxYears; displayYear += 2) {
+        const dataPoint: any = { year: displayYear };
 
-      selectedScenarioData.forEach((scenario) => {
-        if (scenario.projections && scenario.projections[displayYear]) {
-          dataPoint[scenario.id] = scenario.projections[displayYear][dataKey];
-        }
-      });
+        selectedScenarioData.forEach((scenario) => {
+          if (scenario.projections && scenario.projections[displayYear]) {
+            dataPoint[scenario.id] = scenario.projections[displayYear][dataKey];
+          }
+        });
 
-      data.push(dataPoint);
-    }
+        data.push(dataPoint);
+      }
 
-    return data;
-  };
+      return data;
+    };
 
-  const chartData = useMemo(
-    () => ({
+    return {
       netWorth: generateChartData("netWorth"),
       mortgage: generateChartData("mortgageBalance"),
       investment: generateChartData("investmentValue"),
-    }),
-    [selectedScenarioData, timeHorizon]
-  );
+    };
+  }, [selectedScenarioData, timeHorizon]);
 
   return {
     // Data
