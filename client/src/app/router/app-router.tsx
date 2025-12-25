@@ -13,6 +13,7 @@ const ComparisonPage = lazy(() => import("@/pages/comparison-page"));
 const CashFlowPage = lazy(() => import("@/pages/cash-flow-page"));
 const EmergencyFundPage = lazy(() => import("@/pages/emergency-fund-page"));
 const HelocPage = lazy(() => import("@/pages/heloc-page"));
+const SmithManeuverPage = lazy(() => import("@/pages/smith-maneuver-page"));
 const NotificationPreferencesPage = lazy(() => import("@/pages/notification-preferences-page"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
@@ -31,6 +32,7 @@ export function AppRouter() {
         <Route path="/cash-flow" component={CashFlowPage} />
         <Route path="/emergency-fund" component={EmergencyFundPage} />
         <Route path="/heloc" component={HelocPage} />
+        <Route path="/smith-maneuver" component={SmithManeuverPage} />
         <Route path="/notifications/preferences" component={NotificationPreferencesPage} />
         <Route component={NotFound} />
       </Switch>
