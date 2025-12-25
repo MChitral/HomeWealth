@@ -1,4 +1,4 @@
-import { Home, FileText, GitCompare, DollarSign, Receipt, Shield } from "lucide-react";
+import { Home, FileText, GitCompare, DollarSign, Receipt, Shield, CreditCard } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -15,6 +15,7 @@ import {
 const navItems = [
   { title: "Dashboard", url: "/", icon: Home },
   { title: "Mortgage", url: "/mortgage", icon: Receipt },
+  { title: "HELOC", url: "/heloc", icon: CreditCard },
   { title: "Scenarios", url: "/scenarios", icon: FileText },
   { title: "Comparison", url: "/comparison", icon: GitCompare },
   { title: "Cash Flow", url: "/cash-flow", icon: DollarSign },

@@ -18,6 +18,10 @@ import { PrepaymentService } from "./prepayment.service";
 import { SimulationService } from "./simulation.service";
 import { HealthScoreService } from "./health-score.service";
 import { NotificationService } from "./notification.service";
+import { HelocService } from "./heloc.service";
+import { HelocCreditLimitService } from "./heloc-credit-limit.service";
+import { HelocInterestService } from "./heloc-interest.service";
+import { ReAdvanceableMortgageService } from "./re-advanceable-mortgage.service";
 
 export interface ApplicationServices {
   cashFlows: CashFlowService;
@@ -39,6 +43,10 @@ export interface ApplicationServices {
   simulationService: SimulationService;
   healthScoreService: HealthScoreService;
   notifications: NotificationService;
+  heloc: HelocService;
+  helocCreditLimit: HelocCreditLimitService;
+  helocInterest: HelocInterestService;
+  reAdvanceableMortgage: ReAdvanceableMortgageService;
 }
 
 export function createServices(repositories: Repositories): ApplicationServices {
@@ -81,10 +89,16 @@ export function createServices(repositories: Repositories): ApplicationServices 
       repositories.mortgageTerms,
       repositories.mortgagePayments
     ),
+    helocCreditLimit: new HelocCreditLimitService(
+      repositories.helocAccounts,
+      repositories.mortgages
+    ),
+    helocInterest: new HelocInterestService(),
     mortgagePayments: new MortgagePaymentService(
       repositories.mortgages,
       repositories.mortgageTerms,
-      repositories.mortgagePayments
+      repositories.mortgagePayments,
+      new HelocCreditLimitService(repositories.helocAccounts, repositories.mortgages)
     ),
     scenarios: new ScenarioService(repositories.scenarios, repositories.prepaymentEvents),
     prepaymentEvents: new PrepaymentEventService(
@@ -127,6 +141,16 @@ export function createServices(repositories: Repositories): ApplicationServices 
       repositories.notifications,
       repositories.notificationPreferences
     ),
+    heloc: new HelocService(
+      repositories.helocAccounts,
+      repositories.helocTransactions,
+      repositories.mortgages
+    ),
+    reAdvanceableMortgage: new ReAdvanceableMortgageService(
+      repositories.mortgages,
+      repositories.helocAccounts,
+      repositories.mortgagePayments
+    ),
   };
 }
 
@@ -149,3 +173,7 @@ export * from "./prepayment.service";
 export * from "./simulation.service";
 export * from "./health-score.service";
 export * from "./notification.service";
+export * from "./heloc.service";
+export * from "./heloc-credit-limit.service";
+export * from "./heloc-interest.service";
+export * from "./re-advanceable-mortgage.service";

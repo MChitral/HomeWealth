@@ -14,6 +14,7 @@ import { formatCurrency } from "@/shared/lib/utils";
 import { useToast } from "@/shared/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { format, addMonths } from "date-fns";
+import { HelocCreditLimitImpact } from "./components/heloc-credit-limit-impact";
 
 interface PrepaymentFeatureProps {
   isEmbedded?: boolean;
@@ -389,6 +390,14 @@ export default function PrepaymentFeature({ isEmbedded = false }: PrepaymentFeat
                   </div>
 
                   <Separator />
+
+                  {/* HELOC Credit Limit Impact */}
+                  {mortgage && parseFloat(amount) > 0 && (
+                    <HelocCreditLimitImpact
+                      mortgage={mortgage}
+                      prepaymentAmount={parseFloat(amount)}
+                    />
+                  )}
 
                   <div className="flex justify-end gap-3">
                     <Button variant="outline" onClick={() => setAmount("")}>

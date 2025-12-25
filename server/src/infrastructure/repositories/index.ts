@@ -11,6 +11,8 @@ import { PrimeRateHistoryRepository } from "./prime-rate-history.repository";
 import { MarketRatesRepository } from "./market-rates.repository";
 import { NotificationRepository } from "./notification.repository";
 import { NotificationPreferencesRepository } from "./notification-preferences.repository";
+import { HelocAccountRepository } from "./heloc-account.repository";
+import { HelocTransactionRepository } from "./heloc-transaction.repository";
 
 export interface Repositories {
   users: UsersRepository;
@@ -26,6 +28,8 @@ export interface Repositories {
   marketRates: MarketRatesRepository;
   notifications: NotificationRepository;
   notificationPreferences: NotificationPreferencesRepository;
+  helocAccounts: HelocAccountRepository;
+  helocTransactions: HelocTransactionRepository;
 }
 
 export function createRepositories(): Repositories {
@@ -43,6 +47,8 @@ export function createRepositories(): Repositories {
     marketRates: new MarketRatesRepository(),
     notifications: new NotificationRepository(),
     notificationPreferences: new NotificationPreferencesRepository(),
+    helocAccounts: new HelocAccountRepository(),
+    helocTransactions: new HelocTransactionRepository(),
   };
 }
 
@@ -62,4 +68,6 @@ export {
   MarketRatesRepository,
   NotificationRepository,
   NotificationPreferencesRepository,
+  HelocAccountRepository,
+  HelocTransactionRepository,
 };

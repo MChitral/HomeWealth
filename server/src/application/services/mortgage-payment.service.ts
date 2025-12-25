@@ -16,6 +16,8 @@ import {
 } from "@server-shared/calculations/payment-skipping";
 import type { PaymentFrequency } from "@server-shared/calculations/mortgage";
 import { adjustToBusinessDay } from "@server-shared/utils/business-days";
+import type { HelocCreditLimitService } from "./heloc-credit-limit.service";
+import { HelocCreditLimitService } from "./heloc-credit-limit.service";
 
 class PrepaymentLimitError extends Error {
   constructor(message: string) {
@@ -28,7 +30,8 @@ export class MortgagePaymentService {
   constructor(
     private readonly mortgages: MortgagesRepository,
     private readonly mortgageTerms: MortgageTermsRepository,
-    private readonly mortgagePayments: MortgagePaymentsRepository
+    private readonly mortgagePayments: MortgagePaymentsRepository,
+    private readonly helocCreditLimitService?: HelocCreditLimitService
   ) {}
 
   private async authorizeMortgage(mortgageId: string, userId: string) {
@@ -228,11 +231,32 @@ export class MortgagePaymentService {
       Number(normalizedPayload.prepaymentAmount || 0),
       yearToDate
     );
-    return this.mortgagePayments.create({
+    const createdPayment = await this.mortgagePayments.create({
       ...normalizedPayload,
       paymentDate: finalPaymentDate, // Use adjusted date
       mortgageId,
     });
+
+    // Update mortgage balance after payment is created
+    await this.mortgages.update(mortgageId, {
+      currentBalance: normalizedPayload.remainingBalance,
+    });
+
+    // Trigger HELOC credit limit recalculation if there was a prepayment
+    const prepaymentAmount = Number(normalizedPayload.prepaymentAmount || 0);
+    if (prepaymentAmount > 0 && this.helocCreditLimitService) {
+      try {
+        await this.helocCreditLimitService.recalculateCreditLimitOnPrepayment(
+          mortgageId,
+          prepaymentAmount
+        );
+      } catch (error) {
+        // Log error but don't fail the payment creation
+        console.error("Failed to recalculate HELOC credit limit:", error);
+      }
+    }
+
+    return createdPayment;
   }
 
   async createBulk(
@@ -357,8 +381,9 @@ export class MortgagePaymentService {
     }
 
     // Create all payments in a single transaction (all-or-nothing)
-    return await db.transaction(async (tx) => {
+    const result = await db.transaction(async (tx) => {
       const created: MortgagePayment[] = [];
+      let lastBalance = Number(mortgage.currentBalance);
 
       for (const { normalized, adjustedPaymentDate } of validatedPayments) {
         const payment = await this.mortgagePayments.create(
@@ -370,13 +395,38 @@ export class MortgagePaymentService {
           tx
         );
         created.push(payment);
+        lastBalance = Number(normalized.remainingBalance);
       }
+
+      // Update mortgage balance after all payments are created
+      await this.mortgages.update(mortgageId, {
+        currentBalance: lastBalance.toFixed(2),
+      });
 
       return {
         created: created.length,
         payments: created,
       };
     });
+
+    // Trigger HELOC credit limit recalculation if there were any prepayments
+    const totalPrepayment = validatedPayments.reduce(
+      (sum, { normalized }) => sum + Number(normalized.prepaymentAmount || 0),
+      0
+    );
+    if (totalPrepayment > 0 && this.helocCreditLimitService) {
+      try {
+        await this.helocCreditLimitService.recalculateCreditLimitOnPrepayment(
+          mortgageId,
+          totalPrepayment
+        );
+      } catch (error) {
+        // Log error but don't fail the payment creation
+        console.error("Failed to recalculate HELOC credit limit:", error);
+      }
+    }
+
+    return result;
   }
 
   async delete(paymentId: string, userId: string): Promise<boolean> {

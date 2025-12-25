@@ -185,6 +185,10 @@ export const mortgages = pgTable("mortgages", {
   insuranceAddedToPrincipal: integer("insurance_added_to_principal").default(0), // boolean (0 = false, 1 = true)
   isHighRatio: integer("is_high_ratio").default(0), // boolean (0 = false, 1 = true)
 
+  // Re-advanceable mortgage support
+  isReAdvanceable: integer("is_re_advanceable").default(0), // boolean (0 = false, 1 = true)
+  reAdvanceableHelocId: varchar("re_advanceable_heloc_id"), // Foreign key to heloc_accounts.id (defined after helocAccounts table)
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -210,6 +214,7 @@ export const insertMortgageSchema = createInsertSchema(mortgages)
       .transform((val) => (val === null || val === undefined ? undefined : typeof val === "number" ? val.toFixed(2) : val)),
     insuranceAddedToPrincipal: z.union([z.boolean(), z.number()]).optional().transform((val) => (val === true || val === 1 ? 1 : 0)),
     isHighRatio: z.union([z.boolean(), z.number()]).optional().transform((val) => (val === true || val === 1 ? 1 : 0)),
+    isReAdvanceable: z.union([z.boolean(), z.number()]).optional().transform((val) => (val === true || val === 1 ? 1 : 0)),
   });
 
 // Update schema - omits userId and immutable fields
@@ -695,3 +700,120 @@ export const notificationQueue = pgTable(
     index("IDX_notification_queue_scheduled").on(table.scheduledFor),
   ]
 );
+
+// HELOC Accounts - Home Equity Line of Credit accounts
+export const helocAccounts = pgTable(
+  "heloc_accounts",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    userId: varchar("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    mortgageId: varchar("mortgage_id").references(() => mortgages.id, { onDelete: "set null" }),
+    accountName: varchar("account_name").notNull(),
+    lenderName: varchar("lender_name").notNull(),
+    creditLimit: decimal("credit_limit", { precision: 12, scale: 2 }).notNull(),
+    maxLtvPercent: decimal("max_ltv_percent", { precision: 5, scale: 2 }).notNull().default("65.00"), // e.g., 65.00
+    interestSpread: decimal("interest_spread", { precision: 5, scale: 3 }).notNull().default("0.500"), // e.g., 0.500 (Prime + 0.5%)
+    currentBalance: decimal("current_balance", { precision: 12, scale: 2 }).notNull().default("0.00"),
+    homeValueReference: decimal("home_value_reference", { precision: 12, scale: 2 }), // Snapshot for credit limit calc
+    accountOpeningDate: date("account_opening_date").notNull(),
+    accountStatus: text("account_status").notNull().default("active"), // 'active', 'closed', 'suspended'
+    isReAdvanceable: integer("is_re_advanceable").notNull().default(0), // boolean (0/1)
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("IDX_heloc_accounts_user").on(table.userId),
+    index("IDX_heloc_accounts_mortgage").on(table.mortgageId),
+  ]
+);
+
+export const insertHelocAccountSchema = createInsertSchema(helocAccounts)
+  .omit({ id: true, createdAt: true, updatedAt: true })
+  .extend({
+    creditLimit: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    maxLtvPercent: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    interestSpread: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(3) : val)),
+    currentBalance: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    homeValueReference: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) => (val === null || val === undefined ? undefined : typeof val === "number" ? val.toFixed(2) : val)),
+    isReAdvanceable: z.union([z.boolean(), z.number()]).transform((val) => (val === true || val === 1 ? 1 : 0)),
+  });
+
+export const updateHelocAccountSchema = insertHelocAccountSchema.partial();
+
+export type InsertHelocAccount = z.infer<typeof insertHelocAccountSchema>;
+export type UpdateHelocAccount = z.infer<typeof updateHelocAccountSchema>;
+export type HelocAccount = typeof helocAccounts.$inferSelect;
+
+// HELOC Transactions - Borrowing, repayments, interest payments, interest accruals
+export const helocTransactions = pgTable(
+  "heloc_transactions",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    helocAccountId: varchar("heloc_account_id")
+      .notNull()
+      .references(() => helocAccounts.id, { onDelete: "cascade" }),
+    transactionDate: date("transaction_date").notNull(),
+    transactionType: text("transaction_type").notNull(), // 'borrowing', 'repayment', 'interest_payment', 'interest_accrual'
+    transactionAmount: decimal("transaction_amount", { precision: 12, scale: 2 }).notNull(),
+    balanceBefore: decimal("balance_before", { precision: 12, scale: 2 }).notNull(),
+    balanceAfter: decimal("balance_after", { precision: 12, scale: 2 }).notNull(),
+    availableCreditBefore: decimal("available_credit_before", { precision: 12, scale: 2 }).notNull(),
+    availableCreditAfter: decimal("available_credit_after", { precision: 12, scale: 2 }).notNull(),
+    interestRate: decimal("interest_rate", { precision: 5, scale: 3 }), // Prime + spread at time of transaction
+    primeRate: decimal("prime_rate", { precision: 5, scale: 3 }), // Prime rate at time of transaction
+    description: text("description"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("IDX_heloc_transactions_account").on(table.helocAccountId),
+    index("IDX_heloc_transactions_date").on(table.transactionDate),
+  ]
+);
+
+export const insertHelocTransactionSchema = createInsertSchema(helocTransactions)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    transactionAmount: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    balanceBefore: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    balanceAfter: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    availableCreditBefore: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    availableCreditAfter: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    interestRate: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) => (val === null || val === undefined ? undefined : typeof val === "number" ? val.toFixed(3) : val)),
+    primeRate: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) => (val === null || val === undefined ? undefined : typeof val === "number" ? val.toFixed(3) : val)),
+  });
+
+export type InsertHelocTransaction = z.infer<typeof insertHelocTransactionSchema>;
+export type HelocTransaction = typeof helocTransactions.$inferSelect;

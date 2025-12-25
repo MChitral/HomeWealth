@@ -14,6 +14,8 @@ import { createPrepaymentRoutes } from "./prepayment.routes";
 import { createSimulationRoutes } from "./simulation.routes";
 import { createHealthRoutes } from "./health.routes";
 import { registerNotificationRoutes } from "./notification.routes";
+import { registerHelocRoutes } from "./heloc.routes";
+import { registerReAdvanceableMortgageRoutes } from "./re-advanceable-mortgage.routes";
 import insuranceRoutes from "./insurance.routes";
 
 export function buildApiRouter(services: ApplicationServices, repositories: Repositories): Router {
@@ -28,6 +30,8 @@ export function buildApiRouter(services: ApplicationServices, repositories: Repo
   registerRefinancingEventRoutes(router, services);
   registerPrimeRateRoutes(router, services);
   registerNotificationRoutes(router, services);
+  registerHelocRoutes(router, services);
+  registerReAdvanceableMortgageRoutes(router, services);
   router.use("/impact", createImpactRoutes(services, repositories));
   router.use("/prepayment", createPrepaymentRoutes(services));
   router.use("/simulations", createSimulationRoutes(services.simulationService));

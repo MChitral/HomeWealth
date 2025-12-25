@@ -7,3 +7,5 @@ export * from "./mortgage-payment";
 export * from "./scenario";
 export * from "./prepayment-event";
 export * from "./refinancing-event";
+export * from "./heloc-account";
+export * from "./heloc-transaction";

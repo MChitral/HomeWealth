@@ -25,7 +25,12 @@ import { TermDetailsSection } from "./term-details-section";
 import { MortgageSummaryPanels } from "./mortgage-summary-panels";
 import { PaymentHistorySection } from "./payment-history-section";
 import { EducationSidebar } from "./education-sidebar";
+import { HelocSection } from "./heloc-section";
+import { CreditRoomDisplay } from "./credit-room-display";
+import { CreditRoomHistory } from "./credit-room-history";
+import { MarkReAdvanceableDialog } from "./mark-re-advanceable-dialog";
 import { formatAmortization } from "../utils/format";
+import { useState } from "react";
 
 interface MortgageContentProps {
   mortgage: Mortgage | null;
@@ -265,6 +270,7 @@ export function MortgageContent({
       <Tabs defaultValue="details" className="w-full">
         <TabsList className="mb-4 flex flex-wrap h-auto gap-2">
           <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="heloc">HELOC</TabsTrigger>
           <TabsTrigger value="risk">Risk & Analytics</TabsTrigger>
           <TabsTrigger value="prepayments">Prepayments</TabsTrigger>
           <TabsTrigger value="renewals">Renewals</TabsTrigger>
@@ -336,6 +342,10 @@ export function MortgageContent({
           />
 
           <EducationSidebar />
+        </TabsContent>
+
+        <TabsContent value="heloc" className="space-y-8">
+          <HelocSection mortgageId={mortgage.id} mortgage={mortgage} />
         </TabsContent>
 
         <TabsContent value="risk">
