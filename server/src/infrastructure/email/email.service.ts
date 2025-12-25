@@ -183,10 +183,26 @@ export class EmailService {
     mortgageName: string,
     currentRate: number,
     triggerRate: number,
-    balance: number
+    balance: number,
+    options?: {
+      alertType?: "trigger_rate_approaching" | "trigger_rate_close" | "trigger_rate_hit";
+      distanceToTrigger?: number;
+      monthlyBalanceIncrease?: number;
+      projectedBalanceAtTermEnd?: number;
+      requiredPayment?: number;
+      mortgageId?: string;
+    }
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    const alertType = options?.alertType || "trigger_rate_alert";
     const subject = `Trigger Rate Alert: ${mortgageName}`;
-    const htmlContent = this.generateTriggerRateAlertEmail(userName, mortgageName, currentRate, triggerRate, balance);
+    const htmlContent = this.generateTriggerRateAlertEmail(
+      userName,
+      mortgageName,
+      currentRate,
+      triggerRate,
+      balance,
+      options
+    );
     return this.sendEmail(to, subject, htmlContent);
   }
 
@@ -403,21 +419,149 @@ export class EmailService {
     mortgageName: string,
     currentRate: number,
     triggerRate: number,
-    balance: number
+    balance: number,
+    options?: {
+      alertType?: "trigger_rate_approaching" | "trigger_rate_close" | "trigger_rate_hit";
+      distanceToTrigger?: number;
+      monthlyBalanceIncrease?: number;
+      projectedBalanceAtTermEnd?: number;
+      requiredPayment?: number;
+      mortgageId?: string;
+    }
   ): string {
     const appUrl = process.env.APP_URL || "http://localhost:5000";
+    const alertType = options?.alertType || "trigger_rate_hit";
+    const currentRatePercent = currentRate * 100;
+    const triggerRatePercent = triggerRate * 100;
+    const distancePercent = options?.distanceToTrigger
+      ? (options.distanceToTrigger * 100).toFixed(2)
+      : ((triggerRate - currentRate) * 100).toFixed(2);
+
+    // Determine urgency and styling based on alert type
+    let urgencyClass = "critical";
+    let urgencyMessage = "";
+    let headerColor = "#dc2626"; // Red
+    let actionItems: string[] = [];
+
+    if (alertType === "trigger_rate_hit") {
+      urgencyClass = "critical";
+      urgencyMessage = "Critical - Trigger Rate Hit";
+      headerColor = "#dc2626"; // Red
+      actionItems = [
+        "Contact your lender immediately to discuss options",
+        "Consider making a lump-sum prepayment to reduce balance",
+        "Increase your regular payment amount to cover interest",
+        "Review your mortgage strategy and consider refinancing",
+      ];
+    } else if (alertType === "trigger_rate_close") {
+      urgencyClass = "urgent";
+      urgencyMessage = "Urgent - Very Close to Trigger Rate";
+      headerColor = "#ea580c"; // Orange
+      actionItems = [
+        "Take immediate action to prevent negative amortization",
+        "Make a prepayment to reduce your balance",
+        "Increase your regular payment amount",
+        "Contact your lender to discuss payment increase options",
+      ];
+    } else {
+      urgencyClass = "warning";
+      urgencyMessage = "Warning - Approaching Trigger Rate";
+      headerColor = "#f59e0b"; // Amber
+      actionItems = [
+        "Monitor your rate closely",
+        "Consider making a prepayment to build a buffer",
+        "Review your payment amount and consider increasing it",
+        "Plan for potential rate increases",
+      ];
+    }
+
+    // Impact analysis section (for hit and close alerts)
+    let impactHtml = "";
+    if (
+      (alertType === "trigger_rate_hit" || alertType === "trigger_rate_close") &&
+      options?.monthlyBalanceIncrease !== undefined
+    ) {
+      impactHtml = `
+        <div style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; margin: 20px 0; border-radius: 4px;">
+          <h3 style="margin-top: 0; color: #991b1b;">Impact Analysis</h3>
+          <div style="space-y-2">
+            <p style="margin: 8px 0;">
+              <strong>Monthly Balance Increase:</strong> 
+              <span style="color: #dc2626; font-size: 18px;">
+                $${options.monthlyBalanceIncrease.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </p>
+            ${options.projectedBalanceAtTermEnd !== undefined
+              ? `
+                <p style="margin: 8px 0;">
+                  <strong>Projected Balance at Term End:</strong> 
+                  <span style="color: #dc2626; font-size: 18px;">
+                    $${options.projectedBalanceAtTermEnd.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </span>
+                </p>
+              `
+              : ""}
+            ${options.requiredPayment !== undefined
+              ? `
+                <p style="margin: 8px 0;">
+                  <strong>Required Payment to Prevent Increase:</strong> 
+                  <span style="color: #16a34a; font-size: 18px;">
+                    $${options.requiredPayment.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </span>
+                </p>
+              `
+              : ""}
+          </div>
+          <p style="margin: 10px 0 0 0; font-size: 14px; color: #64748b;">
+            ${alertType === "trigger_rate_hit"
+              ? "Your mortgage balance is now increasing each month. Take action immediately."
+              : "If your rate hits the trigger rate, your balance will start increasing."}
+          </p>
+        </div>
+      `;
+    }
+
+    // Build mortgage link
+    const mortgageLink = options?.mortgageId
+      ? `${appUrl}/mortgages/${options.mortgageId}`
+      : `${appUrl}/mortgages`;
+
     return `
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background-color: #dc2626; color: white; padding: 20px; text-align: center; }
-            .content { padding: 20px; background-color: #f9fafb; }
-            .alert { background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; margin: 20px 0; }
-            .button { display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px; }
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 0 auto; padding: 0; }
+            .header { background-color: ${headerColor}; color: white; padding: 30px 20px; text-align: center; }
+            .header h1 { margin: 0; font-size: 24px; }
+            .content { padding: 30px 20px; background-color: #ffffff; }
+            .urgency-badge { display: inline-block; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-bottom: 15px; }
+            .urgency-critical { background-color: #fee2e2; color: #991b1b; }
+            .urgency-urgent { background-color: #fed7aa; color: #9a3412; }
+            .urgency-warning { background-color: #fef3c7; color: #92400e; }
+            .highlight-box { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .button { display: inline-block; padding: 14px 28px; background-color: ${headerColor}; color: white; text-decoration: none; border-radius: 6px; margin: 10px 5px 0 0; font-weight: 600; }
+            .button-secondary { background-color: #64748b; }
+            .action-list { margin: 15px 0; padding-left: 20px; }
+            .action-list li { margin: 8px 0; }
+            .footer { background-color: #f8fafc; padding: 20px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0; }
+            @media only screen and (max-width: 600px) {
+              .container { width: 100% !important; }
+              .content { padding: 20px 15px !important; }
+              .button { display: block; text-align: center; margin: 10px 0 !important; }
+            }
           </style>
         </head>
         <body>
@@ -427,20 +571,68 @@ export class EmailService {
             </div>
             <div class="content">
               <p>Hi ${userName},</p>
-              <div class="alert">
-                <p><strong>Alert:</strong> Your mortgage "${mortgageName}" has hit or is approaching its trigger rate.</p>
-                <p>Current Rate: <strong>${(currentRate * 100).toFixed(2)}%</strong></p>
-                <p>Trigger Rate: <strong>${(triggerRate * 100).toFixed(2)}%</strong></p>
-                <p>Balance: <strong>$${balance.toLocaleString()}</strong></p>
+              
+              <div class="urgency-badge urgency-${urgencyClass}">${urgencyMessage}</div>
+              
+              <div class="highlight-box">
+                <p style="font-size: 20px; margin: 0 0 10px 0;">
+                  <strong style="color: ${headerColor};">
+                    ${alertType === "trigger_rate_hit"
+                      ? "Your trigger rate has been hit"
+                      : `You are ${distancePercent}% away from your trigger rate`}
+                  </strong>
+                </p>
+                <div style="margin-top: 15px; space-y-2">
+                  <p style="margin: 8px 0;">
+                    <strong>Current Rate:</strong> 
+                    <span style="font-size: 18px; color: ${headerColor};">
+                      ${currentRatePercent.toFixed(2)}%
+                    </span>
+                  </p>
+                  <p style="margin: 8px 0;">
+                    <strong>Trigger Rate:</strong> 
+                    <span style="font-size: 18px;">
+                      ${triggerRatePercent.toFixed(2)}%
+                    </span>
+                  </p>
+                  <p style="margin: 8px 0;">
+                    <strong>Current Balance:</strong> 
+                    <span style="font-size: 18px;">
+                      $${balance.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </p>
+                </div>
               </div>
-              <p>When your rate exceeds the trigger rate, your payments may no longer cover the interest, leading to negative amortization.</p>
-              <p>Consider:</p>
-              <ul>
-                <li>Making a lump-sum prepayment</li>
-                <li>Increasing your regular payment amount</li>
-                <li>Reviewing your mortgage strategy</li>
-              </ul>
-              <a href="${appUrl}/mortgages" class="button">View Your Mortgage</a>
+
+              ${impactHtml}
+
+              <div style="margin: 25px 0;">
+                <h3 style="margin-top: 0; color: #1e293b;">Recommended Actions</h3>
+                <ul class="action-list">
+                  ${actionItems.map((item) => `<li>${item}</li>`).join("")}
+                </ul>
+              </div>
+
+              <div style="margin: 30px 0; text-align: center;">
+                <a href="${mortgageLink}" class="button">View Mortgage Details</a>
+                <a href="${appUrl}/mortgages" class="button button-secondary">View All Mortgages</a>
+              </div>
+
+              <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 14px; color: #64748b;">
+                <p style="margin: 0 0 10px 0;"><strong>What is a Trigger Rate?</strong></p>
+                <p style="margin: 0;">
+                  For variable-rate mortgages with fixed payments, the trigger rate is the interest rate at which your payment no longer covers the interest. When this happens, your mortgage balance starts increasing (negative amortization).
+                </p>
+              </div>
+            </div>
+            <div class="footer">
+              <p style="margin: 0;">This is an automated alert from HomeWealth Mortgage Strategy</p>
+              <p style="margin: 5px 0 0 0;">
+                <a href="${appUrl}/notifications/preferences" style="color: #64748b; text-decoration: underline;">Manage notification preferences</a>
+              </p>
             </div>
           </div>
         </body>

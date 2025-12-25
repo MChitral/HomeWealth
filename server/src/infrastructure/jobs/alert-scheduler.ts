@@ -107,13 +107,11 @@ export function registerTriggerRateAlertJob(notificationService: NotificationSer
   scheduler.register({
     id: "trigger-rate-alert",
     name: "Trigger Rate Alert",
-    schedule: "0 */6 * * *", // Every 6 hours
+    schedule: process.env.TRIGGER_RATE_ALERT_SCHEDULE || "0 */6 * * *", // Every 6 hours (configurable)
     enabled: process.env.ENABLE_TRIGGER_RATE_ALERTS !== "false",
     handler: async (services) => {
-      // This will be implemented when trigger rate alert logic is added
-      // For now, this is a placeholder
-      console.log("[Trigger Rate Alert] Checking for trigger rate conditions...");
-      // TODO: Implement trigger rate alert logic
+      const { checkTriggerRatesAndSendAlerts } = await import("./trigger-rate-alert-job");
+      await checkTriggerRatesAndSendAlerts(services);
     },
   });
 }

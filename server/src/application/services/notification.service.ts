@@ -103,9 +103,19 @@ export class NotificationService {
           user.email,
           user.firstName || "User",
           notification.metadata?.mortgageName || "Mortgage",
-          notification.metadata?.currentRate || 0,
-          notification.metadata?.triggerRate || 0,
-          notification.metadata?.balance || 0
+          (notification.metadata?.currentRate || 0) / 100, // Convert from percentage to decimal
+          (notification.metadata?.triggerRate || 0) / 100, // Convert from percentage to decimal
+          notification.metadata?.balance || 0,
+          {
+            alertType: notification.metadata?.alertType,
+            distanceToTrigger: notification.metadata?.distanceToTrigger
+              ? notification.metadata.distanceToTrigger / 100
+              : undefined, // Convert from percentage to decimal if present
+            monthlyBalanceIncrease: notification.metadata?.monthlyBalanceIncrease,
+            projectedBalanceAtTermEnd: notification.metadata?.projectedBalanceAtTermEnd,
+            requiredPayment: notification.metadata?.requiredPayment,
+            mortgageId: notification.metadata?.mortgageId,
+          }
         );
         break;
       default:
