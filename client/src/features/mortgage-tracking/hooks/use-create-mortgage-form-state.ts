@@ -52,14 +52,18 @@ export function useCreateMortgageFormState({
 
       const propertyPrice = Number(formData.propertyPrice);
       const downPayment = Number(formData.downPayment);
-      const originalAmount = loanAmount;
+      // Use adjusted loan amount if insurance premium was added to principal
+      const adjustedLoanAmount = formData.adjustedLoanAmount
+        ? Number(formData.adjustedLoanAmount)
+        : loanAmount;
+      const originalAmount = adjustedLoanAmount;
       const termYears = Number(formData.termYears) || 5;
       const termStartDate = formData.startDate;
       const termEndDate = new Date(termStartDate);
       termEndDate.setFullYear(termEndDate.getFullYear() + termYears);
 
-      // Create mortgage
-      const newMortgage = await mortgageApi.createMortgage({
+      // Create mortgage payload with insurance fields if present
+      const mortgagePayload: any = {
         propertyPrice: propertyPrice.toString(),
         downPayment: downPayment.toString(),
         originalAmount: originalAmount.toString(),
@@ -69,7 +73,24 @@ export function useCreateMortgageFormState({
         amortizationMonths: 0,
         paymentFrequency: formData.frequency,
         annualPrepaymentLimitPercent: 20,
-      });
+      };
+
+      // Add insurance fields if present
+      if (formData.insuranceProvider) {
+        mortgagePayload.insuranceProvider = formData.insuranceProvider;
+      }
+      if (formData.insurancePremium) {
+        mortgagePayload.insurancePremium = formData.insurancePremium;
+      }
+      if (formData.insuranceAddedToPrincipal) {
+        mortgagePayload.insuranceAddedToPrincipal = formData.insuranceAddedToPrincipal;
+      }
+      if (formData.isHighRatio) {
+        mortgagePayload.isHighRatio = formData.isHighRatio;
+      }
+
+      // Create mortgage
+      const newMortgage = await mortgageApi.createMortgage(mortgagePayload);
 
       // Create initial term
       await mortgageApi.createTerm(newMortgage.id, {

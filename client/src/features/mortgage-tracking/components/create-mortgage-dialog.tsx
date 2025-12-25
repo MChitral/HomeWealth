@@ -18,6 +18,8 @@ import type { CreateMortgageFormData } from "../hooks/use-create-mortgage-form";
 import type { PrimeRateResponse } from "../api";
 import { useEffect, useState } from "react";
 import { mortgageApi } from "../api";
+import { CMHCInsuranceCalculator } from "./cmhc-insurance-calculator";
+import type { InsuranceCalculationResult } from "../api/insurance-api";
 
 interface CreateMortgageDialogProps {
   open: boolean;
@@ -43,12 +45,48 @@ interface CreateMortgageDialogProps {
 /**
  * Step 1: Mortgage Details Form Fields
  */
-function Step1Fields() {
-  const { control, watch } = useFormContext<CreateMortgageFormData>();
+function Step1Fields({
+  onInsuranceResultChange,
+}: {
+  onInsuranceResultChange?: (result: InsuranceCalculationResult | null) => void;
+}) {
+  const { control, watch, setValue } = useFormContext<CreateMortgageFormData>();
 
   const propertyPrice = watch("propertyPrice");
   const downPayment = watch("downPayment");
   const loanAmountValue = (Number(propertyPrice) || 0) - (Number(downPayment) || 0);
+  const downPaymentPercent =
+    propertyPrice && downPayment && Number(propertyPrice) > 0
+      ? ((Number(downPayment) / Number(propertyPrice)) * 100).toFixed(2)
+      : "0.00";
+  const isHighRatio = Number(downPaymentPercent) < 20;
+
+  const handleInsuranceResult = (result: InsuranceCalculationResult | null) => {
+    if (onInsuranceResultChange) {
+      onInsuranceResultChange(result);
+    }
+    // Store insurance data in form for later use
+    if (result && result.isHighRatio) {
+      setValue("insuranceProvider", result.provider, { shouldValidate: false });
+      setValue("insurancePremium", result.premiumAfterDiscount.toString(), { shouldValidate: false });
+      setValue(
+        "insuranceAddedToPrincipal",
+        result.premiumPaymentType === "added-to-principal" ? "1" : "0",
+        { shouldValidate: false }
+      );
+      setValue("isHighRatio", "1", { shouldValidate: false });
+      // Update loan amount if premium is added to principal
+      if (result.premiumPaymentType === "added-to-principal") {
+        setValue("adjustedLoanAmount", result.totalMortgageAmount.toString(), { shouldValidate: false });
+      }
+    } else {
+      setValue("insuranceProvider", "", { shouldValidate: false });
+      setValue("insurancePremium", "", { shouldValidate: false });
+      setValue("insuranceAddedToPrincipal", "0", { shouldValidate: false });
+      setValue("isHighRatio", "0", { shouldValidate: false });
+      setValue("adjustedLoanAmount", "", { shouldValidate: false });
+    }
+  };
 
   return (
     <div className="space-y-4 py-4">
@@ -77,7 +115,12 @@ function Step1Fields() {
           name="downPayment"
           render={({ field, fieldState }) => (
             <FormItem className="space-y-2">
-              <FormLabel htmlFor="down-payment">Down Payment ($)</FormLabel>
+              <FormLabel htmlFor="down-payment">
+                Down Payment ($)
+                {downPaymentPercent && propertyPrice && (
+                  <span className="ml-2 text-sm text-muted-foreground">({downPaymentPercent}%)</span>
+                )}
+              </FormLabel>
               <FormControl>
                 <Input
                   id="down-payment"
@@ -167,6 +210,18 @@ function Step1Fields() {
           )}
         />
       </div>
+
+      {/* Insurance Calculator - Show only for high-ratio mortgages */}
+      {isHighRatio && propertyPrice && downPayment && Number(propertyPrice) > 0 && (
+        <div className="mt-4">
+          <CMHCInsuranceCalculator
+            defaultPropertyPrice={propertyPrice}
+            defaultDownPayment={downPayment}
+            onResultChange={handleInsuranceResult}
+            compact={true}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -539,7 +594,10 @@ export function CreateMortgageDialog({
           </DialogHeader>
 
           {wizardStep === 1 ? (
-            <Step1Fields />
+            <Step1Fields onInsuranceResultChange={(result) => {
+              // Store insurance result for use in form submission
+              // This will be handled by the form state hook
+            }} />
           ) : (
             <Step2Fields
               loanAmount={loanAmount}

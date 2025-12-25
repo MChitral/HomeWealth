@@ -14,6 +14,7 @@ import { createPrepaymentRoutes } from "./prepayment.routes";
 import { createSimulationRoutes } from "./simulation.routes";
 import { createHealthRoutes } from "./health.routes";
 import { registerNotificationRoutes } from "./notification.routes";
+import insuranceRoutes from "./insurance.routes";
 
 export function buildApiRouter(services: ApplicationServices, repositories: Repositories): Router {
   const router = Router();
@@ -31,6 +32,7 @@ export function buildApiRouter(services: ApplicationServices, repositories: Repo
   router.use("/prepayment", createPrepaymentRoutes(services));
   router.use("/simulations", createSimulationRoutes(services.simulationService));
   router.use("/mortgages", createHealthRoutes(services.healthScoreService)); // Mounting under /api/mortgages for consistency with REST
+  router.use("/insurance", insuranceRoutes);
 
   return router;
 }

@@ -179,6 +179,12 @@ export const mortgages = pgTable("mortgages", {
   // Canadian lender prepayment constraints
   annualPrepaymentLimitPercent: integer("annual_prepayment_limit_percent").notNull().default(20), // 10-20% typical
 
+  // Mortgage default insurance (for high-ratio mortgages)
+  insuranceProvider: text("insurance_provider"), // "CMHC" | "Sagen" | "Genworth" | null
+  insurancePremium: decimal("insurance_premium", { precision: 12, scale: 2 }),
+  insuranceAddedToPrincipal: integer("insurance_added_to_principal").default(0), // boolean (0 = false, 1 = true)
+  isHighRatio: integer("is_high_ratio").default(0), // boolean (0 = false, 1 = true)
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -198,6 +204,12 @@ export const insertMortgageSchema = createInsertSchema(mortgages)
     currentBalance: z
       .union([z.string(), z.number()])
       .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    insurancePremium: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) => (val === null || val === undefined ? undefined : typeof val === "number" ? val.toFixed(2) : val)),
+    insuranceAddedToPrincipal: z.union([z.boolean(), z.number()]).optional().transform((val) => (val === true || val === 1 ? 1 : 0)),
+    isHighRatio: z.union([z.boolean(), z.number()]).optional().transform((val) => (val === true || val === 1 ? 1 : 0)),
   });
 
 // Update schema - omits userId and immutable fields

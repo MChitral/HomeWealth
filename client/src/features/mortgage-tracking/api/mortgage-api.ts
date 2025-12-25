@@ -11,6 +11,11 @@ export type CreateMortgagePayload = {
   amortizationMonths?: number;
   paymentFrequency: string;
   annualPrepaymentLimitPercent?: number;
+  // Insurance fields (optional)
+  insuranceProvider?: string;
+  insurancePremium?: string;
+  insuranceAddedToPrincipal?: string;
+  isHighRatio?: string;
 };
 
 export type UpdateMortgagePayload = Partial<CreateMortgagePayload>;

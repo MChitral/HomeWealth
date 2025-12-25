@@ -56,6 +56,12 @@ export const createMortgageFormSchema = z
           message: "Payment amount must be greater than zero",
         }
       ),
+    // Insurance fields (optional)
+    insuranceProvider: z.string().optional(),
+    insurancePremium: z.string().optional(),
+    insuranceAddedToPrincipal: z.string().optional(),
+    isHighRatio: z.string().optional(),
+    adjustedLoanAmount: z.string().optional(),
   })
   .refine(
     (data) => {
