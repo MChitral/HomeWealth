@@ -11,6 +11,8 @@ import { setupVite, serveStatic, log } from "@infrastructure/vite";
 import { startPrimeRateScheduler } from "@infrastructure/jobs/prime-rate-scheduler";
 import { startTriggerRateCheck } from "@infrastructure/jobs/daily-trigger-check";
 import { startMarketRateScheduler } from "@infrastructure/jobs/market-rate-scheduler";
+import { startNotificationQueueScheduler } from "@infrastructure/jobs/notification-queue-scheduler";
+import { startAlertScheduler } from "@infrastructure/jobs/alert-scheduler";
 
 declare module "http" {
   interface IncomingMessage {
@@ -42,6 +44,8 @@ async function bootstrap() {
   startPrimeRateScheduler(services.primeRateTracking);
   startMarketRateScheduler(services.marketRateService);
   startTriggerRateCheck(services.triggerRateMonitor);
+  startNotificationQueueScheduler(services.notifications);
+  startAlertScheduler(services);
 
   if (app.get("env") === "development") {
     await setupVite(app, server);

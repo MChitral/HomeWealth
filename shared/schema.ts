@@ -583,3 +583,103 @@ export const insertMarketRateSchema = createInsertSchema(marketRates)
 
 export type InsertMarketRate = z.infer<typeof insertMarketRateSchema>;
 export type MarketRate = typeof marketRates.$inferSelect;
+
+// Notifications table
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: text("type").notNull(), // "renewal_reminder" | "trigger_rate_alert" | "rate_change" | "penalty_calculated" | "blend_extend_available"
+    title: text("title").notNull(),
+    message: text("message").notNull(),
+    read: integer("read").notNull().default(0), // boolean (0 = false, 1 = true)
+    emailSent: integer("email_sent").notNull().default(0), // boolean
+    emailSentAt: timestamp("email_sent_at"),
+    metadata: jsonb("metadata"), // Additional data (renewal date, trigger rate, mortgage ID, etc.)
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("IDX_notifications_user_read").on(table.userId, table.read),
+    index("IDX_notifications_created_at").on(table.createdAt),
+    index("IDX_notifications_type").on(table.type),
+    index("IDX_notifications_user_created").on(table.userId, table.createdAt),
+  ]
+);
+
+export const insertNotificationSchema = createInsertSchema(notifications)
+  .omit({ id: true, createdAt: true, emailSentAt: true })
+  .extend({
+    read: z.union([z.boolean(), z.number()]).transform((val) => (val === true || val === 1 ? 1 : 0)),
+    emailSent: z.union([z.boolean(), z.number()]).transform((val) => (val === true || val === 1 ? 1 : 0)),
+    metadata: z.record(z.any()).optional(),
+  });
+
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;
+
+// Notification preferences table
+export const notificationPreferences = pgTable(
+  "notification_preferences",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" })
+      .unique(),
+    emailEnabled: integer("email_enabled").notNull().default(1), // boolean
+    inAppEnabled: integer("in_app_enabled").notNull().default(1), // boolean
+    renewalReminders: integer("renewal_reminders").notNull().default(1), // boolean
+    renewalReminderDays: text("renewal_reminder_days").notNull().default("180,90,30,7"), // comma-separated days
+    triggerRateAlerts: integer("trigger_rate_alerts").notNull().default(1), // boolean
+    triggerRateThreshold: decimal("trigger_rate_threshold", { precision: 5, scale: 3 }).notNull().default("0.5"), // 0.5% threshold
+    rateChangeAlerts: integer("rate_change_alerts").notNull().default(1), // boolean
+    penaltyAlerts: integer("penalty_alerts").notNull().default(1), // boolean
+    blendExtendAlerts: integer("blend_extend_alerts").notNull().default(1), // boolean
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [index("IDX_notification_preferences_user").on(table.userId)]
+);
+
+export const insertNotificationPreferencesSchema = createInsertSchema(notificationPreferences)
+  .omit({ id: true, updatedAt: true })
+  .extend({
+    emailEnabled: z.union([z.boolean(), z.number()]).transform((val) => (val === true || val === 1 ? 1 : 0)),
+    inAppEnabled: z.union([z.boolean(), z.number()]).transform((val) => (val === true || val === 1 ? 1 : 0)),
+    renewalReminders: z.union([z.boolean(), z.number()]).transform((val) => (val === true || val === 1 ? 1 : 0)),
+    triggerRateAlerts: z.union([z.boolean(), z.number()]).transform((val) => (val === true || val === 1 ? 1 : 0)),
+    rateChangeAlerts: z.union([z.boolean(), z.number()]).transform((val) => (val === true || val === 1 ? 1 : 0)),
+    penaltyAlerts: z.union([z.boolean(), z.number()]).transform((val) => (val === true || val === 1 ? 1 : 0)),
+    blendExtendAlerts: z.union([z.boolean(), z.number()]).transform((val) => (val === true || val === 1 ? 1 : 0)),
+    triggerRateThreshold: z.union([z.string(), z.number()]).transform((val) => (typeof val === "number" ? val.toFixed(3) : val)),
+  });
+
+export const updateNotificationPreferencesSchema = insertNotificationPreferencesSchema.partial();
+
+export type InsertNotificationPreferences = z.infer<typeof insertNotificationPreferencesSchema>;
+export type UpdateNotificationPreferences = z.infer<typeof updateNotificationPreferencesSchema>;
+export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
+
+// Notification queue table for processing notifications asynchronously
+export const notificationQueue = pgTable(
+  "notification_queue",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    notificationId: varchar("notification_id")
+      .notNull()
+      .references(() => notifications.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("pending"), // "pending" | "processing" | "sent" | "failed"
+    retryCount: integer("retry_count").notNull().default(0),
+    maxRetries: integer("max_retries").notNull().default(3),
+    errorMessage: text("error_message"),
+    scheduledFor: timestamp("scheduled_for").defaultNow().notNull(),
+    processedAt: timestamp("processed_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("IDX_notification_queue_status").on(table.status),
+    index("IDX_notification_queue_scheduled").on(table.scheduledFor),
+  ]
+);

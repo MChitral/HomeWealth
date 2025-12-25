@@ -13,6 +13,7 @@ import { createImpactRoutes } from "./impact.routes";
 import { createPrepaymentRoutes } from "./prepayment.routes";
 import { createSimulationRoutes } from "./simulation.routes";
 import { createHealthRoutes } from "./health.routes";
+import { registerNotificationRoutes } from "./notification.routes";
 
 export function buildApiRouter(services: ApplicationServices, repositories: Repositories): Router {
   const router = Router();
@@ -25,6 +26,7 @@ export function buildApiRouter(services: ApplicationServices, repositories: Repo
   registerPrepaymentEventRoutes(router, services);
   registerRefinancingEventRoutes(router, services);
   registerPrimeRateRoutes(router, services);
+  registerNotificationRoutes(router, services);
   router.use("/impact", createImpactRoutes(services, repositories));
   router.use("/prepayment", createPrepaymentRoutes(services));
   router.use("/simulations", createSimulationRoutes(services.simulationService));

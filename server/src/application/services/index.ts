@@ -17,6 +17,7 @@ import { RefinancingService } from "./refinancing.service";
 import { PrepaymentService } from "./prepayment.service";
 import { SimulationService } from "./simulation.service";
 import { HealthScoreService } from "./health-score.service";
+import { NotificationService } from "./notification.service";
 
 export interface ApplicationServices {
   cashFlows: CashFlowService;
@@ -37,6 +38,7 @@ export interface ApplicationServices {
   prepaymentService: PrepaymentService;
   simulationService: SimulationService;
   healthScoreService: HealthScoreService;
+  notifications: NotificationService;
 }
 
 export function createServices(repositories: Repositories): ApplicationServices {
@@ -121,6 +123,10 @@ export function createServices(repositories: Repositories): ApplicationServices 
       repositories.mortgageTerms,
       marketRateService
     ),
+    notifications: new NotificationService(
+      repositories.notifications,
+      repositories.notificationPreferences
+    ),
   };
 }
 
@@ -142,3 +148,4 @@ export * from "./refinancing.service";
 export * from "./prepayment.service";
 export * from "./simulation.service";
 export * from "./health-score.service";
+export * from "./notification.service";

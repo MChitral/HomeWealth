@@ -9,6 +9,8 @@ import { PrepaymentEventsRepository } from "./prepayment-events.repository";
 import { RefinancingEventsRepository } from "./refinancing-events.repository";
 import { PrimeRateHistoryRepository } from "./prime-rate-history.repository";
 import { MarketRatesRepository } from "./market-rates.repository";
+import { NotificationRepository } from "./notification.repository";
+import { NotificationPreferencesRepository } from "./notification-preferences.repository";
 
 export interface Repositories {
   users: UsersRepository;
@@ -22,6 +24,8 @@ export interface Repositories {
   refinancingEvents: RefinancingEventsRepository;
   primeRateHistory: PrimeRateHistoryRepository;
   marketRates: MarketRatesRepository;
+  notifications: NotificationRepository;
+  notificationPreferences: NotificationPreferencesRepository;
 }
 
 export function createRepositories(): Repositories {
@@ -37,6 +41,8 @@ export function createRepositories(): Repositories {
     refinancingEvents: new RefinancingEventsRepository(),
     primeRateHistory: new PrimeRateHistoryRepository(),
     marketRates: new MarketRatesRepository(),
+    notifications: new NotificationRepository(),
+    notificationPreferences: new NotificationPreferencesRepository(),
   };
 }
 
@@ -54,4 +60,6 @@ export {
   RefinancingEventsRepository,
   PrimeRateHistoryRepository,
   MarketRatesRepository,
+  NotificationRepository,
+  NotificationPreferencesRepository,
 };
