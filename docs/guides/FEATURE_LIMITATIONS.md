@@ -1,7 +1,8 @@
-# Feature Limitations & Future Roadmap
+# Feature Limitations & Missing Features
 
-**Date:** December 2025  
-**Purpose:** Comprehensive list of Canadian mortgage features NOT currently implemented, with rationale and future considerations
+**Last Updated:** January 2025  
+**Purpose:** Current list of Canadian mortgage features NOT implemented, based on Product Owner Review  
+**Reference:** See [PRODUCT_OWNER_REVIEW.md](../PRODUCT_OWNER_REVIEW.md) for comprehensive assessment
 
 ---
 
@@ -9,437 +10,408 @@
 
 This document lists mortgage-related features that are **not currently implemented** in the application. This helps set proper expectations and guides future development priorities.
 
----
-
-## Mortgage Penalties
-
-### Interest Rate Differential (IRD)
-
-**Status:** ❌ Not Implemented
-
-**What It Is:**
-- Penalty charged when breaking a fixed-rate mortgage before term end
-- Calculated as the difference between the mortgage rate and current market rate
-- Typically the higher of IRD or 3-month interest
-
-**Why Not Implemented:**
-- Complex calculation with lender-specific formulas
-- Requires current market rate data
-- Varies significantly by lender
-- Not needed for basic mortgage tracking
-
-**Future Consideration:**
-- Medium priority
-- Would require lender-specific penalty calculation rules
-- Useful for refinancing decision support
-
-### 3-Month Interest Penalty
-
-**Status:** ❌ Not Implemented
-
-**What It Is:**
-- Alternative penalty calculation for variable-rate mortgages
-- Simple: 3 months of interest payments
-- Often used for VRM mortgages or when IRD doesn't apply
-
-**Why Not Implemented:**
-- Less critical than IRD for fixed-rate mortgages
-- Can be calculated manually if needed
-- Lower priority than core features
-
-**Future Consideration:**
-- Low priority
-- Simpler to implement than IRD
-- Could be added alongside IRD
+**Note:** Many features previously listed as "not implemented" have since been completed. This document reflects the current state as of January 2025.
 
 ---
 
-## HELOC & Re-advanceable Mortgages
+## High Priority Missing Features
 
-### Home Equity Line of Credit (HELOC)
+### 1. Mortgage Recast ❌ **MISSING**
 
-**Status:** ❌ Not Implemented
-
-**What It Is:**
-- Revolving credit line secured by home equity
-- Can borrow up to credit limit
-- Interest-only payments typically
-- Balance can increase or decrease
-
-**Why Not Implemented:**
-- Fundamentally different product structure
-- Requires different calculation engine
-- Complex credit limit calculations
-- Not a traditional mortgage product
-
-**Future Consideration:**
-- Low priority
-- Would require significant architecture changes
-- Separate product category
-
-### Re-advanceable Mortgages
-
-**Status:** ❌ Not Implemented
+**Status:** ❌ Not Implemented  
+**Priority:** HIGH
 
 **What It Is:**
-- Mortgage that allows re-borrowing paid principal
-- Combines mortgage + HELOC
-- Credit limit increases as principal is paid
-- Complex balance tracking
 
-**Why Not Implemented:**
-- Very complex product structure
-- Requires HELOC functionality first
-- Less common than standard mortgages
-- Significant development effort
-
-**Future Consideration:**
-- Very low priority
-- Would require HELOC implementation first
-- Niche product market
-
----
-
-## Recast Functionality
-
-**Status:** ❌ Not Implemented
-
-**What It Is:**
 - Recalculate payment after large prepayment
-- Lower payment amount while keeping same rate/term
-- Extends effective amortization
-- Common after large lump sum prepayments
+- Payment amount decreases while keeping same amortization period
+- Common after large lump sum prepayments, property sales, or windfalls
+
+**Impact:**
+
+- **HIGH** - Common homeowner scenario
+- Users cannot model payment reduction after large prepayments
+- Missing key mortgage lifecycle stage
 
 **Why Not Implemented:**
-- Not standard Canadian mortgage feature
-- More common in US mortgages
-- Can be modeled via refinancing events
-- Lower user demand
 
-**Future Consideration:**
-- Low priority
-- Could be added as optional feature
-- Workaround exists (refinancing events)
+- Not yet prioritized in roadmap
+- Requires payment recalculation service
+- Needs UI workflow for recast scenarios
 
-**Workaround:**
-- Use refinancing event with same rate
-- Adjust payment frequency if needed
-- Extend amortization if desired
+**Recommendations:**
+
+- Add recast calculation service
+- Add `recastEvents` table to track recast history
+- Add recast option to prepayment workflow
+- Update payment amount after recast
 
 ---
 
-## CMHC Insurance Calculations
+### 2. Payment Frequency Changes Mid-Term ❌ **MISSING**
 
-**Status:** ❌ Not Implemented
+**Status:** ❌ Not Implemented  
+**Priority:** MEDIUM
 
 **What It Is:**
-- Mortgage default insurance for high-ratio mortgages
-- Required for mortgages with <20% down payment
-- Premium calculated as percentage of mortgage amount
-- Added to mortgage principal
+
+- Change payment frequency during term (e.g., monthly to biweekly)
+- Recalculate payment amount for new frequency
+- Maintain same rate and term end date
+
+**Impact:**
+
+- **MEDIUM** - Many homeowners want to switch to accelerated payments mid-term
+- No way to model frequency changes without creating new term
 
 **Why Not Implemented:**
-- Insurance premium is one-time at origination
-- Already included in mortgage amount if applicable
-- Doesn't affect ongoing calculations
+
+- Can be modeled via term renewal (workaround exists)
 - Lower priority than core features
+- Some lenders don't allow it
 
-**Future Consideration:**
-- Low priority
-- Could add insurance premium calculator
-- Useful for mortgage origination planning
-- Doesn't affect existing mortgage tracking
+**Recommendations:**
 
-**Note:**
-- If mortgage includes CMHC insurance, it's already in the `originalAmount`
-- No separate tracking needed for existing mortgages
-- Could add calculator for new mortgage planning
+- Add payment frequency change service
+- Add `paymentFrequencyChangeEvents` table
+- Recalculate payment amount when frequency changes
+- Add UI for frequency change scenarios
 
 ---
 
-## High-Ratio vs Conventional Distinction
+### 3. Mortgage Portability ❌ **MISSING**
 
-**Status:** ⚠️ Partially Implemented
-
-**What It Is:**
-- High-ratio: <20% down payment (requires CMHC insurance)
-- Conventional: ≥20% down payment (no insurance required)
-- Different rules for prepayments, penalties, etc.
-
-**Current State:**
-- System tracks down payment and original amount
-- No explicit high-ratio flag
-- No insurance premium calculations
-- No different rules based on ratio
-
-**Why Not Fully Implemented:**
-- Most rules are the same regardless
-- Insurance is one-time at origination
-- Can infer ratio from down payment percentage
-- Lower priority than core features
-
-**Future Consideration:**
-- Low priority
-- Could add explicit high-ratio flag
-- Could add insurance premium calculator
-- Could add different prepayment rules if needed
-
-**Workaround:**
-- Calculate down payment percentage manually
-- If <20%, assume CMHC insurance included in amount
-- Use standard prepayment rules (same for both types)
-
----
-
-## Payment Skipping
-
-**Status:** ⚠️ Partially Implemented
+**Status:** ❌ Not Implemented  
+**Priority:** MEDIUM
 
 **What It Is:**
-- Skip a payment (typically once per year)
-- Interest still accrues
-- Balance increases (negative amortization)
-- Common feature with some lenders
 
-**Current State:**
-- Calculation logic exists in `server/src/shared/calculations/payment-skipping.ts`
-- No UI for skipping payments
-- No automatic payment skipping feature
-- Can be manually modeled by logging $0 payment
-
-**Why Not Fully Implemented:**
-- Less common feature
-- Can be worked around manually
-- Lower user demand
-- UI complexity for edge case
-
-**Future Consideration:**
-- Low priority
-- Could add "Skip Payment" button in payment dialog
-- Would need to validate skip eligibility (once per year, etc.)
-- Calculation engine already supports it
-
-**Workaround:**
-- Log payment with $0 amount
-- System will calculate interest accrual
-- Balance will increase appropriately
-
----
-
-## Blend-and-Extend UI
-
-**Status:** ⚠️ Partially Implemented
-
-**What It Is:**
-- Renewal option that blends old and new rates
-- Extends amortization period
-- Calculates new payment amount
-
-**Current State:**
-- ✅ Calculation engine implemented (`server/src/shared/calculations/blend-and-extend.ts`)
-- ✅ API endpoint exists (`POST /api/mortgage-terms/:id/blend-and-extend`)
-- ❌ No UI for blend-and-extend
-- ❌ Not integrated into term renewal flow
-
-**Why Not Fully Implemented:**
-- Calculation exists but UI not built
-- Can be calculated via API if needed
-- Lower priority than core renewal flow
-- Niche feature
-
-**Future Consideration:**
-- Medium priority
-- Add "Blend-and-Extend" option in term renewal dialog
-- Show blended rate and new payment
-- Integrate with renewal workflow
-
-**Workaround:**
-- Use API endpoint directly
-- Calculate manually using formula
-- Use refinancing event to approximate
-
----
-
-## Multi-Property Support
-
-**Status:** ❌ Not Implemented
-
-**What It Is:**
-- Track multiple mortgages (primary residence, rental, etc.)
-- Compare strategies across properties
-- Aggregate net worth calculations
-
-**Current State:**
-- System supports multiple mortgages per user
-- No property categorization
-- No rental income tracking
-- No multi-property scenarios
-
-**Why Not Implemented:**
-- Focus on single primary residence
-- Rental properties have different considerations
-- Would require significant UI changes
-- Lower priority than core features
-
-**Future Consideration:**
-- Medium priority
-- Add property type field (primary, rental, vacation)
-- Add rental income/expense tracking
-- Multi-property dashboard views
-
----
-
-## Mortgage Portability
-
-**Status:** ❌ Not Implemented
-
-**What It Is:**
 - Transfer existing mortgage to new property
 - Keep same rate and terms
 - Avoid penalties
 - Common feature with some lenders
 
+**Impact:**
+
+- **MEDIUM** - Important for homeowners moving
+- Cannot model porting scenarios
+
 **Why Not Implemented:**
+
 - Complex feature with many edge cases
 - Lender-specific rules
-- Less common than core features
-- Can be modeled as new mortgage
+- Can be modeled as new mortgage (workaround)
 
-**Future Consideration:**
-- Low priority
-- Would require property transfer workflow
-- Lender-specific rule configuration
-- Niche use case
+**Recommendations:**
 
-**Workaround:**
-- Create new mortgage for new property
-- Manually track that it's a ported mortgage
-- Use same rate/terms if applicable
+- Add mortgage portability data model
+- Add portability calculation service
+- Add portability UI workflow
 
 ---
 
-## Payment Frequency Changes Mid-Term
+### 4. Lender-Specific Penalty Calculations ⚠️ **NEEDS IMPROVEMENT**
+
+**Status:** ⚠️ Partially Implemented  
+**Priority:** HIGH
+
+**What It Is:**
+
+- Accurate IRD (Interest Rate Differential) calculations
+- Lender-specific penalty methodologies
+- Posted rate vs discounted rate handling
+
+**Current State:**
+
+- ✅ Basic IRD calculation implemented
+- ✅ 3-month interest penalty implemented
+- ✅ "Greater of" rule implemented
+- ❌ IRD calculation is simplified (approximation)
+- ❌ No lender-specific methods
+- ❌ Missing variable rate penalty logic (typically 3-month interest only)
+
+**Impact:**
+
+- **HIGH** - Penalty estimates may not match actual lender calculations
+- Users need accurate penalty estimates for refinancing decisions
+
+**Recommendations:**
+
+- Research and implement lender-specific IRD methodologies
+- Add `penaltyCalculationMethod` field to `mortgageTerms`
+- Implement variable rate penalty logic
+- Add penalty calculator UI with lender selection
+- Document that current IRD is an approximation
+
+---
+
+## Medium Priority Missing Features
+
+### 5. Smith Maneuver Tax Optimization ⚠️ **PARTIAL**
+
+**Status:** ⚠️ Partially Implemented  
+**Priority:** MEDIUM
+
+**Current State:**
+
+- ✅ Smith Maneuver strategy tracking
+- ✅ HELOC borrowing linked to investments
+- ✅ Investment transaction tracking
+- ✅ Tax calculation structure
+- ❌ Detailed tax deduction calculations incomplete
+- ❌ Investment income tax treatment incomplete
+- ❌ Net tax benefit calculations incomplete
+
+**Recommendations:**
+
+- Enhance tax calculation service with detailed Canadian tax rules
+- Add dividend tax credit calculations
+- Add capital gains tax calculations
+- Add Smith Maneuver vs prepayment comparison
+- Add ROI analysis for Smith Maneuver strategies
+
+---
+
+### 6. Property Value Tracking ❌ **MISSING**
+
+**Status:** ❌ Not Implemented  
+**Priority:** MEDIUM
+
+**What It Is:**
+
+- Track home value over time
+- Update HELOC credit limits based on value appreciation
+- Historical value tracking
+
+**Impact:**
+
+- **MEDIUM** - Needed for accurate HELOC credit limit updates
+- Credit limits should increase with property value
+
+**Recommendations:**
+
+- Add `propertyValueHistory` table
+- Add property value update workflow
+- Recalculate HELOC credit limits on value updates
+
+---
+
+### 7. Refinancing Closing Costs ❌ **MISSING**
+
+**Status:** ❌ Not Implemented  
+**Priority:** MEDIUM
+
+**What It Is:**
+
+- Track closing costs in refinancing analysis
+- Include in break-even calculations
+- Legal fees, appraisal, etc.
+
+**Current State:**
+
+- ✅ Refinancing benefit calculation exists
+- ❌ Closing costs not included in analysis
+- ❌ Break-even analysis incomplete without costs
+
+**Recommendations:**
+
+- Add closing costs to refinancing analysis
+- Include in break-even calculations
+- Add closing cost input to refinancing UI
+
+---
+
+### 8. Renewal Workflow Wizard ⚠️ **PARTIAL**
+
+**Status:** ⚠️ Partially Implemented  
+**Priority:** MEDIUM
+
+**Current State:**
+
+- ✅ Renewal date tracking
+- ✅ Renewal reminders
+- ✅ Blend-and-extend calculation and UI
+- ❌ No guided term creation workflow
+- ❌ No renewal rate negotiation tracking
+
+**Recommendations:**
+
+- Add renewal workflow wizard (guided term creation)
+- Add renewal rate negotiation tracking
+- Add renewal options comparison (stay vs switch)
+
+---
+
+## Low Priority Missing Features
+
+### 9. HELOC Minimum Payment Calculations ⚠️ **PARTIAL**
 
 **Status:** ⚠️ Partially Implemented
 
-**What It Is:**
-- Change payment frequency during term (e.g., monthly to biweekly)
-- Recalculate payment amount
-- Maintain same rate and term end date
-
 **Current State:**
-- ✅ Can change frequency at term renewal
-- ❌ Cannot change frequency mid-term
-- ❌ No payment recalculation for mid-term changes
 
-**Why Not Fully Implemented:**
-- Less common feature
-- Can be modeled via term renewal
-- Lower priority
-- Some lenders don't allow it
+- ✅ HELOC account management
+- ✅ HELOC transaction tracking
+- ❌ Minimum payment calculations missing
+- ❌ Interest-only vs principal+interest payment types
 
-**Future Consideration:**
-- Low priority
-- Could add "Change Frequency" option
-- Would recalculate payment for remaining term
-- Validate lender allows it
+**Recommendations:**
 
-**Workaround:**
-- Wait until term renewal
-- Use refinancing event to model change
-- Create new term with different frequency
+- Add `helocPaymentType` field
+- Implement minimum payment calculation logic
 
 ---
 
-## Other Canadian Mortgage Features
+### 10. HELOC Draw Period Tracking ⚠️ **PARTIAL**
 
-### Portability with Top-Up
+**Status:** ⚠️ Partially Implemented
+
+**Current State:**
+
+- ✅ HELOC credit limit calculations
+- ❌ Draw period vs repayment period not tracked
+
+**Recommendations:**
+
+- Add `helocDrawPeriodEndDate` field
+- Track draw period vs repayment period
+
+---
+
+### 11. Prepayment Limit Reset Date Tracking ⚠️ **PARTIAL**
+
+**Status:** ⚠️ Partially Implemented
+
+**Current State:**
+
+- ✅ Annual prepayment limits enforced
+- ✅ Calendar year reset implemented
+- ❌ Some lenders reset on anniversary date (not tracked)
+
+**Recommendations:**
+
+- Add `prepaymentLimitResetDate` field
+- Support both calendar year and anniversary date resets
+
+---
+
+### 12. Prepayment Privilege Carry-Forward ❌ **MISSING**
 
 **Status:** ❌ Not Implemented
 
 **What It Is:**
-- Port mortgage to new property
-- Add additional funds (top-up)
-- Blend rates for ported + new funds
 
-**Why Not Implemented:**
-- Very complex calculation
-- Requires portability feature first
-- Niche use case
-- Low priority
+- Unused prepayment room from previous year carries forward
+- Some lenders allow this
 
-### Open vs Closed Mortgages
+**Recommendations:**
+
+- Implement prepayment privilege carry-forward logic
+- Add carry-forward tracking
+
+---
+
+### 13. Payment Skipping UI ⚠️ **PARTIAL**
 
 **Status:** ⚠️ Partially Implemented
 
+**Current State:**
+
+- ✅ Calculation logic exists
+- ✅ Can be modeled manually
+- ❌ No UI for skipping payments
+
+**Recommendations:**
+
+- Add "Skip Payment" button in payment dialog
+- Validate skip eligibility (once per year, etc.)
+
+---
+
+### 14. Variable Rate Cap/Floor Tracking ❌ **MISSING**
+
+**Status:** ❌ Not Implemented
+
 **What It Is:**
+
+- Maximum rate increase per period (cap)
+- Minimum rate (floor)
+- Some variable mortgages have these limits
+
+**Recommendations:**
+
+- Add rate cap/floor fields to `mortgageTerms`
+- Add rate cap/floor alerts
+
+---
+
+### 15. Open vs Closed Mortgage Distinction ❌ **MISSING**
+
+**Status:** ❌ Not Implemented
+
+**What It Is:**
+
 - Open: Can prepay any amount, any time (higher rate)
 - Closed: Prepayment limits apply (lower rate)
 
 **Current State:**
+
 - System assumes closed mortgages (prepayment limits)
 - No open mortgage option
-- No different rate for open mortgages
-
-**Why Not Fully Implemented:**
-- Most mortgages are closed
-- Open mortgages are rare
-- Can be modeled by setting high prepayment limit
-- Lower priority
 
 **Workaround:**
+
 - Set annual prepayment limit to 100%
-- Effectively allows unlimited prepayments
-- Rate difference not modeled
+
+---
+
+## Previously Listed as Missing (Now Implemented ✅)
+
+The following features were previously listed as "not implemented" but are now **fully implemented**:
+
+- ✅ **Mortgage Penalties (IRD & 3-Month Interest)** - Implemented with market rate service
+- ✅ **Penalty Calculator UI** - Fully implemented
+- ✅ **HELOC Support** - Fully implemented
+- ✅ **Re-advanceable Mortgages** - Fully implemented
+- ✅ **CMHC Insurance Calculator** - Fully implemented
+- ✅ **Blend-and-Extend UI** - Fully implemented
+- ✅ **Market Rate Service** - Fully implemented
+- ✅ **Trigger Rate Monitoring** - Fully implemented
+- ✅ **Notification System** - Fully implemented
 
 ---
 
 ## Summary
 
-### High Priority Missing Features
-- None currently identified
+### High Priority Gaps
 
-### Medium Priority Missing Features
-- Blend-and-Extend UI integration
-- Multi-property support
-- Payment skipping UI
+1. Mortgage Recast
+2. Lender-Specific Penalty Calculations
+3. Payment Frequency Changes
 
-### Low Priority Missing Features
-- Mortgage penalties (IRD, 3-month interest)
-- HELOC support
-- Recast functionality
-- CMHC insurance calculator
-- High-ratio explicit tracking
-- Payment frequency changes mid-term
-- Re-advanceable mortgages
-- Mortgage portability
+### Medium Priority Gaps
 
-### Workarounds Available
-- Most missing features can be approximated using existing features
-- Refinancing events can model many scenarios
-- Manual calculations possible for edge cases
+1. Smith Maneuver Tax Optimization
+2. Property Value Tracking
+3. Refinancing Closing Costs
+4. Renewal Workflow Wizard
+
+### Low Priority Gaps
+
+1. HELOC minimum payments
+2. Prepayment privilege carry-forward
+3. Payment skipping UI
+4. Variable rate caps/floors
+5. Open vs closed mortgage distinction
 
 ---
 
-## Future Roadmap Considerations
+## Reference
 
-When prioritizing new features, consider:
+For comprehensive product assessment, feature completeness matrix, and strategic recommendations, see:
 
-1. **User Demand:** Which features are most requested?
-2. **Competitive Advantage:** What differentiates from other tools?
-3. **Development Complexity:** How much effort required?
-4. **Domain Accuracy:** Does it improve mortgage modeling accuracy?
-5. **User Value:** Does it help users make better decisions?
+**[PRODUCT_OWNER_REVIEW.md](../PRODUCT_OWNER_REVIEW.md)**
 
 ---
 
-## Conclusion
-
-The application focuses on core Canadian mortgage features that provide the most value to users. Missing features are either:
-- Niche use cases with low demand
-- Complex features requiring significant development
-- Features with acceptable workarounds
-- Features planned for future releases
-
-This document will be updated as features are added or priorities change.
-
+**Last Updated:** January 2025

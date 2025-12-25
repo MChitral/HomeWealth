@@ -1,131 +1,174 @@
 # Documentation
 
-Essential project documentation organized in a clean structure.
+Essential project documentation organized by purpose and audience.
+
+**Last Updated:** January 2025  
+**Status:** Current and accurate based on Product Owner Review
+
+---
 
 ## 📁 Structure
 
 ```
 docs/
 ├── README.md (this file)
-├── PRODUCT_FEATURE_INVENTORY.md              # Complete product feature catalog
-├── PRODUCT_STRATEGY_MORTGAGE_HEALTH_MONITOR.md # Strategic pivot roadmap
-├── COMPETITIVE_ANALYSIS.md                   # Competitive analysis (ProjectionLab, LunchMoney)
-├── SUBSCRIPTION_VALUE_FRAMEWORK.md          # Framework for creating subscription value
-├── AI_INTEGRATION_STRATEGY.md               # AI/GenAI integration opportunities and strategy
+├── PRODUCT_OWNER_REVIEW.md              # ⭐ Most current product assessment (Jan 2025)
 │
-├── guides/
-│   ├── FORM_VALIDATION_GUIDE.md        # Form patterns
-│   ├── ESLINT_PRETTIER_SETUP.md        # Code quality setup
-│   ├── design_guidelines.md            # UI/UX guidelines
-│   ├── ACCELERATED_PAYMENT_CALCULATION.md # Payment calculation guide
-│   ├── PREPAYMENT_LIMIT_CALCULATION.md    # Prepayment limit guide
-│   ├── PRIME_RATE_DATA_FLOW.md            # Prime rate flow guide
-│   ├── PRIME_RATE_SCHEDULER.md           # Prime rate scheduler guide
-│   ├── ROUNDING_CONVENTIONS.md           # Rounding rules
-│   ├── VARIABLE_RATE_MORTGAGE_BEHAVIOR.md # VRM types and trigger rates
-│   └── FEATURE_LIMITATIONS.md            # What's NOT implemented
+├── guides/                              # Technical & calculation guides
+│   ├── ACCELERATED_PAYMENT_CALCULATION.md
+│   ├── PREPAYMENT_LIMIT_CALCULATION.md
+│   ├── PRIME_RATE_DATA_FLOW.md
+│   ├── PRIME_RATE_SCHEDULER.md
+│   ├── ROUNDING_CONVENTIONS.md
+│   ├── VARIABLE_RATE_MORTGAGE_BEHAVIOR.md
+│   ├── FEATURE_LIMITATIONS.md          # Current gaps & missing features
+│   ├── FORM_VALIDATION_GUIDE.md
+│   ├── ESLINT_PRETTIER_SETUP.md
+│   └── design_guidelines.md
 │
-├── audits/
-│   └── REFINANCING_FEATURE_AUDIT.md   # Refinancing feature audit
+├── feature-specifications/               # Detailed feature specs
+│   ├── HELOC_READVANCEABLE_FEATURE_SPEC.md
+│   └── SMITH_MANEUVER_FEATURE_SPEC.md
 │
-└── architecture/
-    └── TECHNICAL_ARCHITECTURE.md       # System architecture
+├── audits/                              # Feature-specific audits
+│   └── REFINANCING_FEATURE_AUDIT.md    # Technical audit of refinancing feature
+│
+├── architecture/                        # Technical architecture
+│   └── TECHNICAL_ARCHITECTURE.md
+│
+├── cmhc-insurance-rates.md             # CMHC insurance rate reference
+│
+└── strategic/                           # Strategic planning documents (not current state)
+    ├── PRODUCT_STRATEGY_MORTGAGE_HEALTH_MONITOR.md
+    ├── AI_INTEGRATION_STRATEGY.md
+    ├── SUBSCRIPTION_VALUE_FRAMEWORK.md
+    └── COMPETITIVE_ANALYSIS.md
 ```
 
-**Total: 18 essential files**
+**Total: 19 essential files**
 
 ---
 
 ## 🚀 Quick Links
 
-### Getting Started
+### Product Assessment (Start Here)
 
-- **Project Overview:** See root `README.md` in project root
-- **Product Features:** [`PRODUCT_FEATURE_INVENTORY.md`](PRODUCT_FEATURE_INVENTORY.md) - Complete feature catalog
-- **Product Strategy:** [`PRODUCT_STRATEGY_MORTGAGE_HEALTH_MONITOR.md`](PRODUCT_STRATEGY_MORTGAGE_HEALTH_MONITOR.md) - Strategic pivot roadmap
-- **Competitive Analysis:** [`COMPETITIVE_ANALYSIS.md`](COMPETITIVE_ANALYSIS.md) - Competitive landscape analysis
-- **Subscription Value Framework:** [`SUBSCRIPTION_VALUE_FRAMEWORK.md`](SUBSCRIPTION_VALUE_FRAMEWORK.md) - What creates recurring subscription value
-- **AI Integration Strategy:** [`AI_INTEGRATION_STRATEGY.md`](AI_INTEGRATION_STRATEGY.md) - AI/GenAI integration opportunities
-- **Architecture:** [`architecture/TECHNICAL_ARCHITECTURE.md`](architecture/TECHNICAL_ARCHITECTURE.md)
+- **⭐ [Product Owner Review](PRODUCT_OWNER_REVIEW.md)** - Comprehensive January 2025 assessment
+  - Current feature completeness
+  - Critical gaps identified
+  - Strategic recommendations
+  - Feature completeness matrix
 
-### Reference Guides
+### Technical Guides
 
-- **Form Patterns:** [`guides/FORM_VALIDATION_GUIDE.md`](guides/FORM_VALIDATION_GUIDE.md)
-- **Code Quality Setup:** [`guides/ESLINT_PRETTIER_SETUP.md`](guides/ESLINT_PRETTIER_SETUP.md)
-- **Design Guidelines:** [`guides/design_guidelines.md`](guides/design_guidelines.md)
+- **Calculation Guides:**
+  - [Accelerated Payment Calculation](guides/ACCELERATED_PAYMENT_CALCULATION.md)
+  - [Prepayment Limit Calculation](guides/PREPAYMENT_LIMIT_CALCULATION.md)
+  - [Variable Rate Mortgage Behavior](guides/VARIABLE_RATE_MORTGAGE_BEHAVIOR.md)
+  - [Rounding Conventions](guides/ROUNDING_CONVENTIONS.md)
+  - [Prime Rate Data Flow](guides/PRIME_RATE_DATA_FLOW.md)
+  - [Prime Rate Scheduler](guides/PRIME_RATE_SCHEDULER.md)
 
-### Calculation Guides
+- **Development Guides:**
+  - [Form Validation Guide](guides/FORM_VALIDATION_GUIDE.md)
+  - [ESLint & Prettier Setup](guides/ESLINT_PRETTIER_SETUP.md)
+  - [Design Guidelines](guides/design_guidelines.md)
 
-- **Accelerated Payments:** [`guides/ACCELERATED_PAYMENT_CALCULATION.md`](guides/ACCELERATED_PAYMENT_CALCULATION.md)
-- **Prepayment Limits:** [`guides/PREPAYMENT_LIMIT_CALCULATION.md`](guides/PREPAYMENT_LIMIT_CALCULATION.md)
-- **Prime Rate Flow:** [`guides/PRIME_RATE_DATA_FLOW.md`](guides/PRIME_RATE_DATA_FLOW.md)
-- **Prime Rate Scheduler:** [`guides/PRIME_RATE_SCHEDULER.md`](guides/PRIME_RATE_SCHEDULER.md)
-- **Rounding Conventions:** [`guides/ROUNDING_CONVENTIONS.md`](guides/ROUNDING_CONVENTIONS.md)
-- **Variable Rate Mortgages:** [`guides/VARIABLE_RATE_MORTGAGE_BEHAVIOR.md`](guides/VARIABLE_RATE_MORTGAGE_BEHAVIOR.md)
+- **Feature Status:**
+  - [Feature Limitations](guides/FEATURE_LIMITATIONS.md) - What's NOT implemented
 
-### Feature Information
+### Feature Specifications
 
-- **What's NOT Implemented:** [`guides/FEATURE_LIMITATIONS.md`](guides/FEATURE_LIMITATIONS.md) - Comprehensive list of missing features
+- [HELOC & Re-Advanceable Mortgage Spec](feature-specifications/HELOC_READVANCEABLE_FEATURE_SPEC.md)
+- [Smith Maneuver Feature Spec](feature-specifications/SMITH_MANEUVER_FEATURE_SPEC.md)
 
-### Audits
+### Architecture
 
-- **Refinancing Feature Audit:** [`audits/REFINANCING_FEATURE_AUDIT.md`](audits/REFINANCING_FEATURE_AUDIT.md)
+- [Technical Architecture](architecture/TECHNICAL_ARCHITECTURE.md)
 
----
+### Reference
 
-## 📝 Categories
+- [CMHC Insurance Rates](cmhc-insurance-rates.md)
 
-### `/guides` - Reference Guides
+### Strategic Documents
 
-Active guides and setup instructions:
+**Note:** These are strategic planning documents, not current state assessments. For current product state, see [Product Owner Review](PRODUCT_OWNER_REVIEW.md).
 
-- How-to guides for developers
-- Calculation guides (mortgage math)
-- Feature documentation
-- Setup and configuration guides
-
-### `/audits` - Audit Reports
-
-Current feature audits and analysis for reference.
-
-### `/architecture` - Architecture
-
-Technical architecture and system design documentation.
+- [Product Strategy: Mortgage Health Monitor](strategic/PRODUCT_STRATEGY_MORTGAGE_HEALTH_MONITOR.md)
+- [AI Integration Strategy](strategic/AI_INTEGRATION_STRATEGY.md)
+- [Subscription Value Framework](strategic/SUBSCRIPTION_VALUE_FRAMEWORK.md)
+- [Competitive Analysis](strategic/COMPETITIVE_ANALYSIS.md)
 
 ---
 
-**Note:** Historical bug reports, test execution logs, and redundant summaries have been removed. Only essential, current documentation remains.
+## ✅ Implemented Features (Current State)
 
-## What's Included vs What's Not
+Based on Product Owner Review (January 2025):
 
-### ✅ Implemented Features
-- Fixed-rate and variable-rate mortgages (VRM-Changing and VRM-Fixed Payment)
-- Trigger rate calculations and negative amortization tracking
-- Blend-and-extend renewal calculations
-- Refinancing events (year-based and term-end)
-- Prepayment tracking with annual limits
-- Accelerated payment frequencies
-- Prime rate tracking and automatic updates
-- Scenario modeling and comparison
-- Emergency fund planning
-- Cash flow tracking
+### Core Mortgage Features ✅
 
-### ❌ Not Implemented (See Limitations Guide)
-- Mortgage penalties (IRD, 3-month interest)
-- HELOC and re-advanceable mortgages
-- Recast functionality
-- CMHC insurance calculations
-- Payment skipping UI
-- Blend-and-extend UI integration
+- Mortgage creation and tracking
+- Payment tracking with full breakdown
+- Variable rate mortgages (VRM-Changing & VRM-Fixed-Payment)
+- Trigger rate monitoring and alerts
+- Prepayment mechanics with annual limits
+- Penalty calculations (IRD & 3-month interest)
+- Renewal tracking and reminders
+- Blend-and-extend calculations and UI
+- Refinancing analysis
+- CMHC insurance premium calculator
 
-For complete details, see [`guides/FEATURE_LIMITATIONS.md`](guides/FEATURE_LIMITATIONS.md).
+### Advanced Features ✅
+
+- Re-advanceable mortgages
+- HELOC management
+- Smith Maneuver framework
+- Scenario planning and projections
+- Prime rate tracking
+- Market rate service
+- Notification system
 
 ---
 
-**Documentation Summary:** 18 essential files (updated December 2025)
+## ❌ Missing Features (High Priority)
 
-**Cleanup:** Removed 6 historical/outdated documents:
-- Removed outdated audit documents (REACT_APP_AUDIT)
-- Removed historical completed work summaries
-- Removed historical architecture decision documents (STATE_MANAGEMENT, REDUX_DECISION)
-- Kept only current, actionable documentation
+Based on Product Owner Review:
+
+1. **Mortgage Recast** - Payment recalculation after large prepayments
+2. **Payment Frequency Changes** - Mid-term frequency switching
+3. **Mortgage Portability** - Porting mortgage to new property
+4. **Lender-Specific Penalty Calculations** - More accurate IRD methods
+5. **Property Value Tracking** - For HELOC credit limit updates
+
+See [Feature Limitations](guides/FEATURE_LIMITATIONS.md) for complete list.
+
+---
+
+## 📝 Documentation Principles
+
+1. **Single Source of Truth:** Product Owner Review is the authoritative assessment
+2. **Keep Current:** Technical guides updated as features change
+3. **Remove Outdated:** Historical/obsolete docs removed
+4. **Focus on Value:** Only essential, actionable documentation
+
+---
+
+## 🔄 Recent Cleanup (January 2025)
+
+**Removed:**
+
+- Outdated audit documents (replaced by Product Owner Review)
+- Historical implementation plans (features now complete)
+- Redundant feature inventories
+- Strategic documents superseded by current review
+
+**Kept:**
+
+- Technical calculation guides (still accurate)
+- Feature specifications (HELOC, Smith Maneuver)
+- Architecture documentation
+- Current limitations guide
+
+---
+
+**For the most current product assessment, see [PRODUCT_OWNER_REVIEW.md](PRODUCT_OWNER_REVIEW.md)**
