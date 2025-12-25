@@ -121,6 +121,7 @@ export function useMortgageTrackingState() {
     terms,
     payments,
     isLoading,
+    rawPayments: payments, // Expose raw payments for skip tracking
 
     // Prime rate
     primeRate,

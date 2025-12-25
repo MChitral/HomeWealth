@@ -46,6 +46,9 @@ export function normalizePayments(
       amortizationYears: payment.remainingAmortizationMonths / 12,
       termStartDate: term?.startDate,
       remainingAmortizationMonths: payment.remainingAmortizationMonths,
+      // Payment skipping fields
+      isSkipped: payment.isSkipped === 1 || payment.isSkipped === true,
+      skippedInterestAccrued: Number(payment.skippedInterestAccrued || 0),
     };
   });
 }

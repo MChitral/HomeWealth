@@ -18,6 +18,7 @@ export default function MortgageFeature() {
   usePageTitle("Mortgage Tracking | Mortgage Strategy");
 
   const [isCreateMortgageOpen, setIsCreateMortgageOpen] = useState(false);
+  const [isSkipPaymentOpen, setIsSkipPaymentOpen] = useState(false);
 
   const {
     selectedMortgageId,
@@ -59,6 +60,7 @@ export default function MortgageFeature() {
     filteredPayments,
     availableYears,
     monthsRemainingInTerm,
+    rawPayments,
   } = useMortgageTrackingState();
 
   // Memoize prime rate update callback to prevent unnecessary re-renders
@@ -205,6 +207,8 @@ export default function MortgageFeature() {
           onEditMortgageDialogOpenChange={handleEditMortgageDialogOpenChange}
           isDialogOpen={isDialogOpen}
           setIsDialogOpen={setIsDialogOpen}
+          isSkipPaymentOpen={isSkipPaymentOpen}
+          setIsSkipPaymentOpen={setIsSkipPaymentOpen}
           isBackfillOpen={isBackfillOpen}
           setIsBackfillOpen={setIsBackfillOpen}
           isTermRenewalOpen={isTermRenewalOpen}
@@ -230,6 +234,7 @@ export default function MortgageFeature() {
           availableYears={availableYears}
           filterYear={filterYear}
           onFilterYearChange={setFilterYear}
+          payments={rawPayments}
           createPaymentMutation={createPaymentMutation}
           backfillPaymentsMutation={backfillPaymentsMutation}
           deletePaymentMutation={deletePaymentMutation}

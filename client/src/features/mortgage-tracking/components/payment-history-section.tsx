@@ -15,9 +15,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/shared/ui/alert-dialog";
-import { Trash2 } from "lucide-react";
+import { Trash2, SkipForward } from "lucide-react";
 import type { UiPayment } from "../types";
 import type { UseMutationResult } from "@tanstack/react-query";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/shared/ui/tooltip";
 
 /**
  * Format payment period label as "MMM-YYYY" (e.g., "Feb-2025") from payment date
@@ -124,6 +125,7 @@ export function PaymentHistorySection({
                 <TableHead className="text-right">Total Paid</TableHead>
                 <TableHead className="text-right">Principal</TableHead>
                 <TableHead className="text-right">Interest</TableHead>
+                <TableHead className="text-right">Skipped Interest</TableHead>
                 <TableHead className="text-right">Balance</TableHead>
                 <TableHead className="text-right">Amort.</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
@@ -142,15 +144,37 @@ export function PaymentHistorySection({
                   <TableRow
                     key={payment.id}
                     data-testid={`row-payment-${payment.id}`}
-                    className={payment.triggerHit ? "bg-destructive/10" : ""}
+                    className={`${
+                      payment.triggerHit ? "bg-destructive/10" : ""
+                    } ${payment.isSkipped ? "bg-yellow-50 dark:bg-yellow-950/20 italic" : ""}`}
                   >
                     <TableCell className="font-medium">
-                      {payment.date}
-                      {payment.triggerHit && (
-                        <Badge variant="destructive" className="ml-2 text-xs">
-                          Trigger
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {payment.date}
+                        {payment.triggerHit && (
+                          <Badge variant="destructive" className="text-xs">
+                            Trigger
+                          </Badge>
+                        )}
+                        {payment.isSkipped && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge variant="outline" className="text-xs border-orange-300 text-orange-700 bg-orange-50">
+                                  <SkipForward className="h-3 w-3 mr-1" />
+                                  Skipped
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Payment was skipped. Interest accrued: ${payment.skippedInterestAccrued.toLocaleString(undefined, {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground max-w-[120px] truncate">
                       {formatPaymentPeriod(payment.date, payment.paymentPeriodLabel)}
@@ -186,6 +210,18 @@ export function PaymentHistorySection({
                     </TableCell>
                     <TableCell className="text-right font-mono text-orange-600">
                       ${payment.interest.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm">
+                      {payment.isSkipped && payment.skippedInterestAccrued > 0 ? (
+                        <span className="text-red-600 font-medium">
+                          ${payment.skippedInterestAccrued.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-right font-mono font-medium">
                       ${payment.remainingBalance.toLocaleString()}

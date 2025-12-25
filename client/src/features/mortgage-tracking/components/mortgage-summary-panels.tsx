@@ -1,4 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { SkipLimitTracker } from "./skip-limit-tracker";
+import type { MortgagePayment } from "@shared/schema";
 
 interface SummaryStats {
   totalPayments: number;
@@ -7,14 +9,16 @@ interface SummaryStats {
   totalInterest: number;
   currentBalance: number;
   amortizationYears: number;
+  totalSkippedInterest?: number;
 }
 
 interface MortgageSummaryPanelsProps {
   stats: SummaryStats;
   formatAmortization: (years: number) => string;
+  payments: MortgagePayment[];
 }
 
-export function MortgageSummaryPanels({ stats, formatAmortization }: MortgageSummaryPanelsProps) {
+export function MortgageSummaryPanels({ stats, formatAmortization, payments }: MortgageSummaryPanelsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <Card>
@@ -54,6 +58,11 @@ export function MortgageSummaryPanels({ stats, formatAmortization }: MortgageSum
           <p className="text-3xl font-bold font-mono text-orange-600">
             ${stats.totalInterest.toLocaleString()}
           </p>
+          {stats.totalSkippedInterest && stats.totalSkippedInterest > 0 && (
+            <p className="text-sm text-muted-foreground mt-1">
+              (Incl. ${stats.totalSkippedInterest.toLocaleString()} from skipped payments)
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -70,6 +79,10 @@ export function MortgageSummaryPanels({ stats, formatAmortization }: MortgageSum
           </p>
         </CardContent>
       </Card>
+
+      <div className="lg:col-span-2">
+        <SkipLimitTracker payments={payments} />
+      </div>
     </div>
   );
 }

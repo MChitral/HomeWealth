@@ -37,4 +37,7 @@ export type UiPayment = {
   amortizationYears: number;
   termStartDate?: string;
   remainingAmortizationMonths: number;
+  // Payment skipping fields
+  isSkipped: boolean;
+  skippedInterestAccrued: number;
 };

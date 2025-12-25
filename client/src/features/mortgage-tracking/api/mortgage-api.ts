@@ -143,6 +143,17 @@ export const mortgageApi = {
   deletePayment: (paymentId: string) =>
     apiRequest<{ success: boolean }>("DELETE", `/api/mortgage-payments/${paymentId}`),
 
+  // Skip Payment
+  skipPayment: (mortgageId: string, termId: string, payload: {
+    paymentDate: string;
+    maxSkipsPerYear?: number;
+  }) =>
+    apiRequest<MortgagePayment>(
+      "POST",
+      `/api/mortgages/${mortgageId}/terms/${termId}/skip-payment`,
+      payload
+    ),
+
   // Impact Analysis
   fetchLatestImpact: (mortgageId: string) =>
     apiRequest<ImpactResult | null>("GET", `/api/impact/${mortgageId}`),

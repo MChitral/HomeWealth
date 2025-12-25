@@ -5,7 +5,7 @@ import { AnalyticsDashboard } from "@/features/analytics/analytics-dashboard";
 import PrepaymentFeature from "../prepayment-feature";
 import { RenewalTab } from "./renewal-tab";
 import { RefinanceTab } from "./refinance-tab";
-import type { Mortgage } from "@shared/schema";
+import type { Mortgage, MortgagePayment } from "@shared/schema";
 import type { UseFormReturn } from "react-hook-form";
 import type { UseMutationResult } from "@tanstack/react-query";
 import type { PrimeRateResponse } from "../api";
@@ -19,6 +19,7 @@ import { MortgageHeader } from "./mortgage-header";
 import { NoTermState } from "./no-term-state";
 import { EditMortgageDialog } from "./edit-mortgage-dialog";
 import { LogPaymentDialog } from "./log-payment-dialog";
+import { SkipPaymentDialog } from "./skip-payment-dialog";
 import { BackfillPaymentsDialog } from "./backfill-payments-dialog";
 import { TermDetailsSection } from "./term-details-section";
 import { MortgageSummaryPanels } from "./mortgage-summary-panels";
@@ -94,11 +95,15 @@ interface MortgageContentProps {
     totalInterest: number;
     currentBalance: number;
     amortizationYears: number;
+    totalSkippedInterest: number;
   };
   filteredPayments: UiPayment[];
   availableYears: number[];
   filterYear: string;
   onFilterYearChange: (year: string) => void;
+  payments?: MortgagePayment[]; // Raw payments for skip tracking
+  isSkipPaymentOpen: boolean;
+  setIsSkipPaymentOpen: (open: boolean) => void;
   // Mutations - keeping any for complex prop-drilled mutations
   createPaymentMutation: UseMutationResult<any, Error, any, unknown>;
   backfillPaymentsMutation: UseMutationResult<any, Error, any, unknown>;
@@ -123,6 +128,8 @@ export function MortgageContent({
   onEditMortgageDialogOpenChange,
   isDialogOpen,
   setIsDialogOpen,
+  isSkipPaymentOpen,
+  setIsSkipPaymentOpen,
   isBackfillOpen,
   setIsBackfillOpen,
   isTermRenewalOpen,
@@ -148,6 +155,7 @@ export function MortgageContent({
   availableYears,
   filterYear,
   onFilterYearChange,
+  payments,
   createPaymentMutation,
   backfillPaymentsMutation,
   deletePaymentMutation,
@@ -218,7 +226,23 @@ export function MortgageContent({
         lastKnownAmortizationMonths={lastKnownAmortizationMonths}
         onSubmit={(payload) => createPaymentMutation.mutate(payload)}
         isSubmitting={createPaymentMutation.isPending}
+        mortgageId={mortgage?.id}
+        payments={payments}
+        onOpenSkipPayment={() => setIsSkipPaymentOpen(true)}
       />
+
+      {mortgage && payments && (
+        <SkipPaymentDialog
+          open={isSkipPaymentOpen}
+          onOpenChange={setIsSkipPaymentOpen}
+          mortgageId={mortgage.id}
+          currentTerm={uiCurrentTerm}
+          currentBalance={lastKnownBalance}
+          currentAmortizationMonths={lastKnownAmortizationMonths}
+          currentEffectiveRate={currentEffectiveRate}
+          payments={payments}
+        />
+      )}
 
       <BackfillPaymentsDialog
         open={isBackfillOpen}
@@ -296,8 +320,10 @@ export function MortgageContent({
               totalInterest: summaryStats.totalInterest,
               currentBalance: summaryStats.currentBalance,
               amortizationYears: summaryStats.amortizationYears,
+              totalSkippedInterest: summaryStats.totalSkippedInterest,
             }}
             formatAmortization={formatAmortization}
+            payments={payments || []}
           />
 
           <PaymentHistorySection

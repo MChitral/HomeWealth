@@ -70,8 +70,12 @@ export function useMortgageComputed({
         ? mortgage.amortizationYears
         : paymentHistory[paymentHistory.length - 1]?.amortizationYears || 30,
       triggerHitCount: paymentHistory.filter((p) => p.triggerHit).length,
+      totalSkippedInterest: (payments || []).reduce(
+        (sum, p) => sum + Number(p.skippedInterestAccrued || 0),
+        0
+      ),
     }),
-    [paymentHistory, mortgage, currentEffectiveRate, currentPrimeRateValue]
+    [paymentHistory, mortgage, currentEffectiveRate, currentPrimeRateValue, payments]
   );
 
   const filteredPayments = useMemo(
