@@ -192,3 +192,23 @@ export type RefinanceAnalysisResponse = {
   isBeneficial: boolean;
   totalTermSavings: number;
 };
+
+export type CalculatePenaltyRequest = {
+  balance: number;
+  currentRate: number; // decimal
+  marketRate: number; // decimal
+  remainingMonths: number;
+  termType?: "fixed" | "variable-changing" | "variable-fixed";
+};
+
+export type CalculatePenaltyResponse = {
+  threeMonthPenalty: number;
+  irdPenalty: number;
+  totalPenalty: number;
+  method: "IRD" | "3-Month Interest";
+  breakdown: {
+    threeMonth: number;
+    ird: number;
+    applied: "IRD" | "3-Month Interest";
+  };
+};

@@ -290,6 +290,59 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
     }
   });
 
+  // POST /api/mortgages/calculate-penalty - Calculate mortgage penalty
+  router.post("/mortgages/calculate-penalty", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+
+    try {
+      const { balance, currentRate, marketRate, remainingMonths, termType } = req.body;
+
+      // Validate inputs
+      if (!balance || typeof balance !== "number" || balance <= 0) {
+        sendError(res, 400, "Balance must be greater than 0");
+        return;
+      }
+      if (!currentRate || typeof currentRate !== "number" || currentRate < 0 || currentRate > 1) {
+        sendError(res, 400, "Current rate must be between 0 and 1 (decimal)");
+        return;
+      }
+      if (marketRate === undefined || typeof marketRate !== "number" || marketRate < 0) {
+        sendError(res, 400, "Market rate is required and must be >= 0");
+        return;
+      }
+      if (!remainingMonths || typeof remainingMonths !== "number" || remainingMonths <= 0) {
+        sendError(res, 400, "Remaining months must be greater than 0");
+        return;
+      }
+
+      // Calculate penalties
+      const {
+        calculateStandardPenalty,
+        calculateThreeMonthInterestPenalty,
+        calculateIRDPenalty,
+      } = await import("@domain/calculations/penalty");
+
+      const threeMonthPenalty = calculateThreeMonthInterestPenalty(balance, currentRate);
+      const irdPenalty = calculateIRDPenalty(balance, currentRate, marketRate, remainingMonths);
+      const standardPenalty = calculateStandardPenalty(balance, currentRate, marketRate, remainingMonths);
+
+      res.json({
+        threeMonthPenalty,
+        irdPenalty,
+        totalPenalty: standardPenalty.penalty,
+        method: standardPenalty.method,
+        breakdown: {
+          threeMonth: threeMonthPenalty,
+          ird: irdPenalty,
+          applied: standardPenalty.method,
+        },
+      });
+    } catch (error) {
+      sendError(res, 500, "Failed to calculate penalty", error);
+    }
+  });
+
   // Legacy endpoint - keeping for backward compatibility but redirecting to new implementation
   router.get("/market-rates/legacy", async (req, res) => {
     const user = requireUser(req, res);

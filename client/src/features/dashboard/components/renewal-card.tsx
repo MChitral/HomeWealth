@@ -1,8 +1,11 @@
-import { CalendarDays, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
+import { useState } from "react";
+import { CalendarDays, AlertTriangle, CheckCircle2, Clock, Calculator } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
 import { Progress } from "@/shared/ui/progress";
+import { Button } from "@/shared/ui/button";
 import type { RenewalStatusResponse } from "@/features/mortgage-tracking/api";
+import { PenaltyCalculatorDialog } from "@/features/mortgage-tracking/components/penalty-calculator-dialog";
 
 interface RenewalCardProps {
   status: RenewalStatusResponse;
@@ -10,6 +13,8 @@ interface RenewalCardProps {
 
 export function RenewalCard({ status }: RenewalCardProps) {
   if (!status) return null;
+
+  const [penaltyCalculatorOpen, setPenaltyCalculatorOpen] = useState(false);
 
   const getStatusColor = (s: string) => {
     switch (s) {
@@ -109,8 +114,26 @@ export function RenewalCard({ status }: RenewalCardProps) {
               })}
             </div>
           </div>
+
+          {/* Calculate Penalty Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPenaltyCalculatorOpen(true)}
+            className="w-full"
+          >
+            <Calculator className="mr-2 h-4 w-4" />
+            Calculate Detailed Penalty
+          </Button>
         </div>
       </CardContent>
+
+      <PenaltyCalculatorDialog
+        open={penaltyCalculatorOpen}
+        onOpenChange={setPenaltyCalculatorOpen}
+        mortgageId={status.mortgageId}
+        initialCurrentRate={(status.currentRate * 100).toFixed(2)}
+      />
     </Card>
   );
 }
