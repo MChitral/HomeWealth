@@ -18,6 +18,10 @@ export class MortgageService {
     return this.mortgages.findByUserId(userId);
   }
 
+  findAll(): Promise<Mortgage[]> {
+    return this.mortgages.findAll();
+  }
+
   async getByIdForUser(id: string, userId: string): Promise<Mortgage | undefined> {
     const mortgage = await this.mortgages.findById(id);
     if (!mortgage || mortgage.userId !== userId) {

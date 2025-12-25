@@ -88,13 +88,11 @@ export function registerRenewalReminderJob(notificationService: NotificationServ
   scheduler.register({
     id: "renewal-reminder",
     name: "Renewal Reminder",
-    schedule: "0 9 * * *", // Daily at 9 AM
+    schedule: process.env.RENEWAL_REMINDER_SCHEDULE || "0 9 * * *", // Daily at 9 AM (configurable)
     enabled: process.env.ENABLE_RENEWAL_REMINDERS !== "false",
     handler: async (services) => {
-      // This will be implemented when renewal reminder logic is added
-      // For now, this is a placeholder
-      console.log("[Renewal Reminder] Checking for upcoming renewals...");
-      // TODO: Implement renewal reminder logic
+      const { checkRenewalsAndSendReminders } = await import("./renewal-reminder-job");
+      await checkRenewalsAndSendReminders(services);
     },
   });
 }

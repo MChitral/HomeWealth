@@ -321,7 +321,11 @@ export function MortgageContent({
         </TabsContent>
 
         <TabsContent value="renewals">
-          <RenewalTab mortgageId={mortgage.id} />
+          <RenewalTab
+            mortgageId={mortgage.id}
+            onTermRenewalDialogOpenChange={onTermRenewalDialogOpenChange}
+            currentTerm={uiCurrentTerm}
+          />
         </TabsContent>
 
         <TabsContent value="refinance">

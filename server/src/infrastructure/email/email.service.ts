@@ -159,10 +159,21 @@ export class EmailService {
     userName: string,
     renewalDate: string,
     daysUntil: number,
-    currentRate: number
+    currentRate: number,
+    options?: {
+      estimatedPenalty?: { amount: number; method: string };
+      marketRate?: number;
+      mortgageId?: string;
+    }
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     const subject = `Mortgage Renewal Reminder: ${daysUntil} days until renewal`;
-    const htmlContent = this.generateRenewalReminderEmail(userName, renewalDate, daysUntil, currentRate);
+    const htmlContent = this.generateRenewalReminderEmail(
+      userName,
+      renewalDate,
+      daysUntil,
+      currentRate,
+      options
+    );
     return this.sendEmail(to, subject, htmlContent);
   }
 
@@ -183,20 +194,149 @@ export class EmailService {
     userName: string,
     renewalDate: string,
     daysUntil: number,
-    currentRate: number
+    currentRate: number,
+    options?: {
+      estimatedPenalty?: { amount: number; method: string };
+      marketRate?: number;
+      mortgageId?: string;
+    }
   ): string {
     const appUrl = process.env.APP_URL || "http://localhost:5000";
+    const renewalDateFormatted = new Date(renewalDate).toLocaleDateString("en-CA", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    // Determine urgency and action items based on days until renewal
+    let urgencyClass = "info";
+    let urgencyMessage = "";
+    let actionItems: string[] = [];
+
+    if (daysUntil === 180) {
+      urgencyClass = "info";
+      urgencyMessage = "Early Planning Reminder";
+      actionItems = [
+        "Review your current mortgage terms and rates",
+        "Start researching current market rates",
+        "Consider your long-term financial goals",
+        "Plan for potential rate changes",
+      ];
+    } else if (daysUntil === 90) {
+      urgencyClass = "warning";
+      urgencyMessage = "Time to Start Planning";
+      actionItems = [
+        "Compare current market rates with your rate",
+        "Calculate potential penalties if breaking early",
+        "Explore blend-and-extend options",
+        "Begin negotiations with your lender",
+      ];
+    } else if (daysUntil === 30) {
+      urgencyClass = "urgent";
+      urgencyMessage = "Action Needed - 1 Month Remaining";
+      actionItems = [
+        "Finalize your renewal decision",
+        "Calculate exact penalties",
+        "Compare all renewal options",
+        "Contact your lender to negotiate",
+      ];
+    } else if (daysUntil === 7) {
+      urgencyClass = "critical";
+      urgencyMessage = "Urgent - Final Week";
+      actionItems = [
+        "Make your renewal decision immediately",
+        "Finalize new term details",
+        "Complete any required paperwork",
+        "Ensure smooth transition to new term",
+      ];
+    }
+
+    // Rate comparison section
+    let rateComparisonHtml = "";
+    if (options?.marketRate !== undefined) {
+      const marketRatePercent = options.marketRate * 100;
+      const currentRatePercent = currentRate * 100;
+      const rateDiff = marketRatePercent - currentRatePercent;
+      const rateDiffAbs = Math.abs(rateDiff);
+      const isHigher = rateDiff > 0;
+
+      rateComparisonHtml = `
+        <div style="background-color: #f0f9ff; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0; border-radius: 4px;">
+          <h3 style="margin-top: 0; color: #1e40af;">Rate Comparison</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 8px 0;"><strong>Your Current Rate:</strong></td>
+              <td style="padding: 8px 0; text-align: right;"><strong>${currentRatePercent.toFixed(2)}%</strong></td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0;">Current Market Rate:</td>
+              <td style="padding: 8px 0; text-align: right;">${marketRatePercent.toFixed(2)}%</td>
+            </tr>
+            <tr style="border-top: 1px solid #cbd5e1;">
+              <td style="padding: 8px 0;"><strong>Difference:</strong></td>
+              <td style="padding: 8px 0; text-align: right; color: ${isHigher ? "#dc2626" : "#16a34a"};">
+                <strong>${isHigher ? "+" : ""}${rateDiff.toFixed(2)}%</strong>
+              </td>
+            </tr>
+          </table>
+          <p style="margin: 10px 0 0 0; font-size: 14px; color: #64748b;">
+            ${isHigher ? `Market rates are ${rateDiffAbs.toFixed(2)}% higher than your current rate. Renewing now may result in higher payments.` : `Market rates are ${rateDiffAbs.toFixed(2)}% lower than your current rate. You may be able to secure a better rate.`}
+          </p>
+        </div>
+      `;
+    }
+
+    // Penalty information section
+    let penaltyHtml = "";
+    if (options?.estimatedPenalty) {
+      const penalty = options.estimatedPenalty;
+      penaltyHtml = `
+        <div style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; margin: 20px 0; border-radius: 4px;">
+          <h3 style="margin-top: 0; color: #991b1b;">Estimated Early Break Penalty</h3>
+          <p style="font-size: 18px; margin: 10px 0;">
+            <strong>$${penalty.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+            <span style="font-size: 14px; color: #64748b;"> (${penalty.method})</span>
+          </p>
+          <p style="margin: 10px 0 0 0; font-size: 14px; color: #64748b;">
+            This is an estimate. Actual penalties may vary. Use our penalty calculator for a detailed breakdown.
+          </p>
+        </div>
+      `;
+    }
+
+    // Build mortgage link
+    const mortgageLink = options?.mortgageId
+      ? `${appUrl}/mortgages/${options.mortgageId}`
+      : `${appUrl}/mortgages`;
+
     return `
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background-color: #2563eb; color: white; padding: 20px; text-align: center; }
-            .content { padding: 20px; background-color: #f9fafb; }
-            .button { display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px; }
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 0 auto; padding: 0; }
+            .header { background-color: #2563eb; color: white; padding: 30px 20px; text-align: center; }
+            .header h1 { margin: 0; font-size: 24px; }
+            .content { padding: 30px 20px; background-color: #ffffff; }
+            .urgency-badge { display: inline-block; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-bottom: 15px; }
+            .urgency-info { background-color: #dbeafe; color: #1e40af; }
+            .urgency-warning { background-color: #fef3c7; color: #92400e; }
+            .urgency-urgent { background-color: #fed7aa; color: #9a3412; }
+            .urgency-critical { background-color: #fee2e2; color: #991b1b; }
+            .highlight-box { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .button { display: inline-block; padding: 14px 28px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; margin: 10px 5px 0 0; font-weight: 600; }
+            .button-secondary { background-color: #64748b; }
+            .action-list { margin: 15px 0; padding-left: 20px; }
+            .action-list li { margin: 8px 0; }
+            .footer { background-color: #f8fafc; padding: 20px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0; }
+            @media only screen and (max-width: 600px) {
+              .container { width: 100% !important; }
+              .content { padding: 20px 15px !important; }
+              .button { display: block; text-align: center; margin: 10px 0 !important; }
+            }
           </style>
         </head>
         <body>
@@ -206,16 +346,51 @@ export class EmailService {
             </div>
             <div class="content">
               <p>Hi ${userName},</p>
-              <p>Your mortgage term is renewing in <strong>${daysUntil} days</strong> on ${renewalDate}.</p>
-              <p>Current rate: <strong>${(currentRate * 100).toFixed(2)}%</strong></p>
-              <p>Now is a good time to:</p>
-              <ul>
-                <li>Review current market rates</li>
-                <li>Calculate potential penalties</li>
-                <li>Consider blend-and-extend options</li>
-                <li>Negotiate with your lender</li>
-              </ul>
-              <a href="${appUrl}/mortgages" class="button">View Your Mortgages</a>
+              
+              <div class="urgency-badge urgency-${urgencyClass}">${urgencyMessage}</div>
+              
+              <div class="highlight-box">
+                <p style="font-size: 20px; margin: 0 0 10px 0;">
+                  Your mortgage term is renewing in <strong style="color: #2563eb;">${daysUntil} days</strong>
+                </p>
+                <p style="margin: 0; color: #64748b;">
+                  Renewal Date: <strong>${renewalDateFormatted}</strong>
+                </p>
+                <p style="margin: 10px 0 0 0;">
+                  Current Rate: <strong style="font-size: 18px;">${(currentRate * 100).toFixed(2)}%</strong>
+                </p>
+              </div>
+
+              ${rateComparisonHtml}
+
+              ${penaltyHtml}
+
+              <div style="margin: 25px 0;">
+                <h3 style="margin-top: 0; color: #1e293b;">Recommended Actions</h3>
+                <ul class="action-list">
+                  ${actionItems.map((item) => `<li>${item}</li>`).join("")}
+                </ul>
+              </div>
+
+              <div style="margin: 30px 0; text-align: center;">
+                <a href="${mortgageLink}" class="button">View Mortgage Details</a>
+                ${options?.estimatedPenalty ? `<a href="${mortgageLink}?tab=renewals" class="button button-secondary">Calculate Penalty</a>` : ""}
+              </div>
+
+              <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 14px; color: #64748b;">
+                <p style="margin: 0 0 10px 0;"><strong>Quick Links:</strong></p>
+                <p style="margin: 5px 0;">
+                  <a href="${appUrl}/mortgages" style="color: #2563eb; text-decoration: none;">View All Mortgages</a> | 
+                  <a href="${appUrl}/mortgages?tab=renewals" style="color: #2563eb; text-decoration: none;">Renewal Planning</a> | 
+                  <a href="${appUrl}/notifications/preferences" style="color: #2563eb; text-decoration: none;">Notification Settings</a>
+                </p>
+              </div>
+            </div>
+            <div class="footer">
+              <p style="margin: 0;">This is an automated reminder from HomeWealth Mortgage Strategy</p>
+              <p style="margin: 5px 0 0 0;">
+                <a href="${appUrl}/notifications/preferences" style="color: #64748b; text-decoration: underline;">Manage notification preferences</a>
+              </p>
             </div>
           </div>
         </body>

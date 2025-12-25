@@ -88,7 +88,14 @@ export class NotificationService {
           user.firstName || "User",
           notification.metadata?.renewalDate || "",
           notification.metadata?.daysUntil || 0,
-          notification.metadata?.currentRate || 0
+          (notification.metadata?.currentRate || 0) / 100, // Convert from percentage to decimal
+          {
+            estimatedPenalty: notification.metadata?.estimatedPenalty,
+            marketRate: notification.metadata?.marketRate
+              ? notification.metadata.marketRate / 100
+              : undefined, // Convert from percentage to decimal if present
+            mortgageId: notification.metadata?.mortgageId,
+          }
         );
         break;
       case "trigger_rate_alert":
