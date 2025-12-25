@@ -211,10 +211,25 @@ export const insertMortgageSchema = createInsertSchema(mortgages)
     insurancePremium: z
       .union([z.string(), z.number(), z.null(), z.undefined()])
       .optional()
-      .transform((val) => (val === null || val === undefined ? undefined : typeof val === "number" ? val.toFixed(2) : val)),
-    insuranceAddedToPrincipal: z.union([z.boolean(), z.number()]).optional().transform((val) => (val === true || val === 1 ? 1 : 0)),
-    isHighRatio: z.union([z.boolean(), z.number()]).optional().transform((val) => (val === true || val === 1 ? 1 : 0)),
-    isReAdvanceable: z.union([z.boolean(), z.number()]).optional().transform((val) => (val === true || val === 1 ? 1 : 0)),
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(2)
+            : val
+      ),
+    insuranceAddedToPrincipal: z
+      .union([z.boolean(), z.number()])
+      .optional()
+      .transform((val) => (val === true || val === 1 ? 1 : 0)),
+    isHighRatio: z
+      .union([z.boolean(), z.number()])
+      .optional()
+      .transform((val) => (val === true || val === 1 ? 1 : 0)),
+    isReAdvanceable: z
+      .union([z.boolean(), z.number()])
+      .optional()
+      .transform((val) => (val === true || val === 1 ? 1 : 0)),
   });
 
 // Update schema - omits userId and immutable fields
@@ -605,7 +620,9 @@ export type MarketRate = typeof marketRates.$inferSelect;
 export const notifications = pgTable(
   "notifications",
   {
-    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
     userId: varchar("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -629,8 +646,12 @@ export const notifications = pgTable(
 export const insertNotificationSchema = createInsertSchema(notifications)
   .omit({ id: true, createdAt: true, emailSentAt: true })
   .extend({
-    read: z.union([z.boolean(), z.number()]).transform((val) => (val === true || val === 1 ? 1 : 0)),
-    emailSent: z.union([z.boolean(), z.number()]).transform((val) => (val === true || val === 1 ? 1 : 0)),
+    read: z
+      .union([z.boolean(), z.number()])
+      .transform((val) => (val === true || val === 1 ? 1 : 0)),
+    emailSent: z
+      .union([z.boolean(), z.number()])
+      .transform((val) => (val === true || val === 1 ? 1 : 0)),
     metadata: z.record(z.any()).optional(),
   });
 
@@ -641,7 +662,9 @@ export type Notification = typeof notifications.$inferSelect;
 export const notificationPreferences = pgTable(
   "notification_preferences",
   {
-    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
     userId: varchar("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" })
@@ -651,7 +674,9 @@ export const notificationPreferences = pgTable(
     renewalReminders: integer("renewal_reminders").notNull().default(1), // boolean
     renewalReminderDays: text("renewal_reminder_days").notNull().default("180,90,30,7"), // comma-separated days
     triggerRateAlerts: integer("trigger_rate_alerts").notNull().default(1), // boolean
-    triggerRateThreshold: decimal("trigger_rate_threshold", { precision: 5, scale: 3 }).notNull().default("0.5"), // 0.5% threshold
+    triggerRateThreshold: decimal("trigger_rate_threshold", { precision: 5, scale: 3 })
+      .notNull()
+      .default("0.5"), // 0.5% threshold
     rateChangeAlerts: integer("rate_change_alerts").notNull().default(1), // boolean
     penaltyAlerts: integer("penalty_alerts").notNull().default(1), // boolean
     blendExtendAlerts: integer("blend_extend_alerts").notNull().default(1), // boolean
@@ -663,14 +688,30 @@ export const notificationPreferences = pgTable(
 export const insertNotificationPreferencesSchema = createInsertSchema(notificationPreferences)
   .omit({ id: true, updatedAt: true })
   .extend({
-    emailEnabled: z.union([z.boolean(), z.number()]).transform((val) => (val === true || val === 1 ? 1 : 0)),
-    inAppEnabled: z.union([z.boolean(), z.number()]).transform((val) => (val === true || val === 1 ? 1 : 0)),
-    renewalReminders: z.union([z.boolean(), z.number()]).transform((val) => (val === true || val === 1 ? 1 : 0)),
-    triggerRateAlerts: z.union([z.boolean(), z.number()]).transform((val) => (val === true || val === 1 ? 1 : 0)),
-    rateChangeAlerts: z.union([z.boolean(), z.number()]).transform((val) => (val === true || val === 1 ? 1 : 0)),
-    penaltyAlerts: z.union([z.boolean(), z.number()]).transform((val) => (val === true || val === 1 ? 1 : 0)),
-    blendExtendAlerts: z.union([z.boolean(), z.number()]).transform((val) => (val === true || val === 1 ? 1 : 0)),
-    triggerRateThreshold: z.union([z.string(), z.number()]).transform((val) => (typeof val === "number" ? val.toFixed(3) : val)),
+    emailEnabled: z
+      .union([z.boolean(), z.number()])
+      .transform((val) => (val === true || val === 1 ? 1 : 0)),
+    inAppEnabled: z
+      .union([z.boolean(), z.number()])
+      .transform((val) => (val === true || val === 1 ? 1 : 0)),
+    renewalReminders: z
+      .union([z.boolean(), z.number()])
+      .transform((val) => (val === true || val === 1 ? 1 : 0)),
+    triggerRateAlerts: z
+      .union([z.boolean(), z.number()])
+      .transform((val) => (val === true || val === 1 ? 1 : 0)),
+    rateChangeAlerts: z
+      .union([z.boolean(), z.number()])
+      .transform((val) => (val === true || val === 1 ? 1 : 0)),
+    penaltyAlerts: z
+      .union([z.boolean(), z.number()])
+      .transform((val) => (val === true || val === 1 ? 1 : 0)),
+    blendExtendAlerts: z
+      .union([z.boolean(), z.number()])
+      .transform((val) => (val === true || val === 1 ? 1 : 0)),
+    triggerRateThreshold: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(3) : val)),
   });
 
 export const updateNotificationPreferencesSchema = insertNotificationPreferencesSchema.partial();
@@ -683,7 +724,9 @@ export type NotificationPreferences = typeof notificationPreferences.$inferSelec
 export const notificationQueue = pgTable(
   "notification_queue",
   {
-    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
     notificationId: varchar("notification_id")
       .notNull()
       .references(() => notifications.id, { onDelete: "cascade" }),
@@ -715,9 +758,15 @@ export const helocAccounts = pgTable(
     accountName: varchar("account_name").notNull(),
     lenderName: varchar("lender_name").notNull(),
     creditLimit: decimal("credit_limit", { precision: 12, scale: 2 }).notNull(),
-    maxLtvPercent: decimal("max_ltv_percent", { precision: 5, scale: 2 }).notNull().default("65.00"), // e.g., 65.00
-    interestSpread: decimal("interest_spread", { precision: 5, scale: 3 }).notNull().default("0.500"), // e.g., 0.500 (Prime + 0.5%)
-    currentBalance: decimal("current_balance", { precision: 12, scale: 2 }).notNull().default("0.00"),
+    maxLtvPercent: decimal("max_ltv_percent", { precision: 5, scale: 2 })
+      .notNull()
+      .default("65.00"), // e.g., 65.00
+    interestSpread: decimal("interest_spread", { precision: 5, scale: 3 })
+      .notNull()
+      .default("0.500"), // e.g., 0.500 (Prime + 0.5%)
+    currentBalance: decimal("current_balance", { precision: 12, scale: 2 })
+      .notNull()
+      .default("0.00"),
     homeValueReference: decimal("home_value_reference", { precision: 12, scale: 2 }), // Snapshot for credit limit calc
     accountOpeningDate: date("account_opening_date").notNull(),
     accountStatus: text("account_status").notNull().default("active"), // 'active', 'closed', 'suspended'
@@ -749,8 +798,16 @@ export const insertHelocAccountSchema = createInsertSchema(helocAccounts)
     homeValueReference: z
       .union([z.string(), z.number(), z.null(), z.undefined()])
       .optional()
-      .transform((val) => (val === null || val === undefined ? undefined : typeof val === "number" ? val.toFixed(2) : val)),
-    isReAdvanceable: z.union([z.boolean(), z.number()]).transform((val) => (val === true || val === 1 ? 1 : 0)),
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(2)
+            : val
+      ),
+    isReAdvanceable: z
+      .union([z.boolean(), z.number()])
+      .transform((val) => (val === true || val === 1 ? 1 : 0)),
   });
 
 export const updateHelocAccountSchema = insertHelocAccountSchema.partial();
@@ -774,7 +831,10 @@ export const helocTransactions = pgTable(
     transactionAmount: decimal("transaction_amount", { precision: 12, scale: 2 }).notNull(),
     balanceBefore: decimal("balance_before", { precision: 12, scale: 2 }).notNull(),
     balanceAfter: decimal("balance_after", { precision: 12, scale: 2 }).notNull(),
-    availableCreditBefore: decimal("available_credit_before", { precision: 12, scale: 2 }).notNull(),
+    availableCreditBefore: decimal("available_credit_before", {
+      precision: 12,
+      scale: 2,
+    }).notNull(),
     availableCreditAfter: decimal("available_credit_after", { precision: 12, scale: 2 }).notNull(),
     interestRate: decimal("interest_rate", { precision: 5, scale: 3 }), // Prime + spread at time of transaction
     primeRate: decimal("prime_rate", { precision: 5, scale: 3 }), // Prime rate at time of transaction
@@ -808,12 +868,615 @@ export const insertHelocTransactionSchema = createInsertSchema(helocTransactions
     interestRate: z
       .union([z.string(), z.number(), z.null(), z.undefined()])
       .optional()
-      .transform((val) => (val === null || val === undefined ? undefined : typeof val === "number" ? val.toFixed(3) : val)),
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(3)
+            : val
+      ),
     primeRate: z
       .union([z.string(), z.number(), z.null(), z.undefined()])
       .optional()
-      .transform((val) => (val === null || val === undefined ? undefined : typeof val === "number" ? val.toFixed(3) : val)),
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(3)
+            : val
+      ),
   });
 
 export type InsertHelocTransaction = z.infer<typeof insertHelocTransactionSchema>;
 export type HelocTransaction = typeof helocTransactions.$inferSelect;
+
+// Investments - Investment portfolio tracking
+export const investments = pgTable(
+  "investments",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    userId: varchar("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    investmentName: varchar("investment_name").notNull(),
+    investmentType: text("investment_type").notNull(), // 'stocks', 'bonds', 'etfs', 'reits', 'gics', 'other'
+    purchaseDate: date("purchase_date").notNull(),
+    purchasePrice: decimal("purchase_price", { precision: 12, scale: 2 }).notNull(),
+    currentValue: decimal("current_value", { precision: 12, scale: 2 }).notNull(),
+    annualDividendYield: decimal("annual_dividend_yield", { precision: 5, scale: 2 }).default(
+      "0.00"
+    ), // e.g., 3.50%
+    annualInterestRate: decimal("annual_interest_rate", { precision: 5, scale: 2 }).default("0.00"), // e.g., 4.25%
+    investmentStatus: text("investment_status").notNull().default("active"), // 'active', 'sold', 'closed'
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("IDX_investments_user").on(table.userId),
+    index("IDX_investments_status").on(table.investmentStatus),
+  ]
+);
+
+export const insertInvestmentSchema = createInsertSchema(investments)
+  .omit({ id: true, createdAt: true, updatedAt: true })
+  .extend({
+    purchasePrice: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    currentValue: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    annualDividendYield: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val))
+      .optional()
+      .default("0.00"),
+    annualInterestRate: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val))
+      .optional()
+      .default("0.00"),
+  });
+
+export const updateInvestmentSchema = insertInvestmentSchema.partial();
+
+export type InsertInvestment = z.infer<typeof insertInvestmentSchema>;
+export type UpdateInvestment = z.infer<typeof updateInvestmentSchema>;
+export type Investment = typeof investments.$inferSelect;
+
+// Investment Transactions - Purchase, sale, dividend, interest, capital gain transactions
+export const investmentTransactions = pgTable(
+  "investment_transactions",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    investmentId: varchar("investment_id")
+      .notNull()
+      .references(() => investments.id, { onDelete: "cascade" }),
+    transactionDate: date("transaction_date").notNull(),
+    transactionType: text("transaction_type").notNull(), // 'purchase', 'sale', 'dividend', 'interest', 'capital_gain'
+    amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+    quantity: decimal("quantity", { precision: 12, scale: 4 }), // For stocks/ETFs
+    pricePerUnit: decimal("price_per_unit", { precision: 12, scale: 4 }), // For stocks/ETFs
+    description: text("description"),
+    linkedHelocTransactionId: varchar("linked_heloc_transaction_id").references(
+      () => helocTransactions.id,
+      { onDelete: "set null" }
+    ), // For Smith Maneuver tracking
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("IDX_investment_transactions_investment").on(table.investmentId),
+    index("IDX_investment_transactions_date").on(table.transactionDate),
+    index("IDX_investment_transactions_heloc").on(table.linkedHelocTransactionId),
+  ]
+);
+
+export const insertInvestmentTransactionSchema = createInsertSchema(investmentTransactions)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    amount: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    quantity: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(4)
+            : val
+      ),
+    pricePerUnit: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(4)
+            : val
+      ),
+  });
+
+export type InsertInvestmentTransaction = z.infer<typeof insertInvestmentTransactionSchema>;
+export type InvestmentTransaction = typeof investmentTransactions.$inferSelect;
+
+// Investment Income - Track dividend, interest, and capital gain income
+export const investmentIncome = pgTable(
+  "investment_income",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    investmentId: varchar("investment_id")
+      .notNull()
+      .references(() => investments.id, { onDelete: "cascade" }),
+    incomeType: text("income_type").notNull(), // 'dividend', 'interest', 'capital_gain'
+    incomeDate: date("income_date").notNull(),
+    amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+    taxYear: integer("tax_year").notNull(),
+    taxTreatment: text("tax_treatment").notNull(), // 'eligible_dividend', 'non_eligible_dividend', 'interest', 'capital_gain'
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("IDX_investment_income_investment").on(table.investmentId),
+    index("IDX_investment_income_date").on(table.incomeDate),
+    index("IDX_investment_income_tax_year").on(table.taxYear),
+  ]
+);
+
+export const insertInvestmentIncomeSchema = createInsertSchema(investmentIncome)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    amount: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+  });
+
+export type InsertInvestmentIncome = z.infer<typeof insertInvestmentIncomeSchema>;
+export type InvestmentIncome = typeof investmentIncome.$inferSelect;
+
+// Tax Brackets - Canadian federal and provincial tax brackets
+export const taxBrackets = pgTable(
+  "tax_brackets",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    province: varchar("province").notNull(), // 'AB', 'BC', 'MB', 'NB', 'NL', 'NS', 'NT', 'NU', 'ON', 'PE', 'QC', 'SK', 'YT', 'Federal'
+    taxYear: integer("tax_year").notNull(),
+    bracketType: text("bracket_type").notNull(), // 'federal', 'provincial'
+    minIncome: decimal("min_income", { precision: 12, scale: 2 }).notNull(),
+    maxIncome: decimal("max_income", { precision: 12, scale: 2 }), // null for top bracket
+    taxRate: decimal("tax_rate", { precision: 5, scale: 2 }).notNull(), // e.g., 15.00 for 15%
+    effectiveDate: date("effective_date").notNull(),
+    expiryDate: date("expiry_date"), // null for current brackets
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("IDX_tax_brackets_province_year").on(table.province, table.taxYear),
+    index("IDX_tax_brackets_type").on(table.bracketType),
+    index("IDX_tax_brackets_effective_date").on(table.effectiveDate),
+  ]
+);
+
+export const insertTaxBracketSchema = createInsertSchema(taxBrackets)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    minIncome: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    maxIncome: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(2)
+            : val
+      ),
+    taxRate: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+  });
+
+export type InsertTaxBracket = z.infer<typeof insertTaxBracketSchema>;
+export type TaxBracket = typeof taxBrackets.$inferSelect;
+
+// Marginal Tax Rates - Cached calculations for quick lookup
+export const marginalTaxRates = pgTable(
+  "marginal_tax_rates",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    province: varchar("province").notNull(),
+    taxYear: integer("tax_year").notNull(),
+    incomeRange: text("income_range").notNull(), // e.g., "0-48535", "48535-97069", etc.
+    federalRate: decimal("federal_rate", { precision: 5, scale: 2 }).notNull(),
+    provincialRate: decimal("provincial_rate", { precision: 5, scale: 2 }).notNull(),
+    combinedRate: decimal("combined_rate", { precision: 5, scale: 2 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("IDX_marginal_tax_rates_province_year").on(table.province, table.taxYear),
+    index("IDX_marginal_tax_rates_income_range").on(table.incomeRange),
+  ]
+);
+
+export const insertMarginalTaxRateSchema = createInsertSchema(marginalTaxRates)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    federalRate: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    provincialRate: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    combinedRate: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+  });
+
+export type InsertMarginalTaxRate = z.infer<typeof insertMarginalTaxRateSchema>;
+export type MarginalTaxRate = typeof marginalTaxRates.$inferSelect;
+
+// Smith Maneuver Strategies
+export const smithManeuverStrategies = pgTable(
+  "smith_maneuver_strategies",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    userId: varchar("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    strategyName: varchar("strategy_name").notNull(),
+    mortgageId: varchar("mortgage_id")
+      .notNull()
+      .references(() => mortgages.id, { onDelete: "cascade" }),
+    helocAccountId: varchar("heloc_account_id")
+      .notNull()
+      .references(() => helocAccounts.id, { onDelete: "cascade" }),
+
+    // Strategy Parameters
+    prepaymentAmount: decimal("prepayment_amount", { precision: 12, scale: 2 }).notNull(),
+    prepaymentFrequency: text("prepayment_frequency").notNull(), // 'monthly', 'quarterly', 'annually', 'lump_sum'
+    borrowingPercentage: decimal("borrowing_percentage", { precision: 5, scale: 2 }).notNull(), // % of prepayment to borrow
+    investmentAllocation: jsonb("investment_allocation"), // Investment types and allocations
+    expectedReturnRate: decimal("expected_return_rate", { precision: 5, scale: 2 }).notNull(),
+
+    // Tax Parameters
+    annualIncome: decimal("annual_income", { precision: 12, scale: 2 }).notNull(),
+    province: varchar("province").notNull(),
+    marginalTaxRate: decimal("marginal_tax_rate", { precision: 5, scale: 2 }), // Calculated
+
+    // Projection Parameters
+    projectionYears: integer("projection_years").notNull().default(30),
+    startDate: date("start_date").notNull(),
+
+    // Status
+    status: text("status").notNull().default("draft"), // 'draft', 'active', 'archived'
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("IDX_smith_maneuver_strategies_user").on(table.userId),
+    index("IDX_smith_maneuver_strategies_mortgage").on(table.mortgageId),
+    index("IDX_smith_maneuver_strategies_heloc").on(table.helocAccountId),
+  ]
+);
+
+export const insertSmithManeuverStrategySchema = createInsertSchema(smithManeuverStrategies)
+  .omit({ id: true, createdAt: true, updatedAt: true })
+  .extend({
+    prepaymentAmount: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    borrowingPercentage: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    expectedReturnRate: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    annualIncome: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    marginalTaxRate: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(2)
+            : val
+      ),
+  });
+
+export const updateSmithManeuverStrategySchema = insertSmithManeuverStrategySchema.partial();
+
+export type InsertSmithManeuverStrategy = z.infer<typeof insertSmithManeuverStrategySchema>;
+export type UpdateSmithManeuverStrategy = z.infer<typeof updateSmithManeuverStrategySchema>;
+export type SmithManeuverStrategy = typeof smithManeuverStrategies.$inferSelect;
+
+// Smith Maneuver Transactions
+export const smithManeuverTransactions = pgTable(
+  "smith_maneuver_transactions",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    strategyId: varchar("strategy_id")
+      .notNull()
+      .references(() => smithManeuverStrategies.id, { onDelete: "cascade" }),
+    transactionDate: date("transaction_date").notNull(),
+    transactionType: text("transaction_type").notNull(), // 'prepayment', 'borrowing', 'investment', 'repayment'
+
+    // Prepayment Transaction
+    prepaymentAmount: decimal("prepayment_amount", { precision: 12, scale: 2 }),
+
+    // Borrowing Transaction
+    borrowingAmount: decimal("borrowing_amount", { precision: 12, scale: 2 }),
+    helocBalanceAfter: decimal("heloc_balance_after", { precision: 12, scale: 2 }),
+    availableCreditAfter: decimal("available_credit_after", { precision: 12, scale: 2 }),
+
+    // Investment Transaction
+    investmentAmount: decimal("investment_amount", { precision: 12, scale: 2 }),
+    investmentType: text("investment_type"),
+    investmentId: varchar("investment_id").references(() => investments.id, {
+      onDelete: "set null",
+    }),
+
+    // Calculations
+    helocInterestAccrued: decimal("heloc_interest_accrued", { precision: 12, scale: 2 }),
+    taxDeduction: decimal("tax_deduction", { precision: 12, scale: 2 }),
+    taxSavings: decimal("tax_savings", { precision: 12, scale: 2 }),
+
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("IDX_smith_maneuver_transactions_strategy").on(table.strategyId),
+    index("IDX_smith_maneuver_transactions_date").on(table.transactionDate),
+  ]
+);
+
+export const insertSmithManeuverTransactionSchema = createInsertSchema(smithManeuverTransactions)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    prepaymentAmount: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(2)
+            : val
+      ),
+    borrowingAmount: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(2)
+            : val
+      ),
+    helocBalanceAfter: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(2)
+            : val
+      ),
+    availableCreditAfter: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(2)
+            : val
+      ),
+    investmentAmount: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(2)
+            : val
+      ),
+    helocInterestAccrued: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(2)
+            : val
+      ),
+    taxDeduction: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(2)
+            : val
+      ),
+    taxSavings: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(2)
+            : val
+      ),
+  });
+
+export type InsertSmithManeuverTransaction = z.infer<typeof insertSmithManeuverTransactionSchema>;
+export type SmithManeuverTransaction = typeof smithManeuverTransactions.$inferSelect;
+
+// Smith Maneuver Tax Calculations (annual summaries)
+export const smithManeuverTaxCalculations = pgTable(
+  "smith_maneuver_tax_calculations",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    strategyId: varchar("strategy_id")
+      .notNull()
+      .references(() => smithManeuverStrategies.id, { onDelete: "cascade" }),
+    taxYear: integer("tax_year").notNull(),
+    annualIncome: decimal("annual_income", { precision: 12, scale: 2 }).notNull(),
+    province: varchar("province").notNull(),
+    marginalTaxRate: decimal("marginal_tax_rate", { precision: 5, scale: 2 }).notNull(),
+
+    // HELOC Tax Deduction
+    helocInterestPaid: decimal("heloc_interest_paid", { precision: 12, scale: 2 }).notNull(),
+    investmentUsePercentage: decimal("investment_use_percentage", {
+      precision: 5,
+      scale: 2,
+    }).notNull(),
+    eligibleInterest: decimal("eligible_interest", { precision: 12, scale: 2 }).notNull(),
+    taxDeduction: decimal("tax_deduction", { precision: 12, scale: 2 }).notNull(),
+    taxSavings: decimal("tax_savings", { precision: 12, scale: 2 }).notNull(),
+
+    // Investment Income Tax
+    investmentIncome: decimal("investment_income", { precision: 12, scale: 2 }).notNull(),
+    investmentTax: decimal("investment_tax", { precision: 12, scale: 2 }).notNull(),
+
+    // Net Tax Benefit
+    netTaxBenefit: decimal("net_tax_benefit", { precision: 12, scale: 2 }).notNull(),
+
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("IDX_smith_maneuver_tax_calculations_strategy").on(table.strategyId),
+    index("IDX_smith_maneuver_tax_calculations_tax_year").on(table.taxYear),
+  ]
+);
+
+export const insertSmithManeuverTaxCalculationSchema = createInsertSchema(
+  smithManeuverTaxCalculations
+)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    annualIncome: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    marginalTaxRate: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    helocInterestPaid: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    investmentUsePercentage: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    eligibleInterest: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    taxDeduction: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    taxSavings: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    investmentIncome: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    investmentTax: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    netTaxBenefit: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+  });
+
+export type InsertSmithManeuverTaxCalculation = z.infer<
+  typeof insertSmithManeuverTaxCalculationSchema
+>;
+export type SmithManeuverTaxCalculation = typeof smithManeuverTaxCalculations.$inferSelect;
+
+// Smith Maneuver Comparisons
+export const smithManeuverComparisons = pgTable(
+  "smith_maneuver_comparisons",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    userId: varchar("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    comparisonName: varchar("comparison_name").notNull(),
+
+    // Smith Maneuver Scenario
+    smithManeuverStrategyId: varchar("smith_maneuver_strategy_id")
+      .notNull()
+      .references(() => smithManeuverStrategies.id, { onDelete: "cascade" }),
+
+    // Alternative Scenario
+    alternativeType: text("alternative_type").notNull(), // 'direct_prepayment', 'invest_only', 'status_quo'
+    alternativeParameters: jsonb("alternative_parameters"),
+
+    // Comparison Results
+    netWorthDifference: decimal("net_worth_difference", { precision: 12, scale: 2 }),
+    interestPaidDifference: decimal("interest_paid_difference", { precision: 12, scale: 2 }),
+    payoffTimeDifference: integer("payoff_time_difference"), // months
+    riskLevelDifference: text("risk_level_difference"),
+
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("IDX_smith_maneuver_comparisons_user").on(table.userId),
+    index("IDX_smith_maneuver_comparisons_strategy").on(table.smithManeuverStrategyId),
+  ]
+);
+
+export const insertSmithManeuverComparisonSchema = createInsertSchema(smithManeuverComparisons)
+  .omit({ id: true, createdAt: true, updatedAt: true })
+  .extend({
+    netWorthDifference: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(2)
+            : val
+      ),
+    interestPaidDifference: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(2)
+            : val
+      ),
+  });
+
+export type InsertSmithManeuverComparison = z.infer<typeof insertSmithManeuverComparisonSchema>;
+export type SmithManeuverComparison = typeof smithManeuverComparisons.$inferSelect;

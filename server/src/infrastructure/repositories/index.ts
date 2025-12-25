@@ -13,6 +13,10 @@ import { NotificationRepository } from "./notification.repository";
 import { NotificationPreferencesRepository } from "./notification-preferences.repository";
 import { HelocAccountRepository } from "./heloc-account.repository";
 import { HelocTransactionRepository } from "./heloc-transaction.repository";
+import { InvestmentRepository } from "./investment.repository";
+import { InvestmentTransactionRepository } from "./investment-transaction.repository";
+import { InvestmentIncomeRepository } from "./investment-income.repository";
+import { SmithManeuverRepository } from "./smith-maneuver.repository";
 
 export interface Repositories {
   users: UsersRepository;
@@ -30,6 +34,10 @@ export interface Repositories {
   notificationPreferences: NotificationPreferencesRepository;
   helocAccounts: HelocAccountRepository;
   helocTransactions: HelocTransactionRepository;
+  investments: InvestmentRepository;
+  investmentTransactions: InvestmentTransactionRepository;
+  investmentIncome: InvestmentIncomeRepository;
+  smithManeuver: SmithManeuverRepository;
 }
 
 export function createRepositories(): Repositories {
@@ -49,6 +57,10 @@ export function createRepositories(): Repositories {
     notificationPreferences: new NotificationPreferencesRepository(),
     helocAccounts: new HelocAccountRepository(),
     helocTransactions: new HelocTransactionRepository(),
+    investments: new InvestmentRepository(),
+    investmentTransactions: new InvestmentTransactionRepository(),
+    investmentIncome: new InvestmentIncomeRepository(),
+    smithManeuver: new SmithManeuverRepository(),
   };
 }
 
@@ -70,4 +82,8 @@ export {
   NotificationPreferencesRepository,
   HelocAccountRepository,
   HelocTransactionRepository,
+  InvestmentRepository,
+  InvestmentTransactionRepository,
+  InvestmentIncomeRepository,
+  SmithManeuverRepository,
 };
