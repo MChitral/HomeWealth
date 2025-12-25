@@ -52,9 +52,14 @@ export function createServices(repositories: Repositories): ApplicationServices 
     triggerRateMonitor
   );
 
-  const renewalService = new RenewalService(repositories.mortgages, repositories.mortgageTerms);
+  const marketRateService = new MarketRateService(repositories.marketRates);
 
-  const marketRateService = new MarketRateService();
+  const renewalService = new RenewalService(
+    repositories.mortgages,
+    repositories.mortgageTerms,
+    marketRateService
+  );
+
   const refinancingService = new RefinancingService(
     repositories.mortgages,
     repositories.mortgageTerms,

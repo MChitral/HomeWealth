@@ -10,6 +10,7 @@ import { createServices } from "@application/services";
 import { setupVite, serveStatic, log } from "@infrastructure/vite";
 import { startPrimeRateScheduler } from "@infrastructure/jobs/prime-rate-scheduler";
 import { startTriggerRateCheck } from "@infrastructure/jobs/daily-trigger-check";
+import { startMarketRateScheduler } from "@infrastructure/jobs/market-rate-scheduler";
 
 declare module "http" {
   interface IncomingMessage {
@@ -39,6 +40,7 @@ async function bootstrap() {
 
   // Start scheduled jobs
   startPrimeRateScheduler(services.primeRateTracking);
+  startMarketRateScheduler(services.marketRateService);
   startTriggerRateCheck(services.triggerRateMonitor);
 
   if (app.get("env") === "development") {

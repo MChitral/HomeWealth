@@ -551,3 +551,35 @@ export const insertPrimeRateHistorySchema = createInsertSchema(primeRateHistory)
 
 export type InsertPrimeRateHistory = z.infer<typeof insertPrimeRateHistorySchema>;
 export type PrimeRateHistory = typeof primeRateHistory.$inferSelect;
+
+// Market Rates - Track current market mortgage rates for IRD calculations
+export const marketRates = pgTable(
+  "market_rates",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    rateType: text("rate_type").notNull(), // "fixed" | "variable-changing" | "variable-fixed"
+    termYears: integer("term_years").notNull(), // 1, 2, 3, 4, 5, 7, 10
+    rate: decimal("rate", { precision: 5, scale: 3 }).notNull(), // e.g., 5.490
+    source: text("source").notNull().default("Bank of Canada"),
+    effectiveDate: date("effective_date").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("IDX_market_rates_type_term").on(table.rateType, table.termYears),
+    index("IDX_market_rates_effective_date").on(table.effectiveDate),
+    index("IDX_market_rates_created_at").on(table.createdAt),
+  ]
+);
+
+export const insertMarketRateSchema = createInsertSchema(marketRates)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    rate: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(3) : val)),
+  });
+
+export type InsertMarketRate = z.infer<typeof insertMarketRateSchema>;
+export type MarketRate = typeof marketRates.$inferSelect;

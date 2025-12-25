@@ -65,8 +65,9 @@ export class HealthScoreService {
       }
     }
 
-    // Market Rate (Benchmark)
-    const marketRate = await this.marketRateService.getBestRate("5-year-fixed"); // Simple benchmark
+    // Market Rate (Benchmark) - Use 5-year fixed as benchmark
+    const marketRateDecimal = await this.marketRateService.getMarketRate("fixed", 5);
+    const marketRate = marketRateDecimal ?? currentRate; // Fallback to current rate if unavailable
 
     // Prepayment Usage
     // Mortgage has annual prepayment limit percent (e.g. 20%)

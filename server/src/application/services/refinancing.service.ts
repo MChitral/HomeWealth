@@ -35,7 +35,6 @@ export class RefinancingService {
     if (!activeTerm) return null;
 
     // 1. Get Data
-    const marketRates = await this.marketRateService.getMarketRates();
     const currentRate = activeTerm.fixedRate
       ? parseFloat(activeTerm.fixedRate) / 100
       : (parseFloat(activeTerm.primeRate || "0") + parseFloat(activeTerm.lockedSpread || "0")) /
@@ -55,19 +54,24 @@ export class RefinancingService {
     // For MVP, using mortgage.amortizationMonths or calculating from start.
     const amortizationMonths = mortgage.amortizationMonths || 300;
 
-    // 2. Calculate Penalty
-    // For comparison rate in IRD, we should use a posted rate.
-    // MVP: Using currentRate as comparison -> result is usually 3-month interest.
+    // 2. Get market rate for IRD calculation
+    const termType = activeTerm.termType as "fixed" | "variable-changing" | "variable-fixed";
+    const termYears = activeTerm.termYears;
+    const marketRateForPenalty =
+      (await this.marketRateService.getMarketRate(termType, termYears)) ?? currentRate;
+
+    // 3. Calculate Penalty using real market rate
     const penalty = calculateStandardPenalty(
       balance,
       currentRate,
-      currentRate,
+      marketRateForPenalty,
       remainingTermMonths
     );
 
-    // 3. Compare against best market option (assuming Fixed 5Yr is usually the target provided)
+    // 4. Compare against best market option (assuming Fixed 5Yr is usually the target provided)
     // We could compare against both, but let's pick the one with better spread.
-    const targetRate = marketRates.fixed5Yr / 100; // Convert to decimal
+    const targetRate =
+      (await this.marketRateService.getMarketRate("fixed", 5)) ?? currentRate;
 
     const benefit = calculateRefinanceBenefit(
       balance,
@@ -80,7 +84,7 @@ export class RefinancingService {
 
     return {
       currentRate: currentRate * 100, // Return as percentage for UI
-      marketRate: marketRates.fixed5Yr,
+      marketRate: targetRate * 100, // Return as percentage for UI
       marketRateType: "fixed",
       penalty: penalty.penalty,
       monthlySavings: benefit.monthlySavings,

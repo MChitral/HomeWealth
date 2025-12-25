@@ -1,6 +1,7 @@
 import { MortgagesRepository } from "../../infrastructure/repositories/mortgages.repository";
 import { MortgageTermsRepository } from "../../infrastructure/repositories/mortgage-terms.repository";
 import { calculateStandardPenalty } from "../../domain/calculations/penalty";
+import type { MarketRateService } from "./market-rate.service";
 
 export type RenewalStatus = "urgent" | "soon" | "upcoming" | "safe";
 
@@ -19,7 +20,8 @@ export interface RenewalInfo {
 export class RenewalService {
   constructor(
     private mortgagesRepo: MortgagesRepository,
-    private mortgageTermsRepo: MortgageTermsRepository
+    private mortgageTermsRepo: MortgageTermsRepository,
+    private marketRateService: MarketRateService
   ) {}
 
   async getRenewalStatus(mortgageId: string): Promise<RenewalInfo | null> {
@@ -54,15 +56,15 @@ export class RenewalService {
     // Calculate Penalty (Assumption: Breaking today)
     // For MVP, we use the active term's interest rate.
     // If it's a VRM, we should ideally use the current effective rate, but for now we'll use the term's rate or derived.
-    // NOTE: In the future, we need to inject Market RateService to get accurate IRD.
-    // For now, we assume Market Rate = Current Rate - 1% to simulate an IRD risk, or 0 to be safe.
-    // Let's assume Market Rate is SAME as Current Rate for MVP (so IRD is 0, 3-month applies).
-
-    // TODO: Fetch real market rate for IRD
     const currentRate = activeTerm.fixedRate
       ? Number(activeTerm.fixedRate) / 100
       : (Number(activeTerm.primeRate || 0) + Number(activeTerm.lockedSpread || 0)) / 100;
-    const marketRate = currentRate; // MVP simplification
+
+    // Fetch real market rate for IRD calculation
+    const termType = activeTerm.termType as "fixed" | "variable-changing" | "variable-fixed";
+    const termYears = activeTerm.termYears;
+    const marketRate =
+      (await this.marketRateService.getMarketRate(termType, termYears)) ?? currentRate; // Fallback to current rate if market rate unavailable
 
     // We need current balance. This is expensive to calc real-time if we don't have it handy.
     // For MVP, we'll use the mortgage's last known balance or original amount as a proxy if payments aren't up to date.

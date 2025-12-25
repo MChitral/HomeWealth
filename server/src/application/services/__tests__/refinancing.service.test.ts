@@ -10,7 +10,7 @@ const mockTermsRepo: any = {
   findByMortgageId: mock.fn(),
 };
 const mockMarketRateService: any = {
-  getMarketRates: mock.fn(),
+  getMarketRate: mock.fn(),
 };
 
 describe("RefinancingService", () => {
@@ -45,13 +45,9 @@ describe("RefinancingService", () => {
       ] as any)
     );
 
-    // Market rate: 3.5%
-    mockMarketRateService.getMarketRates.mock.mockImplementation(
-      () =>
-        Promise.resolve({
-          fixed5Yr: 3.5,
-          variable5Yr: 4.0,
-        }) as any
+    // Market rate: 3.5% (as decimal: 0.035)
+    mockMarketRateService.getMarketRate.mock.mockImplementation(
+      () => Promise.resolve(0.035) as any
     );
 
     const result = await service.analyzeRefinanceOpportunity("m1");
@@ -106,13 +102,9 @@ describe("RefinancingService", () => {
       ] as any)
     );
 
-    // Market rate: 3.5% (same)
-    mockMarketRateService.getMarketRates.mock.mockImplementation(
-      () =>
-        Promise.resolve({
-          fixed5Yr: 3.5,
-          variable5Yr: 4.0,
-        }) as any
+    // Market rate: 3.5% (same, as decimal: 0.035)
+    mockMarketRateService.getMarketRate.mock.mockImplementation(
+      () => Promise.resolve(0.035) as any
     );
 
     const result = await service.analyzeRefinanceOpportunity("m1");

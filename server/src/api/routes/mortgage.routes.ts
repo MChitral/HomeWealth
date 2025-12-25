@@ -213,6 +213,65 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
     res.json(status); // Returns TriggerRateAlert or null
   });
 
+  // GET /api/market-rates - Get current market rate
+  router.get("/market-rates", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+
+    try {
+      const { rateType, termYears } = req.query;
+
+      if (!rateType || !termYears) {
+        sendError(res, 400, "rateType and termYears are required");
+        return;
+      }
+
+      const rate = await services.marketRateService.getMarketRate(
+        rateType as "fixed" | "variable-changing" | "variable-fixed",
+        parseInt(termYears as string, 10)
+      );
+
+      if (rate === null) {
+        sendError(res, 404, "Market rate not found");
+        return;
+      }
+
+      res.json({
+        rate: rate * 100, // Return as percentage
+        rateType,
+        termYears: parseInt(termYears as string, 10),
+      });
+    } catch (error) {
+      sendError(res, 500, "Failed to get market rate", error);
+    }
+  });
+
+  // GET /api/market-rates/history - Get historical market rates
+  router.get("/market-rates/history", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+
+    try {
+      const { rateType, termYears, startDate, endDate } = req.query;
+
+      if (!rateType || !termYears || !startDate || !endDate) {
+        sendError(res, 400, "rateType, termYears, startDate, and endDate are required");
+        return;
+      }
+
+      const rates = await services.marketRateService.getHistoricalRates(
+        rateType as string,
+        parseInt(termYears as string, 10),
+        new Date(startDate as string),
+        new Date(endDate as string)
+      );
+
+      res.json(rates);
+    } catch (error) {
+      sendError(res, 500, "Failed to get historical market rates", error);
+    }
+  });
+
   router.get("/mortgages/:id/renewal-status", async (req, res) => {
     const user = requireUser(req, res);
     if (!user) return;
@@ -231,13 +290,21 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
     }
   });
 
-  router.get("/market-rates", async (req, res) => {
+  // Legacy endpoint - keeping for backward compatibility but redirecting to new implementation
+  router.get("/market-rates/legacy", async (req, res) => {
     const user = requireUser(req, res);
     if (!user) return;
 
     try {
-      const rates = await services.marketRateService.getMarketRates();
-      res.json(rates);
+      // Old stub implementation - kept for backward compatibility
+      const fixed5Yr = await services.marketRateService.getMarketRate("fixed", 5);
+      const variable5Yr = await services.marketRateService.getMarketRate("variable-changing", 5);
+      
+      res.json({
+        fixed5Yr: fixed5Yr ? fixed5Yr * 100 : null,
+        variable5Yr: variable5Yr ? variable5Yr * 100 : null,
+        lastUpdated: new Date(),
+      });
     } catch (error) {
       sendError(res, 500, "Failed to fetch market rates", error);
     }
