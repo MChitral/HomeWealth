@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/shared/ui/button";
 import {
   Dialog,
@@ -12,6 +13,7 @@ import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Separator } from "@/shared/ui/separator";
 import { Info, Loader2, RefreshCw } from "lucide-react";
 import { InfoTooltip } from "@/shared/ui/info-tooltip";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/shared/ui/tabs";
 import type { UiTerm } from "../types";
 import { FormProvider, useFormContext } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/shared/ui/form";
@@ -19,7 +21,14 @@ import { Input } from "@/shared/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import type { UseFormReturn } from "react-hook-form";
 import type { TermRenewalFormData } from "../hooks/use-term-renewal-form";
-import type { PrimeRateResponse } from "../api";
+import type { PrimeRateResponse, BlendAndExtendResponse } from "../api";
+import { useMutation } from "@tanstack/react-query";
+import { mortgageApi } from "../api";
+import { BlendAndExtendForm } from "./blend-and-extend-form";
+import { BlendAndExtendResults } from "./blend-and-extend-results";
+import { BlendAndExtendComparison } from "./blend-and-extend-comparison";
+import type { BlendAndExtendFormData } from "../hooks/use-blend-and-extend-form";
+import type { Mortgage } from "@shared/schema";
 
 interface TermRenewalDialogProps {
   open: boolean;
@@ -42,6 +51,7 @@ interface TermRenewalDialogProps {
   isValid: boolean;
   // Current term (for renewal context)
   currentTerm?: UiTerm | null;
+  mortgage?: Mortgage | null;
   primeRateData?: PrimeRateResponse;
   onRefreshPrime?: () => void;
   isPrimeRateLoading?: boolean;
@@ -381,10 +391,51 @@ export function TermRenewalDialog({
   isSubmitting,
   isValid,
   currentTerm,
+  mortgage,
   primeRateData,
   onRefreshPrime,
   isPrimeRateLoading,
 }: TermRenewalDialogProps) {
+  const [blendAndExtendResults, setBlendAndExtendResults] = useState<BlendAndExtendResponse | null>(null);
+  const [selectedRenewalOption, setSelectedRenewalOption] = useState<"blend-extend" | "new-term" | undefined>(undefined);
+
+  const blendAndExtendMutation = useMutation({
+    mutationFn: async (data: BlendAndExtendFormData) => {
+      if (!currentTerm?.id) throw new Error("Term ID is required");
+      return mortgageApi.calculateBlendAndExtend(currentTerm.id, {
+        newMarketRate: parseFloat(data.newMarketRate),
+        extendedAmortizationMonths: data.extendedAmortizationMonths
+          ? parseInt(data.extendedAmortizationMonths, 10)
+          : undefined,
+      });
+    },
+    onSuccess: (data) => {
+      setBlendAndExtendResults(data);
+    },
+    onError: (error) => {
+      console.error("Failed to calculate blend-and-extend:", error);
+      // Handle error (show toast)
+    },
+  });
+
+  const handleBlendAndExtendCalculate = (data: BlendAndExtendFormData) => {
+    blendAndExtendMutation.mutate(data);
+  };
+
+  const handleApplyBlendAndExtend = () => {
+    if (!blendAndExtendResults) return;
+    
+    // Apply blended rate to the form
+    form.setValue("termType", "fixed");
+    form.setValue("fixedRate", blendAndExtendResults.blendedRatePercent);
+    form.setValue("paymentAmount", blendAndExtendResults.newPaymentAmount.toFixed(2));
+    
+    // Switch to new term tab
+    // Note: We can't directly control tabs from here, but we can set a state
+    // For now, we'll just update the form values
+    setSelectedRenewalOption("blend-extend");
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {triggerButton && <DialogTrigger asChild>{triggerButton}</DialogTrigger>}
@@ -405,16 +456,52 @@ export function TermRenewalDialog({
             </Alert>
           )}
 
-          <TermRenewalFormFields
-            autoPaymentAmount={autoPaymentAmount}
-            paymentEdited={paymentEdited}
-            onPaymentAmountChange={onPaymentAmountChange}
-            onUseAutoPayment={onUseAutoPayment}
-            currentTerm={currentTerm}
-            primeRateData={primeRateData}
-            onRefreshPrime={onRefreshPrime}
-            isPrimeRateLoading={isPrimeRateLoading}
-          />
+          <Tabs defaultValue="new-term" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="new-term">New Term</TabsTrigger>
+              <TabsTrigger value="blend-extend">Blend-and-Extend</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="new-term">
+              <TermRenewalFormFields
+                autoPaymentAmount={autoPaymentAmount}
+                paymentEdited={paymentEdited}
+                onPaymentAmountChange={onPaymentAmountChange}
+                onUseAutoPayment={onUseAutoPayment}
+                currentTerm={currentTerm}
+                primeRateData={primeRateData}
+                onRefreshPrime={onRefreshPrime}
+                isPrimeRateLoading={isPrimeRateLoading}
+              />
+            </TabsContent>
+
+            <TabsContent value="blend-extend">
+              <BlendAndExtendForm
+                termId={currentTerm?.id}
+                mortgageId={currentTerm?.mortgageId}
+                currentTerm={currentTerm}
+                mortgage={mortgage}
+                onCalculate={handleBlendAndExtendCalculate}
+                isCalculating={blendAndExtendMutation.isPending}
+              />
+              {blendAndExtendResults && (
+                <>
+                  <BlendAndExtendResults
+                    results={blendAndExtendResults}
+                    currentPayment={currentTerm?.regularPaymentAmount}
+                  />
+                  <BlendAndExtendComparison
+                    blendAndExtendResults={blendAndExtendResults}
+                    newTermData={form.getValues()}
+                    onSelectBlendAndExtend={() => setSelectedRenewalOption("blend-extend")}
+                    onSelectNewTerm={() => setSelectedRenewalOption("new-term")}
+                    onApplyBlendAndExtend={handleApplyBlendAndExtend}
+                    selectedOption={selectedRenewalOption}
+                  />
+                </>
+              )}
+            </TabsContent>
+          </Tabs>
 
           <DialogFooter>
             <Button

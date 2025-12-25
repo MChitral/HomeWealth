@@ -9,9 +9,11 @@ import type { UiTerm } from "../types";
 import type { UseFormReturn } from "react-hook-form";
 import type { EditTermFormData } from "../hooks/use-edit-term-form";
 import type { TermRenewalFormData } from "../hooks/use-term-renewal-form";
+import type { Mortgage } from "@shared/schema";
 
 interface TermDetailsSectionProps {
   currentTerm: UiTerm;
+  mortgage?: Mortgage | null;
   monthsRemainingInTerm: number;
   summaryStats: {
     currentPrimeRate: number;
@@ -43,6 +45,7 @@ interface TermDetailsSectionProps {
 
 export function TermDetailsSection({
   currentTerm,
+  mortgage,
   monthsRemainingInTerm,
   summaryStats,
   isEditTermOpen,
@@ -108,6 +111,7 @@ export function TermDetailsSection({
               onPaymentAmountChange={renewalOnPaymentAmountChange}
               onUseAutoPayment={renewalOnUseAutoPayment}
               currentTerm={currentTerm}
+              mortgage={mortgage}
               primeRateData={primeRateData}
               onRefreshPrime={refetchPrimeRate}
               isPrimeRateLoading={isPrimeRateLoading}

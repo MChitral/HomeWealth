@@ -158,6 +158,25 @@ export const mortgageApi = {
       "GET",
       `/api/mortgages/${mortgageId}/refinance-analysis`
     ),
+
+  // Penalty Calculator
+  calculatePenalty: (payload: CalculatePenaltyRequest) =>
+    apiRequest<CalculatePenaltyResponse>("POST", "/api/mortgages/calculate-penalty", payload),
+
+  // Market Rate (for penalty calculator and blend-and-extend)
+  fetchMarketRate: (rateType: string, termYears: number) =>
+    apiRequest<{ rate: number; rateType: string; termYears: number }>(
+      "GET",
+      `/api/market-rates?rateType=${rateType}&termYears=${termYears}`
+    ),
+
+  // Blend-and-Extend
+  calculateBlendAndExtend: (termId: string, payload: BlendAndExtendRequest) =>
+    apiRequest<BlendAndExtendResponse>(
+      "POST",
+      `/api/mortgage-terms/${termId}/blend-and-extend`,
+      payload
+    ),
 };
 
 export type RenewalStatusResponse = {
@@ -211,4 +230,20 @@ export type CalculatePenaltyResponse = {
     ird: number;
     applied: "IRD" | "3-Month Interest";
   };
+};
+
+export type BlendAndExtendRequest = {
+  newMarketRate: number; // percentage (e.g., 5.49)
+  extendedAmortizationMonths?: number;
+};
+
+export type BlendAndExtendResponse = {
+  blendedRate: number; // decimal
+  blendedRatePercent: string; // formatted percentage
+  newPaymentAmount: number;
+  marketRatePaymentAmount: number;
+  oldRatePaymentAmount: number;
+  interestSavingsPerPayment: number;
+  extendedAmortizationMonths: number;
+  message: string;
 };

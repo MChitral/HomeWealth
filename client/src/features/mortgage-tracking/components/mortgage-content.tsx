@@ -250,6 +250,7 @@ export function MortgageContent({
         <TabsContent value="details" className="space-y-8">
           <TermDetailsSection
             currentTerm={uiCurrentTerm}
+            mortgage={mortgage}
             monthsRemainingInTerm={monthsRemainingInTerm}
             summaryStats={{
               currentPrimeRate: summaryStats.currentPrimeRate,
