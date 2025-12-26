@@ -16,7 +16,8 @@ export interface RefinanceResult {
  * @param newRate Annual interest rate (decimal, e.g. 0.0399)
  * @param remainingAmortizationMonths Remaining amortization period
  * @param remainingTermMonths Remaining months in the OWN term (for calculating total term savings)
- * @param totalCostToBreak Penalty + Closing Costs
+ * @param penalty Penalty for breaking the mortgage
+ * @param closingCosts Closing costs (legal fees, appraisal, discharge, etc.)
  */
 export function calculateRefinanceBenefit(
   currentBalance: number,
@@ -24,8 +25,10 @@ export function calculateRefinanceBenefit(
   newRate: number,
   remainingAmortizationMonths: number,
   remainingTermMonths: number,
-  totalCostToBreak: number
+  penalty: number,
+  closingCosts: number = 0
 ): RefinanceResult {
+  const totalCostToBreak = penalty + closingCosts;
   // 1. Calculate Old Payment (based on current balance & rem amortization to be fair comparison)
   // We assume the user keeps the same amortization timeline to see pure rate savings.
   const oldPayment = calculatePayment(

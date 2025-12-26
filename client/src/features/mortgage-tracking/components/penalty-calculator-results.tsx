@@ -30,6 +30,14 @@ export function PenaltyCalculatorResults({ results }: PenaltyCalculatorResultsPr
                 {results.method}
               </Badge>
             </div>
+            <div className="mt-2">
+              <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+                <Info className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-xs text-blue-900 dark:text-blue-100">
+                  <strong>Note:</strong> Penalty calculations are estimates. Actual penalties may vary by lender and specific mortgage terms. Consult your lender for exact penalty amounts.
+                </AlertDescription>
+              </Alert>
+            </div>
             <div className="text-3xl font-bold text-slate-900 dark:text-white">
               ${results.totalPenalty.toLocaleString(undefined, {
                 minimumFractionDigits: 2,

@@ -17,6 +17,8 @@ import { calculateAvailableCredit, calculateCreditUtilization } from "@server-sh
 import { CreditRoomDisplay } from "./credit-room-display";
 import { CreditRoomHistory } from "./credit-room-history";
 import { MarkReAdvanceableDialog } from "./mark-re-advanceable-dialog";
+import { PropertyValueUpdateDialog } from "./property-value-update-dialog";
+import { PropertyValueHistory } from "./property-value-history";
 import type { HelocAccount, Mortgage } from "@shared/schema";
 
 interface HelocSectionProps {
@@ -27,6 +29,7 @@ interface HelocSectionProps {
 export function HelocSection({ mortgageId, mortgage }: HelocSectionProps) {
   const [isMarkReAdvanceableOpen, setIsMarkReAdvanceableOpen] = useState(false);
   const [isCreditRoomHistoryOpen, setIsCreditRoomHistoryOpen] = useState(false);
+  const [isPropertyValueUpdateOpen, setIsPropertyValueUpdateOpen] = useState(false);
   const { data: allAccounts, isLoading } = useQuery({
     queryKey: ["/api/heloc/accounts"],
     queryFn: () => helocApi.fetchAccounts(),
@@ -162,6 +165,45 @@ export function HelocSection({ mortgageId, mortgage }: HelocSectionProps) {
         )}
       </div>
 
+      {/* Property Value Tracking */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Property Value</CardTitle>
+              <CardDescription>
+                Track property value to update HELOC credit limits
+              </CardDescription>
+            </div>
+            {mortgage && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsPropertyValueUpdateOpen(true)}
+              >
+                Update Value
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {mortgage && (
+            <>
+              <div className="mb-4">
+                <p className="text-sm text-muted-foreground">Current Property Value</p>
+                <p className="text-2xl font-bold">
+                  ${Number(mortgage.propertyPrice).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </p>
+              </div>
+              <PropertyValueHistory mortgageId={mortgageId} />
+            </>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Dialogs */}
       <MarkReAdvanceableDialog
         open={isMarkReAdvanceableOpen}
@@ -177,6 +219,15 @@ export function HelocSection({ mortgageId, mortgage }: HelocSectionProps) {
           <CreditRoomHistory mortgageId={mortgageId} />
         </DialogContent>
       </Dialog>
+
+      {mortgage && (
+        <PropertyValueUpdateDialog
+          open={isPropertyValueUpdateOpen}
+          onOpenChange={setIsPropertyValueUpdateOpen}
+          mortgageId={mortgageId}
+          currentPropertyPrice={Number(mortgage.propertyPrice)}
+        />
+      )}
     </div>
   );
 }

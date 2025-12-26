@@ -38,6 +38,17 @@ const penaltyCalculatorSchema = z.object({
     }),
   termType: z.enum(["fixed", "variable-changing", "variable-fixed"]).optional(),
   termYears: z.number().optional(),
+  lenderName: z.string().optional(),
+  penaltyCalculationMethod: z
+    .enum([
+      "ird_posted_rate",
+      "ird_discounted_rate",
+      "ird_origination_comparison",
+      "three_month_interest",
+      "open_mortgage",
+      "variable_rate",
+    ])
+    .optional(),
 });
 
 export type PenaltyCalculatorFormData = z.infer<typeof penaltyCalculatorSchema>;
@@ -52,6 +63,8 @@ export function usePenaltyCalculatorForm(initialValues?: Partial<PenaltyCalculat
       remainingMonths: initialValues?.remainingMonths || "",
       termType: initialValues?.termType,
       termYears: initialValues?.termYears,
+      lenderName: initialValues?.lenderName || "",
+      penaltyCalculationMethod: initialValues?.penaltyCalculationMethod,
     },
   });
 

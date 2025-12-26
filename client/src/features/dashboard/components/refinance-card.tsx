@@ -97,9 +97,22 @@ export function RefinanceScenarioCard({ analysis }: RefinanceScenarioCardProps) 
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Est. Cost to Break:</span>
                 <span className="font-medium text-red-600/80">
-                  -${analysis.penalty.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  -$
+                  {(analysis.penalty + (analysis.closingCosts || 0)).toLocaleString(undefined, {
+                    maximumFractionDigits: 0,
+                  })}
                 </span>
               </div>
+              {analysis.closingCosts > 0 && (
+                <div className="text-xs text-muted-foreground pt-1">
+                  (Penalty: ${analysis.penalty.toLocaleString(undefined, {
+                    maximumFractionDigits: 0,
+                  })}{" "}
+                  + Closing: ${analysis.closingCosts.toLocaleString(undefined, {
+                    maximumFractionDigits: 0,
+                  })})
+                </div>
+              )}
             </div>
           ) : (
             <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg text-sm text-slate-600 dark:text-slate-300 flex gap-2">

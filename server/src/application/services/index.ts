@@ -25,6 +25,11 @@ import { ReAdvanceableMortgageService } from "./re-advanceable-mortgage.service"
 import { InvestmentService } from "./investment.service";
 import { TaxCalculationService } from "./tax-calculation.service";
 import { SmithManeuverService } from "./smith-maneuver.service";
+import { RecastService } from "./recast.service";
+import { PaymentFrequencyService } from "./payment-frequency.service";
+import { PortabilityService } from "./portability.service";
+import { PropertyValueService } from "./property-value.service";
+import { RenewalWorkflowService } from "./renewal-workflow.service";
 
 export interface ApplicationServices {
   cashFlows: CashFlowService;
@@ -53,6 +58,11 @@ export interface ApplicationServices {
   investments: InvestmentService;
   taxCalculation: TaxCalculationService;
   smithManeuver: SmithManeuverService;
+  recast: RecastService;
+  paymentFrequency: PaymentFrequencyService;
+  portability: PortabilityService;
+  propertyValue: PropertyValueService;
+  renewalWorkflow: RenewalWorkflowService;
 }
 
 export function createServices(repositories: Repositories): ApplicationServices {
@@ -172,6 +182,34 @@ export function createServices(repositories: Repositories): ApplicationServices 
       repositories.helocTransactions,
       taxCalculationService
     ),
+    recast: new RecastService(
+      repositories.mortgages,
+      repositories.mortgageTerms,
+      repositories.mortgagePayments,
+      repositories.recastEvents
+    ),
+    paymentFrequency: new PaymentFrequencyService(
+      repositories.mortgages,
+      repositories.mortgageTerms,
+      repositories.paymentFrequencyChangeEvents
+    ),
+    portability: new PortabilityService(
+      repositories.mortgages,
+      repositories.mortgageTerms,
+      repositories.mortgagePortability
+    ),
+    propertyValue: new PropertyValueService(
+      repositories.mortgages,
+      repositories.propertyValueHistory,
+      new HelocCreditLimitService(repositories.helocAccounts, repositories.mortgages)
+    ),
+    renewalWorkflow: new RenewalWorkflowService(
+      repositories.mortgages,
+      repositories.mortgageTerms,
+      repositories.renewalNegotiations,
+      marketRateService,
+      renewalService
+    ),
   };
 }
 
@@ -201,3 +239,8 @@ export * from "./re-advanceable-mortgage.service";
 export * from "./investment.service";
 export * from "./tax-calculation.service";
 export * from "./smith-maneuver.service";
+export * from "./recast.service";
+export * from "./payment-frequency.service";
+export * from "./portability.service";
+export * from "./property-value.service";
+export * from "./renewal-workflow.service";

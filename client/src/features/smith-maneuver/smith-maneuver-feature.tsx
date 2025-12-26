@@ -11,6 +11,8 @@ import {
   TaxSavingsCard,
   NetBenefitAnalysis,
   RiskAssessment,
+  ROIAnalysisCard,
+  PrepaymentComparisonCard,
 } from "./components";
 import {
   useSmithManeuverStrategies,
@@ -116,35 +118,48 @@ export function SmithManeuverFeature() {
                 <ProjectionCharts projections={generateProjections.data} />
 
                 {generateProjections.data.length > 0 && (
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {(() => {
-                      const latest = generateProjections.data[generateProjections.data.length - 1];
-                      const helocInterest = Number(latest.helocInterestPaid);
-                      const taxSavings = Number(latest.taxSavings);
-                      const marginalTaxRate = strategy.marginalTaxRate
-                        ? Number(strategy.marginalTaxRate)
-                        : 0;
-                      const eligibleInterest = helocInterest; // Assuming 100% investment use
+                  <>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {(() => {
+                        const latest = generateProjections.data[generateProjections.data.length - 1];
+                        const helocInterest = Number(latest.helocInterestPaid);
+                        const taxSavings = Number(latest.taxSavings);
+                        const marginalTaxRate = strategy.marginalTaxRate
+                          ? Number(strategy.marginalTaxRate)
+                          : 0;
+                        const eligibleInterest = helocInterest; // Assuming 100% investment use
 
-                      return (
-                        <>
-                          <TaxSavingsCard
-                            helocInterest={helocInterest}
-                            taxSavings={taxSavings}
-                            marginalTaxRate={marginalTaxRate}
-                            eligibleInterest={eligibleInterest}
-                          />
-                          <NetBenefitAnalysis
-                            investmentReturns={Number(latest.investmentReturns)}
-                            investmentTax={0} // Would need to calculate this
-                            helocInterest={helocInterest}
-                            taxSavings={taxSavings}
-                            netBenefit={Number(latest.netBenefit)}
-                          />
-                        </>
-                      );
-                    })()}
-                  </div>
+                        return (
+                          <>
+                            <TaxSavingsCard
+                              helocInterest={helocInterest}
+                              taxSavings={taxSavings}
+                              marginalTaxRate={marginalTaxRate}
+                              eligibleInterest={eligibleInterest}
+                            />
+                            <NetBenefitAnalysis
+                              investmentReturns={Number(latest.investmentReturns)}
+                              investmentTax={0} // Would need to calculate this
+                              helocInterest={helocInterest}
+                              taxSavings={taxSavings}
+                              netBenefit={Number(latest.netBenefit)}
+                            />
+                          </>
+                        );
+                      })()}
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <ROIAnalysisCard
+                        strategyId={selectedStrategyId!}
+                        years={strategy.projectionYears || 10}
+                      />
+                      <PrepaymentComparisonCard
+                        strategyId={selectedStrategyId!}
+                        years={strategy.projectionYears || 10}
+                      />
+                    </div>
+                  </>
                 )}
 
                 {generateProjections.data.length > 0 && (

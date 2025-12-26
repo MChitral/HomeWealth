@@ -296,7 +296,14 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
     if (!user) return;
 
     try {
-      const { balance, currentRate, marketRate, remainingMonths, termType } = req.body;
+      const {
+        balance,
+        currentRate,
+        marketRate,
+        remainingMonths,
+        termType,
+        penaltyCalculationMethod,
+      } = req.body;
 
       // Validate inputs
       if (!balance || typeof balance !== "number" || balance <= 0) {
@@ -321,21 +328,46 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         calculateStandardPenalty,
         calculateThreeMonthInterestPenalty,
         calculateIRDPenalty,
+        calculatePenaltyByMethod,
+        type PenaltyCalculationMethod,
       } = await import("@domain/calculations/penalty");
 
       const threeMonthPenalty = calculateThreeMonthInterestPenalty(balance, currentRate);
       const irdPenalty = calculateIRDPenalty(balance, currentRate, marketRate, remainingMonths);
-      const standardPenalty = calculateStandardPenalty(balance, currentRate, marketRate, remainingMonths);
+
+      // Use specific method if provided, otherwise use standard calculation
+      let penaltyResult;
+      if (penaltyCalculationMethod) {
+        penaltyResult = calculatePenaltyByMethod(
+          penaltyCalculationMethod as PenaltyCalculationMethod,
+          balance,
+          currentRate,
+          marketRate,
+          remainingMonths,
+          termType
+        );
+      } else {
+        const standardPenalty = calculateStandardPenalty(
+          balance,
+          currentRate,
+          marketRate,
+          remainingMonths
+        );
+        penaltyResult = {
+          penalty: standardPenalty.penalty,
+          method: standardPenalty.method,
+        };
+      }
 
       res.json({
         threeMonthPenalty,
         irdPenalty,
-        totalPenalty: standardPenalty.penalty,
-        method: standardPenalty.method,
+        totalPenalty: penaltyResult.penalty,
+        method: penaltyResult.method,
         breakdown: {
           threeMonth: threeMonthPenalty,
           ird: irdPenalty,
-          applied: standardPenalty.method,
+          applied: penaltyResult.method,
         },
       });
     } catch (error) {
@@ -368,9 +400,63 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
     if (!user) return;
 
     try {
-      const analysis = await services.refinancingService.analyzeRefinanceOpportunity(req.params.id);
+      // Parse closing costs from query params if provided
+      const closingCosts = req.query.closingCosts
+        ? {
+            total: req.query.closingCostsTotal
+              ? parseFloat(req.query.closingCostsTotal as string)
+              : undefined,
+            legalFees: req.query.legalFees
+              ? parseFloat(req.query.legalFees as string)
+              : undefined,
+            appraisalFees: req.query.appraisalFees
+              ? parseFloat(req.query.appraisalFees as string)
+              : undefined,
+            dischargeFees: req.query.dischargeFees
+              ? parseFloat(req.query.dischargeFees as string)
+              : undefined,
+            otherFees: req.query.otherFees
+              ? parseFloat(req.query.otherFees as string)
+              : undefined,
+          }
+        : undefined;
+
+      const analysis = await services.refinancingService.analyzeRefinanceOpportunity(
+        req.params.id,
+        closingCosts
+      );
       if (!analysis) {
         // Return null or 404. Let's return null to signify no analysis possible (e.g. no active term)
+        res.json(null);
+        return;
+      }
+      res.json(analysis);
+    } catch (error) {
+      sendError(res, 400, "Failed to analyze refinance opportunity", error);
+    }
+  });
+
+  // POST endpoint for refinance analysis with closing costs in body
+  router.post("/mortgages/:id/refinance-analysis", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+
+    try {
+      const closingCosts = req.body.closingCosts
+        ? {
+            total: req.body.closingCosts.total,
+            legalFees: req.body.closingCosts.legalFees,
+            appraisalFees: req.body.closingCosts.appraisalFees,
+            dischargeFees: req.body.closingCosts.dischargeFees,
+            otherFees: req.body.closingCosts.otherFees,
+          }
+        : undefined;
+
+      const analysis = await services.refinancingService.analyzeRefinanceOpportunity(
+        req.params.id,
+        closingCosts
+      );
+      if (!analysis) {
         res.json(null);
         return;
       }
@@ -619,6 +705,361 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       res.json(payment);
     } catch (error) {
       sendError(res, 400, "Invalid payment data", error);
+    }
+  });
+
+  // Recast endpoints
+  router.post("/mortgages/:id/recast/calculate", async (req, res) => {
+    try {
+      const userId = requireUser(req);
+      const { id } = req.params;
+      const { prepaymentAmount, recastDate } = req.body;
+
+      if (!prepaymentAmount || prepaymentAmount <= 0) {
+        return sendError(res, 400, "Prepayment amount is required and must be greater than zero");
+      }
+
+      const result = await services.recast.calculateRecast(id, userId, {
+        mortgageId: id,
+        prepaymentAmount: parseFloat(prepaymentAmount),
+        recastDate,
+      });
+
+      if (!result) {
+        return sendError(res, 404, "Mortgage not found");
+      }
+
+      res.json(result);
+    } catch (error) {
+      sendError(res, 500, "Failed to calculate recast", error);
+    }
+  });
+
+  router.post("/mortgages/:id/recast/apply", async (req, res) => {
+    try {
+      const userId = requireUser(req);
+      const { id } = req.params;
+      const { prepaymentAmount, recastDate } = req.body;
+
+      if (!prepaymentAmount || prepaymentAmount <= 0) {
+        return sendError(res, 400, "Prepayment amount is required and must be greater than zero");
+      }
+
+      const result = await services.recast.applyRecast(id, userId, {
+        mortgageId: id,
+        prepaymentAmount: parseFloat(prepaymentAmount),
+        recastDate,
+      });
+
+      if (!result) {
+        return sendError(res, 404, "Mortgage not found or recast cannot be applied");
+      }
+
+      res.json(result);
+    } catch (error) {
+      sendError(res, 500, "Failed to apply recast", error);
+    }
+  });
+
+  router.get("/mortgages/:id/recast/history", async (req, res) => {
+    try {
+      const userId = requireUser(req);
+      const { id } = req.params;
+
+      const history = await services.recast.getRecastHistory(id, userId);
+
+      if (history === undefined) {
+        return sendError(res, 404, "Mortgage not found");
+      }
+
+      res.json(history);
+    } catch (error) {
+      sendError(res, 500, "Failed to get recast history", error);
+    }
+  });
+
+  // Payment Frequency Change endpoints
+  router.post("/mortgage-terms/:id/frequency-change/calculate", async (req, res) => {
+    try {
+      const userId = requireUser(req);
+      const { id } = req.params;
+      const { newFrequency } = req.body;
+
+      if (!newFrequency) {
+        return sendError(res, 400, "New frequency is required");
+      }
+
+      const term = await services.mortgageTerms.getByIdForUser(id, userId);
+      if (!term) {
+        return sendError(res, 404, "Term not found");
+      }
+
+      const result = await services.paymentFrequency.calculateFrequencyChangeImpact(
+        term.mortgage.id,
+        id,
+        userId,
+        newFrequency
+      );
+
+      if (!result) {
+        return sendError(res, 404, "Mortgage or term not found");
+      }
+
+      res.json(result);
+    } catch (error) {
+      sendError(res, 500, "Failed to calculate frequency change", error);
+    }
+  });
+
+  router.post("/mortgage-terms/:id/frequency-change/apply", async (req, res) => {
+    try {
+      const userId = requireUser(req);
+      const { id } = req.params;
+      const { newFrequency, changeDate } = req.body;
+
+      if (!newFrequency) {
+        return sendError(res, 400, "New frequency is required");
+      }
+
+      const term = await services.mortgageTerms.getByIdForUser(id, userId);
+      if (!term) {
+        return sendError(res, 404, "Term not found");
+      }
+
+      const result = await services.paymentFrequency.applyFrequencyChange(
+        term.mortgage.id,
+        id,
+        userId,
+        {
+          mortgageId: term.mortgage.id,
+          termId: id,
+          newFrequency,
+          changeDate,
+        }
+      );
+
+      if (!result) {
+        return sendError(res, 404, "Mortgage or term not found, or change cannot be applied");
+      }
+
+      res.json(result);
+    } catch (error) {
+      sendError(res, 500, "Failed to apply frequency change", error);
+    }
+  });
+
+  router.get("/mortgages/:id/frequency-changes", async (req, res) => {
+    try {
+      const userId = requireUser(req);
+      const { id } = req.params;
+
+      const history = await services.paymentFrequency.getFrequencyChangeHistory(id, userId);
+
+      if (history === undefined) {
+        return sendError(res, 404, "Mortgage not found");
+      }
+
+      res.json(history);
+    } catch (error) {
+      sendError(res, 500, "Failed to get frequency change history", error);
+    }
+  });
+
+  // Mortgage Portability endpoints
+  router.post("/mortgages/:id/portability/calculate", async (req, res) => {
+    try {
+      const userId = requireUser(req);
+      const { id } = req.params;
+      const { newPropertyPrice, portDate } = req.body;
+
+      if (!newPropertyPrice || newPropertyPrice <= 0) {
+        return sendError(res, 400, "New property price is required and must be greater than zero");
+      }
+
+      const result = await services.portability.calculatePortability(id, userId, {
+        mortgageId: id,
+        newPropertyPrice: parseFloat(newPropertyPrice),
+        portDate,
+      });
+
+      if (!result) {
+        return sendError(res, 404, "Mortgage not found");
+      }
+
+      res.json(result);
+    } catch (error) {
+      sendError(res, 500, "Failed to calculate portability", error);
+    }
+  });
+
+  router.post("/mortgages/:id/portability/apply", async (req, res) => {
+    try {
+      const userId = requireUser(req);
+      const { id } = req.params;
+      const { newPropertyPrice, portDate } = req.body;
+
+      if (!newPropertyPrice || newPropertyPrice <= 0) {
+        return sendError(res, 400, "New property price is required and must be greater than zero");
+      }
+
+      const result = await services.portability.applyPortability(id, userId, {
+        mortgageId: id,
+        newPropertyPrice: parseFloat(newPropertyPrice),
+        portDate,
+      });
+
+      if (!result) {
+        return sendError(res, 404, "Mortgage not found or portability cannot be applied");
+      }
+
+      res.json(result);
+    } catch (error) {
+      sendError(res, 500, "Failed to apply portability", error);
+    }
+  });
+
+  router.get("/mortgages/:id/portability/history", async (req, res) => {
+    try {
+      const userId = requireUser(req);
+      const { id } = req.params;
+
+      const history = await services.portability.getPortabilityHistory(id, userId);
+
+      if (history === undefined) {
+        return sendError(res, 404, "Mortgage not found");
+      }
+
+      res.json(history);
+    } catch (error) {
+      sendError(res, 500, "Failed to get portability history", error);
+    }
+  });
+
+  // Property Value Tracking endpoints
+  router.post("/mortgages/:id/property-value", async (req, res) => {
+    try {
+      const userId = requireUser(req);
+      const { id } = req.params;
+      const { propertyValue, valueDate, source, notes } = req.body;
+
+      if (!propertyValue || propertyValue <= 0) {
+        return sendError(res, 400, "Property value is required and must be greater than zero");
+      }
+
+      const result = await services.propertyValue.updatePropertyValue(id, userId, {
+        mortgageId: id,
+        propertyValue: parseFloat(propertyValue),
+        valueDate,
+        source,
+        notes,
+      });
+
+      if (!result) {
+        return sendError(res, 404, "Mortgage not found");
+      }
+
+      res.json(result);
+    } catch (error) {
+      sendError(res, 500, "Failed to update property value", error);
+    }
+  });
+
+  router.get("/mortgages/:id/property-value/history", async (req, res) => {
+    try {
+      const userId = requireUser(req);
+      const { id } = req.params;
+
+      const history = await services.propertyValue.getPropertyValueHistory(id, userId);
+
+      if (history === undefined) {
+        return sendError(res, 404, "Mortgage not found");
+      }
+
+      res.json(history);
+    } catch (error) {
+      sendError(res, 500, "Failed to get property value history", error);
+    }
+  });
+
+  // Renewal Workflow endpoints
+  router.post("/mortgages/:id/renewal/start", async (req, res) => {
+    try {
+      const userId = requireUser(req);
+      const { id } = req.params;
+
+      const result = await services.renewalWorkflow.startRenewalWorkflow(id, userId);
+
+      if (!result) {
+        return sendError(res, 404, "Mortgage not found");
+      }
+
+      res.json(result);
+    } catch (error) {
+      sendError(res, 500, "Failed to start renewal workflow", error);
+    }
+  });
+
+  router.post("/mortgages/:id/renewal/negotiations", async (req, res) => {
+    try {
+      const userId = requireUser(req);
+      const { id } = req.params;
+      const { termId, negotiationDate, offeredRate, negotiatedRate, status, notes } = req.body;
+
+      if (!termId || !status) {
+        return sendError(res, 400, "Term ID and status are required");
+      }
+
+      const result = await services.renewalWorkflow.trackNegotiation(id, userId, {
+        mortgageId: id,
+        termId,
+        negotiationDate,
+        offeredRate: offeredRate ? parseFloat(offeredRate) : undefined,
+        negotiatedRate: negotiatedRate ? parseFloat(negotiatedRate) : undefined,
+        status,
+        notes,
+      });
+
+      if (!result) {
+        return sendError(res, 404, "Mortgage not found");
+      }
+
+      res.json(result);
+    } catch (error) {
+      sendError(res, 500, "Failed to track negotiation", error);
+    }
+  });
+
+  router.get("/mortgages/:id/renewal/options", async (req, res) => {
+    try {
+      const userId = requireUser(req);
+      const { id } = req.params;
+
+      const options = await services.renewalWorkflow.compareRenewalOptions(id, userId);
+
+      if (!options) {
+        return sendError(res, 404, "Mortgage not found");
+      }
+
+      res.json(options);
+    } catch (error) {
+      sendError(res, 500, "Failed to get renewal options", error);
+    }
+  });
+
+  router.get("/mortgages/:id/renewal/negotiations", async (req, res) => {
+    try {
+      const userId = requireUser(req);
+      const { id } = req.params;
+
+      const history = await services.renewalWorkflow.getNegotiationHistory(id, userId);
+
+      if (history === undefined) {
+        return sendError(res, 404, "Mortgage not found");
+      }
+
+      res.json(history);
+    } catch (error) {
+      sendError(res, 500, "Failed to get negotiation history", error);
     }
   });
 

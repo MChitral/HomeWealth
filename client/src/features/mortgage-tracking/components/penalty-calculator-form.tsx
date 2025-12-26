@@ -197,6 +197,56 @@ export function PenaltyCalculatorForm() {
           </FormItem>
         )}
       />
+
+      <FormField
+        control={control}
+        name="lenderName"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Lender Name (Optional)</FormLabel>
+            <FormControl>
+              <Input
+                type="text"
+                placeholder="RBC, TD, BMO, etc."
+                {...field}
+              />
+            </FormControl>
+            <FormDescription>
+              Optional: Enter your lender name for lender-specific penalty calculations
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={control}
+        name="penaltyCalculationMethod"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Penalty Calculation Method (Optional)</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Use standard calculation" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="ird_posted_rate">IRD (Posted Rate)</SelectItem>
+                <SelectItem value="ird_discounted_rate">IRD (Discounted Rate)</SelectItem>
+                <SelectItem value="ird_origination_comparison">IRD (Origination Comparison)</SelectItem>
+                <SelectItem value="three_month_interest">3-Month Interest Only</SelectItem>
+                <SelectItem value="variable_rate">Variable Rate (3-Month Interest)</SelectItem>
+                <SelectItem value="open_mortgage">Open Mortgage (No Penalty)</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormDescription>
+              Select a specific calculation method. Leave blank to use standard "greater of" calculation.
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </div>
   );
 }

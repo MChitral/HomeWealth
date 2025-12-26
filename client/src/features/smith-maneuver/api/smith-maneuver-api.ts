@@ -22,6 +22,37 @@ export type YearlyProjection = {
   interestCoverage: number;
 };
 
+export type ROIAnalysis = {
+  totalInvestment: number;
+  totalReturns: number;
+  totalTaxSavings: number;
+  totalInvestmentTax: number;
+  netBenefit: number;
+  roi: number;
+  effectiveReturn: number;
+};
+
+export type PrepaymentComparison = {
+  smithManeuver: {
+    totalPrepayments: number;
+    netBenefit: number;
+    finalMortgageBalance: number;
+    investmentValue: number;
+    totalCost: number;
+  };
+  directPrepayment: {
+    totalPrepayments: number;
+    interestSaved: number;
+    finalMortgageBalance: number;
+    totalCost: number;
+  };
+  advantage: {
+    strategy: "smith_maneuver" | "direct_prepayment" | "tie";
+    netAdvantage: number;
+    advantagePercent: number;
+  };
+};
+
 export const smithManeuverApi = {
   fetchStrategies: () => apiRequest<SmithManeuverStrategy[]>("GET", "/api/smith-maneuver/strategies"),
 
@@ -52,5 +83,18 @@ export const smithManeuverApi = {
       "GET",
       `/api/smith-maneuver/strategies/${strategyId}/tax-calculations`
     ),
+
+  calculateROIAnalysis: (strategyId: string, years?: number) => {
+    const url = years
+      ? `/api/smith-maneuver/strategies/${strategyId}/roi-analysis?years=${years}`
+      : `/api/smith-maneuver/strategies/${strategyId}/roi-analysis`;
+    return apiRequest<ROIAnalysis>("GET", url);
+  },
+
+  compareWithDirectPrepayment: (strategyId: string, years: number, mortgageRate: number) =>
+    apiRequest<PrepaymentComparison>("POST", `/api/smith-maneuver/strategies/${strategyId}/compare-prepayment`, {
+      years,
+      mortgageRate,
+    }),
 };
 

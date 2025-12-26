@@ -2,9 +2,11 @@ import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
 import { Separator } from "@/shared/ui/separator";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Calendar } from "lucide-react";
 import { EditTermDialog } from "./edit-term-dialog";
 import { TermRenewalDialog } from "./term-renewal-dialog";
+import { FrequencyChangeDialog } from "./frequency-change-dialog";
+import { useState } from "react";
 import type { UiTerm } from "../types";
 import type { UseFormReturn } from "react-hook-form";
 import type { EditTermFormData } from "../hooks/use-edit-term-form";
@@ -68,6 +70,8 @@ export function TermDetailsSection({
   isPrimeRateLoading,
   refetchPrimeRate,
 }: TermDetailsSectionProps) {
+  const [isFrequencyChangeOpen, setIsFrequencyChangeOpen] = useState(false);
+
   return (
     <Card className="border-primary">
       <CardHeader>
@@ -116,6 +120,25 @@ export function TermDetailsSection({
               onRefreshPrime={refetchPrimeRate}
               isPrimeRateLoading={isPrimeRateLoading}
             />
+            {mortgage && (
+              <FrequencyChangeDialog
+                open={isFrequencyChangeOpen}
+                onOpenChange={setIsFrequencyChangeOpen}
+                mortgageId={mortgage.id}
+                termId={currentTerm.id}
+                currentFrequency={currentTerm.paymentFrequency}
+              />
+            )}
+            {mortgage && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsFrequencyChangeOpen(true)}
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                Change Frequency
+              </Button>
+            )}
           </div>
         </div>
       </CardHeader>

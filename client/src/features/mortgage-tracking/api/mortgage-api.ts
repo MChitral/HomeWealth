@@ -144,10 +144,14 @@ export const mortgageApi = {
     apiRequest<{ success: boolean }>("DELETE", `/api/mortgage-payments/${paymentId}`),
 
   // Skip Payment
-  skipPayment: (mortgageId: string, termId: string, payload: {
-    paymentDate: string;
-    maxSkipsPerYear?: number;
-  }) =>
+  skipPayment: (
+    mortgageId: string,
+    termId: string,
+    payload: {
+      paymentDate: string;
+      maxSkipsPerYear?: number;
+    }
+  ) =>
     apiRequest<MortgagePayment>(
       "POST",
       `/api/mortgages/${mortgageId}/terms/${termId}/skip-payment`,
@@ -169,11 +173,17 @@ export const mortgageApi = {
     apiRequest<RenewalStatusResponse | null>("GET", `/api/mortgages/${mortgageId}/renewal-status`),
 
   // Refinancing Analysis
-  fetchRefinanceAnalysis: (mortgageId: string) =>
-    apiRequest<RefinanceAnalysisResponse | null>(
-      "GET",
-      `/api/mortgages/${mortgageId}/refinance-analysis`
-    ),
+  fetchRefinanceAnalysis: (mortgageId: string, closingCosts?: RefinanceAnalysisRequest) =>
+    closingCosts
+      ? apiRequest<RefinanceAnalysisResponse | null>(
+          "POST",
+          `/api/mortgages/${mortgageId}/refinance-analysis`,
+          closingCosts
+        )
+      : apiRequest<RefinanceAnalysisResponse | null>(
+          "GET",
+          `/api/mortgages/${mortgageId}/refinance-analysis`
+        ),
 
   // Penalty Calculator
   calculatePenalty: (payload: CalculatePenaltyRequest) =>
@@ -192,6 +202,80 @@ export const mortgageApi = {
       "POST",
       `/api/mortgage-terms/${termId}/blend-and-extend`,
       payload
+    ),
+
+  // Recast
+  calculateRecast: (mortgageId: string, payload: RecastCalculateRequest) =>
+    apiRequest<RecastCalculationResult>(
+      "POST",
+      `/api/mortgages/${mortgageId}/recast/calculate`,
+      payload
+    ),
+  applyRecast: (mortgageId: string, payload: RecastApplyRequest) =>
+    apiRequest<RecastApplyResponse>("POST", `/api/mortgages/${mortgageId}/recast/apply`, payload),
+  fetchRecastHistory: (mortgageId: string) =>
+    apiRequest<RecastEvent[]>("GET", `/api/mortgages/${mortgageId}/recast/history`),
+
+  // Payment Frequency Changes
+  calculateFrequencyChange: (termId: string, payload: FrequencyChangeRequest) =>
+    apiRequest<FrequencyChangeResult>(
+      "POST",
+      `/api/mortgage-terms/${termId}/frequency-change/calculate`,
+      payload
+    ),
+  applyFrequencyChange: (termId: string, payload: FrequencyChangeApplyRequest) =>
+    apiRequest<FrequencyChangeApplyResponse>(
+      "POST",
+      `/api/mortgage-terms/${termId}/frequency-change/apply`,
+      payload
+    ),
+  fetchFrequencyChangeHistory: (mortgageId: string) =>
+    apiRequest<FrequencyChangeEvent[]>("GET", `/api/mortgages/${mortgageId}/frequency-changes`),
+
+  // Mortgage Portability
+  calculatePortability: (mortgageId: string, payload: PortabilityCalculateRequest) =>
+    apiRequest<PortabilityCalculationResult>(
+      "POST",
+      `/api/mortgages/${mortgageId}/portability/calculate`,
+      payload
+    ),
+  applyPortability: (mortgageId: string, payload: PortabilityApplyRequest) =>
+    apiRequest<PortabilityApplyResponse>(
+      "POST",
+      `/api/mortgages/${mortgageId}/portability/apply`,
+      payload
+    ),
+  fetchPortabilityHistory: (mortgageId: string) =>
+    apiRequest<PortabilityEvent[]>("GET", `/api/mortgages/${mortgageId}/portability/history`),
+
+  // Property Value Tracking
+  updatePropertyValue: (mortgageId: string, payload: PropertyValueUpdateRequest) =>
+    apiRequest<PropertyValueUpdateResponse>(
+      "POST",
+      `/api/mortgages/${mortgageId}/property-value`,
+      payload
+    ),
+  fetchPropertyValueHistory: (mortgageId: string) =>
+    apiRequest<PropertyValueHistoryEntry[]>(
+      "GET",
+      `/api/mortgages/${mortgageId}/property-value/history`
+    ),
+
+  // Renewal Workflow
+  startRenewalWorkflow: (mortgageId: string) =>
+    apiRequest<RenewalWorkflowStartResponse>("POST", `/api/mortgages/${mortgageId}/renewal/start`),
+  trackRenewalNegotiation: (mortgageId: string, payload: RenewalNegotiationRequest) =>
+    apiRequest<RenewalNegotiationResponse>(
+      "POST",
+      `/api/mortgages/${mortgageId}/renewal/negotiations`,
+      payload
+    ),
+  fetchRenewalOptions: (mortgageId: string) =>
+    apiRequest<RenewalOptionsResponse>("GET", `/api/mortgages/${mortgageId}/renewal/options`),
+  fetchRenewalNegotiations: (mortgageId: string) =>
+    apiRequest<RenewalNegotiationEntry[]>(
+      "GET",
+      `/api/mortgages/${mortgageId}/renewal/negotiations`
     ),
 };
 
@@ -222,10 +306,21 @@ export type RefinanceAnalysisResponse = {
   marketRate: number;
   marketRateType: "fixed" | "variable";
   penalty: number;
+  closingCosts: number;
   monthlySavings: number;
   breakEvenMonths: number;
   isBeneficial: boolean;
   totalTermSavings: number;
+};
+
+export type RefinanceAnalysisRequest = {
+  closingCosts?: {
+    total?: number;
+    legalFees?: number;
+    appraisalFees?: number;
+    dischargeFees?: number;
+    otherFees?: number;
+  };
 };
 
 export type CalculatePenaltyRequest = {
@@ -234,6 +329,7 @@ export type CalculatePenaltyRequest = {
   marketRate: number; // decimal
   remainingMonths: number;
   termType?: "fixed" | "variable-changing" | "variable-fixed";
+  penaltyCalculationMethod?: string;
 };
 
 export type CalculatePenaltyResponse = {
@@ -262,4 +358,196 @@ export type BlendAndExtendResponse = {
   interestSavingsPerPayment: number;
   extendedAmortizationMonths: number;
   message: string;
+};
+
+export type RecastCalculateRequest = {
+  prepaymentAmount: number;
+  recastDate?: string;
+};
+
+export type RecastCalculationResult = {
+  previousBalance: number;
+  newBalance: number;
+  previousPaymentAmount: number;
+  newPaymentAmount: number;
+  paymentReduction: number;
+  remainingAmortizationMonths: number;
+  canRecast: boolean;
+  message?: string;
+};
+
+export type RecastApplyRequest = {
+  prepaymentAmount: number;
+  recastDate?: string;
+};
+
+export type RecastApplyResponse = {
+  recastEvent: RecastEvent;
+  updatedTerm: MortgageTerm | undefined;
+};
+
+export type RecastEvent = {
+  id: string;
+  mortgageId: string;
+  termId: string;
+  recastDate: string;
+  prepaymentAmount: string;
+  previousBalance: string;
+  newBalance: string;
+  previousPaymentAmount: string;
+  newPaymentAmount: string;
+  remainingAmortizationMonths: number;
+  description: string | null;
+  createdAt: string;
+};
+
+export type FrequencyChangeRequest = {
+  newFrequency: string;
+};
+
+export type FrequencyChangeResult = {
+  oldFrequency: string;
+  newFrequency: string;
+  oldPaymentAmount: number;
+  newPaymentAmount: number;
+  paymentDifference: number;
+  remainingAmortizationMonths: number;
+  canChange: boolean;
+  message?: string;
+};
+
+export type FrequencyChangeApplyRequest = {
+  newFrequency: string;
+  changeDate?: string;
+};
+
+export type FrequencyChangeApplyResponse = {
+  changeEvent: FrequencyChangeEvent;
+  updatedTerm: MortgageTerm | undefined;
+};
+
+export type FrequencyChangeEvent = {
+  id: string;
+  mortgageId: string;
+  termId: string;
+  changeDate: string;
+  oldFrequency: string;
+  newFrequency: string;
+  oldPaymentAmount: string;
+  newPaymentAmount: string;
+  remainingTermMonths: number;
+  description: string | null;
+  createdAt: string;
+};
+
+export type PortabilityCalculateRequest = {
+  newPropertyPrice: number;
+  portDate?: string;
+};
+
+export type PortabilityCalculationResult = {
+  oldPropertyPrice: number;
+  newPropertyPrice: number;
+  portedAmount: number;
+  topUpAmount: number;
+  requiresTopUp: boolean;
+  blendedRate?: number;
+  canPort: boolean;
+  message?: string;
+};
+
+export type PortabilityApplyRequest = {
+  newPropertyPrice: number;
+  portDate?: string;
+};
+
+export type PortabilityApplyResponse = {
+  portabilityEvent: PortabilityEvent;
+  newMortgage?: Mortgage;
+};
+
+export type PortabilityEvent = {
+  id: string;
+  mortgageId: string;
+  portDate: string;
+  oldPropertyPrice: string;
+  newPropertyPrice: string;
+  portedAmount: string;
+  topUpAmount: string | null;
+  newMortgageId: string | null;
+  description: string | null;
+  createdAt: string;
+};
+
+export type PropertyValueUpdateRequest = {
+  propertyValue: number;
+  valueDate?: string;
+  source?: string;
+  notes?: string;
+};
+
+export type PropertyValueUpdateResponse = {
+  valueHistory: PropertyValueHistoryEntry;
+  updatedMortgage: Mortgage | undefined;
+};
+
+export type PropertyValueHistoryEntry = {
+  id: string;
+  mortgageId: string;
+  valueDate: string;
+  propertyValue: string;
+  source: string | null;
+  notes: string | null;
+  createdAt: string;
+};
+
+export type RenewalWorkflowStartResponse = {
+  mortgage: Mortgage;
+  currentTerm: MortgageTerm | undefined;
+  renewalStatus: RenewalStatusResponse | null;
+};
+
+export type RenewalNegotiationRequest = {
+  termId: string;
+  negotiationDate?: string;
+  offeredRate?: number;
+  negotiatedRate?: number;
+  status: "pending" | "accepted" | "rejected" | "counter_offered";
+  notes?: string;
+};
+
+export type RenewalNegotiationResponse = {
+  id: string;
+  mortgageId: string;
+  termId: string;
+  negotiationDate: string;
+  offeredRate: string | null;
+  negotiatedRate: string | null;
+  status: string;
+  notes: string | null;
+  createdAt: string;
+};
+
+export type RenewalOptionsResponse = {
+  stayWithCurrentLender: {
+    estimatedRate: number;
+    estimatedPenalty: number;
+  };
+  switchLender: {
+    estimatedRate: number;
+    estimatedPenalty: number;
+    estimatedClosingCosts: number;
+  };
+};
+
+export type RenewalNegotiationEntry = {
+  id: string;
+  mortgageId: string;
+  termId: string;
+  negotiationDate: string;
+  offeredRate: string | null;
+  negotiatedRate: string | null;
+  status: string;
+  notes: string | null;
+  createdAt: string;
 };

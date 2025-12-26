@@ -8,6 +8,7 @@ import { TaxCalculationService } from "./tax-calculation.service";
 import { calculateCreditRoomIncrease } from "@server-shared/calculations/smith-maneuver/credit-room";
 import { calculateNetBenefit } from "@server-shared/calculations/smith-maneuver/net-benefit";
 import { calculateLeverageRatio, calculateInterestCoverage } from "@server-shared/calculations/smith-maneuver/risk-metrics";
+import { calculateInterestDeduction } from "@domain/calculations/tax/interest-deduction";
 import type {
   InsertSmithManeuverStrategy,
   UpdateSmithManeuverStrategy,
@@ -32,6 +33,37 @@ export interface YearlyProjection {
   netBenefit: number;
   leverageRatio: number;
   interestCoverage: number;
+}
+
+export interface ROIAnalysis {
+  totalInvestment: number;
+  totalReturns: number;
+  totalTaxSavings: number;
+  totalInvestmentTax: number;
+  netBenefit: number;
+  roi: number; // Return on investment as percentage
+  effectiveReturn: number; // After-tax return percentage
+}
+
+export interface PrepaymentComparison {
+  smithManeuver: {
+    totalPrepayments: number;
+    netBenefit: number;
+    finalMortgageBalance: number;
+    investmentValue: number;
+    totalCost: number;
+  };
+  directPrepayment: {
+    totalPrepayments: number;
+    interestSaved: number;
+    finalMortgageBalance: number;
+    totalCost: number;
+  };
+  advantage: {
+    strategy: "smith_maneuver" | "direct_prepayment" | "tie";
+    netAdvantage: number;
+    advantagePercent: number;
+  };
 }
 
 /**
@@ -306,18 +338,24 @@ export class SmithManeuverService {
       // Calculate investment returns
       const investmentReturns = investmentValue * (expectedReturnRate / 100);
 
-      // Calculate tax savings
-      const taxDeductionResult = await this.calculateTaxDeduction(
+      // Calculate tax savings using domain logic
+      const investmentUsePercent = 100; // Assuming 100% investment use
+      const interestDeductionResult = calculateInterestDeduction(
         helocInterestPaid,
-        100, // Assuming 100% investment use
-        marginalTaxRate
+        investmentUsePercent,
+        marginalTaxRate / 100 // Convert percentage to decimal
       );
-      const taxSavings = taxDeductionResult.taxSavings;
+      const taxSavings = interestDeductionResult.taxSavings;
 
-      // Calculate investment tax (simplified - assuming capital gains)
+      // Calculate investment tax based on strategy's income type
+      const incomeType = (strategy.investmentIncomeType || "capital_gain") as
+        | "eligible_dividend"
+        | "non_eligible_dividend"
+        | "interest"
+        | "capital_gain";
       const investmentTaxResult = await this.taxCalculation.calculateInvestmentIncomeTax(
         investmentReturns,
-        "capital_gain",
+        incomeType,
         strategy.province,
         marginalTaxRate
       );
@@ -355,6 +393,138 @@ export class SmithManeuverService {
     }
 
     return projections;
+  }
+
+  /**
+   * Calculate ROI analysis for a strategy
+   */
+  async calculateROIAnalysis(
+    strategyId: string,
+    userId: string,
+    years: number = 10
+  ): Promise<ROIAnalysis> {
+    const projections = await this.projectStrategy(strategyId, userId, years);
+    const lastProjection = projections[projections.length - 1];
+
+    const totalInvestment = lastProjection.totalBorrowings;
+    const totalReturns = projections.reduce((sum, p) => sum + p.investmentReturns, 0);
+    const totalTaxSavings = projections.reduce((sum, p) => sum + p.taxSavings, 0);
+
+    // Calculate total investment tax over the period
+    const strategy = await this.getStrategyById(strategyId, userId);
+    if (!strategy) {
+      throw new Error("Strategy not found");
+    }
+
+    const incomeType = (strategy.investmentIncomeType || "capital_gain") as
+      | "eligible_dividend"
+      | "non_eligible_dividend"
+      | "interest"
+      | "capital_gain";
+    const marginalTaxRate = parseFloat(strategy.marginalTaxRate || "0");
+
+    let totalInvestmentTax = 0;
+    for (const projection of projections) {
+      const taxResult = await this.taxCalculation.calculateInvestmentIncomeTax(
+        projection.investmentReturns,
+        incomeType,
+        strategy.province,
+        marginalTaxRate
+      );
+      totalInvestmentTax += taxResult.taxAmount;
+    }
+
+    const netBenefit = lastProjection.netBenefit;
+    const roi = totalInvestment > 0 ? (netBenefit / totalInvestment) * 100 : 0;
+    const effectiveReturn =
+      totalInvestment > 0
+        ? ((totalReturns - totalInvestmentTax) / totalInvestment) * 100
+        : 0;
+
+    return {
+      totalInvestment,
+      totalReturns,
+      totalTaxSavings,
+      totalInvestmentTax,
+      netBenefit,
+      roi,
+      effectiveReturn,
+    };
+  }
+
+  /**
+   * Compare Smith Maneuver strategy with direct prepayment
+   */
+  async compareWithDirectPrepayment(
+    strategyId: string,
+    userId: string,
+    years: number = 10,
+    mortgageRate: number // Annual mortgage interest rate as decimal
+  ): Promise<PrepaymentComparison> {
+    const strategy = await this.getStrategyById(strategyId, userId);
+    if (!strategy) {
+      throw new Error("Strategy not found");
+    }
+
+    const mortgage = await this.mortgages.findById(strategy.mortgageId);
+    if (!mortgage) {
+      throw new Error("Mortgage not found");
+    }
+
+    const projections = await this.projectStrategy(strategyId, userId, years);
+    const lastProjection = projections[projections.length - 1];
+
+    // Smith Maneuver results
+    const smithManeuver = {
+      totalPrepayments: lastProjection.totalPrepayments,
+      netBenefit: lastProjection.netBenefit,
+      finalMortgageBalance: lastProjection.mortgageBalance,
+      investmentValue: lastProjection.investmentValue,
+      totalCost: lastProjection.totalPrepayments + lastProjection.totalBorrowings,
+    };
+
+    // Direct prepayment results (same prepayment amount, no borrowing)
+    const totalPrepayments = lastProjection.totalPrepayments;
+    const initialBalance = parseFloat(mortgage.currentBalance);
+    const finalBalance = initialBalance - totalPrepayments;
+
+    // Simplified interest saved calculation
+    // In reality, this would require full amortization schedule
+    const averageBalance = (initialBalance + finalBalance) / 2;
+    const interestSaved = averageBalance * mortgageRate * years - finalBalance * mortgageRate * years;
+
+    const directPrepayment = {
+      totalPrepayments,
+      interestSaved,
+      finalMortgageBalance: Math.max(0, finalBalance),
+      totalCost: totalPrepayments,
+    };
+
+    // Calculate advantage
+    const netAdvantage = smithManeuver.netBenefit - directPrepayment.interestSaved;
+    const advantagePercent =
+      directPrepayment.interestSaved > 0
+        ? (netAdvantage / directPrepayment.interestSaved) * 100
+        : 0;
+
+    let winningStrategy: "smith_maneuver" | "direct_prepayment" | "tie";
+    if (netAdvantage > 100) {
+      winningStrategy = "smith_maneuver";
+    } else if (netAdvantage < -100) {
+      winningStrategy = "direct_prepayment";
+    } else {
+      winningStrategy = "tie";
+    }
+
+    return {
+      smithManeuver,
+      directPrepayment,
+      advantage: {
+        strategy: winningStrategy,
+        netAdvantage,
+        advantagePercent,
+      },
+    };
   }
 }
 

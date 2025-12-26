@@ -29,8 +29,18 @@ import { HelocSection } from "./heloc-section";
 import { CreditRoomDisplay } from "./credit-room-display";
 import { CreditRoomHistory } from "./credit-room-history";
 import { MarkReAdvanceableDialog } from "./mark-re-advanceable-dialog";
+import { RecastDialog } from "./recast-dialog";
+import { RecastHistory } from "./recast-history";
+import { FrequencyChangeDialog } from "./frequency-change-dialog";
+import { FrequencyChangeHistory } from "./frequency-change-history";
+import { PortabilityDialog } from "./portability-dialog";
+import { PortabilityHistory } from "./portability-history";
+import { PropertyValueUpdateDialog } from "./property-value-update-dialog";
+import { PropertyValueHistory } from "./property-value-history";
+import { RenewalWorkflowWizard } from "./renewal-workflow-wizard";
 import { formatAmortization } from "../utils/format";
 import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 
 interface MortgageContentProps {
   mortgage: Mortgage | null;
@@ -166,6 +176,11 @@ export function MortgageContent({
   deletePaymentMutation,
   editMortgageMutation,
 }: MortgageContentProps) {
+  const [isRecastOpen, setIsRecastOpen] = useState(false);
+  const [isFrequencyChangeOpen, setIsFrequencyChangeOpen] = useState(false);
+  const [isPortabilityOpen, setIsPortabilityOpen] = useState(false);
+  const [isPropertyValueUpdateOpen, setIsPropertyValueUpdateOpen] = useState(false);
+
   if (!mortgage) {
     return null;
   }
@@ -352,8 +367,26 @@ export function MortgageContent({
           <AnalyticsDashboard mortgageId={mortgage.id} />
         </TabsContent>
 
-        <TabsContent value="prepayments">
+        <TabsContent value="prepayments" className="space-y-6">
           <PrepaymentFeature isEmbedded />
+          {mortgage && (
+            <Tabs defaultValue="recast" className="w-full">
+              <TabsList>
+                <TabsTrigger value="recast">Recast History</TabsTrigger>
+                <TabsTrigger value="frequency">Frequency Changes</TabsTrigger>
+                <TabsTrigger value="portability">Portability History</TabsTrigger>
+              </TabsList>
+              <TabsContent value="recast">
+                <RecastHistory mortgageId={mortgage.id} />
+              </TabsContent>
+              <TabsContent value="frequency">
+                <FrequencyChangeHistory mortgageId={mortgage.id} />
+              </TabsContent>
+              <TabsContent value="portability">
+                <PortabilityHistory mortgageId={mortgage.id} />
+              </TabsContent>
+            </Tabs>
+          )}
         </TabsContent>
 
         <TabsContent value="renewals">
@@ -365,9 +398,44 @@ export function MortgageContent({
         </TabsContent>
 
         <TabsContent value="refinance">
-          <RefinanceTab mortgageId={mortgage.id} />
+          <RefinanceTab
+            mortgageId={mortgage.id}
+            currentPropertyPrice={Number(mortgage.propertyPrice)}
+          />
         </TabsContent>
       </Tabs>
+
+      {mortgage && (
+        <>
+          <RecastDialog
+            open={isRecastOpen}
+            onOpenChange={setIsRecastOpen}
+            mortgageId={mortgage.id}
+          />
+          <PortabilityDialog
+            open={isPortabilityOpen}
+            onOpenChange={setIsPortabilityOpen}
+            mortgageId={mortgage.id}
+            currentPropertyPrice={Number(mortgage.propertyPrice)}
+          />
+          <PropertyValueUpdateDialog
+            open={isPropertyValueUpdateOpen}
+            onOpenChange={setIsPropertyValueUpdateOpen}
+            mortgageId={mortgage.id}
+            currentPropertyPrice={Number(mortgage.propertyPrice)}
+          />
+        </>
+      )}
+
+      {mortgage && uiCurrentTerm && (
+        <FrequencyChangeDialog
+          open={isFrequencyChangeOpen}
+          onOpenChange={setIsFrequencyChangeOpen}
+          mortgageId={mortgage.id}
+          termId={uiCurrentTerm.id}
+          currentFrequency={uiCurrentTerm.paymentFrequency}
+        />
+      )}
     </div>
   );
 }

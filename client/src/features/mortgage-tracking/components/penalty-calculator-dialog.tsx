@@ -91,6 +91,7 @@ export function PenaltyCalculatorDialog({
         marketRate: parseFloat(data.marketRate) / 100,
         remainingMonths: parseInt(data.remainingMonths, 10),
         termType: data.termType,
+        penaltyCalculationMethod: data.penaltyCalculationMethod,
       });
     },
     onSuccess: (data) => {

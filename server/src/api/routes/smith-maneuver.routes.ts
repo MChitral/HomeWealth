@@ -150,6 +150,41 @@ export function registerSmithManeuverRoutes(router: Router, services: Applicatio
   });
 
   // Get tax calculations for strategy
+  router.get("/smith-maneuver/strategies/:id/roi-analysis", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+
+    try {
+      const years = req.query.years ? parseInt(req.query.years as string, 10) : 10;
+      const analysis = await services.smithManeuver.calculateROIAnalysis(
+        req.params.id,
+        user.id,
+        years
+      );
+      res.json(analysis);
+    } catch (error) {
+      sendError(res, 500, "Failed to calculate ROI analysis", error);
+    }
+  });
+
+  router.post("/smith-maneuver/strategies/:id/compare-prepayment", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+
+    try {
+      const { years, mortgageRate } = req.body;
+      const comparison = await services.smithManeuver.compareWithDirectPrepayment(
+        req.params.id,
+        user.id,
+        years || 10,
+        mortgageRate
+      );
+      res.json(comparison);
+    } catch (error) {
+      sendError(res, 500, "Failed to compare with direct prepayment", error);
+    }
+  });
+
   router.get("/smith-maneuver/strategies/:id/tax-calculations", async (req, res) => {
     const user = requireUser(req, res);
     if (!user) return;

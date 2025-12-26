@@ -189,6 +189,13 @@ export const mortgages = pgTable("mortgages", {
   isReAdvanceable: integer("is_re_advanceable").default(0), // boolean (0 = false, 1 = true)
   reAdvanceableHelocId: varchar("re_advanceable_heloc_id"), // Foreign key to heloc_accounts.id (defined after helocAccounts table)
 
+  // Lender information (optional, for lender-specific penalty rules)
+  lenderName: text("lender_name"), // e.g., "RBC", "TD", "BMO", "Scotiabank", "CIBC"
+
+  // Mortgage portability tracking
+  isPorted: integer("is_ported").default(0), // boolean (0 = false, 1 = true)
+  originalMortgageId: varchar("original_mortgage_id"), // Reference to original mortgage if this is a ported mortgage
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -261,6 +268,9 @@ export const mortgageTerms = pgTable("mortgage_terms", {
 
   paymentFrequency: text("payment_frequency").notNull(), // monthly, biweekly, accelerated-biweekly, semi-monthly, weekly, accelerated-weekly
   regularPaymentAmount: decimal("regular_payment_amount", { precision: 10, scale: 2 }).notNull(),
+
+  // Penalty calculation method
+  penaltyCalculationMethod: text("penalty_calculation_method"), // "ird_posted_rate", "ird_discounted_rate", "ird_origination_comparison", "three_month_interest", "open_mortgage", "variable_rate"
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -544,14 +554,74 @@ export const refinancingEvents = pgTable("refinancing_events", {
   newAmortizationMonths: integer("new_amortization_months"), // If extending amortization (nullable)
   paymentFrequency: text("payment_frequency"), // If changing frequency (nullable)
 
+  // Closing costs (Feature 2.3)
+  closingCosts: decimal("closing_costs", { precision: 12, scale: 2 }), // Total closing costs
+  legalFees: decimal("legal_fees", { precision: 12, scale: 2 }), // Legal fees breakdown
+  appraisalFees: decimal("appraisal_fees", { precision: 12, scale: 2 }), // Appraisal fees
+  dischargeFees: decimal("discharge_fees", { precision: 12, scale: 2 }), // Discharge fees
+  otherFees: decimal("other_fees", { precision: 12, scale: 2 }), // Other fees
+
   description: text("description"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertRefinancingEventSchema = createInsertSchema(refinancingEvents).omit({
-  id: true,
-  createdAt: true,
-});
+export const insertRefinancingEventSchema = createInsertSchema(refinancingEvents)
+  .omit({
+    id: true,
+    createdAt: true,
+  })
+  .extend({
+    closingCosts: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(2)
+            : val
+      ),
+    legalFees: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(2)
+            : val
+      ),
+    appraisalFees: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(2)
+            : val
+      ),
+    dischargeFees: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(2)
+            : val
+      ),
+    otherFees: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(2)
+            : val
+      ),
+  });
 export type InsertRefinancingEvent = z.infer<typeof insertRefinancingEventSchema>;
 export type RefinancingEvent = typeof refinancingEvents.$inferSelect;
 
@@ -1480,3 +1550,236 @@ export const insertSmithManeuverComparisonSchema = createInsertSchema(smithManeu
 
 export type InsertSmithManeuverComparison = z.infer<typeof insertSmithManeuverComparisonSchema>;
 export type SmithManeuverComparison = typeof smithManeuverComparisons.$inferSelect;
+
+// Recast Events - Track mortgage recast events (payment recalculation after large prepayments)
+export const recastEvents = pgTable(
+  "recast_events",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    mortgageId: varchar("mortgage_id")
+      .notNull()
+      .references(() => mortgages.id, { onDelete: "cascade" }),
+    termId: varchar("term_id")
+      .notNull()
+      .references(() => mortgageTerms.id, { onDelete: "cascade" }),
+    recastDate: date("recast_date").notNull(),
+    prepaymentAmount: decimal("prepayment_amount", { precision: 12, scale: 2 }).notNull(),
+    previousBalance: decimal("previous_balance", { precision: 12, scale: 2 }).notNull(),
+    newBalance: decimal("new_balance", { precision: 12, scale: 2 }).notNull(),
+    previousPaymentAmount: decimal("previous_payment_amount", { precision: 10, scale: 2 }).notNull(),
+    newPaymentAmount: decimal("new_payment_amount", { precision: 10, scale: 2 }).notNull(),
+    remainingAmortizationMonths: integer("remaining_amortization_months").notNull(),
+    description: text("description"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("IDX_recast_events_mortgage").on(table.mortgageId),
+    index("IDX_recast_events_term").on(table.termId),
+    index("IDX_recast_events_date").on(table.recastDate),
+  ]
+);
+
+export const insertRecastEventSchema = createInsertSchema(recastEvents)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    prepaymentAmount: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    previousBalance: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    newBalance: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    previousPaymentAmount: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    newPaymentAmount: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+  });
+
+export type InsertRecastEvent = z.infer<typeof insertRecastEventSchema>;
+export type RecastEvent = typeof recastEvents.$inferSelect;
+
+// Payment Frequency Change Events - Track mid-term payment frequency changes
+export const paymentFrequencyChangeEvents = pgTable(
+  "payment_frequency_change_events",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    mortgageId: varchar("mortgage_id")
+      .notNull()
+      .references(() => mortgages.id, { onDelete: "cascade" }),
+    termId: varchar("term_id")
+      .notNull()
+      .references(() => mortgageTerms.id, { onDelete: "cascade" }),
+    changeDate: date("change_date").notNull(),
+    oldFrequency: text("old_frequency").notNull(),
+    newFrequency: text("new_frequency").notNull(),
+    oldPaymentAmount: decimal("old_payment_amount", { precision: 10, scale: 2 }).notNull(),
+    newPaymentAmount: decimal("new_payment_amount", { precision: 10, scale: 2 }).notNull(),
+    remainingTermMonths: integer("remaining_term_months").notNull(),
+    description: text("description"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("IDX_payment_frequency_change_events_mortgage").on(table.mortgageId),
+    index("IDX_payment_frequency_change_events_term").on(table.termId),
+    index("IDX_payment_frequency_change_events_date").on(table.changeDate),
+  ]
+);
+
+export const insertPaymentFrequencyChangeEventSchema = createInsertSchema(
+  paymentFrequencyChangeEvents
+)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    oldPaymentAmount: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    newPaymentAmount: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+  });
+
+export type InsertPaymentFrequencyChangeEvent = z.infer<
+  typeof insertPaymentFrequencyChangeEventSchema
+>;
+export type PaymentFrequencyChangeEvent = typeof paymentFrequencyChangeEvents.$inferSelect;
+
+// Mortgage Portability - Track mortgage portability events (transferring mortgages to new properties)
+export const mortgagePortability = pgTable(
+  "mortgage_portability",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    mortgageId: varchar("mortgage_id")
+      .notNull()
+      .references(() => mortgages.id, { onDelete: "cascade" }),
+    portDate: date("port_date").notNull(),
+    oldPropertyPrice: decimal("old_property_price", { precision: 12, scale: 2 }).notNull(),
+    newPropertyPrice: decimal("new_property_price", { precision: 12, scale: 2 }).notNull(),
+    portedAmount: decimal("ported_amount", { precision: 12, scale: 2 }).notNull(),
+    topUpAmount: decimal("top_up_amount", { precision: 12, scale: 2 }), // Additional amount if new property is more expensive
+    newMortgageId: varchar("new_mortgage_id").references(() => mortgages.id), // Reference to new mortgage if created
+    description: text("description"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("IDX_mortgage_portability_mortgage").on(table.mortgageId),
+    index("IDX_mortgage_portability_new_mortgage").on(table.newMortgageId),
+    index("IDX_mortgage_portability_date").on(table.portDate),
+  ]
+);
+
+export const insertMortgagePortabilitySchema = createInsertSchema(mortgagePortability)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    oldPropertyPrice: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    newPropertyPrice: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    portedAmount: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    topUpAmount: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) =>
+        val === null || val === undefined
+          ? undefined
+          : typeof val === "number"
+            ? val.toFixed(2)
+            : val
+      ),
+  });
+
+export type InsertMortgagePortability = z.infer<typeof insertMortgagePortabilitySchema>;
+export type MortgagePortability = typeof mortgagePortability.$inferSelect;
+
+// Renewal Negotiations - Track rate negotiations during renewal process
+export const renewalNegotiations = pgTable(
+  "renewal_negotiations",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    mortgageId: varchar("mortgage_id")
+      .notNull()
+      .references(() => mortgages.id, { onDelete: "cascade" }),
+    termId: varchar("term_id")
+      .notNull()
+      .references(() => mortgageTerms.id, { onDelete: "cascade" }),
+    negotiationDate: date("negotiation_date").notNull(),
+    offeredRate: decimal("offered_rate", { precision: 5, scale: 3 }), // Rate offered by lender
+    negotiatedRate: decimal("negotiated_rate", { precision: 5, scale: 3 }), // Final negotiated rate
+    status: text("status").notNull(), // "pending", "accepted", "rejected", "counter_offered"
+    notes: text("notes"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("IDX_renewal_negotiations_mortgage").on(table.mortgageId),
+    index("IDX_renewal_negotiations_term").on(table.termId),
+    index("IDX_renewal_negotiations_date").on(table.negotiationDate),
+  ]
+);
+
+export const insertRenewalNegotiationSchema = createInsertSchema(renewalNegotiations)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    offeredRate: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) =>
+        val == null ? null : typeof val === "number" ? val.toFixed(3) : val
+      ),
+    negotiatedRate: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) =>
+        val == null ? null : typeof val === "number" ? val.toFixed(3) : val
+      ),
+  });
+
+export type InsertRenewalNegotiation = z.infer<typeof insertRenewalNegotiationSchema>;
+export type RenewalNegotiation = typeof renewalNegotiations.$inferSelect;
+
+// Property Value History - Track property value over time for HELOC credit limit updates
+export const propertyValueHistory = pgTable(
+  "property_value_history",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    mortgageId: varchar("mortgage_id")
+      .notNull()
+      .references(() => mortgages.id, { onDelete: "cascade" }),
+    valueDate: date("value_date").notNull(),
+    propertyValue: decimal("property_value", { precision: 12, scale: 2 }).notNull(),
+    source: text("source"), // "appraisal", "assessment", "estimate", "user_input"
+    notes: text("notes"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("IDX_property_value_history_mortgage").on(table.mortgageId),
+    index("IDX_property_value_history_date").on(table.valueDate),
+  ]
+);
+
+export const insertPropertyValueHistorySchema = createInsertSchema(propertyValueHistory)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    propertyValue: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+  });
+
+export type InsertPropertyValueHistory = z.infer<typeof insertPropertyValueHistorySchema>;
+export type PropertyValueHistory = typeof propertyValueHistory.$inferSelect;

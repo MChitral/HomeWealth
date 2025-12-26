@@ -9,6 +9,7 @@ export interface RefinanceAnalysis {
   marketRate: number;
   marketRateType: "fixed" | "variable";
   penalty: number;
+  closingCosts: number;
   monthlySavings: number;
   breakEvenMonths: number;
   isBeneficial: boolean;
@@ -22,7 +23,16 @@ export class RefinancingService {
     private marketRateService: MarketRateService
   ) {}
 
-  async analyzeRefinanceOpportunity(mortgageId: string): Promise<RefinanceAnalysis | null> {
+  async analyzeRefinanceOpportunity(
+    mortgageId: string,
+    closingCosts?: {
+      total?: number;
+      legalFees?: number;
+      appraisalFees?: number;
+      dischargeFees?: number;
+      otherFees?: number;
+    }
+  ): Promise<RefinanceAnalysis | null> {
     const mortgage = await this.mortgagesRepo.findById(mortgageId);
     if (!mortgage) return null;
 
@@ -73,13 +83,35 @@ export class RefinancingService {
     const targetRate =
       (await this.marketRateService.getMarketRate("fixed", 5)) ?? currentRate;
 
+    // Calculate closing costs: use provided total, or sum of breakdown, or default
+    let totalClosingCosts = 0;
+    if (closingCosts?.total !== undefined && closingCosts.total > 0) {
+      totalClosingCosts = closingCosts.total;
+    } else if (
+      closingCosts?.legalFees ||
+      closingCosts?.appraisalFees ||
+      closingCosts?.dischargeFees ||
+      closingCosts?.otherFees
+    ) {
+      // Sum up breakdown if provided
+      totalClosingCosts =
+        (closingCosts.legalFees || 0) +
+        (closingCosts.appraisalFees || 0) +
+        (closingCosts.dischargeFees || 0) +
+        (closingCosts.otherFees || 0);
+    } else {
+      // Default closing costs estimate (typical closing costs in Canada)
+      totalClosingCosts = 1500;
+    }
+
     const benefit = calculateRefinanceBenefit(
       balance,
       currentRate,
       targetRate,
       amortizationMonths,
       remainingTermMonths,
-      penalty.penalty
+      penalty.penalty,
+      totalClosingCosts
     );
 
     return {
@@ -87,6 +119,7 @@ export class RefinancingService {
       marketRate: targetRate * 100, // Return as percentage for UI
       marketRateType: "fixed",
       penalty: penalty.penalty,
+      closingCosts: totalClosingCosts,
       monthlySavings: benefit.monthlySavings,
       breakEvenMonths: benefit.breakEvenMonths,
       isBeneficial: benefit.isBeneficial,

@@ -17,6 +17,11 @@ import { InvestmentRepository } from "./investment.repository";
 import { InvestmentTransactionRepository } from "./investment-transaction.repository";
 import { InvestmentIncomeRepository } from "./investment-income.repository";
 import { SmithManeuverRepository } from "./smith-maneuver.repository";
+import { RecastEventsRepository } from "./recast-events.repository";
+import { PaymentFrequencyChangeEventsRepository } from "./payment-frequency-change-events.repository";
+import { MortgagePortabilityRepository } from "./mortgage-portability.repository";
+import { RenewalNegotiationsRepository } from "./renewal-negotiations.repository";
+import { PropertyValueHistoryRepository } from "./property-value-history.repository";
 
 export interface Repositories {
   users: UsersRepository;
@@ -38,6 +43,11 @@ export interface Repositories {
   investmentTransactions: InvestmentTransactionRepository;
   investmentIncome: InvestmentIncomeRepository;
   smithManeuver: SmithManeuverRepository;
+  recastEvents: RecastEventsRepository;
+  paymentFrequencyChangeEvents: PaymentFrequencyChangeEventsRepository;
+  mortgagePortability: MortgagePortabilityRepository;
+  renewalNegotiations: RenewalNegotiationsRepository;
+  propertyValueHistory: PropertyValueHistoryRepository;
 }
 
 export function createRepositories(): Repositories {
@@ -61,6 +71,11 @@ export function createRepositories(): Repositories {
     investmentTransactions: new InvestmentTransactionRepository(),
     investmentIncome: new InvestmentIncomeRepository(),
     smithManeuver: new SmithManeuverRepository(),
+    recastEvents: new RecastEventsRepository(),
+    paymentFrequencyChangeEvents: new PaymentFrequencyChangeEventsRepository(),
+    mortgagePortability: new MortgagePortabilityRepository(),
+    renewalNegotiations: new RenewalNegotiationsRepository(),
+    propertyValueHistory: new PropertyValueHistoryRepository(),
   };
 }
 
@@ -86,4 +101,9 @@ export {
   InvestmentTransactionRepository,
   InvestmentIncomeRepository,
   SmithManeuverRepository,
+  RecastEventsRepository,
+  PaymentFrequencyChangeEventsRepository,
+  MortgagePortabilityRepository,
+  RenewalNegotiationsRepository,
+  PropertyValueHistoryRepository,
 };
