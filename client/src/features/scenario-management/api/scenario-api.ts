@@ -137,4 +137,31 @@ export const scenarioApi = {
     apiRequest("DELETE", `/api/refinancing-events/${eventId}`, {}),
   fetchProjection: (params: ProjectionRequest) =>
     apiRequest<ProjectionResponse>("POST", "/api/mortgages/projection", params),
+  runMonteCarloSimulation: (params: {
+    scenarioId?: string;
+    timeHorizonMonths: number;
+    numIterations?: number;
+    rateModel?: "gbm" | "vasicek";
+    interestRateVolatility?: number;
+    interestRateDrift?: number;
+    meanReversionSpeed?: number;
+    longTermMeanRate?: number;
+    rateCap?: number;
+    rateFloor?: number;
+    useHistoricalVolatility?: boolean;
+    historicalRates?: number[];
+  }) => apiRequest<any>("POST", "/api/scenarios/monte-carlo", params),
+  fetchTemplates: () => apiRequest<any[]>("GET", "/api/scenarios/templates"),
+  fetchTemplate: (id: string) => apiRequest<any>("GET", `/api/scenarios/templates/${id}`),
+  createFromTemplate: (templateId: string, name?: string, description?: string) =>
+    apiRequest<Scenario>("POST", "/api/scenarios/from-template", {
+      templateId,
+      name,
+      description,
+    }),
+  analyzeRateChange: (params: {
+    scenarioId?: string;
+    rateChanges: number[];
+    timeHorizonYears?: number;
+  }) => apiRequest<any>("POST", "/api/scenarios/rate-change-analysis", params),
 };

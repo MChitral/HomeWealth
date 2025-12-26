@@ -303,6 +303,8 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         remainingMonths,
         termType,
         penaltyCalculationMethod,
+        mortgageId, // Optional: if provided, will check openClosedMortgageType
+        openClosedMortgageType, // Optional: can be passed directly instead of fetching
       } = req.body;
 
       // Validate inputs
@@ -323,21 +325,62 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         return;
       }
 
+      // Check if mortgage is open (either from direct parameter or by fetching mortgage)
+      let isOpenMortgage = false;
+      let detectedMortgageType: string | null = null;
+
+      if (openClosedMortgageType === "open") {
+        isOpenMortgage = true;
+        detectedMortgageType = "open";
+      } else if (mortgageId && !openClosedMortgageType) {
+        // Fetch mortgage to check openClosedMortgageType
+        const mortgage = await services.mortgages.findById(mortgageId);
+        if (mortgage && mortgage.userId === user.id) {
+          // Verify ownership
+          if (mortgage.openClosedMortgageType === "open") {
+            isOpenMortgage = true;
+            detectedMortgageType = "open";
+          } else {
+            detectedMortgageType = mortgage.openClosedMortgageType || "closed";
+          }
+        }
+      }
+
       // Calculate penalties
       const {
         calculateStandardPenalty,
         calculateThreeMonthInterestPenalty,
         calculateIRDPenalty,
         calculatePenaltyByMethod,
-        type PenaltyCalculationMethod,
       } = await import("@domain/calculations/penalty");
+      type PenaltyCalculationMethod =
+        | "ird_posted_rate"
+        | "ird_discounted_rate"
+        | "ird_origination_comparison"
+        | "three_month_interest"
+        | "open_mortgage"
+        | "variable_rate";
 
       const threeMonthPenalty = calculateThreeMonthInterestPenalty(balance, currentRate);
       const irdPenalty = calculateIRDPenalty(balance, currentRate, marketRate, remainingMonths);
 
       // Use specific method if provided, otherwise use standard calculation
+      // BUT: If mortgage is open, automatically use open_mortgage method (overrides user selection)
       let penaltyResult;
-      if (penaltyCalculationMethod) {
+      let autoDetectedOpen = false;
+
+      if (isOpenMortgage) {
+        // Open mortgage: penalty is always 0
+        penaltyResult = calculatePenaltyByMethod(
+          "open_mortgage" as PenaltyCalculationMethod,
+          balance,
+          currentRate,
+          marketRate,
+          remainingMonths,
+          termType
+        );
+        autoDetectedOpen = true;
+      } else if (penaltyCalculationMethod) {
         penaltyResult = calculatePenaltyByMethod(
           penaltyCalculationMethod as PenaltyCalculationMethod,
           balance,
@@ -369,6 +412,16 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
           ird: irdPenalty,
           applied: penaltyResult.method,
         },
+        // Add metadata about open mortgage detection
+        ...(autoDetectedOpen
+          ? {
+              isOpenMortgage: true,
+              mortgageType: detectedMortgageType,
+              note: "Penalty is $0 because this is an open mortgage",
+            }
+          : detectedMortgageType
+            ? { mortgageType: detectedMortgageType }
+            : {}),
       });
     } catch (error) {
       sendError(res, 500, "Failed to calculate penalty", error);
@@ -1101,6 +1154,232 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       res.json(result);
     } catch (error) {
       sendError(res, 400, "Invalid payment data", error);
+    }
+  });
+
+  // Payment Corrections
+  router.post("/mortgage-payments/:paymentId/correct", requireUser, async (req, res) => {
+    try {
+      const { paymentId } = req.params;
+      const userId = req.user!.id;
+      const { correctedAmount, reason } = req.body;
+
+      if (!correctedAmount || !reason) {
+        return sendError(res, 400, "Missing required fields: correctedAmount, reason");
+      }
+
+      const correction = await services.paymentCorrections.correctPayment({
+        paymentId,
+        correctedAmount: parseFloat(correctedAmount),
+        reason,
+        correctedBy: userId,
+      });
+
+      res.json(correction);
+    } catch (error) {
+      sendError(res, 400, "Failed to correct payment", error);
+    }
+  });
+
+  router.get("/mortgage-payments/:paymentId/corrections", requireUser, async (req, res) => {
+    try {
+      const { paymentId } = req.params;
+      const corrections = await services.paymentCorrections.getCorrectionsByPaymentId(paymentId);
+      res.json(corrections);
+    } catch (error) {
+      sendError(res, 400, "Failed to fetch corrections", error);
+    }
+  });
+
+  // GDS/TDS Ratio Calculator
+  router.post("/mortgages/debt-service-ratios", requireUser, async (req, res) => {
+    try {
+      const {
+        mortgagePayment,
+        grossIncome,
+        propertyTax = 0,
+        heatingCosts = 0,
+        condoFees = 0,
+        otherDebtPayments = 0,
+        maxGDS = 39,
+        maxTDS = 44,
+      } = req.body;
+
+      if (!mortgagePayment || !grossIncome) {
+        return sendError(res, 400, "Missing required fields: mortgagePayment, grossIncome");
+      }
+
+      const {
+        calculateGDS,
+        calculateTDS,
+        calculateHousingCosts,
+        getDebtServiceRatioStatus,
+      } = await import("@domain/calculations/debt-service-ratios");
+
+      const housingCosts = calculateHousingCosts(
+        parseFloat(mortgagePayment),
+        parseFloat(propertyTax || 0),
+        parseFloat(heatingCosts || 0),
+        parseFloat(condoFees || 0)
+      );
+
+      const gds = calculateGDS(housingCosts, parseFloat(grossIncome));
+      const tds = calculateTDS(
+        housingCosts,
+        parseFloat(otherDebtPayments || 0),
+        parseFloat(grossIncome)
+      );
+
+      const status = getDebtServiceRatioStatus(gds, tds, maxGDS, maxTDS);
+
+      res.json({
+        gds,
+        tds,
+        housingCosts,
+        monthlyIncome: parseFloat(grossIncome) / 12,
+        ...status,
+      });
+    } catch (error) {
+      sendError(res, 400, "Failed to calculate debt service ratios", error);
+    }
+  });
+
+  // Stress Test Calculator (B-20 Guidelines)
+  router.post("/mortgages/stress-test", requireUser, async (req, res) => {
+    try {
+      const {
+        mortgageAmount,
+        contractRate,
+        amortizationMonths,
+        grossIncome,
+        otherHousingCosts = 0,
+        otherDebtPayments = 0,
+        maxGDS = 39,
+        maxTDS = 44,
+      } = req.body;
+
+      if (!mortgageAmount || !contractRate || !amortizationMonths || !grossIncome) {
+        return sendError(res, 400, "Missing required fields: mortgageAmount, contractRate, amortizationMonths, grossIncome");
+      }
+
+      const {
+        checkStressTest,
+        calculateMaximumMortgageAmount,
+      } = await import("@domain/calculations/stress-test");
+
+      const stressTestResult = checkStressTest(
+        parseFloat(mortgageAmount),
+        parseFloat(contractRate) / 100, // Convert percentage to decimal
+        parseInt(amortizationMonths),
+        parseFloat(grossIncome),
+        parseFloat(otherHousingCosts || 0),
+        parseFloat(otherDebtPayments || 0),
+        parseFloat(maxGDS || 39),
+        parseFloat(maxTDS || 44)
+      );
+
+      const maxMortgage = calculateMaximumMortgageAmount(
+        parseFloat(grossIncome),
+        parseFloat(contractRate) / 100,
+        parseInt(amortizationMonths),
+        parseFloat(otherHousingCosts || 0),
+        parseFloat(otherDebtPayments || 0),
+        parseFloat(maxGDS || 39),
+        parseFloat(maxTDS || 44)
+      );
+
+      res.json({
+        ...stressTestResult,
+        maxMortgageAmount: maxMortgage.maxMortgageAmount,
+        recommendations: {
+          ...(stressTestResult.passes
+            ? {}
+            : {
+                message: "Mortgage does not pass stress test. Consider reducing mortgage amount or increasing income.",
+                suggestions: [
+                  stressTestResult.gdsPass
+                    ? null
+                    : "Reduce mortgage amount or increase income to meet GDS requirements",
+                  stressTestResult.tdsPass
+                    ? null
+                    : "Reduce total debt or increase income to meet TDS requirements",
+                ].filter(Boolean),
+              }),
+        },
+      });
+    } catch (error) {
+      sendError(res, 400, "Failed to calculate stress test", error);
+    }
+  });
+
+  // Mortgage Payoff
+  router.post("/mortgages/:mortgageId/payoff", requireUser, async (req, res) => {
+    try {
+      const { mortgageId } = req.params;
+      const userId = req.user!.id;
+      const { payoffDate, finalPaymentAmount, remainingBalance, penaltyAmount, notes } = req.body;
+
+      // Verify mortgage belongs to user
+      const mortgage = await services.mortgages.getByIdForUser(mortgageId, userId);
+      if (!mortgage) {
+        return sendError(res, 404, "Mortgage not found");
+      }
+
+      if (!payoffDate || !finalPaymentAmount || remainingBalance === undefined) {
+        return sendError(res, 400, "Missing required fields: payoffDate, finalPaymentAmount, remainingBalance");
+      }
+
+      const result = await services.mortgagePayoff.recordPayoff({
+        mortgageId,
+        payoffDate,
+        finalPaymentAmount: parseFloat(finalPaymentAmount),
+        remainingBalance: parseFloat(remainingBalance),
+        penaltyAmount: penaltyAmount ? parseFloat(penaltyAmount) : 0,
+        notes: notes || undefined,
+      });
+
+      res.json(result);
+    } catch (error) {
+      sendError(res, 400, "Failed to record mortgage payoff", error);
+    }
+  });
+
+  router.get("/mortgages/:mortgageId/payoff/history", requireUser, async (req, res) => {
+    try {
+      const { mortgageId } = req.params;
+      const userId = req.user!.id;
+
+      // Verify mortgage belongs to user
+      const mortgage = await services.mortgages.getByIdForUser(mortgageId, userId);
+      if (!mortgage) {
+        return sendError(res, 404, "Mortgage not found");
+      }
+
+      const history = await services.mortgagePayoff.getPayoffHistory(mortgageId);
+      res.json(history);
+    } catch (error) {
+      sendError(res, 400, "Failed to fetch payoff history", error);
+    }
+  });
+
+  // Payment Amount Change Events
+  router.get("/mortgages/:mortgageId/payment-amount-changes", requireUser, async (req, res) => {
+    try {
+      const { mortgageId } = req.params;
+      const changes = await services.paymentAmountChange.getPaymentAmountChangeHistory(mortgageId);
+      res.json(changes);
+    } catch (error) {
+      sendError(res, 400, "Failed to fetch payment amount changes", error);
+    }
+  });
+
+  router.get("/mortgage-terms/:termId/payment-amount-changes", requireUser, async (req, res) => {
+    try {
+      const { termId } = req.params;
+      const changes = await services.paymentAmountChange.getPaymentAmountChangeHistoryByTerm(termId);
+      res.json(changes);
+    } catch (error) {
+      sendError(res, 400, "Failed to fetch payment amount changes", error);
     }
   });
 

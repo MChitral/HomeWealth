@@ -1,22 +1,61 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/shared/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Download } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/shared/ui/dropdown-menu";
+import { exportToCSV, exportToJSON } from "../utils/export";
 import type { ScenarioWithProjections, TimeHorizon, MetricName } from "../types";
 
 interface ComparisonTableProps {
   scenarios: ScenarioWithProjections[];
   timeHorizon: TimeHorizon;
   getMetricForHorizon: (metrics: any, metricName: MetricName) => number;
+  chartData: {
+    netWorth: any[];
+    mortgage: any[];
+    investment: any[];
+  };
 }
 
 export function ComparisonTable({
   scenarios,
   timeHorizon,
   getMetricForHorizon,
+  chartData,
 }: ComparisonTableProps) {
+  const handleExport = (format: "csv" | "json") => {
+    if (format === "csv") {
+      exportToCSV({ scenarios, timeHorizon, getMetricForHorizon, chartData });
+    } else {
+      exportToJSON({ scenarios, timeHorizon, getMetricForHorizon, chartData });
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Complete Metric Comparison</CardTitle>
-        <CardDescription>All key financial metrics at {timeHorizon} years</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Complete Metric Comparison</CardTitle>
+            <CardDescription>All key financial metrics at {timeHorizon} years</CardDescription>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleExport("csv")}>Export as CSV</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport("json")}>Export as JSON</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">

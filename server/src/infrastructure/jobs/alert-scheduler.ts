@@ -95,6 +95,54 @@ export function registerRenewalReminderJob(notificationService: NotificationServ
       await checkRenewalsAndSendReminders(services);
     },
   });
+
+  // Register prepayment limit check job
+  scheduler.register({
+    id: "prepayment-limit-check",
+    name: "Prepayment Limit Check",
+    schedule: process.env.PREPAYMENT_LIMIT_CHECK_SCHEDULE || "0 10 * * *", // Daily at 10 AM
+    enabled: process.env.ENABLE_PREPAYMENT_LIMIT_ALERTS !== "false",
+    handler: async (services) => {
+      const { checkPrepaymentLimits } = await import("./prepayment-limit-check");
+      await checkPrepaymentLimits(services);
+    },
+  });
+
+  // Register payment due reminder job
+  scheduler.register({
+    id: "payment-due-reminder",
+    name: "Payment Due Reminder",
+    schedule: process.env.PAYMENT_DUE_REMINDER_SCHEDULE || "0 8 * * *", // Daily at 8 AM
+    enabled: process.env.ENABLE_PAYMENT_DUE_REMINDERS !== "false",
+    handler: async (services) => {
+      const { checkPaymentDueReminders } = await import("./payment-due-reminder");
+      await checkPaymentDueReminders(services);
+    },
+  });
+
+  // Register recast opportunity check job
+  scheduler.register({
+    id: "recast-opportunity-check",
+    name: "Recast Opportunity Check",
+    schedule: process.env.RECAST_OPPORTUNITY_CHECK_SCHEDULE || "0 11 * * 1", // Weekly on Monday at 11 AM
+    enabled: process.env.ENABLE_RECAST_OPPORTUNITY_ALERTS !== "false",
+    handler: async (services) => {
+      const { checkRecastOpportunities } = await import("./recast-opportunity-check");
+      await checkRecastOpportunities(services);
+    },
+  });
+
+  // Register HELOC draw period transition check job
+  scheduler.register({
+    id: "heloc-draw-period-transition",
+    name: "HELOC Draw Period Transition Check",
+    schedule: process.env.HELOC_DRAW_PERIOD_TRANSITION_SCHEDULE || "0 9 * * *", // Daily at 9 AM
+    enabled: process.env.ENABLE_HELOC_DRAW_PERIOD_TRANSITION !== "false",
+    handler: async (services) => {
+      const { checkHelocDrawPeriodTransitions } = await import("./heloc-draw-period-transition");
+      await checkHelocDrawPeriodTransitions(services);
+    },
+  });
 }
 
 /**

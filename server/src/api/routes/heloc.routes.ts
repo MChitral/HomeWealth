@@ -82,6 +82,40 @@ export function registerHelocRoutes(router: Router, services: ApplicationService
     }
   });
 
+  // Calculate HELOC minimum payment
+  router.post("/heloc/accounts/:id/calculate-minimum-payment", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+
+    try {
+      const account = await services.heloc.getAccountById(req.params.id, user.id);
+      if (!account) {
+        sendError(res, 404, "HELOC account not found");
+        return;
+      }
+
+      const { calculateHelocMinimumPayment } = await import("@domain/calculations/heloc-payment");
+      const { fetchLatestPrimeRate } = await import("@server-shared/services/prime-rate");
+      
+      const balance = Number(account.currentBalance);
+      const spread = Number(account.interestSpread);
+      const { primeRate } = await fetchLatestPrimeRate();
+      const annualRate = (primeRate + spread) / 100;
+      const paymentType = (account.helocPaymentType || "interest_only") as "interest_only" | "principal_plus_interest";
+      
+      const minimumPayment = calculateHelocMinimumPayment(balance, annualRate, paymentType);
+      
+      res.json({
+        minimumPayment,
+        paymentType,
+        balance,
+        annualRate: annualRate * 100, // Return as percentage
+      });
+    } catch (error) {
+      sendError(res, 400, "Failed to calculate minimum payment", error);
+    }
+  });
+
   // Delete HELOC account
   router.delete("/heloc/accounts/:id", async (req, res) => {
     const user = requireUser(req, res);

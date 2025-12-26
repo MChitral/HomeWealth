@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { PageHeader } from "@/shared/ui/page-header";
 import { usePageTitle } from "@/shared/hooks/use-page-title";
 import { useMortgageSelection } from "@/features/mortgage-tracking";
@@ -11,11 +12,17 @@ import {
   ScenarioComparisonSkeleton,
   TimeHorizonSelector,
   ComparisonTabs,
+  MonteCarloResults,
+  WhatIfRateAnalysis,
 } from "./components";
+import { MonteCarloSettings } from "@/features/scenario-management/components";
+import type { MonteCarloResult } from "@/types/monte-carlo";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 
 export function ScenarioComparisonFeature() {
   const { mortgages, isLoading: mortgagesLoading } = useMortgageSelection();
   const comparison = useScenarioComparison();
+  const [monteCarloResult, setMonteCarloResult] = useState<MonteCarloResult | null>(null);
 
   usePageTitle("Scenario Comparison | Mortgage Strategy");
 
@@ -88,12 +95,34 @@ export function ScenarioComparisonFeature() {
         getMetricForHorizon={comparison.getMetricForHorizon}
       />
 
-      <ComparisonTabs
-        scenarios={comparison.selectedScenarioData}
-        chartData={comparison.chartData}
-        timeHorizon={comparison.timeHorizon}
-        getMetricForHorizon={comparison.getMetricForHorizon}
-      />
+      <Tabs defaultValue="comparison" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="comparison">Scenario Comparison</TabsTrigger>
+          <TabsTrigger value="monte-carlo">Monte Carlo Analysis</TabsTrigger>
+          <TabsTrigger value="what-if">What-If Analysis</TabsTrigger>
+        </TabsList>
+        <TabsContent value="comparison" className="space-y-6">
+          <ComparisonTabs
+            scenarios={comparison.selectedScenarioData}
+            chartData={comparison.chartData}
+            timeHorizon={comparison.timeHorizon}
+            getMetricForHorizon={comparison.getMetricForHorizon}
+          />
+        </TabsContent>
+        <TabsContent value="monte-carlo" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <MonteCarloSettings onResult={setMonteCarloResult} />
+            {monteCarloResult && (
+              <div className="lg:col-span-2">
+                <MonteCarloResults result={monteCarloResult} />
+              </div>
+            )}
+          </div>
+        </TabsContent>
+        <TabsContent value="what-if" className="space-y-6">
+          <WhatIfRateAnalysis />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -12,6 +12,7 @@ import {
   ScenarioListNoMortgageState,
   ScenarioListSkeleton,
   DeleteScenarioDialog,
+  ScenarioTemplateSelector,
 } from "./components";
 import { formatScenarioMetrics } from "./utils";
 import type { ScenarioWithMetrics } from "@/entities";
@@ -46,6 +47,7 @@ export function ScenarioListFeature() {
       <div className="space-y-8">
         <PageHeader title="Scenarios" description="Compare different financial strategies" />
         <ScenarioListEmptyState />
+        <ScenarioTemplateSelector />
       </div>
     );
   }

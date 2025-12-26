@@ -3,6 +3,7 @@ import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { AnalyticsDashboard } from "@/features/analytics/analytics-dashboard";
 import PrepaymentFeature from "../prepayment-feature";
+import { PrepaymentStrategyRecommendations } from "./prepayment-strategy-recommendations";
 import { RenewalTab } from "./renewal-tab";
 import { RefinanceTab } from "./refinance-tab";
 import type { Mortgage, MortgagePayment } from "@shared/schema";
@@ -36,7 +37,7 @@ import { FrequencyChangeHistory } from "./frequency-change-history";
 import { PortabilityDialog } from "./portability-dialog";
 import { PortabilityHistory } from "./portability-history";
 import { PropertyValueUpdateDialog } from "./property-value-update-dialog";
-import { PropertyValueHistory } from "./property-value-history";
+import { PropertyValueSection } from "./property-value-section";
 import { RenewalWorkflowWizard } from "./renewal-workflow-wizard";
 import { formatAmortization } from "../utils/format";
 import { useState } from "react";
@@ -116,6 +117,12 @@ interface MortgageContentProps {
   availableYears: number[];
   filterYear: string;
   onFilterYearChange: (year: string) => void;
+  filterDateRange: { start: string | null; end: string | null };
+  onFilterDateRangeChange: (range: { start: string | null; end: string | null }) => void;
+  filterPaymentType: "all" | "regular" | "prepayment" | "skipped";
+  onFilterPaymentTypeChange: (type: "all" | "regular" | "prepayment" | "skipped") => void;
+  searchAmount: string;
+  onSearchAmountChange: (amount: string) => void;
   payments?: MortgagePayment[]; // Raw payments for skip tracking
   isSkipPaymentOpen: boolean;
   setIsSkipPaymentOpen: (open: boolean) => void;
@@ -170,6 +177,12 @@ export function MortgageContent({
   availableYears,
   filterYear,
   onFilterYearChange,
+  filterDateRange,
+  onFilterDateRangeChange,
+  filterPaymentType,
+  onFilterPaymentTypeChange,
+  searchAmount,
+  onSearchAmountChange,
   payments,
   createPaymentMutation,
   backfillPaymentsMutation,
@@ -352,11 +365,25 @@ export function MortgageContent({
             availableYears={availableYears}
             filterYear={filterYear}
             onFilterYearChange={onFilterYearChange}
+            filterDateRange={filterDateRange}
+            onFilterDateRangeChange={onFilterDateRangeChange}
+            filterPaymentType={filterPaymentType}
+            onFilterPaymentTypeChange={onFilterPaymentTypeChange}
+            searchAmount={searchAmount}
+            onSearchAmountChange={onSearchAmountChange}
             formatAmortization={formatAmortization}
             deletePaymentMutation={deletePaymentMutation}
           />
 
           <EducationSidebar />
+
+          {/* Property Value Tracking */}
+          {mortgage && (
+            <PropertyValueSection
+              mortgageId={mortgage.id}
+              currentPropertyValue={Number(mortgage.propertyPrice)}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="heloc" className="space-y-8">
@@ -369,6 +396,20 @@ export function MortgageContent({
 
         <TabsContent value="prepayments" className="space-y-6">
           <PrepaymentFeature isEmbedded />
+          {mortgage && summaryStats && uiCurrentTerm && (
+            <PrepaymentStrategyRecommendations
+              mortgage={mortgage}
+              currentTerm={uiCurrentTerm}
+              payments={filteredPayments}
+              currentBalance={summaryStats.currentBalance}
+              currentRate={summaryStats.currentRate}
+              onUseAmount={(amount, type) => {
+                // Navigate to prepayment feature or trigger prepayment dialog
+                // For now, we'll just log - can be enhanced to integrate with prepayment dialog
+                console.log("Use prepayment amount:", amount, type);
+              }}
+            />
+          )}
           {mortgage && (
             <Tabs defaultValue="recast" className="w-full">
               <TabsList>

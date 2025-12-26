@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Label } from "@/shared/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
+import { Input } from "@/shared/ui/input";
 import { Badge } from "@/shared/ui/badge";
 import {
   AlertDialog,
@@ -15,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/shared/ui/alert-dialog";
-import { Trash2, SkipForward } from "lucide-react";
+import { Trash2, SkipForward, Download, X, Search } from "lucide-react";
 import type { UiPayment } from "../types";
 import type { UseMutationResult } from "@tanstack/react-query";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/shared/ui/tooltip";
@@ -59,6 +60,12 @@ interface PaymentHistorySectionProps {
   availableYears: number[];
   filterYear: string;
   onFilterYearChange: (year: string) => void;
+  filterDateRange: { start: string | null; end: string | null };
+  onFilterDateRangeChange: (range: { start: string | null; end: string | null }) => void;
+  filterPaymentType: "all" | "regular" | "prepayment" | "skipped";
+  onFilterPaymentTypeChange: (type: "all" | "regular" | "prepayment" | "skipped") => void;
+  searchAmount: string;
+  onSearchAmountChange: (amount: string) => void;
   formatAmortization: (years: number) => string;
   deletePaymentMutation: UseMutationResult<{ success: boolean }, Error, string, unknown>;
 }
@@ -68,6 +75,12 @@ export function PaymentHistorySection({
   availableYears,
   filterYear,
   onFilterYearChange,
+  filterDateRange,
+  onFilterDateRangeChange,
+  filterPaymentType,
+  onFilterPaymentTypeChange,
+  searchAmount,
+  onSearchAmountChange,
   formatAmortization,
   deletePaymentMutation,
 }: PaymentHistorySectionProps) {
@@ -81,34 +94,184 @@ export function PaymentHistorySection({
     }
   };
 
+  const handleExportCSV = () => {
+    const headers = [
+      "Date",
+      "Period",
+      "Prime Rate",
+      "Spread",
+      "Effective Rate",
+      "Regular Payment",
+      "Prepayment",
+      "Total Paid",
+      "Principal",
+      "Interest",
+      "Skipped Interest",
+      "Balance",
+      "Amortization",
+    ];
+
+    const rows = filteredPayments.map((payment) => [
+      payment.date,
+      formatPaymentPeriod(payment.date, payment.paymentPeriodLabel),
+      payment.primeRate ? `${payment.primeRate}%` : "-",
+      payment.termSpread !== undefined
+        ? `${payment.termSpread >= 0 ? "+" : ""}${payment.termSpread}%`
+        : "-",
+      `${payment.effectiveRate}%`,
+      payment.regularPaymentAmount.toFixed(2),
+      payment.prepaymentAmount.toFixed(2),
+      payment.paymentAmount.toFixed(2),
+      payment.principal.toFixed(2),
+      payment.interest.toFixed(2),
+      payment.isSkipped && payment.skippedInterestAccrued > 0
+        ? payment.skippedInterestAccrued.toFixed(2)
+        : "-",
+      payment.remainingBalance.toFixed(2),
+      formatAmortization(payment.amortizationYears),
+    ]);
+
+    const csvContent = [headers, ...rows].map((row) => row.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `payment-history-${new Date().toISOString().split("T")[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const clearFilters = () => {
+    onFilterYearChange("all");
+    onFilterDateRangeChange({ start: null, end: null });
+    onFilterPaymentTypeChange("all");
+    onSearchAmountChange("");
+  };
+
+  const hasActiveFilters =
+    filterYear !== "all" ||
+    filterDateRange.start !== null ||
+    filterDateRange.end !== null ||
+    filterPaymentType !== "all" ||
+    searchAmount.trim() !== "";
+
   return (
     <Card>
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <CardTitle className="text-xl font-semibold">Payment History</CardTitle>
-          <div className="flex items-center gap-2">
-            <Label htmlFor="year-filter" className="text-sm">
-              Filter by year:
-            </Label>
-            <Select value={filterYear} onValueChange={onFilterYearChange}>
-              <SelectTrigger
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Year Filter */}
+            <div className="flex items-center gap-2">
+              <Label htmlFor="year-filter" className="text-sm whitespace-nowrap">
+                Year:
+              </Label>
+              <Select value={filterYear} onValueChange={onFilterYearChange}>
+                <SelectTrigger
+                  className="w-[120px]"
+                  id="year-filter"
+                  data-testid="select-year-filter"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Years</SelectItem>
+                  {availableYears.map((year) => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Date Range Filter */}
+            <div className="flex items-center gap-2">
+              <Label htmlFor="date-start" className="text-sm whitespace-nowrap">
+                From:
+              </Label>
+              <Input
+                id="date-start"
+                type="date"
+                value={filterDateRange.start || ""}
+                onChange={(e) =>
+                  onFilterDateRangeChange({ ...filterDateRange, start: e.target.value || null })
+                }
                 className="w-[140px]"
-                id="year-filter"
-                data-testid="select-year-filter"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Years</SelectItem>
-                {availableYears.map((year) => (
-                  <SelectItem key={year} value={year.toString()}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Label htmlFor="date-end" className="text-sm whitespace-nowrap">
+                To:
+              </Label>
+              <Input
+                id="date-end"
+                type="date"
+                value={filterDateRange.end || ""}
+                onChange={(e) =>
+                  onFilterDateRangeChange({ ...filterDateRange, end: e.target.value || null })
+                }
+                className="w-[140px]"
+              />
+            </div>
+
+            {/* Payment Type Filter */}
+            <div className="flex items-center gap-2">
+              <Label htmlFor="payment-type-filter" className="text-sm whitespace-nowrap">
+                Type:
+              </Label>
+              <Select value={filterPaymentType} onValueChange={onFilterPaymentTypeChange}>
+                <SelectTrigger className="w-[130px]" id="payment-type-filter">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="regular">Regular Only</SelectItem>
+                  <SelectItem value="prepayment">With Prepayment</SelectItem>
+                  <SelectItem value="skipped">Skipped</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Search by Amount */}
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="number"
+                  placeholder="Search amount..."
+                  value={searchAmount}
+                  onChange={(e) => onSearchAmountChange(e.target.value)}
+                  className="w-[140px] pl-8"
+                />
+              </div>
+            </div>
+
+            {/* Clear Filters Button */}
+            {hasActiveFilters && (
+              <Button variant="outline" size="sm" onClick={clearFilters} className="whitespace-nowrap">
+                <X className="h-4 w-4 mr-1" />
+                Clear Filters
+              </Button>
+            )}
+
+            {/* Export CSV Button */}
+            <Button variant="outline" size="sm" onClick={handleExportCSV} className="whitespace-nowrap">
+              <Download className="h-4 w-4 mr-1" />
+              Export CSV
+            </Button>
           </div>
         </div>
+
+        {/* Results Count */}
+        {hasActiveFilters && (
+          <div className="mt-2 text-sm text-muted-foreground">
+            Showing {filteredPayments.length} payment{filteredPayments.length !== 1 ? "s" : ""}
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <div className="rounded-md border overflow-x-auto">

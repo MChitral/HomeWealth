@@ -15,3 +15,5 @@ export * from "./scenario-editor-no-mortgage-state";
 export * from "./projected-mortgage-outcome-card";
 export * from "./emergency-fund-strategy-card";
 export * from "./investment-strategy-card";
+export * from "./monte-carlo-settings";
+export * from "./scenario-template-selector";

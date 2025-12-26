@@ -13,6 +13,7 @@ import { calculateAvailableCredit } from "@server-shared/calculations/heloc/avai
 import { fetchLatestPrimeRate } from "@server-shared/services/prime-rate";
 import { HelocCreditLimitService } from "./heloc-credit-limit.service";
 import { HelocInterestService } from "./heloc-interest.service";
+import { calculateHelocMinimumPayment } from "@domain/calculations/heloc-payment";
 
 /**
  * HELOC Service
@@ -29,6 +30,13 @@ export class HelocService {
   ) {
     this.creditLimitService = new HelocCreditLimitService(helocAccounts, mortgages);
     this.interestService = new HelocInterestService();
+  }
+
+  /**
+   * Get all HELOC accounts (for system jobs)
+   */
+  async findAll() {
+    return this.helocAccounts.findAll();
   }
 
   /**
@@ -67,11 +75,26 @@ export class HelocService {
       }
     }
 
+    // Calculate minimum payment if balance and rate are available
+    let minimumPayment: string | undefined;
+    if (payload.currentBalance && payload.interestSpread) {
+      const { primeRate } = await fetchLatestPrimeRate();
+      const annualRate = (primeRate + Number(payload.interestSpread)) / 100;
+      const paymentType = (payload.helocPaymentType || "interest_only") as "interest_only" | "principal_plus_interest";
+      const minPayment = calculateHelocMinimumPayment(
+        Number(payload.currentBalance || 0),
+        annualRate,
+        paymentType
+      );
+      minimumPayment = minPayment.toFixed(2);
+    }
+
     const account = await this.helocAccounts.create({
       ...payload,
       userId,
       creditLimit: creditLimit.toFixed(2),
       homeValueReference: payload.homeValueReference || undefined,
+      helocMinimumPayment: minimumPayment,
     });
 
     return account;
@@ -88,6 +111,20 @@ export class HelocService {
     const account = await this.getAccountById(id, userId);
     if (!account) {
       return undefined;
+    }
+
+    // Recalculate minimum payment if balance, rate, or payment type changed
+    if (payload.currentBalance !== undefined || payload.interestSpread !== undefined || payload.helocPaymentType !== undefined) {
+      const balance = Number(payload.currentBalance ?? account.currentBalance);
+      const spread = Number(payload.interestSpread ?? account.interestSpread);
+      const paymentType = (payload.helocPaymentType ?? account.helocPaymentType ?? "interest_only") as "interest_only" | "principal_plus_interest";
+      
+      if (balance > 0 && spread !== undefined) {
+        const { primeRate } = await fetchLatestPrimeRate();
+        const annualRate = (primeRate + spread) / 100;
+        const minPayment = calculateHelocMinimumPayment(balance, annualRate, paymentType);
+        payload.helocMinimumPayment = minPayment.toFixed(2);
+      }
     }
 
     // Recalculate credit limit if home value or mortgage balance changed
@@ -136,6 +173,17 @@ export class HelocService {
     const account = await this.getAccountById(accountId, userId);
     if (!account) {
       throw new Error("HELOC account not found");
+    }
+
+    // Check if draw period has ended
+    if (account.helocDrawPeriodEndDate) {
+      const drawPeriodEnd = new Date(account.helocDrawPeriodEndDate);
+      const transactionDateObj = new Date(transactionDate);
+      if (transactionDateObj > drawPeriodEnd) {
+        throw new Error(
+          `Cannot borrow: Draw period ended on ${drawPeriodEnd.toLocaleDateString()}. HELOC is now in repayment period.`
+        );
+      }
     }
 
     const creditLimit = Number(account.creditLimit);

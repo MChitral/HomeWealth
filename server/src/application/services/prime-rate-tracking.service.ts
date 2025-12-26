@@ -2,10 +2,14 @@ import type {
   PrimeRateHistoryRepository,
   MortgageTermsRepository,
   MortgagesRepository,
+  MortgagePaymentsRepository,
 } from "@infrastructure/repositories";
 import { MortgageTerm } from "@shared/schema";
 import { fetchLatestPrimeRate } from "@server-shared/services/prime-rate";
 import { ImpactCalculator } from "./impact-calculator.service";
+import { validateVariableRate } from "@domain/calculations/variable-rate";
+import { getTermEffectiveRate } from "@server-shared/calculations/term-helpers";
+import { calculatePayment, type PaymentFrequency } from "@server-shared/calculations/mortgage";
 // ... imports
 
 // Result of checking for prime rate changes
@@ -23,7 +27,9 @@ export class PrimeRateTrackingService {
     private readonly primeRateHistory: PrimeRateHistoryRepository,
     private readonly mortgageTerms: MortgageTermsRepository,
     private readonly mortgages: MortgagesRepository,
-    private readonly impactCalculator: ImpactCalculator
+    private readonly impactCalculator: ImpactCalculator,
+    private readonly mortgagePayments?: MortgagePaymentsRepository,
+    private readonly paymentAmountChangeService?: any // PaymentAmountChangeService - using any to avoid circular dependency
   ) {}
 
   /**
@@ -92,12 +98,103 @@ export class PrimeRateTrackingService {
 
       for (const term of activeVrmTerms) {
         try {
-          // Update the term's prime rate directly
-          await this.mortgageTerms.update(term.id, {
-            primeRate: newRate.toFixed(3),
-          });
+          // Calculate new effective rate
+          const currentEffectiveRate = getTermEffectiveRate(term);
+          const spread = term.lockedSpread ? Number(term.lockedSpread) : 0;
+          const proposedNewRate = (newRate + spread) / 100; // Convert to decimal
+          
+          // Validate against cap/floor if set
+          const validation = validateVariableRate(
+            currentEffectiveRate,
+            proposedNewRate,
+            term.variableRateCap ? Number(term.variableRateCap) / 100 : null,
+            term.variableRateFloor ? Number(term.variableRateFloor) / 100 : null
+          );
+          
+          // Use validated rate
+          const finalRate = validation.adjustedRate;
+          const finalPrimeRate = (finalRate * 100) - spread; // Convert back to prime rate
+          
+          // For variable-changing mortgages, recalculate payment amount
+          let paymentRecalculated = false;
+          if (term.termType === "variable-changing" && this.mortgagePayments && this.paymentAmountChangeService) {
+            const mortgage = await this.mortgages.findById(term.mortgageId);
+            if (mortgage) {
+              // Get current balance from latest payment or mortgage
+              const payments = await this.mortgagePayments.findByTermId(term.id);
+              const latestPayment = payments.sort(
+                (a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime()
+              )[0];
+              const currentBalance = latestPayment
+                ? Number(latestPayment.remainingBalance)
+                : Number(mortgage.currentBalance);
+              
+              // Calculate remaining amortization
+              const remainingAmortizationMonths = latestPayment
+                ? latestPayment.remainingAmortizationMonths
+                : mortgage.amortizationYears * 12 + (mortgage.amortizationMonths || 0);
+              
+              // Calculate new payment amount
+              const oldPaymentAmount = Number(term.regularPaymentAmount);
+              const newPaymentAmount = calculatePayment(
+                currentBalance,
+                finalRate,
+                remainingAmortizationMonths,
+                term.paymentFrequency as PaymentFrequency
+              );
+              
+              // Update term with new payment amount
+              await this.mortgageTerms.update(term.id, {
+                primeRate: finalPrimeRate.toFixed(3),
+                regularPaymentAmount: newPaymentAmount.toFixed(2),
+              });
+              
+              // Record payment amount change event if payment changed
+              if (oldPaymentAmount !== newPaymentAmount) {
+                try {
+                  await this.paymentAmountChangeService.recordPaymentAmountChange({
+                    mortgageId: term.mortgageId,
+                    termId: term.id,
+                    changeDate: effectiveDate,
+                    oldAmount: oldPaymentAmount,
+                    newAmount: newPaymentAmount,
+                    reason: `Rate change: Prime rate changed from ${previousRate?.toFixed(3)}% to ${newRate.toFixed(3)}%`,
+                  });
+                  paymentRecalculated = true;
+                } catch (error) {
+                  console.error(`Failed to record payment amount change for term ${term.id}:`, error);
+                }
+              } else {
+                // Just update prime rate if payment didn't change
+                await this.mortgageTerms.update(term.id, {
+                  primeRate: finalPrimeRate.toFixed(3),
+                });
+              }
+            } else {
+              // Just update prime rate if mortgage not found
+              await this.mortgageTerms.update(term.id, {
+                primeRate: finalPrimeRate.toFixed(3),
+              });
+            }
+          } else {
+            // For variable-fixed mortgages or if services not available, just update prime rate
+            await this.mortgageTerms.update(term.id, {
+              primeRate: finalPrimeRate.toFixed(3),
+            });
+          }
+          
           termsUpdated++;
           updatedTerms.push(term);
+          
+          // Log warning if rate was adjusted
+          if (!validation.valid && validation.message) {
+            console.warn(`Term ${term.id}: ${validation.message}`);
+          }
+          
+          // Log payment recalculation
+          if (paymentRecalculated) {
+            console.log(`Term ${term.id}: Payment recalculated due to rate change`);
+          }
         } catch (error: unknown) {
           errors.push({
             termId: term.id,

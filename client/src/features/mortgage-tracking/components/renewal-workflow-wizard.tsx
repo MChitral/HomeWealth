@@ -119,6 +119,9 @@ export function RenewalWorkflowWizard({ mortgageId }: RenewalWorkflowWizardProps
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
+            {/* Renewal Recommendation */}
+            <RenewalComparisonCard mortgageId={mortgageId} />
+            
             {workflowData?.renewalStatus && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">

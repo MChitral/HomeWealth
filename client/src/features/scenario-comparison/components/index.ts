@@ -8,3 +8,5 @@ export { ScenarioComparisonSkeleton } from "./scenario-comparison-skeleton";
 export { TimeHorizonSelector } from "./time-horizon-selector";
 export { ComparisonTabs } from "./comparison-tabs";
 export { ComparisonNoMortgageState } from "./no-mortgage-state";
+export { MonteCarloResults } from "./monte-carlo-results";
+export { WhatIfRateAnalysis } from "./what-if-rate-analysis";

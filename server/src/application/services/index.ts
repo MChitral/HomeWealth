@@ -12,6 +12,7 @@ import { PrimeRateTrackingService } from "./prime-rate-tracking.service";
 import { TriggerRateMonitor } from "./trigger-rate-monitor";
 import { ImpactCalculator } from "./impact-calculator.service";
 import { RenewalService } from "./renewal.service";
+import { RenewalRecommendationService } from "./renewal-recommendation.service";
 import { MarketRateService } from "./market-rate.service";
 import { RefinancingService } from "./refinancing.service";
 import { PrepaymentService } from "./prepayment.service";
@@ -30,6 +31,10 @@ import { PaymentFrequencyService } from "./payment-frequency.service";
 import { PortabilityService } from "./portability.service";
 import { PropertyValueService } from "./property-value.service";
 import { RenewalWorkflowService } from "./renewal-workflow.service";
+import { PaymentCorrectionsService } from "./payment-corrections.service";
+import { PaymentAmountChangeService } from "./payment-amount-change.service";
+import { MortgagePayoffService } from "./mortgage-payoff.service";
+import { ScenarioTemplateService } from "./scenario-template.service";
 
 export interface ApplicationServices {
   cashFlows: CashFlowService;
@@ -45,6 +50,7 @@ export interface ApplicationServices {
   triggerRateMonitor: TriggerRateMonitor;
   impactCalculator: ImpactCalculator;
   renewalService: RenewalService;
+  renewalRecommendationService: RenewalRecommendationService;
   marketRateService: MarketRateService;
   refinancingService: RefinancingService;
   prepaymentService: PrepaymentService;
@@ -63,6 +69,9 @@ export interface ApplicationServices {
   portability: PortabilityService;
   propertyValue: PropertyValueService;
   renewalWorkflow: RenewalWorkflowService;
+  paymentCorrections: PaymentCorrectionsService;
+  paymentAmountChange: PaymentAmountChangeService;
+  mortgagePayoff: MortgagePayoffService;
 }
 
 export function createServices(repositories: Repositories): ApplicationServices {
@@ -83,6 +92,7 @@ export function createServices(repositories: Repositories): ApplicationServices 
   const renewalService = new RenewalService(
     repositories.mortgages,
     repositories.mortgageTerms,
+    repositories.renewalHistory,
     marketRateService
   );
 
@@ -92,7 +102,33 @@ export function createServices(repositories: Repositories): ApplicationServices 
     marketRateService
   );
 
+  const renewalRecommendationService = new RenewalRecommendationService(
+    repositories.mortgages,
+    repositories.mortgageTerms,
+    renewalService,
+    refinancingService,
+    marketRateService
+  );
+
   const taxCalculationService = new TaxCalculationService();
+  
+  // Create payment amount change service for prime rate tracking
+  const paymentAmountChangeService = new PaymentAmountChangeService(
+    repositories.paymentAmountChangeEvents,
+    repositories.mortgageTerms
+  );
+
+  const helocCreditLimitService = new HelocCreditLimitService(
+    repositories.helocAccounts,
+    repositories.mortgages
+  );
+
+  const propertyValueService = new PropertyValueService(
+    repositories.mortgages,
+    repositories.propertyValueHistory,
+    helocCreditLimitService,
+    repositories.helocAccounts
+  );
 
   return {
     cashFlows: new CashFlowService(repositories.cashFlows),
@@ -107,16 +143,13 @@ export function createServices(repositories: Repositories): ApplicationServices 
       repositories.mortgageTerms,
       repositories.mortgagePayments
     ),
-    helocCreditLimit: new HelocCreditLimitService(
-      repositories.helocAccounts,
-      repositories.mortgages
-    ),
+    helocCreditLimit: helocCreditLimitService,
     helocInterest: new HelocInterestService(),
     mortgagePayments: new MortgagePaymentService(
       repositories.mortgages,
       repositories.mortgageTerms,
       repositories.mortgagePayments,
-      new HelocCreditLimitService(repositories.helocAccounts, repositories.mortgages)
+      helocCreditLimitService
     ),
     scenarios: new ScenarioService(repositories.scenarios, repositories.prepaymentEvents),
     prepaymentEvents: new PrepaymentEventService(
@@ -131,17 +164,21 @@ export function createServices(repositories: Repositories): ApplicationServices 
       repositories.mortgages,
       repositories.mortgageTerms,
       repositories.cashFlows,
-      repositories.emergencyFunds
+      repositories.emergencyFunds,
+      repositories.scenarios
     ),
     primeRateTracking: new PrimeRateTrackingService(
       repositories.primeRateHistory,
       repositories.mortgageTerms,
       repositories.mortgages,
-      impactCalculator
+      impactCalculator,
+      repositories.mortgagePayments,
+      paymentAmountChangeService
     ),
     triggerRateMonitor,
     impactCalculator,
     renewalService,
+    renewalRecommendationService,
     marketRateService,
     refinancingService,
     prepaymentService: new PrepaymentService(
@@ -198,17 +235,27 @@ export function createServices(repositories: Repositories): ApplicationServices 
       repositories.mortgageTerms,
       repositories.mortgagePortability
     ),
-    propertyValue: new PropertyValueService(
-      repositories.mortgages,
-      repositories.propertyValueHistory,
-      new HelocCreditLimitService(repositories.helocAccounts, repositories.mortgages)
-    ),
+    propertyValue: propertyValueService,
     renewalWorkflow: new RenewalWorkflowService(
       repositories.mortgages,
       repositories.mortgageTerms,
       repositories.renewalNegotiations,
       marketRateService,
-      renewalService
+      renewalService,
+      renewalRecommendationServiceWithRefinance
+    ),
+    paymentCorrections: new PaymentCorrectionsService(
+      repositories.paymentCorrections,
+      repositories.mortgagePayments
+    ),
+    paymentAmountChange: new PaymentAmountChangeService(
+      repositories.paymentAmountChangeEvents,
+      repositories.mortgageTerms
+    ),
+    mortgagePayoff: new MortgagePayoffService(
+      repositories.mortgagePayoff,
+      repositories.mortgages,
+      repositories.mortgagePayments
     ),
   };
 }
@@ -226,6 +273,7 @@ export * from "./prime-rate-tracking.service";
 export * from "./trigger-rate-monitor";
 export * from "./impact-calculator.service";
 export * from "./renewal.service";
+export * from "./renewal-recommendation.service";
 export * from "./market-rate.service";
 export * from "./refinancing.service";
 export * from "./prepayment.service";
@@ -244,3 +292,6 @@ export * from "./payment-frequency.service";
 export * from "./portability.service";
 export * from "./property-value.service";
 export * from "./renewal-workflow.service";
+export * from "./payment-corrections.service";
+export * from "./payment-amount-change.service";
+export * from "./mortgage-payoff.service";

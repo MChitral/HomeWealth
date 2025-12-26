@@ -38,8 +38,14 @@ export function useMortgageTrackingState() {
     setIsEditTermOpen,
   } = dialogs;
 
-  // Payment history filter
+  // Payment history filters
   const [filterYear, setFilterYear] = useState("all");
+  const [filterDateRange, setFilterDateRange] = useState<{ start: string | null; end: string | null }>({
+    start: null,
+    end: null,
+  });
+  const [filterPaymentType, setFilterPaymentType] = useState<"all" | "regular" | "prepayment" | "skipped">("all");
+  const [searchAmount, setSearchAmount] = useState<string>("");
 
   // Core data hooks
   const { mortgage, terms, payments, isLoading } = useMortgageData(selectedMortgageId);
@@ -57,6 +63,9 @@ export function useMortgageTrackingState() {
     primeRateData,
     primeRate,
     filterYear,
+    filterDateRange,
+    filterPaymentType,
+    searchAmount,
   });
   const {
     uiCurrentTerm,
@@ -111,9 +120,15 @@ export function useMortgageTrackingState() {
     isEditTermOpen,
     setIsEditTermOpen,
 
-    // Payment history filter
+    // Payment history filters
     filterYear,
     setFilterYear,
+    filterDateRange,
+    setFilterDateRange,
+    filterPaymentType,
+    setFilterPaymentType,
+    searchAmount,
+    setSearchAmount,
 
     // Core data
     mortgages,

@@ -92,6 +92,10 @@ export function PenaltyCalculatorDialog({
         remainingMonths: parseInt(data.remainingMonths, 10),
         termType: data.termType,
         penaltyCalculationMethod: data.penaltyCalculationMethod,
+        // Pass mortgageId if available, so backend can check openClosedMortgageType
+        mortgageId: mortgageId,
+        // Also pass openClosedMortgageType directly if we have the mortgage data
+        openClosedMortgageType: mortgage?.openClosedMortgageType as "open" | "closed" | null | undefined,
       });
     },
     onSuccess: (data) => {

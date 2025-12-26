@@ -4,6 +4,8 @@ import {
   calculateThreeMonthInterestPenalty,
   calculateIRDPenalty,
   calculateStandardPenalty,
+  calculatePenaltyByMethod,
+  calculateOpenMortgagePenalty,
 } from "@domain/calculations/penalty";
 
 describe("Penalty Calculator API", () => {
@@ -62,6 +64,35 @@ describe("Penalty Calculator API", () => {
       // Zero remaining months
       const ird = calculateIRDPenalty(100000, 0.05, 0.03, 0);
       assert.strictEqual(ird, 0);
+    });
+
+    it("should return 0 penalty for open mortgages", () => {
+      const result = calculatePenaltyByMethod(
+        "open_mortgage",
+        100000, // balance
+        0.05, // currentRate
+        0.03, // comparisonRate
+        24, // remainingMonths
+        "fixed" // termType
+      );
+
+      assert.strictEqual(result.penalty, 0);
+      assert.strictEqual(result.method, "Open Mortgage");
+    });
+
+    it("should calculate penalty correctly for closed mortgages", () => {
+      // Closed mortgage should use normal calculation
+      const result = calculatePenaltyByMethod(
+        null, // no method specified (standard calculation)
+        100000,
+        0.05,
+        0.03,
+        24,
+        "fixed"
+      );
+
+      assert.ok(result.penalty > 0);
+      assert.ok(result.method === "IRD" || result.method === "3-Month Interest");
     });
   });
 });

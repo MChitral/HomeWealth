@@ -19,6 +19,8 @@ import { registerReAdvanceableMortgageRoutes } from "./re-advanceable-mortgage.r
 import { registerInvestmentRoutes } from "./investment.routes";
 import { registerTaxRoutes } from "./tax.routes";
 import { registerSmithManeuverRoutes } from "./smith-maneuver.routes";
+import { createRenewalRoutes } from "./renewal.routes";
+import { createPropertyValueRoutes } from "./property-value.routes";
 import insuranceRoutes from "./insurance.routes";
 
 export function buildApiRouter(services: ApplicationServices, repositories: Repositories): Router {
@@ -42,6 +44,8 @@ export function buildApiRouter(services: ApplicationServices, repositories: Repo
   router.use("/prepayment", createPrepaymentRoutes(services));
   router.use("/simulations", createSimulationRoutes(services.simulationService));
   router.use("/mortgages", createHealthRoutes(services.healthScoreService)); // Mounting under /api/mortgages for consistency with REST
+  router.use(createRenewalRoutes(services));
+  router.use(createPropertyValueRoutes(services));
   router.use("/insurance", insuranceRoutes);
 
   return router;

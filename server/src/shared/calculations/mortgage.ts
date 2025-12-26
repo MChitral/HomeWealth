@@ -334,11 +334,13 @@ export function isWithinPrepaymentLimit(
   prepaymentAmount: number,
   yearToDatePrepayments: number,
   originalMortgageAmount: number,
-  annualLimitPercent: number
+  annualLimitPercent: number,
+  carryForward: number = 0
 ): boolean {
   // Calculate maximum annual prepayment based on original mortgage amount
   // This is the standard Canadian lender convention
-  const maxAnnualPrepayment = (originalMortgageAmount * annualLimitPercent) / 100;
+  // Include carry-forward from previous year if available
+  const maxAnnualPrepayment = (originalMortgageAmount * annualLimitPercent) / 100 + carryForward;
   const totalWithProposed = yearToDatePrepayments + prepaymentAmount;
   return totalWithProposed <= maxAnnualPrepayment;
 }

@@ -8,6 +8,7 @@ import type { MortgagePaymentCreateInput } from "@domain/models";
 import { validateMortgagePayment } from "@server-shared/calculations/payment-validation";
 import { getTermEffectiveRate } from "@server-shared/calculations/term-helpers";
 import { isWithinPrepaymentLimit } from "@server-shared/calculations/mortgage";
+import { calculatePrepaymentWithPenalty } from "@domain/calculations/prepayment-penalty";
 import { db } from "@infrastructure/db/connection";
 import {
   calculateSkippedPayment,
@@ -76,10 +77,28 @@ export class MortgagePaymentService {
     )[0];
   }
 
-  private async getYearToDatePrepayments(mortgageId: string, year: number): Promise<number> {
+  private async getYearToDatePrepayments(
+    mortgageId: string,
+    paymentDate: string,
+    mortgage: Mortgage
+  ): Promise<number> {
+    const { getPrepaymentYear } = await import("@server-shared/calculations/prepayment-year");
     const payments = await this.mortgagePayments.findByMortgageId(mortgageId);
+    const paymentYear = getPrepaymentYear(
+      paymentDate,
+      mortgage.prepaymentLimitResetDate,
+      mortgage.startDate
+    );
+    
     return payments
-      .filter((payment) => payment.paymentDate.startsWith(year.toString()))
+      .filter((payment) => {
+        const paymentYearForPayment = getPrepaymentYear(
+          payment.paymentDate,
+          mortgage.prepaymentLimitResetDate,
+          mortgage.startDate
+        );
+        return paymentYearForPayment === paymentYear;
+      })
       .reduce((sum, payment) => sum + Number(payment.prepaymentAmount || 0), 0);
   }
 
@@ -129,18 +148,21 @@ export class MortgagePaymentService {
   ) {
     const annualLimitPercent = mortgage.annualPrepaymentLimitPercent ?? 20;
     const originalAmount = Number(mortgage.originalAmount);
+    const carryForward = Number(mortgage.prepaymentCarryForward || 0);
     const withinLimit = isWithinPrepaymentLimit(
       prepaymentAmount,
       yearToDate,
       originalAmount,
-      annualLimitPercent
+      annualLimitPercent,
+      carryForward
     );
     if (!withinLimit) {
-      const maxAnnual = (originalAmount * annualLimitPercent) / 100;
+      const maxAnnual = (originalAmount * annualLimitPercent) / 100 + carryForward;
+      const availableLimit = maxAnnual - yearToDate;
+      const penaltyInfo = calculatePrepaymentWithPenalty(prepaymentAmount, availableLimit, 1.5);
+      
       throw new PrepaymentLimitError(
-        `Annual prepayment limit exceeded. Max ${annualLimitPercent}% of original balance ($${maxAnnual.toFixed(
-          2
-        )}) has already been used.`
+        `Annual prepayment limit exceeded. Max ${annualLimitPercent}% of original balance ($${(originalAmount * annualLimitPercent / 100).toFixed(2)})${carryForward > 0 ? ` plus $${carryForward.toFixed(2)} carry-forward` : ""} ($${maxAnnual.toFixed(2)} total) has already been used. Over-limit amount: $${penaltyInfo.overLimitAmount.toFixed(2)}. Estimated penalty: $${penaltyInfo.penaltyAmount.toFixed(2)} (1.5% of over-limit amount).`
       );
     }
   }
@@ -224,7 +246,7 @@ export class MortgagePaymentService {
       previousPayment
     );
     const paymentYear = parseInt(finalPaymentDate.split("-")[0], 10);
-    const yearToDate = await this.getYearToDatePrepayments(mortgageId, paymentYear);
+    const yearToDate = await this.getYearToDatePrepayments(mortgageId, payload.paymentDate, mortgage);
     this.enforcePrepaymentLimit(
       mortgage,
       finalPaymentDate,
@@ -351,13 +373,19 @@ export class MortgagePaymentService {
       previousPaymentInBatch = mockPaymentForNext;
 
       // Check prepayment limits - account for prepayments in this batch
-      // Use adjusted date's year (if date was adjusted, use the adjusted year)
+      // Use adjusted date for prepayment year calculation
       // This ensures that if a date is adjusted (e.g., Dec 31 holiday → Jan 1),
       // the prepayment limit is calculated for the correct year
-      const adjustedPaymentYear = new Date(finalPaymentDate).getFullYear();
+      const { getPrepaymentYear } = await import("@server-shared/calculations/prepayment-year");
+      const adjustedPaymentYear = getPrepaymentYear(
+        finalPaymentDate,
+        mortgage.prepaymentLimitResetDate,
+        mortgage.startDate
+      );
       const existingYearToDate = await this.getYearToDatePrepayments(
         mortgageId,
-        adjustedPaymentYear
+        finalPaymentDate,
+        mortgage
       );
       const batchYearToDate = yearToDatePrepayments.get(adjustedPaymentYear) || 0;
       const totalYearToDate = existingYearToDate + batchYearToDate;

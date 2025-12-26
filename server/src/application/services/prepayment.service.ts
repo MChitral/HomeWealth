@@ -33,13 +33,16 @@ export class PrepaymentService {
     const monthlySurplus = cashFlow ? this.calculateSurplus(cashFlow) : 0;
 
     // Calc room
-    const currentYear = new Date().getFullYear();
+    const { getPrepaymentYear } = await import("@server-shared/calculations/prepayment-year");
     const payments = await this.mortgagePaymentRepository.findByMortgageId(mortgageId);
+    const today = new Date().toISOString().split("T")[0];
+    const currentPrepaymentYear = getPrepaymentYear(today, mortgage.prepaymentLimitResetDate, mortgage.startDate);
 
-    // Filter for current calendar year
-    const currentYearPayments = payments.filter(
-      (p: MortgagePayment) => new Date(p.paymentDate).getFullYear() === currentYear
-    );
+    // Filter for current prepayment year (anniversary or calendar)
+    const currentYearPayments = payments.filter((p: MortgagePayment) => {
+      const paymentYear = getPrepaymentYear(p.paymentDate, mortgage.prepaymentLimitResetDate, mortgage.startDate);
+      return paymentYear === currentPrepaymentYear;
+    });
 
     const { limit, used, remaining } = this.calculatePrepaymentRoom(mortgage, currentYearPayments);
 
@@ -74,15 +77,19 @@ export class PrepaymentService {
   calculatePrepaymentRoom(
     mortgage: Mortgage,
     currentYearPayments: MortgagePayment[]
-  ): { limit: number; used: number; remaining: number } {
+  ): { limit: number; used: number; remaining: number; carryForward: number } {
     const percent = mortgage.annualPrepaymentLimitPercent || 20; // Default 20%
-    const limit = Number(mortgage.originalAmount) * (percent / 100);
+    const annualLimit = Number(mortgage.originalAmount) * (percent / 100);
+    const carryForward = Number(mortgage.prepaymentCarryForward || 0);
+    
+    // Available limit includes carry-forward from previous year
+    const limit = annualLimit + carryForward;
 
     const used = currentYearPayments.reduce((sum, p) => sum + Number(p.prepaymentAmount || 0), 0);
 
     const remaining = Math.max(0, limit - used);
 
-    return { limit, used, remaining };
+    return { limit, used, remaining, carryForward };
   }
 
   private generateRecommendation(surplus: number, remainingRoom: number): string {

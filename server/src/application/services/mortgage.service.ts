@@ -6,6 +6,7 @@ import {
 } from "@infrastructure/repositories";
 import type { MortgageCreateInput, MortgageUpdateInput } from "@domain/models";
 import { db } from "@infrastructure/db/connection";
+import { validateMortgage, validateAmortizationPeriod, validateLTV } from "@domain/validations/mortgage-validation";
 
 export class MortgageService {
   constructor(
@@ -30,7 +31,29 @@ export class MortgageService {
     return mortgage;
   }
 
-  create(userId: string, payload: Omit<MortgageCreateInput, "userId">): Promise<Mortgage> {
+  async create(userId: string, payload: Omit<MortgageCreateInput, "userId">): Promise<Mortgage> {
+    // Validate amortization period
+    const amortizationValidation = validateAmortizationPeriod(
+      payload.amortizationYears,
+      payload.amortizationMonths || 0,
+      payload.isHighRatio === 1 || payload.isHighRatio === true
+    );
+    
+    if (!amortizationValidation.valid) {
+      throw new Error(amortizationValidation.errors.join("; "));
+    }
+    
+    // Validate LTV
+    const ltvValidation = validateLTV(
+      Number(payload.originalAmount),
+      Number(payload.propertyPrice),
+      payload.isHighRatio === 1 || payload.isHighRatio === true
+    );
+    
+    if (!ltvValidation.valid) {
+      throw new Error(ltvValidation.errors.join("; "));
+    }
+    
     return this.mortgages.create({
       ...payload,
       userId,
@@ -46,6 +69,33 @@ export class MortgageService {
     if (!mortgage) {
       return undefined;
     }
+    
+    // Validate amortization if being updated
+    if (payload.amortizationYears !== undefined || payload.amortizationMonths !== undefined) {
+      const amortizationValidation = validateAmortizationPeriod(
+        payload.amortizationYears ?? mortgage.amortizationYears,
+        payload.amortizationMonths ?? mortgage.amortizationMonths ?? 0,
+        (payload.isHighRatio ?? mortgage.isHighRatio) === 1 || (payload.isHighRatio ?? mortgage.isHighRatio) === true
+      );
+      
+      if (!amortizationValidation.valid) {
+        throw new Error(amortizationValidation.errors.join("; "));
+      }
+    }
+    
+    // Validate LTV if being updated
+    if (payload.originalAmount !== undefined || payload.propertyPrice !== undefined) {
+      const ltvValidation = validateLTV(
+        Number(payload.originalAmount ?? mortgage.originalAmount),
+        Number(payload.propertyPrice ?? mortgage.propertyPrice),
+        (payload.isHighRatio ?? mortgage.isHighRatio) === 1 || (payload.isHighRatio ?? mortgage.isHighRatio) === true
+      );
+      
+      if (!ltvValidation.valid) {
+        throw new Error(ltvValidation.errors.join("; "));
+      }
+    }
+    
     return this.mortgages.update(id, payload);
   }
 

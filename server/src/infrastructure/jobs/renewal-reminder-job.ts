@@ -54,20 +54,43 @@ async function hasReminderBeenSent(
 /**
  * Get reminder message based on days until renewal
  */
-function getReminderMessage(daysUntil: number, renewalDate: string): string {
+function getReminderMessage(
+  daysUntil: number,
+  renewalDate: string,
+  currentRate?: number,
+  marketRate?: number
+): string {
   const renewalDateFormatted = new Date(renewalDate).toLocaleDateString();
+  let baseMessage = "";
 
   if (daysUntil === 180) {
-    return `Your mortgage term is renewing in 6 months (${renewalDateFormatted}). Start planning your renewal strategy now.`;
+    baseMessage = `Your mortgage term is renewing in 6 months (${renewalDateFormatted}). Start planning your renewal strategy now.`;
   } else if (daysUntil === 90) {
-    return `Your mortgage term is renewing in 3 months (${renewalDateFormatted}). Research current market rates and consider your options.`;
+    baseMessage = `Your mortgage term is renewing in 3 months (${renewalDateFormatted}). Research current market rates and consider your options.`;
   } else if (daysUntil === 30) {
-    return `Your mortgage term is renewing in 1 month (${renewalDateFormatted}). Time to make a decision - review rates and calculate penalties.`;
+    baseMessage = `Your mortgage term is renewing in 1 month (${renewalDateFormatted}). Time to make a decision - review rates and calculate penalties.`;
   } else if (daysUntil === 7) {
-    return `Your mortgage term is renewing in 1 week (${renewalDateFormatted}). Action needed - finalize your renewal decision.`;
+    baseMessage = `Your mortgage term is renewing in 1 week (${renewalDateFormatted}). Action needed - finalize your renewal decision immediately.`;
+  } else {
+    baseMessage = `Your mortgage term is renewing in ${daysUntil} days (${renewalDateFormatted}).`;
   }
 
-  return `Your mortgage term is renewing in ${daysUntil} days (${renewalDateFormatted}).`;
+  // Add rate comparison if available
+  if (currentRate !== undefined && marketRate !== undefined) {
+    const rateDifference = marketRate - currentRate;
+    if (Math.abs(rateDifference) > 0.1) {
+      // Significant rate difference (>0.1%)
+      if (rateDifference < 0) {
+        // Market rates are lower
+        baseMessage += ` Market rates (${marketRate.toFixed(2)}%) are ${Math.abs(rateDifference).toFixed(2)}% lower than your current rate (${currentRate.toFixed(2)}%). You may be able to secure a better rate.`;
+      } else {
+        // Market rates are higher
+        baseMessage += ` Your current rate (${currentRate.toFixed(2)}%) is ${rateDifference.toFixed(2)}% lower than market rates (${marketRate.toFixed(2)}%). Staying with your lender is recommended.`;
+      }
+    }
+  }
+
+  return baseMessage;
 }
 
 /**
@@ -173,9 +196,14 @@ export async function checkRenewalsAndSendReminders(services: ApplicationService
           // Continue without market rate
         }
 
-        // Create notification
+        // Create notification with enhanced message including comparison data
         const title = getReminderTitle(daysUntil);
-        const message = getReminderMessage(daysUntil, renewalInfo.renewalDate);
+        const message = getReminderMessage(
+          daysUntil,
+          renewalInfo.renewalDate,
+          renewalInfo.currentRate,
+          marketRate
+        );
 
         const metadata = {
           mortgageId: mortgage.id,

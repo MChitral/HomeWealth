@@ -8,10 +8,18 @@ import type { InsertNotification, Notification, UpdateNotificationPreferences } 
 
 export type NotificationType =
   | "renewal_reminder"
+  | "renewal_deadline_escalation"
   | "trigger_rate_alert"
   | "rate_change"
   | "penalty_calculated"
-  | "blend_extend_available";
+  | "blend_extend_available"
+  | "prepayment_limit_80"
+  | "prepayment_limit_90"
+  | "prepayment_limit_100"
+  | "payment_due_reminder"
+  | "heloc_credit_limit_increase"
+  | "heloc_draw_period_transition"
+  | "recast_opportunity";
 
 export class NotificationService {
   constructor(

@@ -12,6 +12,7 @@ import { TermRenewalDialog } from "./term-renewal-dialog";
 import { useTermRenewalForm } from "../hooks/use-term-renewal-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/shared/hooks/use-toast";
+import { RenewalHistorySection } from "./renewal-history-section";
 
 interface RenewalTabProps {
   mortgageId: string;
@@ -54,10 +55,51 @@ export function RenewalTab({ mortgageId, onTermRenewalDialogOpenChange, currentT
 
   const createTermMutation = useMutation({
     mutationFn: (data: any) => mortgageApi.createTerm(mortgageId, data),
-    onSuccess: () => {
+    onSuccess: async (newTerm) => {
       queryClient.invalidateQueries({ queryKey: ["mortgage", mortgageId] });
       queryClient.invalidateQueries({ queryKey: ["renewal", mortgageId] });
       queryClient.invalidateQueries({ queryKey: ["/api/mortgages", mortgageId, "terms"] });
+      queryClient.invalidateQueries({ queryKey: ["renewal-history", mortgageId] });
+      queryClient.invalidateQueries({ queryKey: ["renewal-analytics", mortgageId] });
+      
+      // Record renewal decision if we have the required data
+      if (currentTerm && newTerm?.id && renewalStatus) {
+        try {
+          const formData = renewalForm.form.getValues();
+          const previousRate = renewalStatus.currentRate;
+          
+          // Extract new rate from created term or form data
+          let newRate = previousRate;
+          if (newTerm.fixedRate) {
+            newRate = parseFloat(newTerm.fixedRate) * 100;
+          } else if (newTerm.primeRate && newTerm.lockedSpread) {
+            newRate = (parseFloat(newTerm.primeRate) + parseFloat(newTerm.lockedSpread)) * 100;
+          } else if (formData.fixedRate) {
+            newRate = parseFloat(formData.fixedRate) * 100;
+          } else if (formData.primeRate && formData.lockedSpread) {
+            newRate = (parseFloat(formData.primeRate) + parseFloat(formData.lockedSpread)) * 100;
+          }
+          
+          // Determine decision type (stayed vs switched)
+          // For now, assume "stayed" - this could be enhanced to detect lender changes
+          const decisionType: "stayed" | "switched" | "refinanced" = "stayed";
+          
+          await mortgageApi.recordRenewalDecision(mortgageId, {
+            termId: newTerm.id,
+            renewalDate: formData.startDate || newTerm.startDate || new Date().toISOString().split("T")[0],
+            previousRate,
+            newRate,
+            decisionType,
+            lenderName: undefined, // Could be enhanced to track lender
+            estimatedSavings: undefined, // Could be calculated
+            notes: undefined,
+          });
+        } catch (error) {
+          // Don't fail the renewal if recording the decision fails
+          console.error("Failed to record renewal decision:", error);
+        }
+      }
+      
       toast({
         title: "Term Renewed",
         description: "Your new mortgage term has been created successfully.",
@@ -244,6 +286,9 @@ export function RenewalTab({ mortgageId, onTermRenewalDialogOpenChange, currentT
           </div>
         </CardContent>
       </Card>
+
+      {/* Renewal History Section */}
+      <RenewalHistorySection mortgageId={mortgageId} />
 
       <PenaltyCalculatorDialog
         open={penaltyCalculatorOpen}

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { normalizePayments, normalizeTerm } from "../utils/normalize";
 import type { Mortgage, MortgageTerm, MortgagePayment } from "@shared/schema";
+import type { PrimeRateResponse } from "../api";
 
 interface UseMortgageComputedProps {
   mortgage: Mortgage | null;
@@ -9,6 +10,9 @@ interface UseMortgageComputedProps {
   primeRateData?: PrimeRateResponse;
   primeRate: string;
   filterYear: string;
+  filterDateRange: { start: string | null; end: string | null };
+  filterPaymentType: "all" | "regular" | "prepayment" | "skipped";
+  searchAmount: string;
 }
 
 /**
@@ -22,6 +26,9 @@ export function useMortgageComputed({
   primeRateData,
   primeRate,
   filterYear,
+  filterDateRange,
+  filterPaymentType,
+  searchAmount,
 }: UseMortgageComputedProps) {
   const uiCurrentTerm = useMemo(
     () => normalizeTerm(terms ? terms[terms.length - 1] : undefined),
@@ -78,13 +85,64 @@ export function useMortgageComputed({
     [paymentHistory, mortgage, currentEffectiveRate, currentPrimeRateValue, payments]
   );
 
-  const filteredPayments = useMemo(
-    () =>
-      filterYear === "all"
-        ? paymentHistory
-        : paymentHistory.filter((p) => p.year.toString() === filterYear),
-    [paymentHistory, filterYear]
-  );
+  const filteredPayments = useMemo(() => {
+    let filtered = paymentHistory;
+
+    // Filter by year
+    if (filterYear !== "all") {
+      filtered = filtered.filter((p) => p.year.toString() === filterYear);
+    }
+
+    // Filter by date range
+    if (filterDateRange.start || filterDateRange.end) {
+      filtered = filtered.filter((p) => {
+        const paymentDate = new Date(p.date);
+        if (filterDateRange.start) {
+          const startDate = new Date(filterDateRange.start);
+          startDate.setHours(0, 0, 0, 0);
+          if (paymentDate < startDate) return false;
+        }
+        if (filterDateRange.end) {
+          const endDate = new Date(filterDateRange.end);
+          endDate.setHours(23, 59, 59, 999);
+          if (paymentDate > endDate) return false;
+        }
+        return true;
+      });
+    }
+
+    // Filter by payment type
+    if (filterPaymentType !== "all") {
+      filtered = filtered.filter((p) => {
+        if (filterPaymentType === "prepayment") {
+          return p.prepaymentAmount > 0;
+        }
+        if (filterPaymentType === "skipped") {
+          return p.isSkipped;
+        }
+        if (filterPaymentType === "regular") {
+          return p.prepaymentAmount === 0 && !p.isSkipped;
+        }
+        return true;
+      });
+    }
+
+    // Search by amount (searches in total payment amount, prepayment amount, principal, interest)
+    if (searchAmount.trim()) {
+      const searchValue = parseFloat(searchAmount.trim());
+      if (!isNaN(searchValue)) {
+        filtered = filtered.filter(
+          (p) =>
+            Math.abs(p.paymentAmount - searchValue) < 0.01 ||
+            Math.abs(p.prepaymentAmount - searchValue) < 0.01 ||
+            Math.abs(p.principal - searchValue) < 0.01 ||
+            Math.abs(p.interest - searchValue) < 0.01
+        );
+      }
+    }
+
+    return filtered;
+  }, [paymentHistory, filterYear, filterDateRange, filterPaymentType, searchAmount]);
 
   const availableYears = useMemo(
     () => Array.from(new Set(paymentHistory.map((p) => p.year))).sort((a, b) => b - a),

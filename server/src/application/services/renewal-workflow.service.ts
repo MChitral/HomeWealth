@@ -6,6 +6,7 @@ import {
 } from "@infrastructure/repositories";
 import { MarketRateService } from "./market-rate.service";
 import { RenewalService } from "./renewal.service";
+import type { RenewalRecommendationService } from "./renewal-recommendation.service";
 
 export interface RenewalNegotiationInput {
   mortgageId: string;
@@ -35,7 +36,8 @@ export class RenewalWorkflowService {
     private readonly mortgageTerms: MortgageTermsRepository,
     private readonly renewalNegotiations: RenewalNegotiationsRepository,
     private readonly marketRateService: MarketRateService,
-    private readonly renewalService: RenewalService
+    private readonly renewalService: RenewalService,
+    private readonly renewalRecommendationService?: RenewalRecommendationService
   ) {}
 
   private async authorizeMortgage(mortgageId: string, userId: string) {
@@ -53,6 +55,7 @@ export class RenewalWorkflowService {
     mortgage: Mortgage;
     currentTerm: MortgageTerm | undefined;
     renewalStatus: any;
+    recommendation?: any;
   } | undefined> {
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
     if (!mortgage) {
@@ -66,10 +69,17 @@ export class RenewalWorkflowService {
 
     const renewalStatus = await this.renewalService.getRenewalStatus(mortgageId);
 
+    // Get renewal recommendation if service is available
+    let recommendation = undefined;
+    if (this.renewalRecommendationService) {
+      recommendation = await this.renewalRecommendationService.generateRecommendation(mortgageId);
+    }
+
     return {
       mortgage,
       currentTerm,
       renewalStatus,
+      recommendation,
     };
   }
 

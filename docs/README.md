@@ -28,7 +28,25 @@ docs/
 │
 ├── feature-specifications/               # Detailed feature specs
 │   ├── HELOC_READVANCEABLE_FEATURE_SPEC.md
-│   └── SMITH_MANEUVER_FEATURE_SPEC.md
+│   ├── SMITH_MANEUVER_FEATURE_SPEC.md
+│   ├── RENEWAL_TRACKING_WORKFLOW_FEATURE_SPEC.md
+│   ├── VARIABLE_RATE_MORTGAGES_TRIGGER_RATES_FEATURE_SPEC.md
+│   ├── PENALTY_CALCULATIONS_FEATURE_SPEC.md
+│   ├── REFINANCING_ANALYSIS_FEATURE_SPEC.md
+│   ├── PREPAYMENT_MECHANICS_FEATURE_SPEC.md
+│   ├── PAYMENT_TRACKING_MANAGEMENT_FEATURE_SPEC.md
+│   ├── PROPERTY_VALUE_TRACKING_FEATURE_SPEC.md
+│   ├── MORTGAGE_PAYOFF_TRACKING_FEATURE_SPEC.md
+│   ├── SCENARIO_PLANNING_PROJECTIONS_FEATURE_SPEC.md
+│   ├── MORTGAGE_RECAST_FEATURE_SPEC.md
+│   ├── PAYMENT_FREQUENCY_CHANGES_FEATURE_SPEC.md
+│   ├── MORTGAGE_PORTABILITY_FEATURE_SPEC.md
+│   ├── BLEND_AND_EXTEND_FEATURE_SPEC.md
+│   ├── CASH_FLOW_PLANNING_FEATURE_SPEC.md
+│   ├── EMERGENCY_FUND_PLANNING_FEATURE_SPEC.md
+│   ├── MORTGAGE_CREATION_FEATURE_SPEC.md
+│   ├── NOTIFICATIONS_ALERTS_FEATURE_SPEC.md
+│   └── REGULATORY_COMPLIANCE_FEATURE_SPEC.md
 │
 ├── audits/                              # Feature-specific audits
 │   └── REFINANCING_FEATURE_AUDIT.md    # Technical audit of refinancing feature
@@ -45,7 +63,7 @@ docs/
     └── COMPETITIVE_ANALYSIS.md
 ```
 
-**Total: 19 essential files**
+**Total: 24 essential files**
 
 ---
 
@@ -81,6 +99,24 @@ docs/
 
 - [HELOC & Re-Advanceable Mortgage Spec](feature-specifications/HELOC_READVANCEABLE_FEATURE_SPEC.md)
 - [Smith Maneuver Feature Spec](feature-specifications/SMITH_MANEUVER_FEATURE_SPEC.md)
+- [Renewal Tracking & Workflow Spec](feature-specifications/RENEWAL_TRACKING_WORKFLOW_FEATURE_SPEC.md)
+- [Variable Rate Mortgages & Trigger Rates Spec](feature-specifications/VARIABLE_RATE_MORTGAGES_TRIGGER_RATES_FEATURE_SPEC.md)
+- [Penalty Calculations Spec](feature-specifications/PENALTY_CALCULATIONS_FEATURE_SPEC.md)
+- [Refinancing Analysis Spec](feature-specifications/REFINANCING_ANALYSIS_FEATURE_SPEC.md)
+- [Prepayment Mechanics Spec](feature-specifications/PREPAYMENT_MECHANICS_FEATURE_SPEC.md)
+- [Payment Tracking & Management Spec](feature-specifications/PAYMENT_TRACKING_MANAGEMENT_FEATURE_SPEC.md)
+- [Property Value Tracking Spec](feature-specifications/PROPERTY_VALUE_TRACKING_FEATURE_SPEC.md)
+- [Mortgage Payoff Tracking Spec](feature-specifications/MORTGAGE_PAYOFF_TRACKING_FEATURE_SPEC.md)
+- [Scenario Planning & Projections Spec](feature-specifications/SCENARIO_PLANNING_PROJECTIONS_FEATURE_SPEC.md)
+- [Mortgage Recast Spec](feature-specifications/MORTGAGE_RECAST_FEATURE_SPEC.md)
+- [Payment Frequency Changes Spec](feature-specifications/PAYMENT_FREQUENCY_CHANGES_FEATURE_SPEC.md)
+- [Mortgage Portability Spec](feature-specifications/MORTGAGE_PORTABILITY_FEATURE_SPEC.md)
+- [Blend and Extend Spec](feature-specifications/BLEND_AND_EXTEND_FEATURE_SPEC.md)
+- [Cash Flow Planning Spec](feature-specifications/CASH_FLOW_PLANNING_FEATURE_SPEC.md)
+- [Emergency Fund Planning Spec](feature-specifications/EMERGENCY_FUND_PLANNING_FEATURE_SPEC.md)
+- [Mortgage Creation Spec](feature-specifications/MORTGAGE_CREATION_FEATURE_SPEC.md)
+- [Notifications & Alerts Spec](feature-specifications/NOTIFICATIONS_ALERTS_FEATURE_SPEC.md)
+- [Regulatory Compliance Spec](feature-specifications/REGULATORY_COMPLIANCE_FEATURE_SPEC.md)
 
 ### Architecture
 
@@ -165,7 +201,7 @@ See [Feature Limitations](guides/FEATURE_LIMITATIONS.md) for complete list.
 **Kept:**
 
 - Technical calculation guides (still accurate)
-- Feature specifications (HELOC, Smith Maneuver)
+- Feature specifications (HELOC, Smith Maneuver, Renewal Tracking & Workflow, Variable Rate Mortgages & Trigger Rates, Penalty Calculations, Refinancing Analysis, Prepayment Mechanics, Payment Tracking & Management, Property Value Tracking, Mortgage Payoff Tracking, Scenario Planning & Projections, Mortgage Recast, Payment Frequency Changes, Mortgage Portability, Blend and Extend, Cash Flow Planning, Emergency Fund Planning, Mortgage Creation, Notifications & Alerts, Regulatory Compliance)
 - Architecture documentation
 - Current limitations guide
 

@@ -277,6 +277,38 @@ export const mortgageApi = {
       "GET",
       `/api/mortgages/${mortgageId}/renewal/negotiations`
     ),
+
+  // Renewal History
+  fetchRenewalHistory: (mortgageId: string) =>
+    apiRequest<RenewalHistoryEntry[]>(
+      "GET",
+      `/api/mortgages/${mortgageId}/renewal-history`
+    ),
+
+  recordRenewalDecision: (mortgageId: string, request: RecordRenewalDecisionRequest) =>
+    apiRequest<RenewalHistoryEntry>(
+      "POST",
+      `/api/mortgages/${mortgageId}/renewal-history`,
+      request
+    ),
+
+  fetchRenewalAnalytics: (mortgageId: string) =>
+    apiRequest<RenewalAnalyticsResponse>(
+      "GET",
+      `/api/mortgages/${mortgageId}/renewal-analytics`
+    ),
+
+  fetchRenewalRateComparison: (mortgageId: string) =>
+    apiRequest<RenewalRateComparisonResponse>(
+      "GET",
+      `/api/mortgages/${mortgageId}/renewal-rate-comparison`
+    ),
+
+  fetchRenewalRecommendation: (mortgageId: string) =>
+    apiRequest<RenewalRecommendationResponse>(
+      "GET",
+      `/api/mortgages/${mortgageId}/renewal-recommendation`
+    ),
 };
 
 export type RenewalStatusResponse = {
@@ -330,18 +362,24 @@ export type CalculatePenaltyRequest = {
   remainingMonths: number;
   termType?: "fixed" | "variable-changing" | "variable-fixed";
   penaltyCalculationMethod?: string;
+  mortgageId?: string; // Optional: if provided, will check openClosedMortgageType
+  openClosedMortgageType?: "open" | "closed" | null; // Optional: can be passed directly
 };
 
 export type CalculatePenaltyResponse = {
   threeMonthPenalty: number;
   irdPenalty: number;
   totalPenalty: number;
-  method: "IRD" | "3-Month Interest";
+  method: "IRD" | "3-Month Interest" | "Open Mortgage";
   breakdown: {
     threeMonth: number;
     ird: number;
-    applied: "IRD" | "3-Month Interest";
+    applied: "IRD" | "3-Month Interest" | "Open Mortgage";
   };
+  // Optional metadata
+  isOpenMortgage?: boolean;
+  mortgageType?: "open" | "closed" | null;
+  note?: string; // e.g., "Penalty is $0 because this is an open mortgage"
 };
 
 export type BlendAndExtendRequest = {
@@ -516,6 +554,81 @@ export type RenewalNegotiationRequest = {
   notes?: string;
 };
 
+// Renewal History Types
+export interface RenewalHistoryEntry {
+  id: string;
+  mortgageId: string;
+  termId: string;
+  renewalDate: string;
+  previousRate: number; // Percentage (e.g., 5.5 for 5.5%)
+  newRate: number; // Percentage
+  decisionType: "stayed" | "switched" | "refinanced";
+  lenderName?: string | null;
+  estimatedSavings?: number | null;
+  notes?: string | null;
+  createdAt: string;
+}
+
+export interface RecordRenewalDecisionRequest {
+  termId: string;
+  renewalDate: string;
+  previousRate: number; // Percentage
+  newRate: number; // Percentage
+  decisionType: "stayed" | "switched" | "refinanced";
+  lenderName?: string;
+  estimatedSavings?: number;
+  notes?: string;
+}
+
+export interface RenewalPerformance {
+  totalRenewals: number;
+  averageRateChange: number;
+  totalEstimatedSavings: number;
+  lastRenewalDate?: string;
+  lastRenewalRate?: number;
+}
+
+export interface RenewalRateComparison {
+  currentRate: number;
+  previousRate?: number;
+  rateChange?: number;
+  rateChangePercent?: number;
+}
+
+export interface RenewalAnalyticsResponse {
+  performance: RenewalPerformance;
+  rateComparison: RenewalRateComparison;
+}
+
+export type RenewalRateComparisonResponse = RenewalRateComparison;
+
+// Renewal Recommendation Types
+export interface RenewalRecommendationResponse {
+  recommendation: "stay" | "switch" | "refinance" | "consider_switching";
+  reasoning: string;
+  confidence: "high" | "medium" | "low";
+  stayWithCurrentLender?: {
+    estimatedRate: number;
+    estimatedPenalty: number;
+    estimatedMonthlyPayment: number;
+  };
+  switchLender?: {
+    estimatedRate: number;
+    estimatedPenalty: number;
+    estimatedClosingCosts: number;
+    estimatedMonthlyPayment: number;
+    breakEvenMonths: number;
+  };
+  refinance?: {
+    estimatedRate: number;
+    estimatedPenalty: number;
+    estimatedClosingCosts: number;
+    estimatedMonthlyPayment: number;
+    monthlySavings: number;
+    breakEvenMonths: number;
+  };
+}
+
 export type RenewalNegotiationResponse = {
   id: string;
   mortgageId: string;
@@ -551,3 +664,184 @@ export type RenewalNegotiationEntry = {
   notes: string | null;
   createdAt: string;
 };
+
+// Payment Corrections
+export interface CorrectPaymentRequest {
+  correctedAmount: number;
+  reason: string;
+}
+
+export interface PaymentCorrection {
+  id: string;
+  paymentId: string;
+  originalAmount: string;
+  correctedAmount: string;
+  reason: string;
+  correctedBy: string | null;
+  createdAt: string;
+}
+
+export async function correctPayment(
+  paymentId: string,
+  request: CorrectPaymentRequest
+): Promise<{ correction: PaymentCorrection; payment: MortgagePayment }> {
+  const response = await fetch(`/api/mortgage-payments/${paymentId}/correct`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Failed to correct payment");
+  }
+
+  return response.json();
+}
+
+export async function fetchPaymentCorrections(paymentId: string): Promise<PaymentCorrection[]> {
+  const response = await fetch(`/api/mortgage-payments/${paymentId}/corrections`);
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Failed to fetch corrections");
+  }
+
+  return response.json();
+}
+
+// Stress Test Calculator
+export interface StressTestRequest {
+  mortgageAmount: number;
+  contractRate: number; // Percentage (e.g., 5.5 for 5.5%)
+  amortizationMonths: number;
+  grossIncome: number;
+  otherHousingCosts?: number;
+  otherDebtPayments?: number;
+  maxGDS?: number;
+  maxTDS?: number;
+}
+
+export interface StressTestResult {
+  passes: boolean;
+  stressTestRate: number;
+  qualifyingPayment: number;
+  actualGDS: number;
+  actualTDS: number;
+  maxGDS: number;
+  maxTDS: number;
+  gdsPass: boolean;
+  tdsPass: boolean;
+  maxMortgageAmount: number;
+  recommendations?: {
+    message?: string;
+    suggestions?: string[];
+  };
+}
+
+export async function calculateStressTest(request: StressTestRequest): Promise<StressTestResult> {
+  const response = await fetch("/api/mortgages/stress-test", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Failed to calculate stress test");
+  }
+
+  return response.json();
+}
+
+// GDS/TDS Ratio Calculator
+export interface DebtServiceRatiosRequest {
+  mortgagePayment: number;
+  grossIncome: number;
+  propertyTax?: number;
+  heatingCosts?: number;
+  condoFees?: number;
+  otherDebtPayments?: number;
+  maxGDS?: number;
+  maxTDS?: number;
+}
+
+export interface DebtServiceRatiosResult {
+  gds: number;
+  tds: number;
+  housingCosts: number;
+  monthlyIncome: number;
+  gdsPass: boolean;
+  tdsPass: boolean;
+  overallPass: boolean;
+  gdsWarning: boolean;
+  tdsWarning: boolean;
+  warnings: string[];
+}
+
+export async function calculateDebtServiceRatios(
+  request: DebtServiceRatiosRequest
+): Promise<DebtServiceRatiosResult> {
+  const response = await fetch("/api/mortgages/debt-service-ratios", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Failed to calculate debt service ratios");
+  }
+
+  return response.json();
+}
+
+// Mortgage Payoff
+export interface RecordPayoffRequest {
+  payoffDate: string;
+  finalPaymentAmount: number;
+  remainingBalance: number;
+  penaltyAmount?: number;
+  notes?: string;
+}
+
+export interface MortgagePayoff {
+  id: string;
+  mortgageId: string;
+  payoffDate: string;
+  finalPaymentAmount: string;
+  remainingBalance: string;
+  penaltyAmount: string;
+  totalCost: string;
+  notes: string | null;
+  createdAt: string;
+}
+
+export async function recordMortgagePayoff(
+  mortgageId: string,
+  request: RecordPayoffRequest
+): Promise<{ payoff: MortgagePayoff; mortgageUpdated: boolean }> {
+  const response = await fetch(`/api/mortgages/${mortgageId}/payoff`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Failed to record mortgage payoff");
+  }
+
+  return response.json();
+}
+
+export async function fetchMortgagePayoffHistory(mortgageId: string): Promise<MortgagePayoff[]> {
+  const response = await fetch(`/api/mortgages/${mortgageId}/payoff/history`);
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Failed to fetch payoff history");
+  }
+
+  return response.json();
+}

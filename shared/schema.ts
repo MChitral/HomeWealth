@@ -178,6 +178,8 @@ export const mortgages = pgTable("mortgages", {
 
   // Canadian lender prepayment constraints
   annualPrepaymentLimitPercent: integer("annual_prepayment_limit_percent").notNull().default(20), // 10-20% typical
+  prepaymentLimitResetDate: date("prepayment_limit_reset_date"), // Anniversary date vs calendar year (null = calendar year)
+  prepaymentCarryForward: decimal("prepayment_carry_forward", { precision: 12, scale: 2 }).default("0.00"), // Unused prepayment room from previous year
 
   // Mortgage default insurance (for high-ratio mortgages)
   insuranceProvider: text("insurance_provider"), // "CMHC" | "Sagen" | "Genworth" | null
@@ -195,6 +197,9 @@ export const mortgages = pgTable("mortgages", {
   // Mortgage portability tracking
   isPorted: integer("is_ported").default(0), // boolean (0 = false, 1 = true)
   originalMortgageId: varchar("original_mortgage_id"), // Reference to original mortgage if this is a ported mortgage
+
+  // Open vs Closed mortgage type
+  openClosedMortgageType: text("open_closed_mortgage_type"), // "open" | "closed" | null (null = closed by default)
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -272,6 +277,10 @@ export const mortgageTerms = pgTable("mortgage_terms", {
   // Penalty calculation method
   penaltyCalculationMethod: text("penalty_calculation_method"), // "ird_posted_rate", "ird_discounted_rate", "ird_origination_comparison", "three_month_interest", "open_mortgage", "variable_rate"
 
+  // Variable rate cap and floor (for variable rate mortgages)
+  variableRateCap: decimal("variable_rate_cap", { precision: 5, scale: 3 }), // Maximum rate increase per period
+  variableRateFloor: decimal("variable_rate_floor", { precision: 5, scale: 3 }), // Minimum rate
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -293,6 +302,14 @@ const mortgageTermBaseSchema = createInsertSchema(mortgageTerms)
     regularPaymentAmount: z
       .union([z.string(), z.number()])
       .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    variableRateCap: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .transform((val) => (val == null ? null : typeof val === "number" ? val.toFixed(3) : val))
+      .optional(),
+    variableRateFloor: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .transform((val) => (val == null ? null : typeof val === "number" ? val.toFixed(3) : val))
+      .optional(),
   });
 
 export const insertMortgageTermSchema = mortgageTermBaseSchema.superRefine((data, ctx) => {
@@ -464,6 +481,82 @@ export const insertMortgagePaymentSchema = createInsertSchema(mortgagePayments)
   });
 export type InsertMortgagePayment = z.infer<typeof insertMortgagePaymentSchema>;
 export type MortgagePayment = typeof mortgagePayments.$inferSelect;
+
+// Payment Corrections - Audit trail for payment reversals and adjustments
+export const paymentCorrections = pgTable(
+  "payment_corrections",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    paymentId: varchar("payment_id")
+      .notNull()
+      .references(() => mortgagePayments.id, { onDelete: "cascade" }),
+    originalAmount: decimal("original_amount", { precision: 10, scale: 2 }).notNull(),
+    correctedAmount: decimal("corrected_amount", { precision: 10, scale: 2 }).notNull(),
+    reason: text("reason").notNull(), // Reason for correction
+    correctedBy: varchar("corrected_by"), // User ID who made the correction
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("IDX_payment_corrections_payment").on(table.paymentId),
+    index("IDX_payment_corrections_created").on(table.createdAt),
+  ]
+);
+
+export const insertPaymentCorrectionSchema = createInsertSchema(paymentCorrections)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    originalAmount: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    correctedAmount: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+  });
+
+export type InsertPaymentCorrection = z.infer<typeof insertPaymentCorrectionSchema>;
+export type PaymentCorrection = typeof paymentCorrections.$inferSelect;
+
+// Payment Amount Change Events - Track when regular payment amount changes
+export const paymentAmountChangeEvents = pgTable(
+  "payment_amount_change_events",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    mortgageId: varchar("mortgage_id")
+      .notNull()
+      .references(() => mortgages.id, { onDelete: "cascade" }),
+    termId: varchar("term_id")
+      .notNull()
+      .references(() => mortgageTerms.id, { onDelete: "cascade" }),
+    changeDate: date("change_date").notNull(),
+    oldAmount: decimal("old_amount", { precision: 10, scale: 2 }).notNull(),
+    newAmount: decimal("new_amount", { precision: 10, scale: 2 }).notNull(),
+    reason: text("reason"), // Reason for the change (rate change, recast, etc.)
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("IDX_payment_amount_change_mortgage").on(table.mortgageId),
+    index("IDX_payment_amount_change_term").on(table.termId),
+    index("IDX_payment_amount_change_date").on(table.changeDate),
+  ]
+);
+
+export const insertPaymentAmountChangeEventSchema = createInsertSchema(paymentAmountChangeEvents)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    oldAmount: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    newAmount: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+  });
+
+export type InsertPaymentAmountChangeEvent = z.infer<typeof insertPaymentAmountChangeEventSchema>;
+export type PaymentAmountChangeEvent = typeof paymentAmountChangeEvents.$inferSelect;
 
 // Scenarios - Different prepayment/investment strategies
 export const scenarios = pgTable("scenarios", {
@@ -779,6 +872,12 @@ export const insertNotificationPreferencesSchema = createInsertSchema(notificati
     blendExtendAlerts: z
       .union([z.boolean(), z.number()])
       .transform((val) => (val === true || val === 1 ? 1 : 0)),
+    prepaymentLimitAlerts: z
+      .union([z.boolean(), z.number()])
+      .transform((val) => (val === true || val === 1 ? 1 : 0)),
+    paymentDueReminders: z
+      .union([z.boolean(), z.number()])
+      .transform((val) => (val === true || val === 1 ? 1 : 0)),
     triggerRateThreshold: z
       .union([z.string(), z.number()])
       .transform((val) => (typeof val === "number" ? val.toFixed(3) : val)),
@@ -841,6 +940,13 @@ export const helocAccounts = pgTable(
     accountOpeningDate: date("account_opening_date").notNull(),
     accountStatus: text("account_status").notNull().default("active"), // 'active', 'closed', 'suspended'
     isReAdvanceable: integer("is_re_advanceable").notNull().default(0), // boolean (0/1)
+    
+    // HELOC payment options
+    helocPaymentType: text("heloc_payment_type").default("interest_only"), // "interest_only" | "principal_plus_interest"
+    helocMinimumPayment: decimal("heloc_minimum_payment", { precision: 10, scale: 2 }), // Calculated minimum payment
+    
+    // HELOC draw period tracking
+    helocDrawPeriodEndDate: date("heloc_draw_period_end_date"), // End date of draw period (after this, repayment period begins)
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
@@ -1751,6 +1857,55 @@ export const insertRenewalNegotiationSchema = createInsertSchema(renewalNegotiat
 export type InsertRenewalNegotiation = z.infer<typeof insertRenewalNegotiationSchema>;
 export type RenewalNegotiation = typeof renewalNegotiations.$inferSelect;
 
+// Renewal History - Track completed renewals with decision data
+export const renewalHistory = pgTable(
+  "renewal_history",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    mortgageId: varchar("mortgage_id")
+      .notNull()
+      .references(() => mortgages.id, { onDelete: "cascade" }),
+    termId: varchar("term_id")
+      .notNull()
+      .references(() => mortgageTerms.id, { onDelete: "cascade" }),
+    renewalDate: date("renewal_date").notNull(),
+    previousRate: decimal("previous_rate", { precision: 5, scale: 3 }).notNull(), // Rate before renewal (in decimal, e.g., 0.055 for 5.5%)
+    newRate: decimal("new_rate", { precision: 5, scale: 3 }).notNull(), // Rate after renewal
+    decisionType: text("decision_type").notNull(), // "stayed", "switched", "refinanced"
+    lenderName: text("lender_name"),
+    estimatedSavings: decimal("estimated_savings", { precision: 12, scale: 2 }), // Estimated savings over term
+    notes: text("notes"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("IDX_renewal_history_mortgage").on(table.mortgageId),
+    index("IDX_renewal_history_term").on(table.termId),
+    index("IDX_renewal_history_date").on(table.renewalDate),
+  ]
+);
+
+export const insertRenewalHistorySchema = createInsertSchema(renewalHistory)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    previousRate: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(3) : val)),
+    newRate: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(3) : val)),
+    estimatedSavings: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .optional()
+      .transform((val) =>
+        val == null ? null : typeof val === "number" ? val.toFixed(2) : val
+      ),
+  });
+
+export type InsertRenewalHistory = z.infer<typeof insertRenewalHistorySchema>;
+export type RenewalHistory = typeof renewalHistory.$inferSelect;
+
 // Property Value History - Track property value over time for HELOC credit limit updates
 export const propertyValueHistory = pgTable(
   "property_value_history",
@@ -1783,3 +1938,49 @@ export const insertPropertyValueHistorySchema = createInsertSchema(propertyValue
 
 export type InsertPropertyValueHistory = z.infer<typeof insertPropertyValueHistorySchema>;
 export type PropertyValueHistory = typeof propertyValueHistory.$inferSelect;
+
+// Mortgage Payoff - Track final mortgage payoff
+export const mortgagePayoff = pgTable(
+  "mortgage_payoff",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    mortgageId: varchar("mortgage_id")
+      .notNull()
+      .references(() => mortgages.id, { onDelete: "cascade" }),
+    payoffDate: date("payoff_date").notNull(),
+    finalPaymentAmount: decimal("final_payment_amount", { precision: 12, scale: 2 }).notNull(),
+    remainingBalance: decimal("remaining_balance", { precision: 12, scale: 2 }).notNull(),
+    penaltyAmount: decimal("penalty_amount", { precision: 12, scale: 2 }).default("0.00"),
+    totalCost: decimal("total_cost", { precision: 12, scale: 2 }).notNull(), // finalPaymentAmount + penaltyAmount
+    notes: text("notes"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("IDX_mortgage_payoff_mortgage").on(table.mortgageId),
+    index("IDX_mortgage_payoff_date").on(table.payoffDate),
+  ]
+);
+
+export const insertMortgagePayoffSchema = createInsertSchema(mortgagePayoff)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    finalPaymentAmount: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    remainingBalance: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    penaltyAmount: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val))
+      .optional()
+      .default("0.00"),
+    totalCost: z
+      .union([z.string(), z.number()])
+      .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+  });
+
+export type InsertMortgagePayoff = z.infer<typeof insertMortgagePayoffSchema>;
+export type MortgagePayoff = typeof mortgagePayoff.$inferSelect;

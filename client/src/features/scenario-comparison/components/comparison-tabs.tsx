@@ -32,7 +32,12 @@ export function ComparisonTabs({
       </TabsList>
 
       <TabsContent value="charts" className="space-y-6">
-        <ComparisonCharts scenarios={scenarios} chartData={chartData} />
+        <ComparisonCharts
+          scenarios={scenarios}
+          chartData={chartData}
+          timeHorizon={timeHorizon}
+          getMetricForHorizon={getMetricForHorizon}
+        />
       </TabsContent>
 
       <TabsContent value="metrics" className="space-y-6">
@@ -40,6 +45,7 @@ export function ComparisonTabs({
           scenarios={scenarios}
           timeHorizon={timeHorizon}
           getMetricForHorizon={getMetricForHorizon}
+          chartData={chartData}
         />
       </TabsContent>
     </Tabs>

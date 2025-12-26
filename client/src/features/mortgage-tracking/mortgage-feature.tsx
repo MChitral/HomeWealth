@@ -31,6 +31,13 @@ export default function MortgageFeature() {
     setIsBackfillOpen,
     filterYear,
     setFilterYear,
+    filterDateRange,
+    setFilterDateRange,
+    filterPaymentType,
+    setFilterPaymentType,
+    searchAmount,
+    setSearchAmount,
+    setFilterYear,
     primeRate,
     setPrimeRate,
     isEditMortgageOpen,
@@ -234,6 +241,12 @@ export default function MortgageFeature() {
           availableYears={availableYears}
           filterYear={filterYear}
           onFilterYearChange={setFilterYear}
+          filterDateRange={filterDateRange}
+          onFilterDateRangeChange={setFilterDateRange}
+          filterPaymentType={filterPaymentType}
+          onFilterPaymentTypeChange={setFilterPaymentType}
+          searchAmount={searchAmount}
+          onSearchAmountChange={setSearchAmount}
           payments={rawPayments}
           createPaymentMutation={createPaymentMutation}
           backfillPaymentsMutation={backfillPaymentsMutation}
