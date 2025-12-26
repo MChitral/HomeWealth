@@ -4,7 +4,6 @@ import { Switch } from "@/shared/ui/switch";
 import { Label } from "@/shared/ui/label";
 import { DollarSign, Percent, TrendingDown, TrendingUp } from "lucide-react";
 import { useState } from "react";
-import { cn } from "@/shared/lib/utils";
 
 interface InterestCostAnalysisWidgetProps {
   currentBalance: number;

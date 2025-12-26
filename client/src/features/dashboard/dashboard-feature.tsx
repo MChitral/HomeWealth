@@ -143,10 +143,10 @@ export function DashboardFeature() {
   const {
     homeValue,
     mortgageBalance,
-    originalMortgageBalance,
+    originalMortgageBalance: _originalMortgageBalance,
     efBalance,
-    efTargetAmount,
-    paymentPreview,
+    efTargetAmount: _efTargetAmount,
+    paymentPreview: _paymentPreview,
   } = useDashboardCalculations({
     activeMortgage,
     latestTerm,

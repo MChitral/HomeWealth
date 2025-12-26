@@ -62,7 +62,7 @@ function AccountImpactDisplay({
     currentCreditLimit,
     projectedCreditLimit,
     creditRoomIncrease,
-    currentAvailableCredit,
+    currentAvailableCredit: _currentAvailableCredit,
     projectedAvailableCredit,
     availableCreditIncrease,
   } = impact;

@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/shared/ui/card";
-import { cn } from "@/shared/lib/utils";
 import { Info, Lock, TrendingUp, DollarSign } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/shared/ui/tooltip";
 
@@ -250,7 +249,7 @@ export function EquityStackChart({
               <Info className="h-4 w-4 text-blue-500 shrink-0" />
               <p>
                 Canadian regulations typically limit total borrowing (Mortgage + HELOC) to 80% of
-                your home's value. Re-advanceable mortgages allow your limit to increase
+                your home&apos;s value. Re-advanceable mortgages allow your limit to increase
                 automatically as you pay down your principal.
               </p>
             </div>

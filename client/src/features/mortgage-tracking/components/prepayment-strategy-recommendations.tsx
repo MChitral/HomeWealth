@@ -49,7 +49,7 @@ interface InvestmentComparison {
 export function PrepaymentStrategyRecommendations({
   mortgage,
   currentTerm,
-  payments,
+  payments: _payments,
   currentBalance,
   currentRate,
   onUseAmount,
@@ -121,7 +121,7 @@ export function PrepaymentStrategyRecommendations({
     }
 
     return scenarios.sort((a, b) => b.roi - a.roi);
-  }, [currentTerm, currentBalance, currentRate, mortgage, payments.length]);
+  }, [currentTerm, currentBalance, currentRate, mortgage]);
 
   // Calculate prepayment vs investment comparison
   const investmentComparison = useMemo((): InvestmentComparison | null => {

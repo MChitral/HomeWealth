@@ -63,7 +63,10 @@
     "dist",
     "node_modules",
     "*.config.js",
-    "*.config.ts"
+    "*.config.ts",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx"
   ]
 }
 

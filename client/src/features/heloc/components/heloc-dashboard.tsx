@@ -78,7 +78,7 @@ export function HelocDashboard() {
             <h3 className="text-lg font-semibold mb-2">No HELOC Accounts Linked</h3>
             <p className="text-muted-foreground max-w-md mb-6">
               Add your Home Equity Line of Credit to visualize your available borrowing power and
-              track the "Smith Manoeuvre" potential.
+              track the &quot;Smith Manoeuvre&quot; potential.
             </p>
             <Button onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />

@@ -498,6 +498,7 @@ export function MortgageContent({
               onUseAmount={(amount, type) => {
                 // Navigate to prepayment feature or trigger prepayment dialog
                 // For now, we'll just log - can be enhanced to integrate with prepayment dialog
+                // eslint-disable-next-line no-console
                 console.log("Use prepayment amount:", amount, type);
               }}
             />

@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
-import { Activity, ArrowUpRight, ArrowDownLeft, Settings, FileText } from "lucide-react";
+import { Activity, ArrowUpRight, Settings, FileText } from "lucide-react";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 
 // In a real app, these would come from an API. For MVP/Redesign, we'll mock or format real data if available.

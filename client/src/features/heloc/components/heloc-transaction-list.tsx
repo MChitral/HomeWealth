@@ -103,7 +103,10 @@ export function HelocTransactionList({ account }: HelocTransactionListProps) {
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
-            <p>Use the "Borrow" or "Pay" buttons above to create your first record.</p>
+            <p>
+              Use the &quot;Borrow&quot; or &quot;Pay&quot; buttons above to create your first
+              record.
+            </p>
           </div>
         </CardContent>
       </Card>

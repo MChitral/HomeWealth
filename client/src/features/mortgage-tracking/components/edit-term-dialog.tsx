@@ -111,7 +111,7 @@ function EditTermFormFields({
         }
       }
     }
-  }, [startDate, termType, setValue, primeRate]);
+  }, [startDate, termType, setValue, primeRate, primeRateData?.primeRate]);
 
   // Determine which rate to display
   const displayRate = historicalPrimeRate?.rate ?? primeRateData?.primeRate;

@@ -1,5 +1,4 @@
 import { Button } from "@/shared/ui/button";
-import { Card, CardContent } from "@/shared/ui/card";
 import { PlusCircle, DollarSign, TrendingUp, RefreshCw } from "lucide-react";
 import { Link } from "wouter";
 

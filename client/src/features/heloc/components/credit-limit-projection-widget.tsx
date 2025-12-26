@@ -29,7 +29,7 @@ interface CreditLimitProjectionWidgetProps {
 export function CreditLimitProjectionWidget({
   mortgageId,
   currentHelocLimit,
-  currentHelocBalance,
+  currentHelocBalance: _currentHelocBalance,
 }: CreditLimitProjectionWidgetProps) {
   // Use the hook to get terms for the specific mortgage by passing the ID if needed,
   // but useMortgageData currently only fetches terms for the 'active' one passed or first one.
