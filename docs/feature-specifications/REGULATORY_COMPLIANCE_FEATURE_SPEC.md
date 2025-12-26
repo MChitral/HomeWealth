@@ -319,8 +319,9 @@ function calculateTDS(
 **Acceptance Criteria:**
 - ✅ Qualifying rate calculated: Max(Contract Rate + 2%, Bank of Canada 5-Year Posted Rate)
 - ✅ Payment at qualifying rate calculated and displayed
-- ✅ Stress test information displayed on mortgage details
+- ✅ Stress test calculator available in Risk & Analytics tab (Regulatory Compliance section)
 - ✅ Stress test calculated for insured and uninsured mortgages
+- ✅ Calculator pre-filled with current mortgage data for convenience
 
 ### US-4: Calculate GDS/TDS Ratios
 
@@ -329,10 +330,12 @@ function calculateTDS(
 **So that** I understand my debt service position
 
 **Acceptance Criteria:**
-- ✅ GDS ratio calculated (if income/expense data available)
-- ✅ TDS ratio calculated (if income/expense data available)
-- ✅ Ratios displayed with typical limits (GDS <= 32%, TDS <= 40%)
-- ✅ Ratios updated when mortgage or income/expense data changes
+- ✅ GDS ratio calculator available in Risk & Analytics tab (Regulatory Compliance section)
+- ✅ TDS ratio calculator available in Risk & Analytics tab (Regulatory Compliance section)
+- ✅ Calculator pre-filled with current mortgage payment amount
+- ✅ Ratios displayed with regulatory limits (GDS <= 39%, TDS <= 44% per B-20 guidelines)
+- ✅ User can input income and housing costs to calculate ratios
+- ✅ Results show pass/fail status with clear visual indicators
 
 ---
 
@@ -350,22 +353,29 @@ function calculateTDS(
 
 ### Integration Points
 
-1. **Mortgage Creation Validation:**
+1. **Mortgage Details Page - Risk & Analytics Tab:**
+   - **B-20 Stress Test Calculator:** Available in the Regulatory Compliance section
+     - Dialog-based calculator accessible via "Open Calculator" button
+     - Pre-filled with current mortgage balance, rate, and amortization
+     - Calculates qualifying rate and payment at qualifying rate
+     - Displays GDS/TDS ratios and pass/fail status
+   - **Debt Service Ratios Calculator:** Available in the Regulatory Compliance section
+     - Pre-filled with current mortgage payment amount
+     - Allows input of income and housing costs
+     - Calculates and displays GDS/TDS ratios with regulatory limits
+
+2. **Mortgage Creation Validation:**
    - Validate amortization and LTV
-   - Calculate qualifying rate
-   - Display stress test information
+   - Calculate qualifying rate (available via stress test calculator post-creation)
+   - Display stress test information (accessible from Risk & Analytics tab)
 
-2. **Mortgage Renewal Validation:**
+3. **Mortgage Renewal Validation:**
    - Validate amortization if changed
-   - Calculate qualifying rate for new term
+   - Calculate qualifying rate for new term (available via stress test calculator)
 
-3. **Refinancing Analysis:**
-   - Calculate qualifying rate
-   - Display stress test impact
-
-4. **Debt Service Ratios:**
-   - Calculate GDS/TDS if income/expense data available
-   - Display ratios with limits
+4. **Refinancing Analysis:**
+   - Calculate qualifying rate (available via stress test calculator)
+   - Display stress test impact (available via stress test calculator)
 
 ---
 

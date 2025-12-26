@@ -935,6 +935,25 @@ See "Data Models" section above for table schemas.
 - Validation and error display
 - Submit button
 
+#### SkipImpactCalculator
+
+**Props:**
+```typescript
+{
+  currentBalance: number
+  currentAmortizationMonths: number
+  effectiveRate: number // Annual rate as decimal (e.g., 0.055 for 5.5%)
+  paymentFrequency: PaymentFrequency
+}
+```
+
+**Features:**
+- Calculate impact of skipping multiple consecutive payments (1-12)
+- Displays total interest accrued, balance increase, final balance, and extended amortization
+- Available in Mortgage Details tab (Details section)
+- Provides "what-if" scenario analysis before skipping payments
+- Shows warnings about compound interest impact
+
 ### Data Flows
 
 #### Payment Recording Flow

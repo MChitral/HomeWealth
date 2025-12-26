@@ -694,6 +694,38 @@ See "Data Models" section above for table schemas.
 - Adjusted loan amount calculation (if premium added to principal)
 - LTV validation
 
+#### MLISelectChecker
+
+**Props:**
+```typescript
+{
+  onDiscountSelected?: (discount: 0 | 10 | 20 | 30) => void
+}
+```
+
+**Features:**
+- Interactive eligibility questionnaire for MLI Select premium discounts
+- Guides users through property type, location, and borrower profile questions
+- Calculates maximum applicable discount (0%, 10%, 20%, or 30%)
+- Available in Mortgage Details tab (Insurance & Compliance section) for high-ratio mortgages
+- Provides educational information about MLI Select program
+
+#### InsuranceProviderComparison
+
+**Props:**
+```typescript
+{
+  comparison: InsuranceProviderComparison
+}
+```
+
+**Features:**
+- Displays side-by-side comparison of CMHC, Sagen, and Genworth insurance premiums
+- Highlights provider with lowest premium
+- Shows premium rates, amounts, and LTV ratios for each provider
+- Available in Mortgage Details tab (Insurance & Compliance section) for high-ratio mortgages
+- Automatically fetches comparison data when mortgage is high-ratio (LTV > 80%)
+
 ---
 
 ## Edge Cases & Error Handling
@@ -799,8 +831,8 @@ See "Data Models" section above for table schemas.
 
 ### Phase 1: Enhanced Validation
 
-- **B-20 Stress Test Integration:** Calculate qualifying rate and validate payment affordability
-- **GDS/TDS Ratio Integration:** Calculate and validate debt service ratios (if income/expense data available)
+- ✅ **B-20 Stress Test Integration:** Calculate qualifying rate and validate payment affordability (Implemented - available in Risk & Analytics tab)
+- ✅ **GDS/TDS Ratio Integration:** Calculate and validate debt service ratios (Implemented - available in Risk & Analytics tab)
 - **Credit Score Integration:** Factor credit score into rate suggestions
 
 ### Phase 2: Mortgage Templates
