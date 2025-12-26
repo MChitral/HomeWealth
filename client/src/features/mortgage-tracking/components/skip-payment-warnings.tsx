@@ -35,8 +35,9 @@ export function SkipPaymentWarnings() {
             <AccordionTrigger>What is Negative Amortization?</AccordionTrigger>
             <AccordionContent className="space-y-2">
               <p>
-                When you skip a payment, you don't pay any principal or interest. However, interest
-                still accrues during the skipped period and is added to your mortgage balance.
+                When you skip a payment, you don&apos;t pay any principal or interest. However,
+                interest still accrues during the skipped period and is added to your mortgage
+                balance.
               </p>
               <div className="bg-muted p-3 rounded-md">
                 <p className="text-sm font-medium mb-1">Example:</p>
@@ -47,8 +48,8 @@ export function SkipPaymentWarnings() {
                 </p>
               </div>
               <p className="text-sm text-muted-foreground">
-                This is called "negative amortization" because your balance increases instead of
-                decreasing.
+                This is called &quot;negative amortization&quot; because your balance increases
+                instead of decreasing.
               </p>
             </AccordionContent>
           </AccordionItem>
@@ -64,7 +65,7 @@ export function SkipPaymentWarnings() {
                 <p className="text-sm font-medium mb-1">Impact:</p>
                 <ul className="text-sm list-disc list-inside space-y-1">
                   <li>Your mortgage term may extend by several months or years</li>
-                  <li>You'll pay more interest over the life of the mortgage</li>
+                  <li>You&apos;ll pay more interest over the life of the mortgage</li>
                   <li>Your monthly payments remain the same, but more goes to interest</li>
                 </ul>
               </div>
@@ -75,16 +76,16 @@ export function SkipPaymentWarnings() {
             <AccordionTrigger>Interest on Interest</AccordionTrigger>
             <AccordionContent className="space-y-2">
               <p>
-                When interest is added to your principal balance, you'll pay interest on that
+                When interest is added to your principal balance, you&apos;ll pay interest on that
                 interest in future periods. This compounding effect increases your total interest
                 paid over time.
               </p>
               <div className="bg-muted p-3 rounded-md">
                 <p className="text-sm font-medium mb-1">Example:</p>
                 <p className="text-sm">
-                  If you skip a payment and accrue $1,667 in interest, you'll pay interest on that
-                  $1,667 in all future periods. Over a 25-year mortgage, this can add hundreds or
-                  thousands of dollars to your total interest paid.
+                  If you skip a payment and accrue $1,667 in interest, you&apos;ll pay interest on
+                  that $1,667 in all future periods. Over a 25-year mortgage, this can add hundreds
+                  or thousands of dollars to your total interest paid.
                 </p>
               </div>
             </AccordionContent>
@@ -121,7 +122,7 @@ export function SkipPaymentWarnings() {
               </p>
               <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-3 rounded-md">
                 <ul className="text-sm list-disc list-inside space-y-1">
-                  <li>You're experiencing temporary financial hardship</li>
+                  <li>You&apos;re experiencing temporary financial hardship</li>
                   <li>You have unexpected expenses (medical, home repairs, etc.)</li>
                   <li>You have seasonal income variations</li>
                   <li>You need short-term cash flow relief</li>
@@ -132,8 +133,8 @@ export function SkipPaymentWarnings() {
                 <ul className="text-sm list-disc list-inside space-y-1">
                   <li>You can make the payment with minor budget adjustments</li>
                   <li>You have other sources of credit available</li>
-                  <li>You're already at your skip limit</li>
-                  <li>You're planning to refinance soon</li>
+                  <li>You&apos;re already at your skip limit</li>
+                  <li>You&apos;re planning to refinance soon</li>
                 </ul>
               </div>
             </AccordionContent>

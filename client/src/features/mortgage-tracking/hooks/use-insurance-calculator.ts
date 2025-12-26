@@ -104,7 +104,7 @@ export function useInsuranceCalculator({
   });
 
   const handleCompare = form.handleSubmit((data) => {
-    const { provider, ...compareData } = data;
+    const { provider: _provider, ...compareData } = data;
     compareMutation.mutate(compareData);
   });
 

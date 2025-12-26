@@ -64,9 +64,7 @@ describe("InsuranceCalculatorService", () => {
 
       expect(result.isHighRatio).toBe(true);
       expect(result.totalMortgageAmount).toBeGreaterThan(result.mortgageAmount);
-      expect(result.totalMortgageAmount).toBe(
-        result.mortgageAmount + result.premiumAfterDiscount
-      );
+      expect(result.totalMortgageAmount).toBe(result.mortgageAmount + result.premiumAfterDiscount);
     });
 
     it("should handle different LTV brackets correctly", () => {
@@ -218,4 +216,3 @@ describe("InsuranceCalculatorService", () => {
     });
   });
 });
-

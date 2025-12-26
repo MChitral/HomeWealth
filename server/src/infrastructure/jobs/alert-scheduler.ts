@@ -1,4 +1,4 @@
-import cron from "node-cron";
+import * as cron from "node-cron";
 import type { NotificationService } from "@application/services/notification.service";
 import type { ApplicationServices } from "@application/services";
 
@@ -27,6 +27,7 @@ class AlertScheduler {
   start(services: ApplicationServices): void {
     for (const job of this.registeredJobs) {
       if (!job.enabled) {
+        // eslint-disable-next-line no-console
         console.log(`[Alert Scheduler] Job "${job.name}" is disabled`);
         continue;
       }
@@ -34,16 +35,20 @@ class AlertScheduler {
       try {
         const task = cron.schedule(job.schedule, async () => {
           try {
+            // eslint-disable-next-line no-console
             console.log(`[Alert Scheduler] Running job: ${job.name}`);
             await job.handler(services);
           } catch (error) {
+            // eslint-disable-next-line no-console
             console.error(`[Alert Scheduler] Error in job "${job.name}":`, error);
           }
         });
 
         this.jobs.set(job.id, task);
+        // eslint-disable-next-line no-console
         console.log(`[Alert Scheduler] Registered job: ${job.name} (${job.schedule})`);
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error(`[Alert Scheduler] Failed to register job "${job.name}":`, error);
       }
     }
@@ -53,8 +58,9 @@ class AlertScheduler {
    * Stop all scheduled jobs
    */
   stop(): void {
-    for (const [id, task] of this.jobs.entries()) {
+    for (const [id, task] of Array.from(this.jobs.entries())) {
       task.stop();
+      // eslint-disable-next-line no-console
       console.log(`[Alert Scheduler] Stopped job: ${id}`);
     }
     this.jobs.clear();
@@ -82,7 +88,7 @@ export function getAlertScheduler(): AlertScheduler {
  * Register a renewal reminder job
  * This will check for mortgages approaching renewal and send notifications
  */
-export function registerRenewalReminderJob(notificationService: NotificationService): void {
+export function registerRenewalReminderJob(_notificationService: NotificationService): void {
   const scheduler = getAlertScheduler();
 
   scheduler.register({
@@ -149,7 +155,7 @@ export function registerRenewalReminderJob(notificationService: NotificationServ
  * Register a trigger rate alert job
  * This will check for mortgages approaching trigger rates and send notifications
  */
-export function registerTriggerRateAlertJob(notificationService: NotificationService): void {
+export function registerTriggerRateAlertJob(_notificationService: NotificationService): void {
   const scheduler = getAlertScheduler();
 
   scheduler.register({
@@ -176,5 +182,6 @@ export function startAlertScheduler(services: ApplicationServices): void {
 
   // Start all jobs
   scheduler.start(services);
+  // eslint-disable-next-line no-console
   console.log("[Alert Scheduler] Started with all registered jobs");
 }

@@ -1,4 +1,4 @@
-import type { Mortgage } from "@shared/schema";
+import type { Mortgage, PropertyValueHistory } from "@shared/schema";
 import {
   MortgagesRepository,
   PropertyValueHistoryRepository,
@@ -39,7 +39,9 @@ export class PropertyValueService {
     mortgageId: string,
     userId: string,
     input: PropertyValueUpdateInput
-  ): Promise<{ valueHistory: any; updatedMortgage: Mortgage | undefined } | undefined> {
+  ): Promise<
+    { valueHistory: PropertyValueHistory; updatedMortgage: Mortgage | undefined } | undefined
+  > {
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
     if (!mortgage) {
       return undefined;
@@ -117,7 +119,10 @@ export class PropertyValueService {
   /**
    * Get property value history for a mortgage
    */
-  async getPropertyValueHistory(mortgageId: string, userId: string): Promise<any[] | undefined> {
+  async getPropertyValueHistory(
+    mortgageId: string,
+    userId: string
+  ): Promise<PropertyValueHistory[] | undefined> {
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
     if (!mortgage) {
       return undefined;
@@ -129,7 +134,10 @@ export class PropertyValueService {
   /**
    * Get latest property value
    */
-  async getLatestPropertyValue(mortgageId: string, userId: string): Promise<any | undefined> {
+  async getLatestPropertyValue(
+    mortgageId: string,
+    userId: string
+  ): Promise<PropertyValueHistory | undefined> {
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
     if (!mortgage) {
       return undefined;
@@ -147,7 +155,7 @@ export class PropertyValueService {
     timeRangeMonths: number = 24
   ): Promise<
     | {
-        history: any[];
+        history: PropertyValueHistory[];
         averageGrowthRate: number; // Annual percentage
         trendDirection: "increasing" | "decreasing" | "stable";
         projectedValue?: number;

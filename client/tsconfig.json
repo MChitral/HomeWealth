@@ -1,0 +1,19 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@shared/*": ["../shared/*"],
+      "@server/*": ["../server/src/*"],
+      "@api/*": ["../server/src/api/*"],
+      "@application/*": ["../server/src/application/*"],
+      "@domain/*": ["../server/src/domain/*"],
+      "@infrastructure/*": ["../server/src/infrastructure/*"],
+      "@server-shared/*": ["../server/src/shared/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "build"]
+}
+

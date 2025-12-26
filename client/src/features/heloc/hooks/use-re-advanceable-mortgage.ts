@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { reAdvanceableMortgageApi } from "../api/heloc-api";
-import type { CreditRoomResponse, CreditRoomHistoryItem } from "../api/heloc-api";
 
 export const reAdvanceableQueryKeys = {
   all: ["/api/mortgages"] as const,

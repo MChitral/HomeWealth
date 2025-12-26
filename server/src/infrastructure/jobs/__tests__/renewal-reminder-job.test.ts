@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { checkRenewalsAndSendReminders } from "../renewal-reminder-job";
 import type { ApplicationServices } from "@application/services";
-import type { Mortgage, MortgageTerm } from "@shared/schema";
+import type { Mortgage } from "@shared/schema";
 
 // Mock services
 const mockRenewalService = {
@@ -52,7 +52,9 @@ describe("Renewal Reminder Job", () => {
         mockRenewalService.getRenewalStatus.mockResolvedValue({
           mortgageId: "mortgage-1",
           daysUntilRenewal: days,
-          renewalDate: new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+          renewalDate: new Date(Date.now() + days * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split("T")[0],
           status: "upcoming",
           currentRate: 5.5,
           estimatedPenalty: { amount: 5000, method: "IRD" },
@@ -239,4 +241,3 @@ describe("Renewal Reminder Job", () => {
     });
   });
 });
-

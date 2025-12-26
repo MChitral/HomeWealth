@@ -6,7 +6,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  ReferenceLine,
 } from "recharts";
 import { format, parseISO } from "date-fns";
 import type { PropertyValueTrend } from "../api/property-value-api";
@@ -24,23 +23,6 @@ export function PropertyValueTrendChart({ trend }: PropertyValueTrendChartProps)
       fullDate: entry.valueDate,
     }))
     .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime());
-
-  // Calculate trend line data points (linear projection)
-  const trendLineData =
-    chartData.length > 1
-      ? chartData.map((point, index) => {
-          if (index === 0) return null;
-          const prevPoint = chartData[index - 1];
-          const timeDiff =
-            new Date(point.fullDate).getTime() - new Date(prevPoint.fullDate).getTime();
-          const valueDiff = point.value - prevPoint.value;
-          const slope = timeDiff > 0 ? valueDiff / (timeDiff / (1000 * 60 * 60 * 24 * 30)) : 0; // Monthly slope
-          return {
-            ...point,
-            trendValue: prevPoint.value + slope,
-          };
-        })
-      : [];
 
   // Add projection point if available
   if (trend.projectedValue && chartData.length > 0) {

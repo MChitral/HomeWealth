@@ -1,4 +1,4 @@
-import type { Mortgage, MortgageTerm } from "@shared/schema";
+import type { Mortgage, MortgageTerm, RenewalNegotiation } from "@shared/schema";
 import {
   MortgagesRepository,
   MortgageTermsRepository,
@@ -58,8 +58,8 @@ export class RenewalWorkflowService {
     | {
         mortgage: Mortgage;
         currentTerm: MortgageTerm | undefined;
-        renewalStatus: any;
-        recommendation?: any;
+        renewalStatus: unknown;
+        recommendation?: unknown;
       }
     | undefined
   > {
@@ -96,7 +96,7 @@ export class RenewalWorkflowService {
     mortgageId: string,
     userId: string,
     input: RenewalNegotiationInput
-  ): Promise<any | undefined> {
+  ): Promise<RenewalNegotiation | undefined> {
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
     if (!mortgage) {
       return undefined;
@@ -162,7 +162,10 @@ export class RenewalWorkflowService {
   /**
    * Get negotiation history for a mortgage
    */
-  async getNegotiationHistory(mortgageId: string, userId: string): Promise<any[] | undefined> {
+  async getNegotiationHistory(
+    mortgageId: string,
+    userId: string
+  ): Promise<RenewalNegotiation[] | undefined> {
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
     if (!mortgage) {
       return undefined;

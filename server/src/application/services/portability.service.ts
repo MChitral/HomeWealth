@@ -1,14 +1,10 @@
-import type { Mortgage, MortgageTerm } from "@shared/schema";
+import type { Mortgage, MortgageTerm, MortgagePortability } from "@shared/schema";
 import {
   MortgagesRepository,
   MortgageTermsRepository,
   MortgagePortabilityRepository,
 } from "@infrastructure/repositories";
-import {
-  calculatePortability,
-  calculateBlendedRate,
-  type PortabilityResult,
-} from "@domain/calculations/portability";
+import { calculatePortability, type PortabilityResult } from "@domain/calculations/portability";
 import { getTermEffectiveRate } from "@server-shared/calculations/term-helpers";
 
 export interface PortabilityCalculationInput {
@@ -145,7 +141,7 @@ export class PortabilityService {
     mortgageId: string,
     userId: string,
     input: PortabilityCalculationInput
-  ): Promise<{ portabilityEvent: any; newMortgage?: Mortgage } | undefined> {
+  ): Promise<{ portabilityEvent: MortgagePortability; newMortgage?: Mortgage } | undefined> {
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
     if (!mortgage) {
       return undefined;
@@ -198,7 +194,10 @@ export class PortabilityService {
   /**
    * Get portability history for a mortgage
    */
-  async getPortabilityHistory(mortgageId: string, userId: string): Promise<any[] | undefined> {
+  async getPortabilityHistory(
+    mortgageId: string,
+    userId: string
+  ): Promise<MortgagePortability[] | undefined> {
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
     if (!mortgage) {
       return undefined;

@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Progress } from "@/shared/ui/progress";
-import { CreditCard, TrendingUp, DollarSign, Edit, Trash2 } from "lucide-react";
+import { CreditCard, Edit, Trash2 } from "lucide-react";
 import type { HelocAccount } from "@shared/schema";
 import {
   calculateAvailableCredit,
@@ -144,8 +144,8 @@ export function HelocAccountCard({ account }: HelocAccountCardProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete HELOC Account</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{account.accountName}"? This action cannot be undone.
-              All transaction history will be permanently deleted.
+              Are you sure you want to delete &quot;{account.accountName}&quot;? This action cannot
+              be undone. All transaction history will be permanently deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

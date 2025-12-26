@@ -33,6 +33,7 @@ export function startTriggerRateCheck(monitor: TriggerRateMonitor): void {
           // TODO: Send notifications
         }
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error("[Trigger Rate Check] Error:", error);
       }
     },

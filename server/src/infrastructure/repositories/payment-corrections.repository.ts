@@ -52,6 +52,6 @@ export class PaymentCorrectionsRepository {
     const result = await this.database
       .delete(paymentCorrections)
       .where(eq(paymentCorrections.id, id));
-    return result.rowCount !== undefined ? result.rowCount > 0 : false;
+    return (result.rowCount ?? 0) > 0;
   }
 }

@@ -127,10 +127,12 @@ export async function checkHelocDrawPeriodTransitions(
         }
       );
 
+      // eslint-disable-next-line no-console
       console.log(
         `[HELOC Draw Period Transition] Processed transition for HELOC ${account.id} (user ${account.userId})`
       );
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error(`[HELOC Draw Period Transition] Error processing HELOC ${account.id}:`, error);
     }
   }

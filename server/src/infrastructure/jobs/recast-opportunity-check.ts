@@ -17,7 +17,7 @@ export async function checkRecastOpportunities(services: ApplicationServices): P
   for (const mortgage of allMortgages) {
     try {
       // Get user's notification preferences
-      const preferences = await services.notificationPreferences.findByUserId(mortgage.userId);
+      const _preferences = await services.notificationPreferences.findByUserId(mortgage.userId);
 
       // Check if recast opportunity alerts are enabled (default: enabled)
       // We'll check for any notification preference, but recast is a new feature
@@ -93,7 +93,7 @@ export async function checkRecastOpportunities(services: ApplicationServices): P
         if (!alreadyNotified && reductionPercent >= 10) {
           // Calculate potential payment reduction
           const currentPayment = Number(activeTerm.regularPaymentAmount);
-          const remainingAmortizationMonths =
+          const _remainingAmortizationMonths =
             mortgage.amortizationYears * 12 + (mortgage.amortizationMonths || 0);
 
           // Estimate new payment after recast (simplified calculation)
@@ -121,6 +121,7 @@ export async function checkRecastOpportunities(services: ApplicationServices): P
         }
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error(`Error checking recast opportunities for mortgage ${mortgage.id}:`, error);
     }
   }

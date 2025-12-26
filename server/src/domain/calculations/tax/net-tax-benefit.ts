@@ -58,24 +58,20 @@ export function calculateNetTaxBenefit(
  * @param province Province code
  * @returns Net tax benefit calculation result
  */
-export function calculateNetTaxBenefitDetailed(
+export async function calculateNetTaxBenefitDetailed(
   helocInterest: number,
   investmentUsePercent: number,
   investmentIncome: number,
   incomeType: "eligible_dividend" | "non_eligible_dividend" | "interest" | "capital_gain",
   marginalTaxRate: number,
   province: string
-): NetTaxBenefitResult {
+): Promise<NetTaxBenefitResult> {
   // Import here to avoid circular dependencies
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { calculateInterestDeduction } = require("./interest-deduction");
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const {
-    calculateEligibleDividendTaxCredit,
-    calculateNonEligibleDividendTaxCredit,
-  } = require("./dividend-tax-credit");
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { calculateCapitalGainsTax } = require("./capital-gains-tax");
+  // Using dynamic import to avoid circular dependencies
+  const { calculateInterestDeduction } = await import("./interest-deduction");
+  const { calculateEligibleDividendTaxCredit, calculateNonEligibleDividendTaxCredit } =
+    await import("./dividend-tax-credit");
+  const { calculateCapitalGainsTax } = await import("./capital-gains-tax");
 
   // Calculate interest deduction
   const interestDeduction = calculateInterestDeduction(

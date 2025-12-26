@@ -76,12 +76,14 @@ export function RenewalTab({
           let newRate = previousRate;
           if (newTerm.fixedRate) {
             newRate = parseFloat(newTerm.fixedRate) * 100;
-          } else if (newTerm.primeRate && newTerm.lockedSpread) {
-            newRate = (parseFloat(newTerm.primeRate) + parseFloat(newTerm.lockedSpread)) * 100;
+          } else if (newTerm.primeRate && (newTerm as any).lockedSpread) {
+            newRate =
+              (parseFloat(newTerm.primeRate) + parseFloat((newTerm as any).lockedSpread)) * 100;
           } else if (formData.fixedRate) {
             newRate = parseFloat(formData.fixedRate) * 100;
-          } else if (formData.primeRate && formData.lockedSpread) {
-            newRate = (parseFloat(formData.primeRate) + parseFloat(formData.lockedSpread)) * 100;
+          } else if (formData.primeRate && (formData as any).lockedSpread) {
+            newRate =
+              (parseFloat(formData.primeRate) + parseFloat((formData as any).lockedSpread)) * 100;
           }
 
           // Determine decision type (stayed vs switched)

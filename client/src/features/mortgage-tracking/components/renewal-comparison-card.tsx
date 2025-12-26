@@ -2,9 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { mortgageApi } from "@/features/mortgage-tracking/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
-import { Loader2, CheckCircle2, AlertCircle, TrendingUp, TrendingDown } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle, TrendingUp } from "lucide-react";
 import { formatCurrency } from "@/shared/utils/format";
-import type { RenewalRecommendationResponse } from "@/features/mortgage-tracking/api";
 
 interface RenewalComparisonCardProps {
   mortgageId: string;

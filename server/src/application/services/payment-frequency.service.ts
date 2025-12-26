@@ -1,4 +1,4 @@
-import type { Mortgage, MortgageTerm } from "@shared/schema";
+import type { Mortgage, MortgageTerm, PaymentFrequencyChangeEvent } from "@shared/schema";
 import {
   MortgagesRepository,
   MortgageTermsRepository,
@@ -38,7 +38,7 @@ export class PaymentFrequencyService {
     return mortgage;
   }
 
-  private async getCurrentBalance(mortgage: Mortgage, termId: string): Promise<number> {
+  private async getCurrentBalance(mortgage: Mortgage, _termId: string): Promise<number> {
     // For simplicity, use mortgage currentBalance
     // In a real implementation, you'd get the latest payment balance
     return Number(mortgage.currentBalance);
@@ -66,7 +66,7 @@ export class PaymentFrequencyService {
         oldPaymentAmount: 0,
         newPaymentAmount: 0,
         paymentDifference: 0,
-        remainingAmortizationMonths: 0,
+        remainingTermMonths: 0,
         canChange: false,
         message: "Term not found or does not belong to this mortgage",
       };
@@ -84,7 +84,7 @@ export class PaymentFrequencyService {
         oldPaymentAmount: currentPaymentAmount,
         newPaymentAmount: currentPaymentAmount,
         paymentDifference: 0,
-        remainingAmortizationMonths: mortgage.amortizationMonths || 0,
+        remainingTermMonths: mortgage.amortizationMonths || 0,
         canChange: false,
         message: "New frequency must be different from current frequency",
       };
@@ -94,14 +94,14 @@ export class PaymentFrequencyService {
     const effectiveRate = getTermEffectiveRate(term);
 
     // Get remaining amortization (simplified - in real app, calculate from payments)
-    const remainingAmortizationMonths = mortgage.amortizationMonths || 300;
+    const remainingTermMonths = mortgage.amortizationMonths || 300;
 
     try {
       // Calculate new payment amount
       const result = calculatePaymentForFrequency(
         currentBalance,
         effectiveRate,
-        remainingAmortizationMonths,
+        remainingTermMonths,
         oldFrequency,
         newFrequency,
         currentPaymentAmount
@@ -118,7 +118,7 @@ export class PaymentFrequencyService {
         oldPaymentAmount: currentPaymentAmount,
         newPaymentAmount: currentPaymentAmount,
         paymentDifference: 0,
-        remainingAmortizationMonths,
+        remainingTermMonths,
         canChange: false,
         message: error instanceof Error ? error.message : "Failed to calculate frequency change",
       };
@@ -133,7 +133,9 @@ export class PaymentFrequencyService {
     termId: string,
     userId: string,
     input: PaymentFrequencyChangeInput
-  ): Promise<{ changeEvent: any; updatedTerm: MortgageTerm | undefined } | undefined> {
+  ): Promise<
+    { changeEvent: PaymentFrequencyChangeEvent; updatedTerm: MortgageTerm | undefined } | undefined
+  > {
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
     if (!mortgage) {
       return undefined;
@@ -195,7 +197,10 @@ export class PaymentFrequencyService {
   /**
    * Get payment frequency change history for a mortgage
    */
-  async getFrequencyChangeHistory(mortgageId: string, userId: string): Promise<any[] | undefined> {
+  async getFrequencyChangeHistory(
+    mortgageId: string,
+    userId: string
+  ): Promise<PaymentFrequencyChangeEvent[] | undefined> {
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
     if (!mortgage) {
       return undefined;

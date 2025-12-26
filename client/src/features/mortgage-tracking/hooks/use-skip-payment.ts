@@ -64,7 +64,7 @@ export function useSkipPayment({
   }, [skippedThisYear, skipLimit]);
 
   // Calculate skip impact preview
-  const calculateSkipImpact = (paymentDate: string) => {
+  const calculateSkipImpact = (_paymentDate: string) => {
     try {
       const impact = calculateSkippedPayment(
         currentBalance,

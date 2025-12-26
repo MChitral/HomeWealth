@@ -23,6 +23,7 @@ export function startMarketRateScheduler(marketRateService: MarketRateService): 
     isEnabled && (isProduction || process.env.ENABLE_MARKET_RATE_SCHEDULER === "true");
 
   if (!shouldRun) {
+    // eslint-disable-next-line no-console
     console.log("[Market Rate Scheduler] Disabled");
     return;
   }
@@ -38,8 +39,10 @@ export function startMarketRateScheduler(marketRateService: MarketRateService): 
     async () => {
       try {
         await marketRateService.fetchAndStoreLatestRates();
+        // eslint-disable-next-line no-console
         console.log("[Market Rate Scheduler] Rates updated successfully");
-      } catch (error: any) {
+      } catch (error: unknown) {
+        // eslint-disable-next-line no-console
         console.error("[Market Rate Scheduler] Error updating rates:", error);
         // Don't throw - let the scheduler continue running
       }
@@ -49,6 +52,7 @@ export function startMarketRateScheduler(marketRateService: MarketRateService): 
     }
   );
 
+  // eslint-disable-next-line no-console
   console.log(`[Market Rate Scheduler] Started with schedule: ${schedule}`);
 }
 

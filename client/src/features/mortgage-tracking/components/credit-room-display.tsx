@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/sha
 import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge";
 import { Progress } from "@/shared/ui/progress";
-import { TrendingUp, CreditCard, History, Loader2, AlertCircle } from "lucide-react";
+import { TrendingUp, History, Loader2, AlertCircle } from "lucide-react";
 import { useCreditRoom } from "@/features/heloc/hooks";
 import { calculateCreditUtilization } from "@server-shared/calculations/heloc/available-credit";
 

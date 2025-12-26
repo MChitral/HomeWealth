@@ -4,7 +4,6 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useSkipPayment } from "../use-skip-payment";
 import type { MortgagePayment } from "@shared/schema";
-import { countSkippedPaymentsInYear, canSkipPayment } from "@server-shared/calculations/payment-skipping";
 
 // Mock the API
 vi.mock("../../api", () => ({
@@ -52,8 +51,10 @@ const createWrapper = () => {
       mutations: { retry: false },
     },
   });
-  return ({ children }: { children: React.ReactNode }) =>
+  const Wrapper = ({ children }: { children: React.ReactNode }) =>
     React.createElement(QueryClientProvider, { client: queryClient }, children);
+  Wrapper.displayName = "TestWrapper";
+  return Wrapper;
 };
 
 describe("useSkipPayment", () => {
@@ -222,14 +223,10 @@ describe("useSkipPayment", () => {
       expect(result.current.skipPaymentMutation.isSuccess).toBe(true);
     });
 
-    expect(mortgageApi.skipPayment).toHaveBeenCalledWith(
-      "mortgage-1",
-      "term-1",
-      {
-        paymentDate: "2024-07-15",
-        maxSkipsPerYear: 2,
-      }
-    );
+    expect(mortgageApi.skipPayment).toHaveBeenCalledWith("mortgage-1", "term-1", {
+      paymentDate: "2024-07-15",
+      maxSkipsPerYear: 2,
+    });
   });
 
   it("should handle skip payment mutation error", async () => {
@@ -250,4 +247,3 @@ describe("useSkipPayment", () => {
     });
   });
 });
-

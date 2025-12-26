@@ -4,10 +4,18 @@ import { PrimeRateTrackingService } from "../prime-rate-tracking.service";
 import type { MortgageTerm, Mortgage } from "@shared/schema";
 
 // Mock repositories
-class MockPrimeRateHistoryRepository {
-  private history: any[] = [];
+interface PrimeRateHistoryEntry {
+  id: string;
+  primeRate: string;
+  effectiveDate: string;
+  source: string;
+  createdAt: string;
+}
 
-  async create(data: any) {
+class MockPrimeRateHistoryRepository {
+  private history: PrimeRateHistoryEntry[] = [];
+
+  async create(data: { primeRate: string; effectiveDate: string; source: string }) {
     const entry = {
       id: `history-${Date.now()}`,
       ...data,
@@ -47,7 +55,7 @@ class MockMortgageTermsRepository {
     return Array.from(this.terms.values());
   }
 
-  async update(id: string, payload: any): Promise<MortgageTerm | undefined> {
+  async update(id: string, payload: Partial<MortgageTerm>): Promise<MortgageTerm | undefined> {
     const term = this.terms.get(id);
     if (!term) return undefined;
     const updated = { ...term, ...payload };
@@ -98,10 +106,10 @@ describe("PrimeRateTrackingService", () => {
     impactCalculator = new MockImpactCalculator();
 
     service = new PrimeRateTrackingService(
-      historyRepo as any,
-      termsRepo as any,
-      mortgagesRepo as any,
-      impactCalculator as any
+      historyRepo as unknown as PrimeRateTrackingService["primeRateHistory"],
+      termsRepo as unknown as PrimeRateTrackingService["mortgageTerms"],
+      mortgagesRepo as unknown as PrimeRateTrackingService["mortgages"],
+      impactCalculator as unknown as PrimeRateTrackingService["impactCalculator"]
     );
 
     // Reset mock
@@ -155,8 +163,8 @@ describe("PrimeRateTrackingService", () => {
       mockPrimeRate = { primeRate: 6.75, effectiveDate: "2024-03-15" };
 
       // Mock fetchLatestPrimeRate
-      const originalFetch = (global as any).fetch;
-      (global as any).fetch = async () => ({
+      const originalFetch = (global as { fetch?: typeof fetch }).fetch;
+      (global as { fetch: typeof fetch }).fetch = async () => ({
         ok: true,
         json: async () => ({
           observations: [
@@ -171,7 +179,11 @@ describe("PrimeRateTrackingService", () => {
       const result = await service.checkAndUpdatePrimeRate();
 
       // Restore fetch
-      (global as any).fetch = originalFetch;
+      if (originalFetch) {
+        (global as { fetch: typeof fetch }).fetch = originalFetch;
+      } else {
+        delete (global as { fetch?: typeof fetch }).fetch;
+      }
 
       assert.ok(result, "Should return result");
       assert.equal(result.changed, true, "Should detect change");
@@ -197,8 +209,8 @@ describe("PrimeRateTrackingService", () => {
       mockPrimeRate = { primeRate: 6.45, effectiveDate: "2024-01-15" };
 
       // Mock fetchLatestPrimeRate
-      const originalFetch = (global as any).fetch;
-      (global as any).fetch = async () => ({
+      const originalFetch = (global as { fetch?: typeof fetch }).fetch;
+      (global as { fetch: typeof fetch }).fetch = async () => ({
         ok: true,
         json: async () => ({
           observations: [
@@ -213,7 +225,11 @@ describe("PrimeRateTrackingService", () => {
       const result = await service.checkAndUpdatePrimeRate();
 
       // Restore fetch
-      (global as any).fetch = originalFetch;
+      if (originalFetch) {
+        (global as { fetch: typeof fetch }).fetch = originalFetch;
+      } else {
+        delete (global as { fetch?: typeof fetch }).fetch;
+      }
 
       assert.ok(result, "Should return result");
       assert.equal(result.changed, false, "Should not detect change");
@@ -226,8 +242,8 @@ describe("PrimeRateTrackingService", () => {
       mockPrimeRate = { primeRate: 6.75, effectiveDate: "2024-03-15" };
 
       // Mock fetchLatestPrimeRate
-      const originalFetch = (global as any).fetch;
-      (global as any).fetch = async () => ({
+      const originalFetch = (global as { fetch?: typeof fetch }).fetch;
+      (global as { fetch: typeof fetch }).fetch = async () => ({
         ok: true,
         json: async () => ({
           observations: [
@@ -242,7 +258,11 @@ describe("PrimeRateTrackingService", () => {
       await service.checkAndUpdatePrimeRate();
 
       // Restore fetch
-      (global as any).fetch = originalFetch;
+      if (originalFetch) {
+        (global as { fetch: typeof fetch }).fetch = originalFetch;
+      } else {
+        delete (global as { fetch?: typeof fetch }).fetch;
+      }
 
       const latest = await historyRepo.findLatest();
       assert.ok(latest, "Should record in history");
@@ -316,8 +336,8 @@ describe("PrimeRateTrackingService", () => {
       mockPrimeRate = { primeRate: 6.75, effectiveDate: "2024-03-15" };
 
       // Mock fetchLatestPrimeRate
-      const originalFetch = (global as any).fetch;
-      (global as any).fetch = async () => ({
+      const originalFetch = (global as { fetch?: typeof fetch }).fetch;
+      (global as { fetch: typeof fetch }).fetch = async () => ({
         ok: true,
         json: async () => ({
           observations: [
@@ -332,7 +352,11 @@ describe("PrimeRateTrackingService", () => {
       const result = await service.checkAndUpdatePrimeRate();
 
       // Restore fetch
-      (global as any).fetch = originalFetch;
+      if (originalFetch) {
+        (global as { fetch: typeof fetch }).fetch = originalFetch;
+      } else {
+        delete (global as { fetch?: typeof fetch }).fetch;
+      }
 
       assert.equal(result.termsUpdated, 1, "Should only update active VRM term");
 
@@ -373,8 +397,8 @@ describe("PrimeRateTrackingService", () => {
       mockPrimeRate = { primeRate: 6.75, effectiveDate: "2024-03-15" };
 
       // Mock fetchLatestPrimeRate
-      const originalFetch = (global as any).fetch;
-      (global as any).fetch = async () => ({
+      const originalFetch = (global as { fetch?: typeof fetch }).fetch;
+      (global as { fetch: typeof fetch }).fetch = async () => ({
         ok: true,
         json: async () => ({
           observations: [
@@ -396,7 +420,11 @@ describe("PrimeRateTrackingService", () => {
 
       // Restore
       termsRepo.update = originalUpdate;
-      (global as any).fetch = originalFetch;
+      if (originalFetch) {
+        (global as { fetch: typeof fetch }).fetch = originalFetch;
+      } else {
+        delete (global as { fetch?: typeof fetch }).fetch;
+      }
 
       assert.ok(result, "Should return result even with errors");
       assert.equal(result.errors.length, 1, "Should track error");

@@ -18,7 +18,7 @@ import {
   type PrepaymentEvent as CalcPrepaymentEvent,
   type TermRenewal,
 } from "../../shared/calculations/mortgage";
-import type { MortgageTerm } from "@shared/schema";
+import type { MortgageTerm, MortgagePayment, RefinancingEvent } from "@shared/schema";
 import {
   getTermEffectiveRate,
   shouldUpdatePaymentAmount,
@@ -1561,7 +1561,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       let mortgageTerms: MortgageTerm[] = [];
 
       // Fetch historical payments first to determine projection start date
-      let historicalPayments: any[] = [];
+      let historicalPayments: MortgagePayment[] = [];
       let lastPaymentDate: Date | null = null;
       let lastPaymentBalance: number = data.currentBalance;
 
@@ -1629,7 +1629,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       }
 
       // Fetch and process refinancing events from scenario if provided
-      let refinancingEventsFromScenario: any[] = [];
+      let refinancingEventsFromScenario: RefinancingEvent[] = [];
       if (data.scenarioId) {
         const scenarioRefinancingEvents = await services.refinancingEvents.list(
           data.scenarioId,

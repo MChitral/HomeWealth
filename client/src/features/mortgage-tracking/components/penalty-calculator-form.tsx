@@ -205,8 +205,8 @@ export function PenaltyCalculatorForm() {
               />
             </FormControl>
             <FormDescription>
-              Current market rate for the remaining term. Click "Auto-fill" to fetch from market
-              rate service.
+              Current market rate for the remaining term. Click &quot;Auto-fill&quot; to fetch from
+              market rate service.
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -254,8 +254,8 @@ export function PenaltyCalculatorForm() {
               </SelectContent>
             </Select>
             <FormDescription>
-              Select a specific calculation method. Leave blank to use standard "greater of"
-              calculation.
+              Select a specific calculation method. Leave blank to use standard &quot;greater
+              of&quot; calculation.
             </FormDescription>
             <FormMessage />
           </FormItem>

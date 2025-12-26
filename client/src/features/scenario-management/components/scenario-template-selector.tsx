@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { scenarioApi, scenarioQueryKeys } from "../api/scenario-api";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "wouter";
 import { Loader2 } from "lucide-react";
 
 interface ScenarioTemplate {
@@ -18,7 +18,7 @@ interface ScenarioTemplate {
 }
 
 export function ScenarioTemplateSelector() {
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
 
   const { data: templates, isLoading } = useQuery({
@@ -38,7 +38,7 @@ export function ScenarioTemplateSelector() {
     }) => scenarioApi.createFromTemplate(templateId, name, description),
     onSuccess: (scenario) => {
       queryClient.invalidateQueries({ queryKey: scenarioQueryKeys.all() });
-      navigate(`/scenarios/${scenario.id}/edit`);
+      setLocation(`/scenarios/${scenario.id}/edit`);
     },
   });
 

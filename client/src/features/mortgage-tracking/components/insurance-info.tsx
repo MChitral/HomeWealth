@@ -21,7 +21,7 @@ export function InsuranceInfo() {
           Mortgage Default Insurance Guide
         </CardTitle>
         <CardDescription>
-          Learn about mortgage default insurance, when it's required, and how it works
+          Learn about mortgage default insurance, when it&apos;s required, and how it works
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -29,7 +29,7 @@ export function InsuranceInfo() {
           <Info className="h-4 w-4" />
           <AlertDescription>
             Mortgage default insurance protects lenders if borrowers default on their mortgage
-            payments. It's required for high-ratio mortgages in Canada.
+            payments. It&apos;s required for high-ratio mortgages in Canada.
           </AlertDescription>
         </Alert>
 
@@ -101,9 +101,9 @@ export function InsuranceInfo() {
                     <strong>Option 2: Add to Principal</strong>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Add the premium to your mortgage principal. You'll pay it over the life of your
-                    mortgage along with your regular payments. This increases your total mortgage
-                    amount.
+                    Add the premium to your mortgage principal. You&apos;ll pay it over the life of
+                    your mortgage along with your regular payments. This increases your total
+                    mortgage amount.
                   </p>
                 </div>
               </div>

@@ -12,11 +12,9 @@
 export function getPrepaymentYear(
   paymentDate: string | Date,
   prepaymentLimitResetDate: string | null | undefined,
-  mortgageStartDate: string | Date
+  _mortgageStartDate: string | Date
 ): string {
   const payment = typeof paymentDate === "string" ? new Date(paymentDate) : paymentDate;
-  const startDate =
-    typeof mortgageStartDate === "string" ? new Date(mortgageStartDate) : mortgageStartDate;
 
   // If no reset date specified, use calendar year
   if (!prepaymentLimitResetDate) {
@@ -52,7 +50,7 @@ export function getPrepaymentYear(
 export function getPrepaymentYearDates(
   prepaymentYear: string,
   prepaymentLimitResetDate: string | null | undefined,
-  mortgageStartDate: string | Date
+  _mortgageStartDate: string | Date
 ): { startDate: Date; endDate: Date } {
   if (!prepaymentLimitResetDate) {
     // Calendar year

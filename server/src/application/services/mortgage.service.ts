@@ -6,11 +6,7 @@ import {
 } from "@infrastructure/repositories";
 import type { MortgageCreateInput, MortgageUpdateInput } from "@domain/models";
 import { db } from "@infrastructure/db/connection";
-import {
-  validateMortgage,
-  validateAmortizationPeriod,
-  validateLTV,
-} from "@domain/validations/mortgage-validation";
+import { validateAmortizationPeriod, validateLTV } from "@domain/validations/mortgage-validation";
 
 export class MortgageService {
   constructor(

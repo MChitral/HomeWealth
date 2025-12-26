@@ -3,7 +3,6 @@ import request from "supertest";
 import { app } from "../../../app";
 import { db } from "@infrastructure/db/connection";
 import { users } from "@shared/schema";
-import { sql } from "drizzle-orm";
 
 describe("Insurance API Routes", () => {
   let testUser: { id: string; email: string };
@@ -84,9 +83,7 @@ describe("Insurance API Routes", () => {
 
       expect(response.status).toBe(200);
       expect(response.body.breakdown.discountAmount).toBeGreaterThan(0);
-      expect(response.body.premiumAfterDiscount).toBeLessThan(
-        response.body.breakdown.basePremium
-      );
+      expect(response.body.premiumAfterDiscount).toBeLessThan(response.body.breakdown.basePremium);
     });
 
     it("should add premium to principal when requested", async () => {
@@ -101,9 +98,7 @@ describe("Insurance API Routes", () => {
         });
 
       expect(response.status).toBe(200);
-      expect(response.body.totalMortgageAmount).toBeGreaterThan(
-        response.body.mortgageAmount
-      );
+      expect(response.body.totalMortgageAmount).toBeGreaterThan(response.body.mortgageAmount);
       expect(response.body.totalMortgageAmount).toBe(
         response.body.mortgageAmount + response.body.premiumAfterDiscount
       );
@@ -255,4 +250,3 @@ describe("Insurance API Routes", () => {
     });
   });
 });
-

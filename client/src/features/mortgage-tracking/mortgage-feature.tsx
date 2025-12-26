@@ -37,7 +37,6 @@ export default function MortgageFeature() {
     setFilterPaymentType,
     searchAmount,
     setSearchAmount,
-    setFilterYear,
     primeRate,
     setPrimeRate,
     isEditMortgageOpen,

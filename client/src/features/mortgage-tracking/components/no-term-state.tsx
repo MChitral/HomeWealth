@@ -28,7 +28,7 @@ interface NoTermStateProps {
  * Prompts user to create their first mortgage term.
  */
 export function NoTermState({
-  mortgage,
+  mortgage: _mortgage,
   isTermRenewalOpen,
   onTermRenewalOpenChange,
   form,
@@ -43,8 +43,6 @@ export function NoTermState({
   onRefreshPrime,
   isPrimeRateLoading,
 }: NoTermStateProps) {
-  const defaultStartDate = mortgage.startDate || new Date().toISOString().split("T")[0];
-
   return (
     <div className="flex flex-col items-center justify-center h-screen gap-6">
       <div className="text-center space-y-2">
@@ -61,7 +59,6 @@ export function NoTermState({
         title="Create Mortgage Term"
         description="Set up your initial mortgage term with interest rate and payment details"
         showAlert={false}
-        defaultStartDate={defaultStartDate}
         triggerButton={
           <Button size="lg" data-testid="button-create-first-term">
             <Plus className="h-5 w-5 mr-2" />

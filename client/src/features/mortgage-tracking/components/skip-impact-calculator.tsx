@@ -3,7 +3,6 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
-import { Badge } from "@/shared/ui/badge";
 import { Calculator, TrendingUp, AlertTriangle, DollarSign } from "lucide-react";
 import { calculateSkippedPayment } from "@server-shared/calculations/payment-skipping";
 import type { PaymentFrequency } from "@server-shared/calculations/mortgage";

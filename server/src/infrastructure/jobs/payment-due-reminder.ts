@@ -1,7 +1,4 @@
 import type { ApplicationServices } from "@application/services";
-import { eq, and, gte } from "drizzle-orm";
-import { db } from "@infrastructure/db/connection";
-import { notifications, mortgageTerms } from "@shared/schema";
 
 /**
  * Check all active mortgages for upcoming payment due dates and send reminders
@@ -104,6 +101,7 @@ export async function checkPaymentDueReminders(services: ApplicationServices): P
         }
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error(`Error checking payment due reminders for mortgage ${mortgage.id}:`, error);
     }
   }

@@ -14,6 +14,7 @@ export function startNotificationQueueScheduler(notificationService: Notificatio
     isEnabled && (isProduction || process.env.ENABLE_NOTIFICATION_QUEUE_SCHEDULER === "true");
 
   if (!shouldRun) {
+    // eslint-disable-next-line no-console
     console.log("[Notification Queue Scheduler] Disabled");
     return;
   }
@@ -24,6 +25,7 @@ export function startNotificationQueueScheduler(notificationService: Notificatio
   // Process queue every 5 minutes
   cron.schedule("*/5 * * * *", async () => {
     if (!queueProcessor) {
+      // eslint-disable-next-line no-console
       console.error("[Notification Queue Scheduler] Processor not initialized");
       return;
     }
@@ -31,9 +33,11 @@ export function startNotificationQueueScheduler(notificationService: Notificatio
     try {
       await queueProcessor.processQueue();
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Error processing notification queue:", error);
     }
   });
 
+  // eslint-disable-next-line no-console
   console.log("[Notification Queue Scheduler] Started - processing queue every 5 minutes");
 }

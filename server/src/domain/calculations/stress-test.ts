@@ -28,7 +28,7 @@ export function calculateQualifyingPayment(
   principal: number,
   contractRate: number,
   amortizationMonths: number,
-  frequency: "monthly" | "biweekly" | "semi-monthly" | "weekly"
+  _frequency: "monthly" | "biweekly" | "semi-monthly" | "weekly"
 ): number {
   const stressTestRate = calculateStressTestRate(contractRate);
 

@@ -47,7 +47,7 @@ export function normalizePayments(
       termStartDate: term?.startDate,
       remainingAmortizationMonths: payment.remainingAmortizationMonths,
       // Payment skipping fields
-      isSkipped: payment.isSkipped === 1 || payment.isSkipped === true,
+      isSkipped: payment.isSkipped === 1,
       skippedInterestAccrued: Number(payment.skippedInterestAccrued || 0),
     };
   });

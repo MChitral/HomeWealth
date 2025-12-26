@@ -1,4 +1,4 @@
-import type { Mortgage, MortgageTerm } from "@shared/schema";
+import type { Mortgage, MortgageTerm, RecastEvent } from "@shared/schema";
 import {
   MortgagesRepository,
   MortgageTermsRepository,
@@ -185,7 +185,7 @@ export class RecastService {
     mortgageId: string,
     userId: string,
     input: RecastCalculationInput
-  ): Promise<{ recastEvent: any; updatedTerm: MortgageTerm | undefined } | undefined> {
+  ): Promise<{ recastEvent: RecastEvent; updatedTerm: MortgageTerm | undefined } | undefined> {
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
     if (!mortgage) {
       return undefined;
@@ -234,7 +234,7 @@ export class RecastService {
   /**
    * Get recast history for a mortgage
    */
-  async getRecastHistory(mortgageId: string, userId: string): Promise<any[] | undefined> {
+  async getRecastHistory(mortgageId: string, userId: string): Promise<RecastEvent[] | undefined> {
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
     if (!mortgage) {
       return undefined;

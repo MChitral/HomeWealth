@@ -38,9 +38,9 @@ describe("Renewal Feature", () => {
 
   describe("RenewalService", () => {
     let service: RenewalService;
-    let mockMortgagesRepo: any;
-    let mockTermsRepo: any;
-    let mockMarketRateService: any;
+    let mockMortgagesRepo: { findById: ReturnType<typeof mock.fn> };
+    let mockTermsRepo: { findByMortgageId: ReturnType<typeof mock.fn> };
+    let mockMarketRateService: { getMarketRate: ReturnType<typeof mock.fn> };
 
     beforeEach(() => {
       mockMortgagesRepo = {
@@ -52,11 +52,7 @@ describe("Renewal Feature", () => {
       mockMarketRateService = {
         getMarketRate: mock.fn(),
       };
-      service = new RenewalService(
-        mockMortgagesRepo,
-        mockTermsRepo,
-        mockMarketRateService
-      );
+      service = new RenewalService(mockMortgagesRepo, mockTermsRepo, mockMarketRateService);
     });
 
     it("should return 'urgent' status if renewal is within 90 days", async () => {
@@ -123,8 +119,8 @@ describe("Renewal Feature", () => {
       ];
 
       // Mock market rate service to return 3% (lower than current 5%)
-      mockMarketRateService.getMarketRate.mock.mockImplementation(() =>
-        Promise.resolve(0.03) // 3% as decimal
+      mockMarketRateService.getMarketRate.mock.mockImplementation(
+        () => Promise.resolve(0.03) // 3% as decimal
       );
 
       mockMortgagesRepo.findById.mock.mockImplementation(() => Promise.resolve(mortgage));
@@ -193,8 +189,8 @@ describe("Renewal Feature", () => {
       ];
 
       // Mock market rate service to return 4% for variable rate
-      mockMarketRateService.getMarketRate.mock.mockImplementation(() =>
-        Promise.resolve(0.04) // 4% as decimal
+      mockMarketRateService.getMarketRate.mock.mockImplementation(
+        () => Promise.resolve(0.04) // 4% as decimal
       );
 
       mockMortgagesRepo.findById.mock.mockImplementation(() => Promise.resolve(mortgage));

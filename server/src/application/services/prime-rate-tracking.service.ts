@@ -29,7 +29,16 @@ export class PrimeRateTrackingService {
     private readonly mortgages: MortgagesRepository,
     private readonly impactCalculator: ImpactCalculator,
     private readonly mortgagePayments?: MortgagePaymentsRepository,
-    private readonly paymentAmountChangeService?: any // PaymentAmountChangeService - using any to avoid circular dependency
+    private readonly paymentAmountChangeService?: {
+      recordPaymentAmountChange: (params: {
+        mortgageId: string;
+        termId: string;
+        changeDate: string;
+        oldAmount: number;
+        newAmount: number;
+        reason: string;
+      }) => Promise<unknown>;
+    } // PaymentAmountChangeService - using interface to avoid circular dependency
   ) {}
 
   /**
@@ -200,6 +209,7 @@ export class PrimeRateTrackingService {
 
           // Log payment recalculation
           if (paymentRecalculated) {
+            // eslint-disable-next-line no-console
             console.log(`Term ${term.id}: Payment recalculated due to rate change`);
           }
         } catch (error: unknown) {

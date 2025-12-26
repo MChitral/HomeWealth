@@ -11,9 +11,11 @@ export const createHealthRoutes = (healthService: HealthScoreService) => {
         return res.status(404).json({ error: "Mortgage not found" });
       }
       res.json(result);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // eslint-disable-next-line no-console
       console.error("Error calculating health score:", error);
-      res.status(500).json({ error: error.message || "Internal server error" });
+      const errorMessage = error instanceof Error ? error.message : "Internal server error";
+      res.status(500).json({ error: errorMessage });
     }
   });
 

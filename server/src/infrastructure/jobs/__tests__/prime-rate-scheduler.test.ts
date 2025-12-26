@@ -19,7 +19,7 @@ describe("Prime Rate Scheduler", () => {
         termsUpdated: 0,
         errors: [],
       }),
-    } as any;
+    } as unknown as ApplicationServices["primeRateTracking"];
   });
 
   afterEach(() => {

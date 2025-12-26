@@ -359,7 +359,6 @@ describe("Trigger Rate Alert Job", () => {
       // Mock database to return existing notification (simulating duplicate check)
       const { db } = await import("@infrastructure/db/connection");
       const { notifications } = await import("@shared/schema");
-      const { eq, and, gte } = await import("drizzle-orm");
 
       // Create a mock notification to simulate duplicate
       await db.insert(notifications).values({
@@ -411,4 +410,3 @@ describe("Trigger Rate Alert Job", () => {
     });
   });
 });
-

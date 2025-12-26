@@ -364,11 +364,25 @@ export type CalculatePenaltyResponse = {
   threeMonthPenalty: number;
   irdPenalty: number;
   totalPenalty: number;
-  method: "IRD" | "3-Month Interest" | "Open Mortgage";
+  method:
+    | "IRD"
+    | "IRD (Posted Rate)"
+    | "IRD (Discounted Rate)"
+    | "IRD (Origination Comparison)"
+    | "3-Month Interest"
+    | "3-Month Interest (Variable)"
+    | "Open Mortgage";
   breakdown: {
     threeMonth: number;
     ird: number;
-    applied: "IRD" | "3-Month Interest" | "Open Mortgage";
+    applied:
+      | "IRD"
+      | "IRD (Posted Rate)"
+      | "IRD (Discounted Rate)"
+      | "IRD (Origination Comparison)"
+      | "3-Month Interest"
+      | "3-Month Interest (Variable)"
+      | "Open Mortgage";
   };
   // Optional metadata
   isOpenMortgage?: boolean;

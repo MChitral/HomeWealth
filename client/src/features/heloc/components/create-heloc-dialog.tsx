@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,9 +11,8 @@ import {
 } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
-import { Label } from "@/shared/ui/label";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/shared/ui/form";
-import { useCreateHelocAccount, useHelocAccounts } from "../hooks";
+import { useCreateHelocAccount } from "../hooks";
 import { useToast } from "@/shared/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
@@ -51,7 +49,6 @@ interface CreateHelocDialogProps {
 export function CreateHelocDialog({ open, onOpenChange }: CreateHelocDialogProps) {
   const { toast } = useToast();
   const createAccount = useCreateHelocAccount();
-  const { data: mortgages } = useHelocAccounts(); // This should be mortgages, but using as placeholder
 
   const form = useForm<HelocAccountFormData>({
     resolver: zodResolver(helocAccountSchema),

@@ -149,9 +149,7 @@ describe("Renewal Reminder Job - Integration Tests", () => {
       .where(eq(notifications.userId, testUserId));
 
     // Should have notifications for both mortgages
-    const renewalNotifications = createdNotifications.filter(
-      (n) => n.type === "renewal_reminder"
-    );
+    const renewalNotifications = createdNotifications.filter((n) => n.type === "renewal_reminder");
 
     expect(renewalNotifications.length).toBeGreaterThanOrEqual(1);
 
@@ -160,4 +158,3 @@ describe("Renewal Reminder Job - Integration Tests", () => {
     await db.delete(mortgages).where(eq(mortgages.id, mortgage2.id));
   });
 });
-

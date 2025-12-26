@@ -93,7 +93,7 @@ export class TaxCalculationService {
     incomeType: "eligible_dividend" | "non_eligible_dividend" | "interest" | "capital_gain",
     province: string,
     marginalTaxRate: number,
-    taxYear: number = 2025
+    _taxYear: number = 2025
   ): Promise<InvestmentIncomeTaxResult> {
     let taxableIncome: number;
     let taxAmount: number;

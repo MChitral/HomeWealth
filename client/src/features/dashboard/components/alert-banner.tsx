@@ -19,6 +19,16 @@ export function AlertBanner({ alert, notificationId, onDismiss }: AlertBannerPro
   const [isDismissed, setIsDismissed] = useState(false);
   const queryClient = useQueryClient();
 
+  const markAsReadMutation = useMutation({
+    mutationFn: (id: string) => notificationApi.markAsRead(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+      setIsDismissed(true);
+      if (onDismiss) onDismiss();
+    },
+  });
+
   if (!alert.isHit && !alert.isRisk) return null;
   if (isDismissed) return null;
 
@@ -31,19 +41,13 @@ export function AlertBanner({ alert, notificationId, onDismiss }: AlertBannerPro
 
   // Get impact data from notification metadata if available
   // This would come from the notification if it was created by the alert job
-  const monthlyBalanceIncrease = (alert as any).monthlyBalanceIncrease;
-  const projectedBalanceAtTermEnd = (alert as any).projectedBalanceAtTermEnd;
-  const requiredPayment = (alert as any).requiredPayment;
-
-  const markAsReadMutation = useMutation({
-    mutationFn: (id: string) => notificationApi.markAsRead(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
-      setIsDismissed(true);
-      if (onDismiss) onDismiss();
-    },
-  });
+  const monthlyBalanceIncrease = (alert as Record<string, unknown>).monthlyBalanceIncrease as
+    | number
+    | undefined;
+  const projectedBalanceAtTermEnd = (alert as Record<string, unknown>).projectedBalanceAtTermEnd as
+    | number
+    | undefined;
+  const requiredPayment = (alert as Record<string, unknown>).requiredPayment as number | undefined;
 
   const handleDismiss = () => {
     if (notificationId) {

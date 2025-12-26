@@ -63,6 +63,6 @@ export class PaymentAmountChangeEventsRepository {
     const result = await this.database
       .delete(paymentAmountChangeEvents)
       .where(eq(paymentAmountChangeEvents.id, id));
-    return result.rowCount !== undefined ? result.rowCount > 0 : false;
+    return (result.rowCount ?? 0) > 0;
   }
 }

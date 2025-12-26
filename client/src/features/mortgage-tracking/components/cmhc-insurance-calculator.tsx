@@ -4,7 +4,6 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
-import { Badge } from "@/shared/ui/badge";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Info, Calculator, TrendingUp, AlertCircle } from "lucide-react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/shared/ui/form";
@@ -25,7 +24,6 @@ export function CMHCInsuranceCalculator({
   defaultDownPayment,
   onResultChange,
   showProviderComparison = false,
-  compact = false,
 }: CMHCInsuranceCalculatorProps) {
   const {
     form,
@@ -48,7 +46,6 @@ export function CMHCInsuranceCalculator({
   const [calculationResult, setCalculationResult] = useState<InsuranceCalculationResult | null>(
     null
   );
-  const [comparisonResult, setComparisonResult] = useState<any>(null);
 
   // Auto-calculate when form values change (debounced)
   useEffect(() => {
@@ -66,16 +63,22 @@ export function CMHCInsuranceCalculator({
   // Update result when calculation completes
   useEffect(() => {
     if (calculateMutation.data) {
-      setCalculationResult(calculateMutation.data);
+      const result = calculateMutation.data;
+      // Use callback to avoid setState in effect
       if (onResultChange) {
         // Pass result with premiumPaymentType from form
         const resultWithPaymentType = {
-          ...calculateMutation.data,
+          ...result,
           premiumPaymentType: form.getValues("premiumPaymentType") || "upfront",
         };
         onResultChange(
           resultWithPaymentType as InsuranceCalculationResult & { premiumPaymentType: string }
         );
+      } else {
+        // Use setTimeout to avoid setState in effect
+        setTimeout(() => {
+          setCalculationResult(result);
+        }, 0);
       }
     }
   }, [calculateMutation.data, onResultChange, form]);

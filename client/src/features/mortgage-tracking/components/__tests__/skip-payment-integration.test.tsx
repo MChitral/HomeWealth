@@ -27,7 +27,7 @@ vi.mock("@/shared/hooks/use-toast", () => ({
 
 // Mock calculation functions
 vi.mock("@server-shared/calculations/payment-skipping", () => ({
-  calculateSkippedPayment: vi.fn((balance, rate, frequency, amortization) => ({
+  calculateSkippedPayment: vi.fn((_balance, _rate, _frequency, _amortization) => ({
     interestAccrued: 1830.0,
     newBalance: 401830.0,
     extendedAmortizationMonths: 301,
@@ -43,9 +43,11 @@ const createWrapper = () => {
       mutations: { retry: false },
     },
   });
-  return ({ children }: { children: React.ReactNode }) => (
+  const Wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
+  Wrapper.displayName = "TestWrapper";
+  return Wrapper;
 };
 
 const mockTerm: UiTerm = {
@@ -245,4 +247,3 @@ describe("SkipPaymentDialog Integration", () => {
     expect(screen.getByText(/limit.*reached/i)).toBeInTheDocument();
   });
 });
-

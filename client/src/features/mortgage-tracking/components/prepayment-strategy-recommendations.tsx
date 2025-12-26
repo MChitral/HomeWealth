@@ -14,7 +14,6 @@ import {
   Target,
   Clock,
   DollarSign,
-  ArrowRight,
 } from "lucide-react";
 import type { Mortgage } from "@shared/schema";
 import type { UiTerm, UiPayment } from "../types";
@@ -67,7 +66,6 @@ export function PrepaymentStrategyRecommendations({
     const rateDecimal = currentRate / 100;
     const monthlyRate = Math.pow(1 + rateDecimal / 2, 2 / 12) - 1; // Semi-annual compounding
     const regularPayment = currentTerm.regularPaymentAmount;
-    const remainingMonths = mortgage.amortizationYears * 12 - payments.length;
 
     // Scenario 1: Small lump sum (e.g., $5,000)
     const smallLumpSum = Math.min(5000, currentBalance * 0.05);
@@ -434,8 +432,8 @@ export function PrepaymentStrategyRecommendations({
                     <div>
                       <div className="font-medium">When Rates Are High</div>
                       <div className="text-muted-foreground">
-                        Higher mortgage rates make prepayments more valuable as you're saving on
-                        higher-cost debt.
+                        Higher mortgage rates make prepayments more valuable as you&apos;re saving
+                        on higher-cost debt.
                       </div>
                     </div>
                   </div>

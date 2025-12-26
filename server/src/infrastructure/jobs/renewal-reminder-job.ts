@@ -38,7 +38,7 @@ async function hasReminderBeenSent(
 
   // Check if any existing notification has matching metadata
   for (const notification of existingNotifications) {
-    const metadata = notification.metadata as Record<string, any> | null;
+    const metadata = notification.metadata as Record<string, unknown> | null;
     if (metadata && metadata.mortgageId === mortgageId && metadata.daysUntil === daysUntil) {
       return true;
     }
@@ -111,10 +111,12 @@ function getReminderTitle(daysUntil: number): string {
  */
 export async function checkRenewalsAndSendReminders(services: ApplicationServices): Promise<void> {
   try {
+    // eslint-disable-next-line no-console
     console.log("[Renewal Reminder Job] Starting renewal check...");
 
     // Get all mortgages
     const allMortgages = await services.mortgages.findAll();
+    // eslint-disable-next-line no-console
     console.log(`[Renewal Reminder Job] Found ${allMortgages.length} mortgages to check`);
 
     let remindersSent = 0;
@@ -153,6 +155,7 @@ export async function checkRenewalsAndSendReminders(services: ApplicationService
         const alreadySent = await hasReminderBeenSent(mortgage.userId, mortgage.id, daysUntil);
 
         if (alreadySent) {
+          // eslint-disable-next-line no-console
           console.log(
             `[Renewal Reminder Job] Skipping duplicate reminder for mortgage ${mortgage.id}, ${daysUntil} days`
           );
@@ -179,6 +182,7 @@ export async function checkRenewalsAndSendReminders(services: ApplicationService
             }
           }
         } catch (error) {
+          // eslint-disable-next-line no-console
           console.warn(
             `[Renewal Reminder Job] Failed to fetch market rate for mortgage ${mortgage.id}:`,
             error
@@ -216,20 +220,24 @@ export async function checkRenewalsAndSendReminders(services: ApplicationService
         );
 
         remindersSent++;
+        // eslint-disable-next-line no-console
         console.log(
           `[Renewal Reminder Job] Sent reminder for mortgage ${mortgage.id}, ${daysUntil} days until renewal`
         );
       } catch (error) {
         errors++;
+        // eslint-disable-next-line no-console
         console.error(`[Renewal Reminder Job] Error processing mortgage ${mortgage.id}:`, error);
         // Continue with next mortgage instead of crashing
       }
     }
 
+    // eslint-disable-next-line no-console
     console.log(
       `[Renewal Reminder Job] Completed: ${remindersSent} sent, ${remindersSkipped} skipped, ${errors} errors`
     );
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("[Renewal Reminder Job] Fatal error:", error);
     throw error;
   }

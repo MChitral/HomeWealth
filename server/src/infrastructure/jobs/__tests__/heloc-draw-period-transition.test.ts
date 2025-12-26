@@ -24,7 +24,7 @@ vi.mock("@domain/calculations/heloc-payment", () => ({
 describe("checkHelocDrawPeriodTransitions", () => {
   let mockServices: Partial<ApplicationServices>;
   let mockHelocAccounts: HelocAccount[];
-  let mockNotifications: any[];
+  let mockNotifications: unknown[];
 
   beforeEach(() => {
     mockNotifications = [];
@@ -55,7 +55,7 @@ describe("checkHelocDrawPeriodTransitions", () => {
           mockNotifications.push(notification);
           return notification;
         }),
-        getNotifications: vi.fn(async (userId, options) => {
+        getNotifications: vi.fn(async (userId, _options) => {
           return mockNotifications.filter((n) => n.userId === userId);
         }),
       },
@@ -269,4 +269,3 @@ describe("checkHelocDrawPeriodTransitions", () => {
     expect(mockServices.notifications?.createNotification).toHaveBeenCalledTimes(2);
   });
 });
-

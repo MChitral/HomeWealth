@@ -40,13 +40,15 @@ export function startPrimeRateScheduler(primeRateTracking: PrimeRateTrackingServ
 
         if (result.changed) {
           if (result.errors.length > 0) {
+            // eslint-disable-next-line no-console
             console.warn(
               `[Prime Rate Scheduler] ${result.errors.length} errors occurred during update:`,
               result.errors
             );
           }
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
+        // eslint-disable-next-line no-console
         console.error("[Prime Rate Scheduler] Error checking prime rate:", error);
         // Don't throw - let the scheduler continue running
       }

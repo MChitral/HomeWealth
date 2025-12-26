@@ -244,7 +244,6 @@ export class MortgagePaymentService {
       { ...payload, paymentDate: finalPaymentDate },
       previousPayment
     );
-    const paymentYear = parseInt(finalPaymentDate.split("-")[0], 10);
     const yearToDate = await this.getYearToDatePrepayments(
       mortgageId,
       payload.paymentDate,

@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge";
-import { Plus, TrendingUp, DollarSign, AlertTriangle, Loader2 } from "lucide-react";
+import { Plus, TrendingUp, Loader2 } from "lucide-react";
 import { useSmithManeuverStrategies } from "../hooks";
 import { useState } from "react";
 import type { SmithManeuverStrategy } from "@shared/schema";

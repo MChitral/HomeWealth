@@ -1,11 +1,10 @@
-import { describe, it, mock } from "node:test";
+import { describe, it } from "node:test";
 import assert from "node:assert";
 import {
   calculateThreeMonthInterestPenalty,
   calculateIRDPenalty,
   calculateStandardPenalty,
   calculatePenaltyByMethod,
-  calculateOpenMortgagePenalty,
 } from "@domain/calculations/penalty";
 
 describe("Penalty Calculator API", () => {
@@ -96,4 +95,3 @@ describe("Penalty Calculator API", () => {
     });
   });
 });
-

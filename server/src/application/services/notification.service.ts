@@ -4,11 +4,7 @@ import { emailService } from "@infrastructure/email/email.service";
 import { users } from "@shared/schema";
 import { db } from "@infrastructure/db/connection";
 import { eq } from "drizzle-orm";
-import type {
-  InsertNotification,
-  Notification,
-  UpdateNotificationPreferences,
-} from "@shared/schema";
+import type { Notification, UpdateNotificationPreferences } from "@shared/schema";
 
 export type NotificationType =
   | "renewal_reminder"
@@ -36,7 +32,7 @@ export class NotificationService {
     type: NotificationType,
     title: string,
     message: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<Notification> {
     const notification = await this.notificationRepo.create({
       userId,
@@ -103,7 +99,20 @@ export class NotificationService {
           (metadata.daysUntil as number) || 0,
           ((metadata.currentRate as number) || 0) / 100, // Convert from percentage to decimal
           {
-            estimatedPenalty: metadata.estimatedPenalty as number | undefined,
+            estimatedPenalty: metadata.estimatedPenalty
+              ? {
+                  amount:
+                    typeof metadata.estimatedPenalty === "number"
+                      ? metadata.estimatedPenalty
+                      : (metadata.estimatedPenalty as { amount: number; method: string }).amount,
+                  method:
+                    typeof metadata.estimatedPenalty === "object" &&
+                    metadata.estimatedPenalty !== null
+                      ? (metadata.estimatedPenalty as { amount: number; method: string }).method ||
+                        "IRD"
+                      : "IRD",
+                }
+              : undefined,
             marketRate: metadata.marketRate ? (metadata.marketRate as number) / 100 : undefined, // Convert from percentage to decimal if present
             mortgageId: metadata.mortgageId as string | undefined,
           }
@@ -118,7 +127,12 @@ export class NotificationService {
           ((metadata.triggerRate as number) || 0) / 100, // Convert from percentage to decimal
           (metadata.balance as number) || 0,
           {
-            alertType: metadata.alertType as string | undefined,
+            alertType: metadata.alertType
+              ? (metadata.alertType as
+                  | "trigger_rate_hit"
+                  | "trigger_rate_approaching"
+                  | "trigger_rate_close")
+              : undefined,
             distanceToTrigger: metadata.distanceToTrigger
               ? (metadata.distanceToTrigger as number) / 100
               : undefined, // Convert from percentage to decimal if present

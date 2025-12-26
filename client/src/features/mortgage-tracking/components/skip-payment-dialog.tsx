@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -42,8 +42,26 @@ export function SkipPaymentDialog({
   payments,
   maxSkipsPerYear = 2,
 }: SkipPaymentDialogProps) {
-  const [paymentDate, setPaymentDate] = useState("");
+  const [dialogKey, setDialogKey] = useState(0);
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split("T")[0]);
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const previousOpenRef = useRef(open);
+
+  // Update key when dialog opens/closes to force remount and reset state
+  // Use startTransition or update in a way that doesn't trigger warnings
+  useEffect(() => {
+    if (open && !previousOpenRef.current) {
+      // Dialog just opened - generate new key
+      setDialogKey(performance.now());
+    } else if (!open && previousOpenRef.current) {
+      // Dialog just closed - reset key and state
+      setDialogKey(0);
+      setPaymentDate(new Date().toISOString().split("T")[0]);
+      setIsConfirmed(false);
+    }
+    previousOpenRef.current = open;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const {
     skipPaymentMutation,
@@ -63,16 +81,6 @@ export function SkipPaymentDialog({
     payments,
     maxSkipsPerYear,
   });
-
-  // Initialize payment date when dialog opens
-  useEffect(() => {
-    if (open) {
-      const today = new Date().toISOString().split("T")[0];
-      setPaymentDate(today);
-      setIsConfirmed(false);
-      resetSkipImpact();
-    }
-  }, [open, resetSkipImpact]);
 
   // Calculate impact when payment date changes
   useEffect(() => {
@@ -102,7 +110,7 @@ export function SkipPaymentDialog({
   const skipsRemaining = skipLimit - skippedThisYear;
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog key={dialogKey} open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Skip Payment</DialogTitle>
@@ -243,8 +251,8 @@ export function SkipPaymentDialog({
                     <Info className="h-4 w-4" />
                     <AlertDescription>
                       <strong>Important:</strong> Skipped payments still accrue interest. This
-                      interest is added to your principal balance, which means you'll pay interest
-                      on interest over time. Consider this carefully before proceeding.
+                      interest is added to your principal balance, which means you&apos;ll pay
+                      interest on interest over time. Consider this carefully before proceeding.
                     </AlertDescription>
                   </Alert>
 

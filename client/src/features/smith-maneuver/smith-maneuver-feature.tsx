@@ -19,7 +19,7 @@ import {
   useSmithManeuverStrategy,
   useGenerateProjections,
 } from "./hooks";
-import { useHelocAccounts } from "@/features/heloc";
+import { useHelocAccounts } from "@/features/heloc/hooks";
 import { useMortgageSelection } from "@/features/mortgage-tracking";
 import type { SmithManeuverStrategy } from "@shared/schema";
 
@@ -28,7 +28,7 @@ export function SmithManeuverFeature() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingStrategy, setEditingStrategy] = useState<SmithManeuverStrategy | null>(null);
 
-  const { data: strategies } = useSmithManeuverStrategies();
+  const { data: _strategies } = useSmithManeuverStrategies();
   const { data: strategy } = useSmithManeuverStrategy(selectedStrategyId);
   const generateProjections = useGenerateProjections();
   const { data: helocAccounts = [] } = useHelocAccounts();
@@ -90,7 +90,10 @@ export function SmithManeuverFeature() {
               <div>
                 <h2 className="text-2xl font-bold">{strategy.strategyName}</h2>
                 <p className="text-muted-foreground">
-                  Created {new Date(strategy.createdAt).toLocaleDateString()}
+                  Created{" "}
+                  {strategy.createdAt
+                    ? new Date(strategy.createdAt).toLocaleDateString()
+                    : "Unknown"}
                 </p>
               </div>
               <div className="flex gap-2">
@@ -194,7 +197,7 @@ export function SmithManeuverFeature() {
               <Card>
                 <CardContent className="p-6 text-center">
                   <p className="text-muted-foreground">
-                    Click "Generate Projections" to see analysis and charts
+                    Click &quot;Generate Projections&quot; to see analysis and charts
                   </p>
                 </CardContent>
               </Card>

@@ -214,7 +214,10 @@ export class ScenarioProjectionService {
     let scenario: Scenario | null = null;
     if (params.scenarioId) {
       const foundScenario = await this.scenarios.findById(params.scenarioId);
-      scenario = foundScenario ?? null;
+      if (!foundScenario) {
+        throw new Error(`Scenario ${params.scenarioId} not found`);
+      }
+      scenario = foundScenario;
     }
 
     // Calculate baseline metrics

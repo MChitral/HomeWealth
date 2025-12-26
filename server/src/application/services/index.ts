@@ -34,7 +34,6 @@ import { RenewalWorkflowService } from "./renewal-workflow.service";
 import { PaymentCorrectionsService } from "./payment-corrections.service";
 import { PaymentAmountChangeService } from "./payment-amount-change.service";
 import { MortgagePayoffService } from "./mortgage-payoff.service";
-import { ScenarioTemplateService } from "./scenario-template.service";
 
 export interface ApplicationServices {
   cashFlows: CashFlowService;

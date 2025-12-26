@@ -50,6 +50,6 @@ export class MortgagePayoffRepository {
 
   async delete(id: string): Promise<boolean> {
     const result = await this.database.delete(mortgagePayoff).where(eq(mortgagePayoff.id, id));
-    return result.rowCount !== undefined ? result.rowCount > 0 : false;
+    return (result.rowCount ?? 0) > 0;
   }
 }

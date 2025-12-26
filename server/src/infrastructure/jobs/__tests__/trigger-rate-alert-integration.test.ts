@@ -100,9 +100,7 @@ describe("Trigger Rate Alert Job - Integration Tests", () => {
 
     // Should only have one notification per alert type
     const triggerRateNotifications = createdNotifications.filter(
-      (n) =>
-        n.type === "trigger_rate_alert" &&
-        n.metadata?.mortgageId === testMortgageId
+      (n) => n.type === "trigger_rate_alert" && n.metadata?.mortgageId === testMortgageId
     );
 
     // Group by alertType
@@ -170,4 +168,3 @@ describe("Trigger Rate Alert Job - Integration Tests", () => {
     await db.delete(mortgages).where(eq(mortgages.id, mortgage2.id));
   });
 });
-

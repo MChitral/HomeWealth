@@ -36,6 +36,7 @@ if (process.env.NODE_ENV !== "production") {
 
 export function requireUser(_req: Request, _res: Response): Express.User | null {
   // Ensure user exists before returning (async but fire-and-forget)
+  // eslint-disable-next-line no-console
   ensureDevUserExists().catch(console.error);
-  return { id: DEV_USER_ID } as any;
+  return { id: DEV_USER_ID } as Express.User;
 }

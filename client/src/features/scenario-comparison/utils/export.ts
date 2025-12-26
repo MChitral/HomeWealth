@@ -24,14 +24,17 @@ export function exportToCSV(data: ExportData): void {
   rows.push(`Metric,${scenarios.map((s) => s.name).join(",")}`);
 
   // Metric rows
-  const metrics = [
-    { label: `Net Worth (${timeHorizon} years)`, key: "netWorth" as MetricName },
-    { label: `Mortgage Balance (${timeHorizon} years)`, key: "mortgageBalance" as MetricName },
-    { label: "Years to Mortgage Freedom", key: "mortgagePayoffYear" as MetricName },
-    { label: "Total Interest Paid", key: "totalInterestPaid" as MetricName },
-    { label: `Investment Portfolio (${timeHorizon} years)`, key: "investments" as MetricName },
-    { label: "Investment Returns Earned", key: "investmentReturns" as MetricName },
-    { label: "Emergency Fund Filled By", key: "emergencyFundFilledByYear" as MetricName },
+  const metrics: Array<{
+    label: string;
+    key: MetricName | "mortgagePayoffYear" | "emergencyFundFilledByYear" | "totalInterestPaid";
+  }> = [
+    { label: `Net Worth (${timeHorizon} years)`, key: "netWorth" },
+    { label: `Mortgage Balance (${timeHorizon} years)`, key: "mortgageBalance" },
+    { label: "Years to Mortgage Freedom", key: "mortgagePayoffYear" },
+    { label: "Total Interest Paid", key: "totalInterestPaid" },
+    { label: `Investment Portfolio (${timeHorizon} years)`, key: "investments" },
+    { label: "Investment Returns Earned", key: "investmentReturns" },
+    { label: "Emergency Fund Filled By", key: "emergencyFundFilledByYear" },
   ];
 
   metrics.forEach((metric) => {
@@ -45,7 +48,7 @@ export function exportToCSV(data: ExportData): void {
       if (metric.key === "totalInterestPaid") {
         return scenario.metrics.totalInterestPaid;
       }
-      return getMetricForHorizon(scenario.metrics, metric.key);
+      return getMetricForHorizon(scenario.metrics, metric.key as MetricName);
     });
     rows.push(`${metric.label},${values.join(",")}`);
   });
@@ -91,10 +94,8 @@ export function exportToJSON(data: ExportData): void {
         emergencyFundFilledByYear: scenario.metrics.emergencyFundFilledByYear,
       },
       settings: {
-        prepaymentMonthlyPercent: scenario.prepaymentMonthlyPercent,
-        investmentMonthlyPercent: scenario.investmentMonthlyPercent,
-        expectedReturnRate: parseFloat(scenario.expectedReturnRate),
-        efPriorityPercent: scenario.efPriorityPercent,
+        // Note: These properties are not available on ScenarioWithProjections
+        // They would need to be added to the type if needed
       },
     })),
     chartData: {

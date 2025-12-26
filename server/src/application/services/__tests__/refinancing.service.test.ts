@@ -3,33 +3,48 @@ import assert from "node:assert";
 import { RefinancingService } from "../refinancing.service";
 
 // Mock dependencies
-const mockMortgagesRepo: any = {
+interface MockMortgagesRepo {
+  findById: ReturnType<typeof mock.fn>;
+}
+
+interface MockTermsRepo {
+  findByMortgageId: ReturnType<typeof mock.fn>;
+}
+
+interface MockMarketRateService {
+  getMarketRate: ReturnType<typeof mock.fn>;
+}
+
+const mockMortgagesRepo: MockMortgagesRepo = {
   findById: mock.fn(),
 };
-const mockTermsRepo: any = {
+const mockTermsRepo: MockTermsRepo = {
   findByMortgageId: mock.fn(),
 };
-const mockMarketRateService: any = {
+const mockMarketRateService: MockMarketRateService = {
   getMarketRate: mock.fn(),
 };
 
 describe("RefinancingService", () => {
   it("should calculate refinance benefit correctly when beneficial", async () => {
     const service = new RefinancingService(
-      mockMortgagesRepo as any,
-      mockTermsRepo as any,
-      mockMarketRateService as any
+      mockMortgagesRepo as unknown as Parameters<
+        typeof RefinancingService.prototype.constructor
+      >[0],
+      mockTermsRepo as unknown as Parameters<typeof RefinancingService.prototype.constructor>[1],
+      mockMarketRateService as unknown as Parameters<
+        typeof RefinancingService.prototype.constructor
+      >[2]
     );
 
     // Setup mocks
-    mockMortgagesRepo.findById.mock.mockImplementation(
-      () =>
-        Promise.resolve({
-          id: "m1",
-          currentBalance: "500000",
-          amortizationMonths: 300,
-          amortizationYears: 25,
-        }) as any
+    mockMortgagesRepo.findById.mock.mockImplementation(() =>
+      Promise.resolve({
+        id: "m1",
+        currentBalance: "500000",
+        amortizationMonths: 300,
+        amortizationYears: 25,
+      })
     );
 
     // Active term: 5% rate, 3 years left
@@ -42,13 +57,11 @@ describe("RefinancingService", () => {
           interestRate: "5.00",
           fixedRate: "5.00",
         },
-      ] as any)
+      ])
     );
 
     // Market rate: 3.5% (as decimal: 0.035)
-    mockMarketRateService.getMarketRate.mock.mockImplementation(
-      () => Promise.resolve(0.035) as any
-    );
+    mockMarketRateService.getMarketRate.mock.mockImplementation(() => Promise.resolve(0.035));
 
     const result = await service.analyzeRefinanceOpportunity("m1");
 
@@ -73,20 +86,23 @@ describe("RefinancingService", () => {
 
   it("should identify when refinancing is NOT beneficial", async () => {
     const service = new RefinancingService(
-      mockMortgagesRepo as any,
-      mockTermsRepo as any,
-      mockMarketRateService as any
+      mockMortgagesRepo as unknown as Parameters<
+        typeof RefinancingService.prototype.constructor
+      >[0],
+      mockTermsRepo as unknown as Parameters<typeof RefinancingService.prototype.constructor>[1],
+      mockMarketRateService as unknown as Parameters<
+        typeof RefinancingService.prototype.constructor
+      >[2]
     );
 
     // Setup mocks
-    mockMortgagesRepo.findById.mock.mockImplementation(
-      () =>
-        Promise.resolve({
-          id: "m1",
-          currentBalance: "500000",
-          amortizationMonths: 300,
-          amortizationYears: 25,
-        }) as any
+    mockMortgagesRepo.findById.mock.mockImplementation(() =>
+      Promise.resolve({
+        id: "m1",
+        currentBalance: "500000",
+        amortizationMonths: 300,
+        amortizationYears: 25,
+      })
     );
 
     // Active term: 3.5% rate (already low)
@@ -99,13 +115,11 @@ describe("RefinancingService", () => {
           interestRate: "3.50",
           fixedRate: "3.50",
         },
-      ] as any)
+      ])
     );
 
     // Market rate: 3.5% (same, as decimal: 0.035)
-    mockMarketRateService.getMarketRate.mock.mockImplementation(
-      () => Promise.resolve(0.035) as any
-    );
+    mockMarketRateService.getMarketRate.mock.mockImplementation(() => Promise.resolve(0.035));
 
     const result = await service.analyzeRefinanceOpportunity("m1");
 

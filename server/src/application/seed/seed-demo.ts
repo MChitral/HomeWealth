@@ -40,6 +40,9 @@ export async function seedDemoData(repositories: Repositories) {
       amortizationMonths: 0,
       paymentFrequency: "accelerated-biweekly",
       annualPrepaymentLimitPercent: 20,
+      insuranceAddedToPrincipal: 0,
+      isHighRatio: 0,
+      isReAdvanceable: 0,
     });
 
     const scenario1 = await repositories.scenarios.create({
@@ -76,12 +79,18 @@ export async function seedDemoData(repositories: Repositories) {
       regularPaymentAmount: "1650.00",
     });
 
+    // eslint-disable-next-line no-console
     console.log(`✅ Created mortgage term: 5-year fixed @ ${term.fixedRate}%`);
 
+    // eslint-disable-next-line no-console
     console.log("\n🎉 Demo data seeded successfully!");
+    // eslint-disable-next-line no-console
     console.log("📊 Summary:");
+    // eslint-disable-next-line no-console
     console.log(`   - 1 mortgage: $${mortgage.currentBalance} balance`);
+    // eslint-disable-next-line no-console
     console.log(`   - 2 scenarios: "${scenario1.name}" and "${scenario2.name}"`);
+    // eslint-disable-next-line no-console
     console.log(`   - 1 term: ${term.termYears}-year ${term.termType}`);
 
     return {

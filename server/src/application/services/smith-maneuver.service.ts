@@ -12,11 +12,7 @@ import {
   calculateInterestCoverage,
 } from "@server-shared/calculations/smith-maneuver/risk-metrics";
 import { calculateInterestDeduction } from "@domain/calculations/tax/interest-deduction";
-import type {
-  InsertSmithManeuverStrategy,
-  UpdateSmithManeuverStrategy,
-  InsertSmithManeuverTransaction,
-} from "@shared/schema";
+import type { InsertSmithManeuverStrategy, UpdateSmithManeuverStrategy } from "@shared/schema";
 import { fetchLatestPrimeRate } from "@server-shared/services/prime-rate";
 
 export interface CreateSmithManeuverStrategyParams extends Omit<
@@ -121,16 +117,21 @@ export class SmithManeuverService {
     // Calculate marginal tax rate if not provided
     let marginalTaxRate = params.marginalTaxRate;
     if (!marginalTaxRate) {
-      marginalTaxRate = await this.taxCalculation.calculateMarginalTaxRate(
-        parseFloat(params.annualIncome),
+      const calculatedRate = await this.taxCalculation.calculateMarginalTaxRate(
+        typeof params.annualIncome === "string"
+          ? parseFloat(params.annualIncome)
+          : params.annualIncome,
         params.province,
         2025
       );
+      marginalTaxRate = calculatedRate.toString();
+    } else if (typeof marginalTaxRate !== "string") {
+      marginalTaxRate = marginalTaxRate.toString();
     }
 
     return this.smithManeuver.createStrategy({
       ...params,
-      marginalTaxRate: marginalTaxRate.toString(),
+      marginalTaxRate,
     });
   }
 
@@ -307,8 +308,8 @@ export class SmithManeuverService {
     const maxLtv = parseFloat(helocAccount.maxLtvPercent);
 
     // Get prime rate
-    const primeRate = await fetchLatestPrimeRate();
-    const helocRate = primeRate + parseFloat(helocAccount.interestSpread);
+    const primeRateData = await fetchLatestPrimeRate();
+    const helocRate = primeRateData.primeRate + parseFloat(helocAccount.interestSpread);
 
     for (let year = 1; year <= years; year++) {
       // Calculate annual prepayment based on frequency
@@ -331,8 +332,8 @@ export class SmithManeuverService {
       totalPrepayments += annualPrepayment;
       mortgageBalance -= annualPrepayment;
 
-      // Calculate credit room increase
-      const creditRoomIncrease = this.calculateCreditRoomIncrease(
+      // Calculate credit room increase (for potential future use)
+      const _creditRoomIncrease = this.calculateCreditRoomIncrease(
         annualPrepayment,
         mortgageBalance + annualPrepayment,
         homeValue,
@@ -361,7 +362,8 @@ export class SmithManeuverService {
       const taxSavings = interestDeductionResult.taxSavings;
 
       // Calculate investment tax based on strategy's income type
-      const incomeType = (strategy.investmentIncomeType || "capital_gain") as
+      // Default to capital_gain if not specified in investmentAllocation
+      const incomeType = "capital_gain" as
         | "eligible_dividend"
         | "non_eligible_dividend"
         | "interest"
@@ -429,7 +431,8 @@ export class SmithManeuverService {
       throw new Error("Strategy not found");
     }
 
-    const incomeType = (strategy.investmentIncomeType || "capital_gain") as
+    // Default to capital_gain if not specified in investmentAllocation
+    const incomeType = "capital_gain" as
       | "eligible_dividend"
       | "non_eligible_dividend"
       | "interest"

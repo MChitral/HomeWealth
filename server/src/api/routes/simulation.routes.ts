@@ -22,9 +22,11 @@ export const createSimulationRoutes = (simulationService: SimulationService) => 
       }
 
       res.json(result);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // eslint-disable-next-line no-console
       console.error("Error running trigger rate simulation:", error);
-      res.status(500).json({ error: error.message || "Failed to run simulation" });
+      const errorMessage = error instanceof Error ? error.message : "Failed to run simulation";
+      res.status(500).json({ error: errorMessage });
     }
   });
 

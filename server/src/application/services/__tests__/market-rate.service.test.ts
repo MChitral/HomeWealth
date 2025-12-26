@@ -3,7 +3,14 @@ import assert from "node:assert";
 import { MarketRateService } from "../market-rate.service";
 
 // Mock dependencies
-const mockMarketRatesRepo: any = {
+interface MockMarketRatesRepo {
+  findLatest: ReturnType<typeof mock.fn>;
+  create: ReturnType<typeof mock.fn>;
+  existsForDate: ReturnType<typeof mock.fn>;
+  findByDateRange?: ReturnType<typeof mock.fn>;
+}
+
+const mockMarketRatesRepo: MockMarketRatesRepo = {
   findLatest: mock.fn(),
   create: mock.fn(),
   existsForDate: mock.fn(),
@@ -12,7 +19,11 @@ const mockMarketRatesRepo: any = {
 describe("MarketRateService", () => {
   describe("getMarketRate", () => {
     it("should return cached rate when recent (within 7 days)", async () => {
-      const service = new MarketRateService(mockMarketRatesRepo as any);
+      const service = new MarketRateService(
+        mockMarketRatesRepo as unknown as Parameters<
+          typeof MarketRateService.prototype.constructor
+        >[0]
+      );
 
       const recentDate = new Date();
       recentDate.setDate(recentDate.getDate() - 3); // 3 days ago
@@ -34,7 +45,11 @@ describe("MarketRateService", () => {
     });
 
     it("should fetch new rate when cache is stale (older than 7 days)", async () => {
-      const service = new MarketRateService(mockMarketRatesRepo as any);
+      const service = new MarketRateService(
+        mockMarketRatesRepo as unknown as Parameters<
+          typeof MarketRateService.prototype.constructor
+        >[0]
+      );
 
       const oldDate = new Date();
       oldDate.setDate(oldDate.getDate() - 10); // 10 days ago
@@ -68,7 +83,11 @@ describe("MarketRateService", () => {
     });
 
     it("should return null when fetch fails and no cache exists", async () => {
-      const service = new MarketRateService(mockMarketRatesRepo as any);
+      const service = new MarketRateService(
+        mockMarketRatesRepo as unknown as Parameters<
+          typeof MarketRateService.prototype.constructor
+        >[0]
+      );
 
       mockMarketRatesRepo.findLatest.mock.mockImplementation(() => Promise.resolve(undefined));
 
@@ -89,7 +108,11 @@ describe("MarketRateService", () => {
 
   describe("fetchAndStoreLatestRates", () => {
     it("should store rates for all term types and lengths", async () => {
-      const service = new MarketRateService(mockMarketRatesRepo as any);
+      const service = new MarketRateService(
+        mockMarketRatesRepo as unknown as Parameters<
+          typeof MarketRateService.prototype.constructor
+        >[0]
+      );
 
       const today = new Date().toISOString().split("T")[0];
       mockMarketRatesRepo.existsForDate.mock.mockImplementation(() => Promise.resolve(false));
@@ -109,7 +132,11 @@ describe("MarketRateService", () => {
     });
 
     it("should skip rates that already exist for today", async () => {
-      const service = new MarketRateService(mockMarketRatesRepo as any);
+      const service = new MarketRateService(
+        mockMarketRatesRepo as unknown as Parameters<
+          typeof MarketRateService.prototype.constructor
+        >[0]
+      );
 
       mockMarketRatesRepo.existsForDate.mock.mockImplementation(() => Promise.resolve(true));
       mockMarketRatesRepo.create.mock.mockImplementation(() => Promise.resolve({}));
@@ -121,7 +148,11 @@ describe("MarketRateService", () => {
     });
 
     it("should continue processing other rates when one fails", async () => {
-      const service = new MarketRateService(mockMarketRatesRepo as any);
+      const service = new MarketRateService(
+        mockMarketRatesRepo as unknown as Parameters<
+          typeof MarketRateService.prototype.constructor
+        >[0]
+      );
 
       let callCount = 0;
       mockMarketRatesRepo.existsForDate.mock.mockImplementation(() => Promise.resolve(false));
@@ -146,7 +177,11 @@ describe("MarketRateService", () => {
 
   describe("getHistoricalRates", () => {
     it("should return historical rates for date range", async () => {
-      const service = new MarketRateService(mockMarketRatesRepo as any);
+      const service = new MarketRateService(
+        mockMarketRatesRepo as unknown as Parameters<
+          typeof MarketRateService.prototype.constructor
+        >[0]
+      );
 
       const mockRates = [
         {
@@ -176,4 +211,3 @@ describe("MarketRateService", () => {
     });
   });
 });
-

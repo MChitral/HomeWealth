@@ -6,11 +6,7 @@ import { Label } from "@/shared/ui/label";
 import { Input } from "@/shared/ui/input";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
-import {
-  calculateDebtServiceRatios,
-  type DebtServiceRatiosRequest,
-  type DebtServiceRatiosResult,
-} from "../api/mortgage-api";
+import { calculateDebtServiceRatios, type DebtServiceRatiosRequest } from "../api/mortgage-api";
 import { formatCurrency } from "@/shared/utils/format";
 
 interface DebtServiceRatiosProps {

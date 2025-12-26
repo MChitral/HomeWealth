@@ -5,7 +5,7 @@ import { TrendingUp, CreditCard, Loader2 } from "lucide-react";
 import { helocApi } from "@/features/heloc/api";
 import { calculateCreditLimit } from "@server-shared/calculations/heloc/credit-limit";
 import { calculateAvailableCredit } from "@server-shared/calculations/heloc/available-credit";
-import type { HelocAccount, Mortgage } from "@shared/schema";
+import type { Mortgage } from "@shared/schema";
 
 interface HelocCreditLimitImpactProps {
   mortgage: Mortgage;

@@ -175,7 +175,7 @@ export function PropertyValueSection({
             <div className="text-center py-8 text-muted-foreground">
               <p>No property value history yet.</p>
               <p className="text-sm mt-2">
-                Click "Update Value" to add your first property value entry.
+                Click &quot;Update Value&quot; to add your first property value entry.
               </p>
             </div>
           )}

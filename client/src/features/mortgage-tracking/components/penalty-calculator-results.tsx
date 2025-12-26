@@ -99,7 +99,7 @@ export function PenaltyCalculatorResults({ results }: PenaltyCalculatorResultsPr
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                IRD penalty applies because it's higher than 3-month interest. You would save{" "}
+                IRD penalty applies because it&apos;s higher than 3-month interest. You would save{" "}
                 <strong>
                   $
                   {Math.abs(savings).toLocaleString(undefined, {

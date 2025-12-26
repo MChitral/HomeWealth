@@ -46,9 +46,11 @@ class LocalSMTPEmailService implements IEmailService {
         text: textContent || this.htmlToText(htmlContent),
       });
 
+      // eslint-disable-next-line no-console
       console.log(`[Local SMTP] Email sent to ${to}: ${info.messageId}`);
       return { success: true, messageId: info.messageId };
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("[Local SMTP] Email send error:", error);
       return {
         success: false,
@@ -70,10 +72,11 @@ class LocalSMTPEmailService implements IEmailService {
 
 // Resend adapter (for production) - lazy loaded
 class ResendEmailService implements IEmailService {
-  private resend: any;
+  private resend: unknown;
 
   constructor() {
     // Dynamically import Resend to make it optional
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Resend = require("resend").Resend;
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
@@ -98,12 +101,14 @@ class ResendEmailService implements IEmailService {
       });
 
       if (error) {
+        // eslint-disable-next-line no-console
         console.error("Resend email error:", error);
         return { success: false, error: error.message };
       }
 
       return { success: true, messageId: data?.id };
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Resend service error:", error);
       return {
         success: false,
@@ -133,17 +138,21 @@ export class EmailService {
     if (emailMode === "resend") {
       try {
         this.service = new ResendEmailService();
+        // eslint-disable-next-line no-console
         console.log("[Email Service] Using Resend (production mode)");
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.warn(
           "[Email Service] Failed to initialize Resend, falling back to local SMTP:",
           error
         );
         this.service = new LocalSMTPEmailService();
+        // eslint-disable-next-line no-console
         console.log("[Email Service] Using local SMTP (fallback mode)");
       }
     } else {
       this.service = new LocalSMTPEmailService();
+      // eslint-disable-next-line no-console
       console.log("[Email Service] Using local SMTP (development mode)");
     }
   }
@@ -196,7 +205,6 @@ export class EmailService {
       mortgageId?: string;
     }
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
-    const alertType = options?.alertType || "trigger_rate_alert";
     const subject = `Trigger Rate Alert: ${mortgageName}`;
     const htmlContent = this.generateTriggerRateAlertEmail(
       userName,

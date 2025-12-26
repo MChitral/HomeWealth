@@ -41,7 +41,7 @@ function BlendAndExtendFormFields({
   onCalculate: (data: BlendAndExtendFormData) => void;
   isCalculating?: boolean;
 }) {
-  const { control, watch, setValue, handleSubmit } = useFormContext<BlendAndExtendFormData>();
+  const { control, setValue, handleSubmit } = useFormContext<BlendAndExtendFormData>();
 
   const termType = currentTerm?.termType as
     | "fixed"
@@ -145,8 +145,8 @@ function BlendAndExtendFormFields({
               />
             </FormControl>
             <FormDescription>
-              Current market rate for a new term. Click "Auto-fill" to fetch from market rate
-              service.
+              Current market rate for a new term. Click &quot;Auto-fill&quot; to fetch from market
+              rate service.
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -182,7 +182,12 @@ function BlendAndExtendFormFields({
         )}
       />
 
-      <Button type="button" onClick={onCalculate} disabled={isCalculating} className="w-full">
+      <Button
+        type="button"
+        onClick={handleSubmit(onCalculate)}
+        disabled={isCalculating}
+        className="w-full"
+      >
         {isCalculating ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -200,8 +205,8 @@ function BlendAndExtendFormFields({
 }
 
 export function BlendAndExtendForm({
-  termId,
-  mortgageId,
+  termId: _termId,
+  mortgageId: _mortgageId,
   currentTerm,
   mortgage,
   onCalculate,
@@ -209,16 +214,12 @@ export function BlendAndExtendForm({
 }: BlendAndExtendFormProps) {
   const form = useBlendAndExtendForm();
 
-  const handleCalculate = form.handleSubmit((data) => {
-    onCalculate(data);
-  });
-
   return (
     <FormProvider {...form}>
       <BlendAndExtendFormFields
         currentTerm={currentTerm}
         mortgage={mortgage}
-        onCalculate={handleCalculate}
+        onCalculate={onCalculate}
         isCalculating={isCalculating}
       />
     </FormProvider>

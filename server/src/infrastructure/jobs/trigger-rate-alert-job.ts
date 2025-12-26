@@ -1,7 +1,6 @@
 import type { ApplicationServices } from "@application/services";
 import { eq, and, gte } from "drizzle-orm";
-import { db } from "@infrastructure/db/connection";
-import { notifications, mortgageTerms } from "@shared/schema";
+import { notifications } from "@shared/schema";
 import { calculatePayment, type PaymentFrequency } from "@server-shared/calculations/mortgage";
 
 // Alert thresholds
@@ -99,7 +98,7 @@ async function hasAlertBeenSent(
 
   // Check if any existing notification has matching metadata
   for (const notification of existingNotifications) {
-    const metadata = notification.metadata as Record<string, any> | null;
+    const metadata = notification.metadata as Record<string, unknown> | null;
     if (metadata && metadata.mortgageId === mortgageId && metadata.alertType === alertType) {
       return true;
     }
@@ -139,7 +138,7 @@ async function shouldSendUpgradeAlert(
   };
 
   for (const notification of existingNotifications) {
-    const metadata = notification.metadata as Record<string, any> | null;
+    const metadata = notification.metadata as Record<string, unknown> | null;
     if (metadata && metadata.mortgageId === mortgageId) {
       const existingType = metadata.alertType as TriggerRateAlertType;
       if (existingType && severity[existingType] < severity[newAlertType]) {
@@ -197,10 +196,12 @@ function getAlertTitle(alertType: TriggerRateAlertType): string {
  */
 export async function checkTriggerRatesAndSendAlerts(services: ApplicationServices): Promise<void> {
   try {
+    // eslint-disable-next-line no-console
     console.log("[Trigger Rate Alert Job] Starting trigger rate check...");
 
     // Get all mortgages
     const allMortgages = await services.mortgages.findAll();
+    // eslint-disable-next-line no-console
     console.log(`[Trigger Rate Alert Job] Found ${allMortgages.length} mortgages to check`);
 
     let alertsSent = 0;
@@ -232,6 +233,7 @@ export async function checkTriggerRatesAndSendAlerts(services: ApplicationServic
         const alreadySent = await hasAlertBeenSent(mortgage.userId, mortgage.id, alertType);
 
         if (alreadySent) {
+          // eslint-disable-next-line no-console
           console.log(
             `[Trigger Rate Alert Job] Skipping duplicate alert for mortgage ${mortgage.id}, type ${alertType}`
           );
@@ -259,6 +261,7 @@ export async function checkTriggerRatesAndSendAlerts(services: ApplicationServic
         // Get active term for impact calculations
         const terms = await services.mortgageTerms.listForMortgage(mortgage.id, mortgage.userId);
         if (!terms) {
+          // eslint-disable-next-line no-console
           console.warn(`[Trigger Rate Alert Job] Could not get terms for mortgage ${mortgage.id}`);
           continue;
         }
@@ -332,18 +335,22 @@ export async function checkTriggerRatesAndSendAlerts(services: ApplicationServic
         );
 
         alertsSent++;
+        // eslint-disable-next-line no-console
         console.log(`[Trigger Rate Alert Job] Sent ${alertType} alert for mortgage ${mortgage.id}`);
       } catch (error) {
         errors++;
+        // eslint-disable-next-line no-console
         console.error(`[Trigger Rate Alert Job] Error processing mortgage ${mortgage.id}:`, error);
         // Continue with next mortgage instead of crashing
       }
     }
 
+    // eslint-disable-next-line no-console
     console.log(
       `[Trigger Rate Alert Job] Completed: ${alertsSent} sent, ${alertsSkipped} skipped, ${errors} errors`
     );
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("[Trigger Rate Alert Job] Fatal error:", error);
     throw error;
   }

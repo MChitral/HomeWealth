@@ -1,6 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import {
-  LineChart,
   Line,
   XAxis,
   YAxis,

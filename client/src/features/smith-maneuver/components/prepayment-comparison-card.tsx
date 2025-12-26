@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { smithManeuverApi, type PrepaymentComparison } from "../api";
+import { smithManeuverApi } from "../api";
 import { Loader2, TrendingUp, TrendingDown, Scale } from "lucide-react";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";

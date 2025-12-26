@@ -57,7 +57,7 @@ export function MLISelectChecker({ onDiscountSelected }: MLISelectCheckerProps) 
     },
   ];
 
-  const handleAnswer = (questionId: string, value: string, questionDiscount: number) => {
+  const handleAnswer = (questionId: string, value: string, _questionDiscount: number) => {
     const newAnswers = { ...answers, [questionId]: value };
     setAnswers(newAnswers);
 

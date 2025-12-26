@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { helocApi } from "../api";
-import type { HelocAccount, InsertHelocAccount, UpdateHelocAccount } from "@shared/schema";
+import type { InsertHelocAccount, UpdateHelocAccount } from "@shared/schema";
 
 export const helocQueryKeys = {
   all: ["/api/heloc/accounts"] as const,

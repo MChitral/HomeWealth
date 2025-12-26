@@ -26,9 +26,11 @@ describe("PrepaymentService", () => {
 
   beforeEach(() => {
     // Reset mocks
-    (mockCashFlowRepo.findByUserId as any).mock.resetCalls();
-    (mockMortgageRepo.findById as any).mock.resetCalls();
-    (mockMortgagePaymentRepo.findByMortgageId as any).mock.resetCalls();
+    (mockCashFlowRepo.findByUserId as { mock: { resetCalls: () => void } }).mock.resetCalls();
+    (mockMortgageRepo.findById as { mock: { resetCalls: () => void } }).mock.resetCalls();
+    (
+      mockMortgagePaymentRepo.findByMortgageId as { mock: { resetCalls: () => void } }
+    ).mock.resetCalls();
 
     service = new PrepaymentService(mockCashFlowRepo, mockMortgageRepo, mockMortgagePaymentRepo);
   });
@@ -101,7 +103,11 @@ describe("PrepaymentService", () => {
 
   describe("getPrepaymentOpportunity", () => {
     it("should return recommendation to focus on cash flow if no surplus", async () => {
-      (mockCashFlowRepo.findByUserId as any).mock.mockImplementation(() =>
+      (
+        mockCashFlowRepo.findByUserId as {
+          mock: { mockImplementation: (fn: () => Promise<unknown>) => void };
+        }
+      ).mock.mockImplementation(() =>
         Promise.resolve({
           monthlyIncome: "1000",
           propertyTax: "5000", // Negative flow
@@ -117,16 +123,22 @@ describe("PrepaymentService", () => {
           creditCard: "0",
         })
       );
-      (mockMortgageRepo.findById as any).mock.mockImplementation(() =>
+      (
+        mockMortgageRepo.findById as {
+          mock: { mockImplementation: (fn: () => Promise<unknown>) => void };
+        }
+      ).mock.mockImplementation(() =>
         Promise.resolve({
           id: "m1",
           originalAmount: "500000",
           annualPrepaymentLimitPercent: 20,
         })
       );
-      (mockMortgagePaymentRepo.findByMortgageId as any).mock.mockImplementation(() =>
-        Promise.resolve([])
-      );
+      (
+        mockMortgagePaymentRepo.findByMortgageId as {
+          mock: { mockImplementation: (fn: () => Promise<unknown>) => void };
+        }
+      ).mock.mockImplementation(() => Promise.resolve([]));
 
       const result = await service.getPrepaymentOpportunity("u1", "m1");
       assert.strictEqual(result?.monthlySurplus, 0);
@@ -134,7 +146,11 @@ describe("PrepaymentService", () => {
     });
 
     it("should return recommendation to prepay if surplus exists", async () => {
-      (mockCashFlowRepo.findByUserId as any).mock.mockImplementation(() =>
+      (
+        mockCashFlowRepo.findByUserId as {
+          mock: { mockImplementation: (fn: () => Promise<unknown>) => void };
+        }
+      ).mock.mockImplementation(() =>
         Promise.resolve({
           monthlyIncome: "5000",
           propertyTax: "0",
@@ -150,16 +166,22 @@ describe("PrepaymentService", () => {
           creditCard: "0",
         })
       );
-      (mockMortgageRepo.findById as any).mock.mockImplementation(() =>
+      (
+        mockMortgageRepo.findById as {
+          mock: { mockImplementation: (fn: () => Promise<unknown>) => void };
+        }
+      ).mock.mockImplementation(() =>
         Promise.resolve({
           id: "m1",
           originalAmount: "500000",
           annualPrepaymentLimitPercent: 20,
         })
       );
-      (mockMortgagePaymentRepo.findByMortgageId as any).mock.mockImplementation(() =>
-        Promise.resolve([])
-      );
+      (
+        mockMortgagePaymentRepo.findByMortgageId as {
+          mock: { mockImplementation: (fn: () => Promise<unknown>) => void };
+        }
+      ).mock.mockImplementation(() => Promise.resolve([]));
 
       const result = await service.getPrepaymentOpportunity("u1", "m1");
       assert.strictEqual(result?.monthlySurplus, 5000);

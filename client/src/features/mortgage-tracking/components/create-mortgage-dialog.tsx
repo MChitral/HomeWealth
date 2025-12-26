@@ -604,7 +604,7 @@ export function CreateMortgageDialog({
 
           {wizardStep === 1 ? (
             <Step1Fields
-              onInsuranceResultChange={(result) => {
+              onInsuranceResultChange={(_result) => {
                 // Store insurance result for use in form submission
                 // This will be handled by the form state hook
               }}

@@ -56,8 +56,9 @@ export function createImpactRoutes(services: ApplicationServices, repositories: 
         message: `Calculated impacts for ${impacts.length} terms`,
         impacts,
       });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Internal server error";
+      res.status(500).json({ message: errorMessage });
     }
   });
 

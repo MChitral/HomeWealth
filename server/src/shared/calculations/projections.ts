@@ -15,7 +15,7 @@ import {
 } from "./mortgage";
 
 export interface ProjectionParams {
-  scenario: Scenario;
+  scenario?: Scenario;
   mortgage: Mortgage;
   cashFlow?: CashFlow;
   emergencyFund?: EmergencyFund;
@@ -103,14 +103,14 @@ function calculateMonthlySurplus(cashFlow?: CashFlow): number {
  * Generate prepayment events based on scenario strategy
  */
 function generatePrepayments(
-  scenario: Scenario,
+  scenario: Scenario | undefined,
   monthlySurplus: number,
   basePaymentAmount: number,
   frequency: PaymentFrequency
 ): PrepaymentEvent[] {
   const prepayments: PrepaymentEvent[] = [];
 
-  const prepaymentPercent = scenario.prepaymentMonthlyPercent || 0;
+  const prepaymentPercent = scenario?.prepaymentMonthlyPercent || 0;
   if (prepaymentPercent > 0 && monthlySurplus > 0 && basePaymentAmount > 0) {
     const paymentsPerYear = getPaymentsPerYear(frequency);
     const paymentsPerMonth = paymentsPerYear / 12;
@@ -134,13 +134,13 @@ function generatePrepayments(
  * Calculate investment growth over time
  */
 function calculateInvestments(
-  scenario: Scenario,
+  scenario: Scenario | undefined,
   monthlySurplus: number,
   years: number
 ): { value: number; contributions: number; returns: number } {
-  const investmentPercent = scenario.investmentMonthlyPercent || 0;
+  const investmentPercent = scenario?.investmentMonthlyPercent || 0;
   const monthlyInvestment = (monthlySurplus * investmentPercent) / 100;
-  const annualReturn = parseFloat(scenario.expectedReturnRate || "7") / 100;
+  const annualReturn = parseFloat(scenario?.expectedReturnRate || "7") / 100;
 
   let value = 0;
   let totalContributions = 0;

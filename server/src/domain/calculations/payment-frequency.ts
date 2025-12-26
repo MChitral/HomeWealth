@@ -70,6 +70,6 @@ export function calculatePaymentForFrequency(
     oldPaymentAmount,
     newPaymentAmount,
     paymentDifference,
-    remainingAmortizationMonths,
+    remainingTermMonths: remainingAmortizationMonths,
   };
 }

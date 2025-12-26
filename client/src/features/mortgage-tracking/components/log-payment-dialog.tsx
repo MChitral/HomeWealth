@@ -11,7 +11,7 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
-import { AlertTriangle, SkipForward } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import type { UiTerm } from "../types";
 import { calculatePaymentBreakdown, type PaymentFrequency } from "../utils/mortgage-math";
 import type { MortgagePayment } from "@shared/schema";
@@ -58,10 +58,10 @@ export function LogPaymentDialog({
   monthsRemainingInTerm,
   onSubmit,
   isSubmitting,
-  mortgageId,
-  payments = [],
-  onOpenSkipPayment,
-  maxSkipsPerYear = 2,
+  mortgageId: _mortgageId,
+  payments: _payments = [],
+  onOpenSkipPayment: _onOpenSkipPayment,
+  maxSkipsPerYear: _maxSkipsPerYear = 2,
 }: LogPaymentDialogProps) {
   const [paymentDate, setPaymentDate] = useState("");
   const [paymentPeriodLabel, setPaymentPeriodLabel] = useState("");

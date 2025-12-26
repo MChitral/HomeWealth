@@ -1,10 +1,10 @@
-import type { ScenarioPayload } from "@domain/models";
+import type { InsertScenario } from "@shared/schema";
 
 export interface ScenarioTemplate {
   id: string;
   name: string;
   description: string;
-  payload: Omit<ScenarioPayload, "name" | "description">;
+  payload: Omit<InsertScenario, "name" | "description" | "userId">;
 }
 
 export class ScenarioTemplateService {
@@ -21,7 +21,7 @@ export class ScenarioTemplateService {
         payload: {
           prepaymentMonthlyPercent: 90,
           investmentMonthlyPercent: 10,
-          expectedReturnRate: 0.06,
+          expectedReturnRate: "0.060",
           efPriorityPercent: 0,
         },
       },
@@ -33,7 +33,7 @@ export class ScenarioTemplateService {
         payload: {
           prepaymentMonthlyPercent: 0,
           investmentMonthlyPercent: 100,
-          expectedReturnRate: 0.07,
+          expectedReturnRate: "0.070",
           efPriorityPercent: 0,
         },
       },
@@ -45,7 +45,7 @@ export class ScenarioTemplateService {
         payload: {
           prepaymentMonthlyPercent: 50,
           investmentMonthlyPercent: 50,
-          expectedReturnRate: 0.06,
+          expectedReturnRate: "0.060",
           efPriorityPercent: 0,
         },
       },
@@ -57,7 +57,7 @@ export class ScenarioTemplateService {
         payload: {
           prepaymentMonthlyPercent: 40,
           investmentMonthlyPercent: 40,
-          expectedReturnRate: 0.05,
+          expectedReturnRate: "0.050",
           efPriorityPercent: 20,
         },
       },
@@ -69,7 +69,7 @@ export class ScenarioTemplateService {
         payload: {
           prepaymentMonthlyPercent: 40,
           investmentMonthlyPercent: 40,
-          expectedReturnRate: 0.065,
+          expectedReturnRate: "0.065",
           efPriorityPercent: 20,
         },
       },
@@ -81,7 +81,7 @@ export class ScenarioTemplateService {
         payload: {
           prepaymentMonthlyPercent: 30,
           investmentMonthlyPercent: 50,
-          expectedReturnRate: 0.06,
+          expectedReturnRate: "0.060",
           efPriorityPercent: 20,
         },
       },
@@ -102,7 +102,7 @@ export class ScenarioTemplateService {
     templateId: string,
     name?: string,
     description?: string
-  ): ScenarioPayload | null {
+  ): Omit<InsertScenario, "userId"> | null {
     const template = this.getTemplateById(templateId);
     if (!template) {
       return null;

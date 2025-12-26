@@ -76,7 +76,7 @@ export async function checkPrepaymentLimits(services: ApplicationServices): Prom
           if (!alreadyNotified) {
             await services.notifications.createNotification(
               mortgage.userId,
-              `prepayment_limit_${threshold}` as any,
+              `prepayment_limit_${threshold}` as NotificationType,
               `Prepayment Limit Alert: ${threshold}% Used`,
               `You have used ${usagePercent.toFixed(1)}% of your annual prepayment limit (${threshold}% threshold). Used: ${used.toFixed(2)}, Limit: ${totalLimit.toFixed(2)}.`,
               {
@@ -93,6 +93,7 @@ export async function checkPrepaymentLimits(services: ApplicationServices): Prom
         }
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error(`Error checking prepayment limits for mortgage ${mortgage.id}:`, error);
     }
   }

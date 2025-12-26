@@ -32,8 +32,10 @@ class MockMortgageTermsRepository {
   }
 }
 
+import type { MortgagePayment } from "@shared/schema";
+
 class MockMortgagePaymentsRepository {
-  async findByTermId(_termId: string): Promise<any[]> {
+  async findByTermId(_termId: string): Promise<MortgagePayment[]> {
     return []; // Return empty payments
   }
 }
@@ -49,7 +51,11 @@ describe("TriggerRateMonitor", () => {
     termsRepo = new MockMortgageTermsRepository();
     paymentRepo = new MockMortgagePaymentsRepository();
 
-    service = new TriggerRateMonitor(mortgagesRepo as any, termsRepo as any, paymentRepo as any);
+    service = new TriggerRateMonitor(
+      mortgagesRepo as unknown as Parameters<typeof TriggerRateMonitor.prototype.constructor>[0],
+      termsRepo as unknown as Parameters<typeof TriggerRateMonitor.prototype.constructor>[1],
+      paymentRepo as unknown as Parameters<typeof TriggerRateMonitor.prototype.constructor>[2]
+    );
   });
 
   const createMortgage = (id: string): Mortgage => ({

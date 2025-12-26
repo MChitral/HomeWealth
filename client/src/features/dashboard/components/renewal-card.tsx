@@ -23,8 +23,6 @@ interface RenewalCardProps {
 }
 
 export function RenewalCard({ status }: RenewalCardProps) {
-  if (!status) return null;
-
   const [penaltyCalculatorOpen, setPenaltyCalculatorOpen] = useState(false);
   const queryClient = useQueryClient();
 
@@ -32,10 +30,11 @@ export function RenewalCard({ status }: RenewalCardProps) {
   const { data: notifications = [] } = useQuery({
     queryKey: ["/api/notifications"],
     queryFn: () => notificationApi.getNotifications({ unreadOnly: true }),
+    enabled: !!status,
   });
 
   const renewalReminders = notifications.filter(
-    (n) => n.type === "renewal_reminder" && n.metadata?.mortgageId === status.mortgageId && !n.read
+    (n) => n.type === "renewal_reminder" && n.metadata?.mortgageId === status?.mortgageId && !n.read
   );
 
   const hasUnreadReminder = renewalReminders.length > 0;
@@ -92,6 +91,8 @@ export function RenewalCard({ status }: RenewalCardProps) {
         return "On Track";
     }
   };
+
+  if (!status) return null;
 
   // Calculate rough progress (assuming 5 year term standard for visual, or just inverse of urgency)
   const progressValue = Math.max(

@@ -7,9 +7,9 @@ import type { PrimeRateHistory } from "@shared/schema";
 class MockDatabase {
   private data: PrimeRateHistory[] = [];
 
-  insert(_table: any) {
+  insert(_table: unknown) {
     return {
-      values: (values: any) => ({
+      values: (values: Record<string, unknown>) => ({
         returning: async () => {
           const newRecord: PrimeRateHistory = {
             id: `id-${Date.now()}-${Math.random()}`,
@@ -24,9 +24,9 @@ class MockDatabase {
   }
 
   select() {
-    const createChain = (data: any[]) => ({
-      from: (_table: any) => createChain(data),
-      orderBy: (..._args: any[]) => {
+    const createChain = (data: PrimeRateHistory[]) => ({
+      from: (_table: unknown) => createChain(data),
+      orderBy: (..._args: unknown[]) => {
         const sorted = [...data].sort((a, b) => {
           const dateA = new Date(a.effectiveDate).getTime();
           const dateB = new Date(b.effectiveDate).getTime();
@@ -34,7 +34,7 @@ class MockDatabase {
         });
         return createChain(sorted);
       },
-      where: (condition: any) => {
+      where: (condition: unknown) => {
         // Basic mock filtering: look for matching values in the data
         // This handles "eq(col, val)" where condition might hold the value
         let filtered = data;
@@ -66,7 +66,7 @@ class MockDatabase {
         return createChain(filtered);
       },
       limit: (n: number) => createChain(data.slice(0, n)),
-      then: (resolve: any) => resolve(data),
+      then: (resolve: (value: PrimeRateHistory[]) => void) => resolve(data),
     });
 
     return createChain(this.data);
@@ -89,7 +89,7 @@ describe("PrimeRateHistoryRepository", () => {
     mockDb = new MockDatabase();
     // @ts-expect-error - Mock the database
     repository = new PrimeRateHistoryRepository();
-    (repository as any).db = mockDb;
+    (repository as { db: MockDatabase }).db = mockDb;
   });
 
   it("creates a new prime rate history entry", async () => {

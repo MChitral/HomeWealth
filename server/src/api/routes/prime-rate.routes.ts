@@ -44,7 +44,8 @@ export function registerPrimeRateRoutes(router: Router, services: ApplicationSer
         source: "Bank of Canada",
         lastUpdated: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // eslint-disable-next-line no-console
       console.error("Error fetching prime rate:", error);
       sendError(res, 500, "Failed to fetch prime rate", error);
     }
@@ -89,7 +90,7 @@ export function registerPrimeRateRoutes(router: Router, services: ApplicationSer
         startDate: start_date,
         endDate: end_date,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching historical prime rates:", error);
       sendError(res, 500, "Failed to fetch historical prime rates", error);
     }
@@ -106,7 +107,7 @@ export function registerPrimeRateRoutes(router: Router, services: ApplicationSer
           ? `Prime rate changed from ${result.previousRate}% to ${result.newRate}%. Updated ${result.termsUpdated} VRM terms.`
           : `Prime rate unchanged at ${result.newRate}%.`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error checking prime rate:", error);
       sendError(res, 500, "Failed to check and update prime rate", error);
     }
@@ -132,7 +133,7 @@ export function registerPrimeRateRoutes(router: Router, services: ApplicationSer
         startDate: start_date,
         endDate: end_date,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching prime rate history:", error);
       sendError(res, 500, "Failed to fetch prime rate history", error);
     }
@@ -148,7 +149,7 @@ export function registerPrimeRateRoutes(router: Router, services: ApplicationSer
         });
       }
       res.json(latest);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching latest prime rate:", error);
       sendError(res, 500, "Failed to fetch latest prime rate", error);
     }

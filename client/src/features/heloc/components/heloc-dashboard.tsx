@@ -1,7 +1,7 @@
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Plus, Loader2 } from "lucide-react";
-import { useHelocAccounts, useCreateHelocAccount } from "../hooks";
+import { useHelocAccounts } from "../hooks";
 import { HelocAccountCard } from "./heloc-account-card";
 import { CreateHelocDialog } from "./create-heloc-dialog";
 import { useState } from "react";
@@ -51,7 +51,7 @@ export function HelocDashboard() {
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground mb-4">
-              You don't have any HELOC accounts yet. Add your first account to start tracking.
+              You don&apos;t have any HELOC accounts yet. Add your first account to start tracking.
             </p>
             <Button onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />

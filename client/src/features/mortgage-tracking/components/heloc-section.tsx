@@ -36,14 +36,6 @@ export function HelocSection({ mortgageId, mortgage }: HelocSectionProps) {
   // Filter accounts linked to this mortgage
   const linkedAccounts = allAccounts?.filter((account) => account.mortgageId === mortgageId) || [];
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-CA", {
-      style: "currency",
-      currency: "CAD",
-      minimumFractionDigits: 2,
-    }).format(amount);
-  };
-
   if (isLoading) {
     return (
       <Card>

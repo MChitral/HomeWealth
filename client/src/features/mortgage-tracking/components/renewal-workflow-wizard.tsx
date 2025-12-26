@@ -6,12 +6,13 @@ import { Label } from "@/shared/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { Textarea } from "@/shared/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
-import { mortgageApi, type RenewalOptionsResponse, type RenewalNegotiationEntry } from "../api";
+import { mortgageApi, type RenewalNegotiationEntry } from "../api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, RefreshCw, TrendingUp, FileText } from "lucide-react";
+import { Loader2, FileText } from "lucide-react";
 import { mortgageQueryKeys } from "../api";
 import { useToast } from "@/shared/hooks/use-toast";
 import { format } from "date-fns";
+import { RenewalComparisonCard } from "./renewal-comparison-card";
 
 interface RenewalWorkflowWizardProps {
   mortgageId: string;
