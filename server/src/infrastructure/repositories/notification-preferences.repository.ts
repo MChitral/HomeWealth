@@ -22,7 +22,10 @@ export class NotificationPreferencesRepository {
     return prefs;
   }
 
-  async update(userId: string, data: UpdateNotificationPreferences): Promise<NotificationPreferences> {
+  async update(
+    userId: string,
+    data: UpdateNotificationPreferences
+  ): Promise<NotificationPreferences> {
     const [updated] = await db
       .update(notificationPreferences)
       .set({ ...data, updatedAt: new Date() })
@@ -37,9 +40,19 @@ export class NotificationPreferencesRepository {
   async getOrCreate(userId: string): Promise<NotificationPreferences> {
     let prefs = await this.findByUserId(userId);
     if (!prefs) {
-      prefs = await this.create({ userId });
+      prefs = await this.create({
+        userId,
+        emailEnabled: 1,
+        inAppEnabled: 1,
+        renewalReminders: 1,
+        renewalReminderDays: "180,90,30,7",
+        triggerRateAlerts: 1,
+        triggerRateThreshold: "0.5",
+        rateChangeAlerts: 1,
+        penaltyAlerts: 1,
+        blendExtendAlerts: 1,
+      } as InsertNotificationPreferences);
     }
     return prefs;
   }
 }
-

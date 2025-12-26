@@ -13,7 +13,11 @@ import { Label } from "@/shared/ui/label";
 import { Input } from "@/shared/ui/input";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
-import { calculateStressTest, type StressTestRequest, type StressTestResult } from "../api/mortgage-api";
+import {
+  calculateStressTest,
+  type StressTestRequest,
+  type StressTestResult,
+} from "../api/mortgage-api";
 import { formatCurrency } from "@/shared/utils/format";
 
 interface StressTestCalculatorProps {
@@ -176,11 +180,15 @@ export function StressTestCalculator({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm text-muted-foreground">Stress Test Rate</Label>
-                  <p className="text-lg font-semibold">{(result.stressTestRate * 100).toFixed(2)}%</p>
+                  <p className="text-lg font-semibold">
+                    {(result.stressTestRate * 100).toFixed(2)}%
+                  </p>
                 </div>
                 <div>
                   <Label className="text-sm text-muted-foreground">Qualifying Payment</Label>
-                  <p className="text-lg font-semibold">{formatCurrency(result.qualifyingPayment)}</p>
+                  <p className="text-lg font-semibold">
+                    {formatCurrency(result.qualifyingPayment)}
+                  </p>
                 </div>
                 <div>
                   <Label className="text-sm text-muted-foreground">GDS Ratio</Label>
@@ -211,7 +219,9 @@ export function StressTestCalculator({
               {result.maxMortgageAmount > 0 && (
                 <div>
                   <Label className="text-sm text-muted-foreground">Maximum Mortgage Amount</Label>
-                  <p className="text-lg font-semibold">{formatCurrency(result.maxMortgageAmount)}</p>
+                  <p className="text-lg font-semibold">
+                    {formatCurrency(result.maxMortgageAmount)}
+                  </p>
                 </div>
               )}
 
@@ -240,7 +250,13 @@ export function StressTestCalculator({
             <Button
               type="button"
               onClick={handleCalculate}
-              disabled={stressTestMutation.isPending || !mortgageAmount || !contractRate || !amortizationMonths || !grossIncome}
+              disabled={
+                stressTestMutation.isPending ||
+                !mortgageAmount ||
+                !contractRate ||
+                !amortizationMonths ||
+                !grossIncome
+              }
             >
               {stressTestMutation.isPending ? "Calculating..." : "Calculate"}
             </Button>
@@ -250,4 +266,3 @@ export function StressTestCalculator({
     </Dialog>
   );
 }
-

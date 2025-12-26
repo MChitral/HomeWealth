@@ -39,11 +39,7 @@ async function hasReminderBeenSent(
   // Check if any existing notification has matching metadata
   for (const notification of existingNotifications) {
     const metadata = notification.metadata as Record<string, any> | null;
-    if (
-      metadata &&
-      metadata.mortgageId === mortgageId &&
-      metadata.daysUntil === daysUntil
-    ) {
+    if (metadata && metadata.mortgageId === mortgageId && metadata.daysUntil === daysUntil) {
       return true;
     }
   }
@@ -154,11 +150,7 @@ export async function checkRenewalsAndSendReminders(services: ApplicationService
         }
 
         // Check if reminder has already been sent
-        const alreadySent = await hasReminderBeenSent(
-          mortgage.userId,
-          mortgage.id,
-          daysUntil
-        );
+        const alreadySent = await hasReminderBeenSent(mortgage.userId, mortgage.id, daysUntil);
 
         if (alreadySent) {
           console.log(
@@ -171,9 +163,7 @@ export async function checkRenewalsAndSendReminders(services: ApplicationService
         // Get market rate for comparison (optional, don't fail if unavailable)
         let marketRate: number | undefined;
         try {
-          const activeTerm = (
-            await services.mortgageTerms.findByMortgageId(mortgage.id)
-          ).sort(
+          const activeTerm = (await services.mortgageTerms.findByMortgageId(mortgage.id)).sort(
             (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
           )[0];
 
@@ -231,10 +221,7 @@ export async function checkRenewalsAndSendReminders(services: ApplicationService
         );
       } catch (error) {
         errors++;
-        console.error(
-          `[Renewal Reminder Job] Error processing mortgage ${mortgage.id}:`,
-          error
-        );
+        console.error(`[Renewal Reminder Job] Error processing mortgage ${mortgage.id}:`, error);
         // Continue with next mortgage instead of crashing
       }
     }
@@ -247,4 +234,3 @@ export async function checkRenewalsAndSendReminders(services: ApplicationService
     throw error;
   }
 }
-

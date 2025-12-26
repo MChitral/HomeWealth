@@ -4,12 +4,12 @@ import { fetchLatestPrimeRate } from "@server-shared/services/prime-rate";
 
 /**
  * Check all HELOC accounts for draw period transitions
- * 
+ *
  * A draw period transition occurs when:
  * - The HELOC draw period end date has passed
  * - The account is still in "interest_only" payment mode (if applicable)
  * - The minimum payment needs to be recalculated for principal+interest payments
- * 
+ *
  * This job should run daily to detect and handle transitions.
  */
 export async function checkHelocDrawPeriodTransitions(
@@ -37,10 +37,9 @@ export async function checkHelocDrawPeriodTransitions(
 
       // Check if we've already processed this transition
       // We'll check for existing notifications to avoid duplicate processing
-      const existingNotifications = await services.notifications.getNotifications(
-        account.userId,
-        { unreadOnly: false }
-      );
+      const existingNotifications = await services.notifications.getNotifications(account.userId, {
+        unreadOnly: false,
+      });
 
       const alreadyProcessed = existingNotifications.some(
         (n) =>
@@ -132,11 +131,7 @@ export async function checkHelocDrawPeriodTransitions(
         `[HELOC Draw Period Transition] Processed transition for HELOC ${account.id} (user ${account.userId})`
       );
     } catch (error) {
-      console.error(
-        `[HELOC Draw Period Transition] Error processing HELOC ${account.id}:`,
-        error
-      );
+      console.error(`[HELOC Draw Period Transition] Error processing HELOC ${account.id}:`, error);
     }
   }
 }
-

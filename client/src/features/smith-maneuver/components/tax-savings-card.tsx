@@ -56,9 +56,7 @@ export function TaxSavingsCard({
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Tax Savings</span>
-            <span className="text-2xl font-bold text-green-600">
-              {formatCurrency(taxSavings)}
-            </span>
+            <span className="text-2xl font-bold text-green-600">{formatCurrency(taxSavings)}</span>
           </div>
           <div className="mt-2 text-xs text-muted-foreground">
             {formatPercent(taxSavingsPercent)} of HELOC interest
@@ -91,4 +89,3 @@ export function TaxSavingsCard({
     </Card>
   );
 }
-

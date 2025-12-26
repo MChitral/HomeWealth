@@ -12,32 +12,48 @@ const marginalRateQuerySchema = z.object({
   year: z
     .union([z.string(), z.number()])
     .optional()
-    .transform((val) => (val === undefined ? 2025 : typeof val === "string" ? parseInt(val, 10) : val)),
+    .transform((val) =>
+      val === undefined ? 2025 : typeof val === "string" ? parseInt(val, 10) : val
+    ),
 });
 
 const taxDeductionSchema = z.object({
-  helocInterest: z.union([z.string(), z.number()]).transform((val) => (typeof val === "number" ? val : parseFloat(val))),
+  helocInterest: z
+    .union([z.string(), z.number()])
+    .transform((val) => (typeof val === "number" ? val : parseFloat(val))),
   investmentUsePercent: z
     .union([z.string(), z.number()])
     .transform((val) => (typeof val === "number" ? val : parseFloat(val)))
     .refine((val) => val >= 0 && val <= 100, "Investment use percentage must be between 0 and 100"),
-  marginalTaxRate: z.union([z.string(), z.number()]).transform((val) => (typeof val === "number" ? val : parseFloat(val))),
+  marginalTaxRate: z
+    .union([z.string(), z.number()])
+    .transform((val) => (typeof val === "number" ? val : parseFloat(val))),
 });
 
 const taxSavingsSchema = z.object({
-  deduction: z.union([z.string(), z.number()]).transform((val) => (typeof val === "number" ? val : parseFloat(val))),
-  marginalTaxRate: z.union([z.string(), z.number()]).transform((val) => (typeof val === "number" ? val : parseFloat(val))),
+  deduction: z
+    .union([z.string(), z.number()])
+    .transform((val) => (typeof val === "number" ? val : parseFloat(val))),
+  marginalTaxRate: z
+    .union([z.string(), z.number()])
+    .transform((val) => (typeof val === "number" ? val : parseFloat(val))),
 });
 
 const investmentIncomeTaxSchema = z.object({
-  income: z.union([z.string(), z.number()]).transform((val) => (typeof val === "number" ? val : parseFloat(val))),
+  income: z
+    .union([z.string(), z.number()])
+    .transform((val) => (typeof val === "number" ? val : parseFloat(val))),
   incomeType: z.enum(["eligible_dividend", "non_eligible_dividend", "interest", "capital_gain"]),
   province: z.string().length(2),
-  marginalTaxRate: z.union([z.string(), z.number()]).transform((val) => (typeof val === "number" ? val : parseFloat(val))),
+  marginalTaxRate: z
+    .union([z.string(), z.number()])
+    .transform((val) => (typeof val === "number" ? val : parseFloat(val))),
   taxYear: z
     .union([z.string(), z.number()])
     .optional()
-    .transform((val) => (val === undefined ? 2025 : typeof val === "string" ? parseInt(val, 10) : val)),
+    .transform((val) =>
+      val === undefined ? 2025 : typeof val === "string" ? parseInt(val, 10) : val
+    ),
 });
 
 export function registerTaxRoutes(router: Router, services: ApplicationServices) {
@@ -151,9 +167,7 @@ export function registerTaxRoutes(router: Router, services: ApplicationServices)
 
     try {
       const province = req.query.province as string;
-      const year = req.query.year
-        ? parseInt(req.query.year as string, 10)
-        : 2025;
+      const year = req.query.year ? parseInt(req.query.year as string, 10) : 2025;
 
       if (!province || province.length !== 2) {
         sendError(res, 400, "Province code (2 letters) is required");
@@ -167,4 +181,3 @@ export function registerTaxRoutes(router: Router, services: ApplicationServices)
     }
   });
 }
-

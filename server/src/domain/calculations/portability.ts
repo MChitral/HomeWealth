@@ -48,9 +48,13 @@ export function calculatePortability(
   const portedAmount = Math.min(maxPortableAmount, newPropertyPrice * 0.95); // Can't port more than 95% of new property
 
   // Calculate top-up if new property is more expensive
-  const topUpAmount = newPropertyPrice > oldPropertyPrice
-    ? Math.max(0, newPropertyPrice - oldPropertyPrice - (oldPropertyPrice - originalMortgageAmount))
-    : 0;
+  const topUpAmount =
+    newPropertyPrice > oldPropertyPrice
+      ? Math.max(
+          0,
+          newPropertyPrice - oldPropertyPrice - (oldPropertyPrice - originalMortgageAmount)
+        )
+      : 0;
 
   const requiresTopUp = topUpAmount > 0;
 
@@ -92,4 +96,3 @@ export function calculateBlendedRate(
 
   return portedRate * portedWeight + topUpRate * topUpWeight;
 }
-

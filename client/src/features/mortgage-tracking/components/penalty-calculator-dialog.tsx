@@ -65,7 +65,9 @@ export function PenaltyCalculatorDialog({
       (mortgage?.currentBalance ? parseFloat(mortgage.currentBalance).toFixed(2) : ""),
     currentRate: initialCurrentRate || "",
     remainingMonths: initialRemainingMonths || "",
-    termType: initialTermType || (term?.termType as "fixed" | "variable-changing" | "variable-fixed" | undefined),
+    termType:
+      initialTermType ||
+      (term?.termType as "fixed" | "variable-changing" | "variable-fixed" | undefined),
     termYears: initialTermYears || term?.termYears,
   };
 
@@ -95,7 +97,11 @@ export function PenaltyCalculatorDialog({
         // Pass mortgageId if available, so backend can check openClosedMortgageType
         mortgageId: mortgageId,
         // Also pass openClosedMortgageType directly if we have the mortgage data
-        openClosedMortgageType: mortgage?.openClosedMortgageType as "open" | "closed" | null | undefined,
+        openClosedMortgageType: mortgage?.openClosedMortgageType as
+          | "open"
+          | "closed"
+          | null
+          | undefined,
       });
     },
     onSuccess: (data) => {
@@ -156,4 +162,3 @@ export function PenaltyCalculatorDialog({
     </Dialog>
   );
 }
-

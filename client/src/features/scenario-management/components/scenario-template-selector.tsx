@@ -27,8 +27,15 @@ export function ScenarioTemplateSelector() {
   });
 
   const createFromTemplateMutation = useMutation({
-    mutationFn: ({ templateId, name, description }: { templateId: string; name?: string; description?: string }) =>
-      scenarioApi.createFromTemplate(templateId, name, description),
+    mutationFn: ({
+      templateId,
+      name,
+      description,
+    }: {
+      templateId: string;
+      name?: string;
+      description?: string;
+    }) => scenarioApi.createFromTemplate(templateId, name, description),
     onSuccess: (scenario) => {
       queryClient.invalidateQueries({ queryKey: scenarioQueryKeys.all() });
       navigate(`/scenarios/${scenario.id}/edit`);
@@ -73,15 +80,21 @@ export function ScenarioTemplateSelector() {
                 <div className="space-y-2 mb-4 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Prepayment:</span>
-                    <span className="font-medium">{template.payload.prepaymentMonthlyPercent}%</span>
+                    <span className="font-medium">
+                      {template.payload.prepaymentMonthlyPercent}%
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Investment:</span>
-                    <span className="font-medium">{template.payload.investmentMonthlyPercent}%</span>
+                    <span className="font-medium">
+                      {template.payload.investmentMonthlyPercent}%
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Expected Return:</span>
-                    <span className="font-medium">{(template.payload.expectedReturnRate * 100).toFixed(1)}%</span>
+                    <span className="font-medium">
+                      {(template.payload.expectedReturnRate * 100).toFixed(1)}%
+                    </span>
                   </div>
                   {template.payload.efPriorityPercent > 0 && (
                     <div className="flex justify-between">
@@ -106,4 +119,3 @@ export function ScenarioTemplateSelector() {
     </Card>
   );
 }
-

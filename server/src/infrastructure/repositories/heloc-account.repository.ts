@@ -72,4 +72,3 @@ export class HelocAccountRepository {
     return this.findByUserId(userId);
   }
 }
-

@@ -12,7 +12,10 @@ interface HelocCreditLimitImpactProps {
   prepaymentAmount: number;
 }
 
-export function HelocCreditLimitImpact({ mortgage, prepaymentAmount }: HelocCreditLimitImpactProps) {
+export function HelocCreditLimitImpact({
+  mortgage,
+  prepaymentAmount,
+}: HelocCreditLimitImpactProps) {
   const { data: allAccounts, isLoading } = useQuery({
     queryKey: ["/api/heloc/accounts"],
     queryFn: () => helocApi.fetchAccounts(),
@@ -56,9 +59,7 @@ export function HelocCreditLimitImpact({ mortgage, prepaymentAmount }: HelocCred
           <TrendingUp className="h-4 w-4 text-green-600" />
           HELOC Credit Limit Impact
         </CardTitle>
-        <CardDescription>
-          How this prepayment affects your HELOC credit limits
-        </CardDescription>
+        <CardDescription>How this prepayment affects your HELOC credit limits</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {linkedAccounts.map((account) => {
@@ -85,7 +86,10 @@ export function HelocCreditLimitImpact({ mortgage, prepaymentAmount }: HelocCred
 
           // Calculate available credit after prepayment
           const currentAvailableCredit = calculateAvailableCredit(currentCreditLimit, helocBalance);
-          const projectedAvailableCredit = calculateAvailableCredit(projectedCreditLimit, helocBalance);
+          const projectedAvailableCredit = calculateAvailableCredit(
+            projectedCreditLimit,
+            helocBalance
+          );
           const availableCreditIncrease = projectedAvailableCredit - currentAvailableCredit;
 
           return (
@@ -99,7 +103,9 @@ export function HelocCreditLimitImpact({ mortgage, prepaymentAmount }: HelocCred
                   <p className="text-xs text-muted-foreground">{account.lenderName}</p>
                 </div>
                 {account.isReAdvanceable === 1 && (
-                  <Badge variant="outline" className="text-xs">Re-advanceable</Badge>
+                  <Badge variant="outline" className="text-xs">
+                    Re-advanceable
+                  </Badge>
                 )}
               </div>
 
@@ -143,4 +149,3 @@ export function HelocCreditLimitImpact({ mortgage, prepaymentAmount }: HelocCred
     </Card>
   );
 }
-

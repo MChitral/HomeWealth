@@ -12,30 +12,39 @@ const penaltyCalculatorSchema = z.object({
   currentRate: z
     .string()
     .min(1, "Current rate is required")
-    .refine((val) => {
-      const num = parseFloat(val);
-      return !isNaN(num) && num >= 0 && num <= 100;
-    }, {
-      message: "Current rate must be between 0 and 100",
-    }),
+    .refine(
+      (val) => {
+        const num = parseFloat(val);
+        return !isNaN(num) && num >= 0 && num <= 100;
+      },
+      {
+        message: "Current rate must be between 0 and 100",
+      }
+    ),
   marketRate: z
     .string()
     .min(1, "Market rate is required")
-    .refine((val) => {
-      const num = parseFloat(val);
-      return !isNaN(num) && num >= 0;
-    }, {
-      message: "Market rate must be a positive number",
-    }),
+    .refine(
+      (val) => {
+        const num = parseFloat(val);
+        return !isNaN(num) && num >= 0;
+      },
+      {
+        message: "Market rate must be a positive number",
+      }
+    ),
   remainingMonths: z
     .string()
     .min(1, "Remaining months is required")
-    .refine((val) => {
-      const num = parseInt(val, 10);
-      return !isNaN(num) && num > 0 && num <= 120;
-    }, {
-      message: "Remaining months must be between 1 and 120",
-    }),
+    .refine(
+      (val) => {
+        const num = parseInt(val, 10);
+        return !isNaN(num) && num > 0 && num <= 120;
+      },
+      {
+        message: "Remaining months must be between 1 and 120",
+      }
+    ),
   termType: z.enum(["fixed", "variable-changing", "variable-fixed"]).optional(),
   termYears: z.number().optional(),
   lenderName: z.string().optional(),
@@ -70,4 +79,3 @@ export function usePenaltyCalculatorForm(initialValues?: Partial<PenaltyCalculat
 
   return form;
 }
-

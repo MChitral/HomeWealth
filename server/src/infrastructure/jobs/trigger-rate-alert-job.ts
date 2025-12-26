@@ -19,14 +19,10 @@ export type TriggerRateAlertType =
 /**
  * Determine alert type based on distance to trigger rate
  */
-function getAlertType(
-  distanceToTrigger: number,
-  isHit: boolean
-): TriggerRateAlertType | null {
+function getAlertType(distanceToTrigger: number, isHit: boolean): TriggerRateAlertType | null {
   if (isHit) return "trigger_rate_hit";
   if (distanceToTrigger <= ALERT_THRESHOLDS.CLOSE) return "trigger_rate_close";
-  if (distanceToTrigger <= ALERT_THRESHOLDS.APPROACHING)
-    return "trigger_rate_approaching";
+  if (distanceToTrigger <= ALERT_THRESHOLDS.APPROACHING) return "trigger_rate_approaching";
   return null;
 }
 
@@ -104,11 +100,7 @@ async function hasAlertBeenSent(
   // Check if any existing notification has matching metadata
   for (const notification of existingNotifications) {
     const metadata = notification.metadata as Record<string, any> | null;
-    if (
-      metadata &&
-      metadata.mortgageId === mortgageId &&
-      metadata.alertType === alertType
-    ) {
+    if (metadata && metadata.mortgageId === mortgageId && metadata.alertType === alertType) {
       return true;
     }
   }
@@ -150,10 +142,7 @@ async function shouldSendUpgradeAlert(
     const metadata = notification.metadata as Record<string, any> | null;
     if (metadata && metadata.mortgageId === mortgageId) {
       const existingType = metadata.alertType as TriggerRateAlertType;
-      if (
-        existingType &&
-        severity[existingType] < severity[newAlertType]
-      ) {
+      if (existingType && severity[existingType] < severity[newAlertType]) {
         return true; // Upgrade alert needed
       }
     }
@@ -206,17 +195,13 @@ function getAlertTitle(alertType: TriggerRateAlertType): string {
 /**
  * Main function to check trigger rates and send alerts
  */
-export async function checkTriggerRatesAndSendAlerts(
-  services: ApplicationServices
-): Promise<void> {
+export async function checkTriggerRatesAndSendAlerts(services: ApplicationServices): Promise<void> {
   try {
     console.log("[Trigger Rate Alert Job] Starting trigger rate check...");
 
     // Get all mortgages
     const allMortgages = await services.mortgages.findAll();
-    console.log(
-      `[Trigger Rate Alert Job] Found ${allMortgages.length} mortgages to check`
-    );
+    console.log(`[Trigger Rate Alert Job] Found ${allMortgages.length} mortgages to check`);
 
     let alertsSent = 0;
     let alertsSkipped = 0;
@@ -226,9 +211,7 @@ export async function checkTriggerRatesAndSendAlerts(
     for (const mortgage of allMortgages) {
       try {
         // Check trigger rate status using TriggerRateMonitor
-        const triggerStatus = await services.triggerRateMonitor.checkOne(
-          mortgage.id
-        );
+        const triggerStatus = await services.triggerRateMonitor.checkOne(mortgage.id);
 
         // Skip if no trigger status (not VRM-Fixed Payment or no active term)
         if (!triggerStatus) {
@@ -246,11 +229,7 @@ export async function checkTriggerRatesAndSendAlerts(
         }
 
         // Check if alert has already been sent (same type)
-        const alreadySent = await hasAlertBeenSent(
-          mortgage.userId,
-          mortgage.id,
-          alertType
-        );
+        const alreadySent = await hasAlertBeenSent(mortgage.userId, mortgage.id, alertType);
 
         if (alreadySent) {
           console.log(
@@ -261,11 +240,7 @@ export async function checkTriggerRatesAndSendAlerts(
         }
 
         // Check if we should send an upgrade alert
-        const shouldUpgrade = await shouldSendUpgradeAlert(
-          mortgage.userId,
-          mortgage.id,
-          alertType
-        );
+        const shouldUpgrade = await shouldSendUpgradeAlert(mortgage.userId, mortgage.id, alertType);
 
         if (!shouldUpgrade && !triggerStatus.isHit) {
           // For non-hit alerts, only send if it's an upgrade or first time
@@ -282,26 +257,14 @@ export async function checkTriggerRatesAndSendAlerts(
         }
 
         // Get active term for impact calculations
-        const terms = await services.mortgageTerms.listForMortgage(
-          mortgage.id,
-          mortgage.userId
-        );
+        const terms = await services.mortgageTerms.listForMortgage(mortgage.id, mortgage.userId);
         if (!terms) {
-          console.warn(
-            `[Trigger Rate Alert Job] Could not get terms for mortgage ${mortgage.id}`
-          );
+          console.warn(`[Trigger Rate Alert Job] Could not get terms for mortgage ${mortgage.id}`);
           continue;
         }
         const activeTerm = terms
-          .filter(
-            (t) =>
-              new Date(t.startDate) <= new Date() &&
-              new Date(t.endDate) >= new Date()
-          )
-          .sort(
-            (a, b) =>
-              new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
-          )[0];
+          .filter((t) => new Date(t.startDate) <= new Date() && new Date(t.endDate) >= new Date())
+          .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())[0];
 
         // Calculate impact analysis
         let monthlyBalanceIncrease: number | undefined;
@@ -369,15 +332,10 @@ export async function checkTriggerRatesAndSendAlerts(
         );
 
         alertsSent++;
-        console.log(
-          `[Trigger Rate Alert Job] Sent ${alertType} alert for mortgage ${mortgage.id}`
-        );
+        console.log(`[Trigger Rate Alert Job] Sent ${alertType} alert for mortgage ${mortgage.id}`);
       } catch (error) {
         errors++;
-        console.error(
-          `[Trigger Rate Alert Job] Error processing mortgage ${mortgage.id}:`,
-          error
-        );
+        console.error(`[Trigger Rate Alert Job] Error processing mortgage ${mortgage.id}:`, error);
         // Continue with next mortgage instead of crashing
       }
     }
@@ -390,4 +348,3 @@ export async function checkTriggerRatesAndSendAlerts(
     throw error;
   }
 }
-

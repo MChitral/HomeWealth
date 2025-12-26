@@ -33,7 +33,9 @@ export const insuranceCalculatorSchema = z.object({
       }
     ),
   provider: z.enum(["CMHC", "Sagen", "Genworth"]),
-  mliSelectDiscount: z.union([z.literal(0), z.literal(10), z.literal(20), z.literal(30)]).optional(),
+  mliSelectDiscount: z
+    .union([z.literal(0), z.literal(10), z.literal(20), z.literal(30)])
+    .optional(),
   premiumPaymentType: z.enum(["upfront", "added-to-principal"]).optional(),
 });
 
@@ -128,4 +130,3 @@ export function useInsuranceCalculator({
     isValid: form.formState.isValid,
   };
 }
-

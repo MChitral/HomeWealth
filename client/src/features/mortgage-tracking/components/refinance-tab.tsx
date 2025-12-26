@@ -40,9 +40,7 @@ export function RefinanceTab({ mortgageId, currentPropertyPrice = 0 }: Refinance
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Detailed Refinance Analysis</CardTitle>
-            <CardDescription>
-              Calculate refinance impact with custom closing costs
-            </CardDescription>
+            <CardDescription>Calculate refinance impact with custom closing costs</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">

@@ -30,10 +30,7 @@ export class MortgagePayoffRepository {
       .orderBy(desc(mortgagePayoff.payoffDate));
   }
 
-  async create(
-    payload: InsertMortgagePayoff,
-    tx?: Database
-  ): Promise<MortgagePayoffRecord> {
+  async create(payload: InsertMortgagePayoff, tx?: Database): Promise<MortgagePayoffRecord> {
     const db = tx || this.database;
     const [created] = await db.insert(mortgagePayoff).values(payload).returning();
     return created;
@@ -52,10 +49,7 @@ export class MortgagePayoffRepository {
   }
 
   async delete(id: string): Promise<boolean> {
-    const result = await this.database
-      .delete(mortgagePayoff)
-      .where(eq(mortgagePayoff.id, id));
+    const result = await this.database.delete(mortgagePayoff).where(eq(mortgagePayoff.id, id));
     return result.rowCount !== undefined ? result.rowCount > 0 : false;
   }
 }
-

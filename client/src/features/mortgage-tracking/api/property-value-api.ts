@@ -46,16 +46,17 @@ export const propertyValueApi = {
     );
   },
 
-  updateValue: (mortgageId: string, value: number, valueDate?: string, source?: string, notes?: string) =>
-    apiRequest<any>(
-      "POST",
-      `/api/mortgages/${mortgageId}/property-value`,
-      {
-        propertyValue: value,
-        valueDate,
-        source,
-        notes,
-      }
-    ),
+  updateValue: (
+    mortgageId: string,
+    value: number,
+    valueDate?: string,
+    source?: string,
+    notes?: string
+  ) =>
+    apiRequest<any>("POST", `/api/mortgages/${mortgageId}/property-value`, {
+      propertyValue: value,
+      valueDate,
+      source,
+      notes,
+    }),
 };
-

@@ -2,11 +2,7 @@ import {
   PaymentCorrectionsRepository,
   MortgagePaymentsRepository,
 } from "@infrastructure/repositories";
-import type {
-  InsertPaymentCorrection,
-  PaymentCorrection,
-  MortgagePayment,
-} from "@shared/schema";
+import type { InsertPaymentCorrection, PaymentCorrection, MortgagePayment } from "@shared/schema";
 
 export interface CorrectionRequest {
   paymentId: string;
@@ -63,4 +59,3 @@ export class PaymentCorrectionsService {
     return this.paymentCorrectionsRepo.delete(id);
   }
 }
-

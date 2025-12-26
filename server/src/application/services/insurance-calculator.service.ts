@@ -39,28 +39,28 @@ export interface InsuranceCalculationResult {
  */
 const PREMIUM_RATE_TABLES: Record<InsuranceProvider, Record<string, number>> = {
   CMHC: {
-    "65-75": 0.60, // 0.60% of mortgage amount
-    "75-80": 1.70,
-    "80-85": 2.40,
-    "85-90": 2.80,
-    "90-95": 3.10,
-    "95-100": 4.00,
+    "65-75": 0.6, // 0.60% of mortgage amount
+    "75-80": 1.7,
+    "80-85": 2.4,
+    "85-90": 2.8,
+    "90-95": 3.1,
+    "95-100": 4.0,
   },
   Sagen: {
-    "65-75": 0.60,
-    "75-80": 1.70,
-    "80-85": 2.40,
-    "85-90": 2.80,
-    "90-95": 3.10,
-    "95-100": 4.00,
+    "65-75": 0.6,
+    "75-80": 1.7,
+    "80-85": 2.4,
+    "85-90": 2.8,
+    "90-95": 3.1,
+    "95-100": 4.0,
   },
   Genworth: {
-    "65-75": 0.60,
-    "75-80": 1.70,
-    "80-85": 2.40,
-    "85-90": 2.80,
-    "90-95": 3.10,
-    "95-100": 4.00,
+    "65-75": 0.6,
+    "75-80": 1.7,
+    "80-85": 2.4,
+    "85-90": 2.8,
+    "90-95": 3.1,
+    "95-100": 4.0,
   },
 };
 
@@ -86,7 +86,9 @@ function getPremiumRateForLTV(ltvRatio: number, provider: InsuranceProvider): nu
   }
 
   // LTV > 100% is invalid for insurance
-  throw new Error(`Invalid LTV ratio: ${ltvRatio}%. LTV must be between 65% and 100% for mortgage insurance.`);
+  throw new Error(
+    `Invalid LTV ratio: ${ltvRatio}%. LTV must be between 65% and 100% for mortgage insurance.`
+  );
 }
 
 /**
@@ -97,7 +99,13 @@ export class InsuranceCalculatorService {
    * Calculate insurance premium for a mortgage
    */
   calculate(input: InsuranceCalculationInput): InsuranceCalculationResult {
-    const { propertyPrice, downPayment, provider, mliSelectDiscount = 0, premiumPaymentType = "upfront" } = input;
+    const {
+      propertyPrice,
+      downPayment,
+      provider,
+      mliSelectDiscount = 0,
+      premiumPaymentType = "upfront",
+    } = input;
 
     // Validate inputs
     if (propertyPrice <= 0) {
@@ -141,7 +149,9 @@ export class InsuranceCalculatorService {
 
     // Validate LTV is within insurance range (65% - 100%)
     if (ltvRatio < 65.0) {
-      throw new Error(`LTV ratio ${ltvRatio.toFixed(2)}% is below the minimum 65% for mortgage insurance`);
+      throw new Error(
+        `LTV ratio ${ltvRatio.toFixed(2)}% is below the minimum 65% for mortgage insurance`
+      );
     }
 
     if (ltvRatio > 100.0) {
@@ -216,4 +226,3 @@ export class InsuranceCalculatorService {
     return { ...PREMIUM_RATE_TABLES[provider] };
   }
 }
-

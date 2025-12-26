@@ -5,7 +5,7 @@ import { notifications, mortgageTerms } from "@shared/schema";
 
 /**
  * Check all active mortgages for upcoming payment due dates and send reminders
- * 
+ *
  * This job should run daily to check payment due dates and send reminders
  * based on user preferences (3, 7, 14 days before due date).
  */
@@ -134,4 +134,3 @@ function calculateNextPaymentDate(lastDate: Date, frequency: string): Date {
   }
   return next;
 }
-

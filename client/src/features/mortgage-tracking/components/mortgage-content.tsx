@@ -41,7 +41,6 @@ import { PropertyValueSection } from "./property-value-section";
 import { RenewalWorkflowWizard } from "./renewal-workflow-wizard";
 import { formatAmortization } from "../utils/format";
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 
 interface MortgageContentProps {
   mortgage: Mortgage | null;

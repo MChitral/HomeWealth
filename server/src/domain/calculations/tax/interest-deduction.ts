@@ -1,8 +1,8 @@
 /**
  * Interest Deduction Calculations
- * 
+ *
  * Calculates eligible interest deductions for tax purposes in Canada.
- * 
+ *
  * Key rules:
  * - Interest on money borrowed to earn investment income is deductible
  * - Must be used for income-producing purposes
@@ -73,10 +73,8 @@ export function calculateAggregateInterestDeduction(
     totalEligibleInterest += eligible;
   }
 
-  const investmentUsePercent = totalInterest > 0 
-    ? (totalEligibleInterest / totalInterest) * 100 
-    : 0;
+  const investmentUsePercent =
+    totalInterest > 0 ? (totalEligibleInterest / totalInterest) * 100 : 0;
 
   return calculateInterestDeduction(totalInterest, investmentUsePercent, marginalTaxRate);
 }
-

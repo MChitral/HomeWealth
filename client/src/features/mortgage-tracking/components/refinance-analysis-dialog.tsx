@@ -45,7 +45,8 @@ export function RefinanceAnalysisDialog({
       if (!data) {
         toast({
           title: "Analysis Unavailable",
-          description: "Could not perform refinance analysis. Please check your mortgage configuration.",
+          description:
+            "Could not perform refinance analysis. Please check your mortgage configuration.",
           variant: "destructive",
         });
       }
@@ -231,19 +232,21 @@ export function RefinanceAnalysisDialog({
                     </div>
                   </div>
 
-                  {!totalClosingCosts && (legalFees || appraisalFees || dischargeFees || otherFees) && (
-                    <div className="rounded-lg bg-muted p-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">Breakdown Total:</span>
-                        <span className="text-lg font-bold">
-                          ${calculateBreakdownTotal().toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </span>
+                  {!totalClosingCosts &&
+                    (legalFees || appraisalFees || dischargeFees || otherFees) && (
+                      <div className="rounded-lg bg-muted p-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">Breakdown Total:</span>
+                          <span className="text-lg font-bold">
+                            $
+                            {calculateBreakdownTotal().toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </div>
 
                 <div className="flex gap-2 pt-4">
@@ -287,7 +290,8 @@ export function RefinanceAnalysisDialog({
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Penalty:</span>
                       <span className="font-semibold">
-                        ${analysis.penalty.toLocaleString(undefined, {
+                        $
+                        {analysis.penalty.toLocaleString(undefined, {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
@@ -296,7 +300,8 @@ export function RefinanceAnalysisDialog({
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Closing Costs:</span>
                       <span className="font-semibold">
-                        ${analysis.closingCosts.toLocaleString(undefined, {
+                        $
+                        {analysis.closingCosts.toLocaleString(undefined, {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
@@ -305,7 +310,8 @@ export function RefinanceAnalysisDialog({
                     <div className="flex justify-between pt-2 border-t font-semibold">
                       <span>Total Cost to Break:</span>
                       <span className="text-red-600">
-                        ${(analysis.penalty + analysis.closingCosts).toLocaleString(undefined, {
+                        $
+                        {(analysis.penalty + analysis.closingCosts).toLocaleString(undefined, {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
@@ -327,4 +333,3 @@ export function RefinanceAnalysisDialog({
     </Dialog>
   );
 }
-

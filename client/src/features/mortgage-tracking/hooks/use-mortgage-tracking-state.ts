@@ -40,11 +40,16 @@ export function useMortgageTrackingState() {
 
   // Payment history filters
   const [filterYear, setFilterYear] = useState("all");
-  const [filterDateRange, setFilterDateRange] = useState<{ start: string | null; end: string | null }>({
+  const [filterDateRange, setFilterDateRange] = useState<{
+    start: string | null;
+    end: string | null;
+  }>({
     start: null,
     end: null,
   });
-  const [filterPaymentType, setFilterPaymentType] = useState<"all" | "regular" | "prepayment" | "skipped">("all");
+  const [filterPaymentType, setFilterPaymentType] = useState<
+    "all" | "regular" | "prepayment" | "skipped"
+  >("all");
   const [searchAmount, setSearchAmount] = useState<string>("");
 
   // Core data hooks

@@ -5,7 +5,7 @@ import { Label } from "@/shared/ui/label";
 import { Separator } from "@/shared/ui/separator";
 import { Switch } from "@/shared/ui/switch";
 import { Loader2, Save } from "lucide-react";
-import { notificationApi, type NotificationPreferences } from "../api";
+import { notificationApi, type NotificationPreferences } from "../api/notification-api";
 import { useState } from "react";
 
 export function NotificationPreferences() {
@@ -71,9 +71,7 @@ export function NotificationPreferences() {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="email-enabled">Email Notifications</Label>
-              <p className="text-sm text-muted-foreground">
-                Receive notifications via email
-              </p>
+              <p className="text-sm text-muted-foreground">Receive notifications via email</p>
             </div>
             <Switch
               id="email-enabled"
@@ -203,5 +201,3 @@ export function NotificationPreferences() {
     </div>
   );
 }
-
-

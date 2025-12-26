@@ -66,4 +66,3 @@ export class PaymentAmountChangeEventsRepository {
     return result.rowCount !== undefined ? result.rowCount > 0 : false;
   }
 }
-

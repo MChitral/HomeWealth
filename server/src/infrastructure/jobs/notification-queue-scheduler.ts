@@ -37,4 +37,3 @@ export function startNotificationQueueScheduler(notificationService: Notificatio
 
   console.log("[Notification Queue Scheduler] Started - processing queue every 5 minutes");
 }
-

@@ -121,7 +121,8 @@ export function SmithManeuverFeature() {
                   <>
                     <div className="grid gap-4 md:grid-cols-2">
                       {(() => {
-                        const latest = generateProjections.data[generateProjections.data.length - 1];
+                        const latest =
+                          generateProjections.data[generateProjections.data.length - 1];
                         const helocInterest = Number(latest.helocInterestPaid);
                         const taxSavings = Number(latest.taxSavings);
                         const marginalTaxRate = strategy.marginalTaxRate
@@ -177,10 +178,12 @@ export function SmithManeuverFeature() {
                       generateProjections.data[generateProjections.data.length - 1].investmentValue
                     )}
                     investmentIncome={Number(
-                      generateProjections.data[generateProjections.data.length - 1].investmentReturns
+                      generateProjections.data[generateProjections.data.length - 1]
+                        .investmentReturns
                     )}
                     helocInterest={Number(
-                      generateProjections.data[generateProjections.data.length - 1].helocInterestPaid
+                      generateProjections.data[generateProjections.data.length - 1]
+                        .helocInterestPaid
                     )}
                   />
                 )}
@@ -210,4 +213,3 @@ export function SmithManeuverFeature() {
     </div>
   );
 }
-

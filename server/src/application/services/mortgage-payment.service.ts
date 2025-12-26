@@ -17,7 +17,6 @@ import {
 } from "@server-shared/calculations/payment-skipping";
 import type { PaymentFrequency } from "@server-shared/calculations/mortgage";
 import { adjustToBusinessDay } from "@server-shared/utils/business-days";
-import type { HelocCreditLimitService } from "./heloc-credit-limit.service";
 import { HelocCreditLimitService } from "./heloc-credit-limit.service";
 
 class PrepaymentLimitError extends Error {
@@ -89,7 +88,7 @@ export class MortgagePaymentService {
       mortgage.prepaymentLimitResetDate,
       mortgage.startDate
     );
-    
+
     return payments
       .filter((payment) => {
         const paymentYearForPayment = getPrepaymentYear(
@@ -160,9 +159,9 @@ export class MortgagePaymentService {
       const maxAnnual = (originalAmount * annualLimitPercent) / 100 + carryForward;
       const availableLimit = maxAnnual - yearToDate;
       const penaltyInfo = calculatePrepaymentWithPenalty(prepaymentAmount, availableLimit, 1.5);
-      
+
       throw new PrepaymentLimitError(
-        `Annual prepayment limit exceeded. Max ${annualLimitPercent}% of original balance ($${(originalAmount * annualLimitPercent / 100).toFixed(2)})${carryForward > 0 ? ` plus $${carryForward.toFixed(2)} carry-forward` : ""} ($${maxAnnual.toFixed(2)} total) has already been used. Over-limit amount: $${penaltyInfo.overLimitAmount.toFixed(2)}. Estimated penalty: $${penaltyInfo.penaltyAmount.toFixed(2)} (1.5% of over-limit amount).`
+        `Annual prepayment limit exceeded. Max ${annualLimitPercent}% of original balance ($${((originalAmount * annualLimitPercent) / 100).toFixed(2)})${carryForward > 0 ? ` plus $${carryForward.toFixed(2)} carry-forward` : ""} ($${maxAnnual.toFixed(2)} total) has already been used. Over-limit amount: $${penaltyInfo.overLimitAmount.toFixed(2)}. Estimated penalty: $${penaltyInfo.penaltyAmount.toFixed(2)} (1.5% of over-limit amount).`
       );
     }
   }
@@ -246,7 +245,11 @@ export class MortgagePaymentService {
       previousPayment
     );
     const paymentYear = parseInt(finalPaymentDate.split("-")[0], 10);
-    const yearToDate = await this.getYearToDatePrepayments(mortgageId, payload.paymentDate, mortgage);
+    const yearToDate = await this.getYearToDatePrepayments(
+      mortgageId,
+      payload.paymentDate,
+      mortgage
+    );
     this.enforcePrepaymentLimit(
       mortgage,
       finalPaymentDate,
@@ -307,7 +310,7 @@ export class MortgagePaymentService {
 
     // Validate all payments BEFORE creating any (fail fast)
     // Track cumulative prepayments by year to properly enforce limits within the batch
-    const yearToDatePrepayments = new Map<number, number>();
+    const yearToDatePrepayments = new Map<string, number>();
     const validatedPayments: Array<{
       payload: Omit<MortgagePaymentCreateInput, "mortgageId">;
       normalized: Omit<MortgagePaymentCreateInput, "mortgageId">;

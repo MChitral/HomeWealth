@@ -71,11 +71,14 @@ export const taxApi = {
     apiRequest<{ taxSavings: number }>("POST", "/api/tax/calculate-savings", payload),
 
   calculateInvestmentIncomeTax: (payload: InvestmentIncomeTaxPayload) =>
-    apiRequest<InvestmentIncomeTaxResult>("POST", "/api/tax/calculate-investment-income-tax", payload),
+    apiRequest<InvestmentIncomeTaxResult>(
+      "POST",
+      "/api/tax/calculate-investment-income-tax",
+      payload
+    ),
 
   getTaxBrackets: (province: string, year?: number) => {
     const url = `/api/tax/brackets?province=${province}${year ? `&year=${year}` : ""}`;
     return apiRequest<TaxBracketsResponse>("GET", url);
   },
 };
-

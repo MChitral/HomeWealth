@@ -102,7 +102,7 @@ export class PrimeRateTrackingService {
           const currentEffectiveRate = getTermEffectiveRate(term);
           const spread = term.lockedSpread ? Number(term.lockedSpread) : 0;
           const proposedNewRate = (newRate + spread) / 100; // Convert to decimal
-          
+
           // Validate against cap/floor if set
           const validation = validateVariableRate(
             currentEffectiveRate,
@@ -110,14 +110,18 @@ export class PrimeRateTrackingService {
             term.variableRateCap ? Number(term.variableRateCap) / 100 : null,
             term.variableRateFloor ? Number(term.variableRateFloor) / 100 : null
           );
-          
+
           // Use validated rate
           const finalRate = validation.adjustedRate;
-          const finalPrimeRate = (finalRate * 100) - spread; // Convert back to prime rate
-          
+          const finalPrimeRate = finalRate * 100 - spread; // Convert back to prime rate
+
           // For variable-changing mortgages, recalculate payment amount
           let paymentRecalculated = false;
-          if (term.termType === "variable-changing" && this.mortgagePayments && this.paymentAmountChangeService) {
+          if (
+            term.termType === "variable-changing" &&
+            this.mortgagePayments &&
+            this.paymentAmountChangeService
+          ) {
             const mortgage = await this.mortgages.findById(term.mortgageId);
             if (mortgage) {
               // Get current balance from latest payment or mortgage
@@ -128,12 +132,12 @@ export class PrimeRateTrackingService {
               const currentBalance = latestPayment
                 ? Number(latestPayment.remainingBalance)
                 : Number(mortgage.currentBalance);
-              
+
               // Calculate remaining amortization
               const remainingAmortizationMonths = latestPayment
                 ? latestPayment.remainingAmortizationMonths
                 : mortgage.amortizationYears * 12 + (mortgage.amortizationMonths || 0);
-              
+
               // Calculate new payment amount
               const oldPaymentAmount = Number(term.regularPaymentAmount);
               const newPaymentAmount = calculatePayment(
@@ -142,13 +146,13 @@ export class PrimeRateTrackingService {
                 remainingAmortizationMonths,
                 term.paymentFrequency as PaymentFrequency
               );
-              
+
               // Update term with new payment amount
               await this.mortgageTerms.update(term.id, {
                 primeRate: finalPrimeRate.toFixed(3),
                 regularPaymentAmount: newPaymentAmount.toFixed(2),
               });
-              
+
               // Record payment amount change event if payment changed
               if (oldPaymentAmount !== newPaymentAmount) {
                 try {
@@ -162,7 +166,10 @@ export class PrimeRateTrackingService {
                   });
                   paymentRecalculated = true;
                 } catch (error) {
-                  console.error(`Failed to record payment amount change for term ${term.id}:`, error);
+                  console.error(
+                    `Failed to record payment amount change for term ${term.id}:`,
+                    error
+                  );
                 }
               } else {
                 // Just update prime rate if payment didn't change
@@ -182,15 +189,15 @@ export class PrimeRateTrackingService {
               primeRate: finalPrimeRate.toFixed(3),
             });
           }
-          
+
           termsUpdated++;
           updatedTerms.push(term);
-          
+
           // Log warning if rate was adjusted
           if (!validation.valid && validation.message) {
             console.warn(`Term ${term.id}: ${validation.message}`);
           }
-          
+
           // Log payment recalculation
           if (paymentRecalculated) {
             console.log(`Term ${term.id}: Payment recalculated due to rate change`);

@@ -5,15 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/sha
 import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge";
 import { Progress } from "@/shared/ui/progress";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog";
 import { CreditCard, ExternalLink, Loader2, TrendingUp } from "lucide-react";
 import { helocApi } from "@/features/heloc/api";
-import { calculateAvailableCredit, calculateCreditUtilization } from "@server-shared/calculations/heloc/available-credit";
+import {
+  calculateAvailableCredit,
+  calculateCreditUtilization,
+} from "@server-shared/calculations/heloc/available-credit";
 import { CreditRoomDisplay } from "./credit-room-display";
 import { CreditRoomHistory } from "./credit-room-history";
 import { MarkReAdvanceableDialog } from "./mark-re-advanceable-dialog";
@@ -67,9 +65,7 @@ export function HelocSection({ mortgageId, mortgage }: HelocSectionProps) {
             <CreditCard className="h-5 w-5" />
             Linked HELOC Accounts
           </CardTitle>
-          <CardDescription>
-            HELOC accounts linked to this mortgage will appear here
-          </CardDescription>
+          <CardDescription>HELOC accounts linked to this mortgage will appear here</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
@@ -130,7 +126,8 @@ export function HelocSection({ mortgageId, mortgage }: HelocSectionProps) {
               Linked HELOC Accounts
             </h3>
             <p className="text-sm text-muted-foreground">
-              {linkedAccounts.length} account{linkedAccounts.length !== 1 ? "s" : ""} linked to this mortgage
+              {linkedAccounts.length} account{linkedAccounts.length !== 1 ? "s" : ""} linked to this
+              mortgage
             </p>
           </div>
           <Button asChild variant="outline" size="sm">
@@ -171,9 +168,7 @@ export function HelocSection({ mortgageId, mortgage }: HelocSectionProps) {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Property Value</CardTitle>
-              <CardDescription>
-                Track property value to update HELOC credit limits
-              </CardDescription>
+              <CardDescription>Track property value to update HELOC credit limits</CardDescription>
             </div>
             {mortgage && (
               <Button
@@ -192,7 +187,8 @@ export function HelocSection({ mortgageId, mortgage }: HelocSectionProps) {
               <div className="mb-4">
                 <p className="text-sm text-muted-foreground">Current Property Value</p>
                 <p className="text-2xl font-bold">
-                  ${Number(mortgage.propertyPrice).toLocaleString(undefined, {
+                  $
+                  {Number(mortgage.propertyPrice).toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}
@@ -254,9 +250,7 @@ function HelocAccountSummaryCard({ account }: { account: HelocAccount }) {
             <CardTitle className="text-base">{account.accountName}</CardTitle>
             <CardDescription>{account.lenderName}</CardDescription>
           </div>
-          {account.isReAdvanceable === 1 && (
-            <Badge variant="outline">Re-advanceable</Badge>
-          )}
+          {account.isReAdvanceable === 1 && <Badge variant="outline">Re-advanceable</Badge>}
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -278,7 +272,11 @@ function HelocAccountSummaryCard({ account }: { account: HelocAccount }) {
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">Credit Utilization</span>
-            <Badge variant={utilization > 80 ? "destructive" : utilization > 50 ? "default" : "secondary"}>
+            <Badge
+              variant={
+                utilization > 80 ? "destructive" : utilization > 50 ? "default" : "secondary"
+              }
+            >
               {utilization.toFixed(1)}%
             </Badge>
           </div>
@@ -295,4 +293,3 @@ function HelocAccountSummaryCard({ account }: { account: HelocAccount }) {
     </Card>
   );
 }
-

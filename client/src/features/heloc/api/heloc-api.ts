@@ -83,4 +83,3 @@ export const reAdvanceableMortgageApi = {
   getCreditRoomHistory: (mortgageId: string) =>
     apiRequest<CreditRoomHistoryItem[]>("GET", `/api/mortgages/${mortgageId}/credit-room-history`),
 };
-

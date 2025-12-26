@@ -4,7 +4,10 @@ import { Button } from "@/shared/ui/button";
 import { Progress } from "@/shared/ui/progress";
 import { CreditCard, TrendingUp, DollarSign, Edit, Trash2 } from "lucide-react";
 import type { HelocAccount } from "@shared/schema";
-import { calculateAvailableCredit, calculateCreditUtilization } from "@server-shared/calculations/heloc/available-credit";
+import {
+  calculateAvailableCredit,
+  calculateCreditUtilization,
+} from "@server-shared/calculations/heloc/available-credit";
 import { useState } from "react";
 import { EditHelocDialog } from "./edit-heloc-dialog";
 import { useDeleteHelocAccount } from "../hooks";
@@ -90,14 +93,20 @@ export function HelocAccountCard({ account }: HelocAccountCardProps) {
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Available Credit</span>
-              <span className="font-semibold text-green-600">{formatCurrency(availableCredit)}</span>
+              <span className="font-semibold text-green-600">
+                {formatCurrency(availableCredit)}
+              </span>
             </div>
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground">Credit Utilization</span>
-              <Badge variant={utilization > 80 ? "destructive" : utilization > 50 ? "default" : "secondary"}>
+              <Badge
+                variant={
+                  utilization > 80 ? "destructive" : utilization > 50 ? "default" : "secondary"
+                }
+              >
                 {utilization.toFixed(1)}%
               </Badge>
             </div>
@@ -154,4 +163,3 @@ export function HelocAccountCard({ account }: HelocAccountCardProps) {
     </>
   );
 }
-

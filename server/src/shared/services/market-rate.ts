@@ -92,4 +92,3 @@ export function getTypicalSpread(
     return -0.75;
   }
 }
-

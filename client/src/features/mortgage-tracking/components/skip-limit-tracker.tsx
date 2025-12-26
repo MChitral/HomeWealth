@@ -37,9 +37,7 @@ export function SkipLimitTracker({
           <Calendar className="h-4 w-4 text-indigo-500" />
           Payment Skip Limit
         </CardTitle>
-        <CardDescription>
-          Track your payment skip usage for {year}
-        </CardDescription>
+        <CardDescription>Track your payment skip usage for {year}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
@@ -55,12 +53,18 @@ export function SkipLimitTracker({
                   Limit Reached
                 </Badge>
               ) : isNearLimit ? (
-                <Badge variant="outline" className="flex items-center gap-1 border-yellow-500 text-yellow-700 bg-yellow-50">
+                <Badge
+                  variant="outline"
+                  className="flex items-center gap-1 border-yellow-500 text-yellow-700 bg-yellow-50"
+                >
                   <AlertTriangle className="h-3 w-3" />
                   Near Limit
                 </Badge>
               ) : (
-                <Badge variant="outline" className="flex items-center gap-1 border-green-500 text-green-700 bg-green-50">
+                <Badge
+                  variant="outline"
+                  className="flex items-center gap-1 border-green-500 text-green-700 bg-green-50"
+                >
                   <CheckCircle2 className="h-3 w-3" />
                   Available
                 </Badge>
@@ -102,7 +106,8 @@ export function SkipLimitTracker({
 
         <div className="pt-2 border-t">
           <p className="text-xs text-muted-foreground">
-            <strong>Reset Date:</strong> {resetDate.toLocaleDateString("en-US", {
+            <strong>Reset Date:</strong>{" "}
+            {resetDate.toLocaleDateString("en-US", {
               month: "long",
               day: "numeric",
               year: "numeric",
@@ -116,4 +121,3 @@ export function SkipLimitTracker({
     </Card>
   );
 }
-

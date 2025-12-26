@@ -3,4 +3,3 @@ import { NotificationPreferences } from "@/features/notifications/components/not
 export default function NotificationPreferencesPage() {
   return <NotificationPreferences />;
 }
-

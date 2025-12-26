@@ -69,4 +69,3 @@ export class PaymentFrequencyChangeEventsRepository {
       .where(eq(paymentFrequencyChangeEvents.mortgageId, mortgageId));
   }
 }
-

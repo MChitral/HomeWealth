@@ -105,12 +105,15 @@ export function RefinanceScenarioCard({ analysis }: RefinanceScenarioCardProps) 
               </div>
               {analysis.closingCosts > 0 && (
                 <div className="text-xs text-muted-foreground pt-1">
-                  (Penalty: ${analysis.penalty.toLocaleString(undefined, {
+                  (Penalty: $
+                  {analysis.penalty.toLocaleString(undefined, {
                     maximumFractionDigits: 0,
                   })}{" "}
-                  + Closing: ${analysis.closingCosts.toLocaleString(undefined, {
+                  + Closing: $
+                  {analysis.closingCosts.toLocaleString(undefined, {
                     maximumFractionDigits: 0,
-                  })})
+                  })}
+                  )
                 </div>
               )}
             </div>

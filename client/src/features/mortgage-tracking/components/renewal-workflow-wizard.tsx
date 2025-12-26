@@ -3,13 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { Textarea } from "@/shared/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { mortgageApi, type RenewalOptionsResponse, type RenewalNegotiationEntry } from "../api";
@@ -121,13 +115,15 @@ export function RenewalWorkflowWizard({ mortgageId }: RenewalWorkflowWizardProps
           <TabsContent value="overview" className="space-y-4">
             {/* Renewal Recommendation */}
             <RenewalComparisonCard mortgageId={mortgageId} />
-            
+
             {workflowData?.renewalStatus && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Days Until Renewal</p>
-                    <p className="text-2xl font-bold">{workflowData.renewalStatus.daysUntilRenewal}</p>
+                    <p className="text-2xl font-bold">
+                      {workflowData.renewalStatus.daysUntilRenewal}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Renewal Date</p>
@@ -144,12 +140,18 @@ export function RenewalWorkflowWizard({ mortgageId }: RenewalWorkflowWizardProps
                 </div>
                 {workflowData.renewalStatus.estimatedPenalty && (
                   <div>
-                    <p className="text-sm text-muted-foreground">Estimated Penalty (if broken today)</p>
+                    <p className="text-sm text-muted-foreground">
+                      Estimated Penalty (if broken today)
+                    </p>
                     <p className="text-lg font-semibold">
-                      ${workflowData.renewalStatus.estimatedPenalty.amount.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}{" "}
+                      $
+                      {workflowData.renewalStatus.estimatedPenalty.amount.toLocaleString(
+                        undefined,
+                        {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }
+                      )}{" "}
                       <span className="text-sm font-normal text-muted-foreground">
                         ({workflowData.renewalStatus.estimatedPenalty.method})
                       </span>
@@ -181,7 +183,8 @@ export function RenewalWorkflowWizard({ mortgageId }: RenewalWorkflowWizardProps
                     <div>
                       <p className="text-sm text-muted-foreground">Estimated Penalty</p>
                       <p className="text-lg font-semibold">
-                        ${renewalOptions.stayWithCurrentLender.estimatedPenalty.toLocaleString(
+                        $
+                        {renewalOptions.stayWithCurrentLender.estimatedPenalty.toLocaleString(
                           undefined,
                           {
                             minimumFractionDigits: 2,
@@ -207,7 +210,8 @@ export function RenewalWorkflowWizard({ mortgageId }: RenewalWorkflowWizardProps
                     <div>
                       <p className="text-sm text-muted-foreground">Estimated Penalty</p>
                       <p className="text-lg font-semibold">
-                        ${renewalOptions.switchLender.estimatedPenalty.toLocaleString(undefined, {
+                        $
+                        {renewalOptions.switchLender.estimatedPenalty.toLocaleString(undefined, {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
@@ -216,10 +220,14 @@ export function RenewalWorkflowWizard({ mortgageId }: RenewalWorkflowWizardProps
                     <div>
                       <p className="text-sm text-muted-foreground">Closing Costs</p>
                       <p className="text-lg font-semibold">
-                        ${renewalOptions.switchLender.estimatedClosingCosts.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
+                        $
+                        {renewalOptions.switchLender.estimatedClosingCosts.toLocaleString(
+                          undefined,
+                          {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }
+                        )}
                       </p>
                     </div>
                   </CardContent>
@@ -374,4 +382,3 @@ export function RenewalWorkflowWizard({ mortgageId }: RenewalWorkflowWizardProps
     </Card>
   );
 }
-

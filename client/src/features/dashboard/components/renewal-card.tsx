@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { CalendarDays, AlertTriangle, CheckCircle2, Clock, Calculator, Bell, X } from "lucide-react";
+import {
+  CalendarDays,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Calculator,
+  Bell,
+  X,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
 import { Progress } from "@/shared/ui/progress";
@@ -8,7 +16,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import type { RenewalStatusResponse } from "@/features/mortgage-tracking/api";
 import { PenaltyCalculatorDialog } from "@/features/mortgage-tracking/components/penalty-calculator-dialog";
-import { notificationApi } from "@/features/notifications/api";
+import { notificationApi } from "@/features/notifications/api/notification-api";
 
 interface RenewalCardProps {
   status: RenewalStatusResponse;
@@ -27,10 +35,7 @@ export function RenewalCard({ status }: RenewalCardProps) {
   });
 
   const renewalReminders = notifications.filter(
-    (n) =>
-      n.type === "renewal_reminder" &&
-      n.metadata?.mortgageId === status.mortgageId &&
-      !n.read
+    (n) => n.type === "renewal_reminder" && n.metadata?.mortgageId === status.mortgageId && !n.read
   );
 
   const hasUnreadReminder = renewalReminders.length > 0;
@@ -188,12 +193,7 @@ export function RenewalCard({ status }: RenewalCardProps) {
 
           {/* Action Buttons */}
           <div className="flex flex-col gap-2">
-            <Button
-              variant="default"
-              size="sm"
-              asChild
-              className="w-full"
-            >
+            <Button variant="default" size="sm" asChild className="w-full">
               <Link href={`/mortgages/${status.mortgageId}?tab=renewals`}>
                 View Renewal Planning
               </Link>

@@ -1,23 +1,23 @@
 /**
  * Debt Service Ratio Calculations
- * 
+ *
  * GDS (Gross Debt Service) and TDS (Total Debt Service) ratios
  * Used for mortgage qualification under B-20 guidelines
  */
 
 /**
  * Calculate GDS (Gross Debt Service) ratio
- * 
+ *
  * GDS = (Housing Costs / Gross Income) * 100
- * 
+ *
  * Housing Costs include:
  * - Mortgage payment
  * - Property tax
  * - Heating costs
  * - 50% of condo fees (if applicable)
- * 
+ *
  * B-20 Guideline: Maximum GDS = 39%
- * 
+ *
  * @param housingCosts - Monthly housing costs
  * @param grossIncome - Annual gross income
  * @returns GDS ratio as percentage
@@ -26,26 +26,26 @@ export function calculateGDS(housingCosts: number, grossIncome: number): number 
   if (grossIncome <= 0) {
     return 0;
   }
-  
+
   const monthlyIncome = grossIncome / 12;
   const gds = (housingCosts / monthlyIncome) * 100;
-  
+
   return Math.round(gds * 100) / 100; // Round to 2 decimal places
 }
 
 /**
  * Calculate TDS (Total Debt Service) ratio
- * 
+ *
  * TDS = ((Housing Costs + Other Debt Payments) / Gross Income) * 100
- * 
+ *
  * Other Debt Payments include:
  * - Car loans
  * - Student loans
  * - Credit card payments
  * - Other personal loans
- * 
+ *
  * B-20 Guideline: Maximum TDS = 44%
- * 
+ *
  * @param housingCosts - Monthly housing costs
  * @param otherDebtPayments - Monthly other debt payments
  * @param grossIncome - Annual gross income
@@ -59,17 +59,17 @@ export function calculateTDS(
   if (grossIncome <= 0) {
     return 0;
   }
-  
+
   const monthlyIncome = grossIncome / 12;
   const totalDebtCosts = housingCosts + otherDebtPayments;
   const tds = (totalDebtCosts / monthlyIncome) * 100;
-  
+
   return Math.round(tds * 100) / 100; // Round to 2 decimal places
 }
 
 /**
  * Calculate housing costs for GDS/TDS calculations
- * 
+ *
  * @param mortgagePayment - Monthly mortgage payment
  * @param propertyTax - Monthly property tax
  * @param heatingCosts - Monthly heating costs
@@ -84,13 +84,13 @@ export function calculateHousingCosts(
 ): number {
   // Include 50% of condo fees (B-20 guideline)
   const condoFeesContribution = condoFees * 0.5;
-  
+
   return mortgagePayment + propertyTax + heatingCosts + condoFeesContribution;
 }
 
 /**
  * Get debt service ratio status
- * 
+ *
  * @param gds - GDS ratio
  * @param tds - TDS ratio
  * @param maxGDS - Maximum GDS (default: 39%)
@@ -113,11 +113,11 @@ export function getDebtServiceRatioStatus(
   const gdsPass = gds <= maxGDS;
   const tdsPass = tds <= maxTDS;
   const overallPass = gdsPass && tdsPass;
-  
+
   // Warnings when approaching limits (90% of max)
   const gdsWarning = gds > maxGDS * 0.9 && gdsPass;
   const tdsWarning = tds > maxTDS * 0.9 && tdsPass;
-  
+
   const warnings: string[] = [];
   if (gdsWarning) {
     warnings.push(`GDS ratio (${gds.toFixed(1)}%) is approaching the maximum of ${maxGDS}%`);
@@ -131,7 +131,7 @@ export function getDebtServiceRatioStatus(
   if (!tdsPass) {
     warnings.push(`TDS ratio (${tds.toFixed(1)}%) exceeds maximum of ${maxTDS}%`);
   }
-  
+
   return {
     gdsPass,
     tdsPass,
@@ -141,4 +141,3 @@ export function getDebtServiceRatioStatus(
     warnings,
   };
 }
-

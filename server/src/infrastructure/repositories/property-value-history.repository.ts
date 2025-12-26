@@ -25,18 +25,13 @@ export class PropertyValueHistoryRepository {
       .orderBy(desc(propertyValueHistory.valueDate));
   }
 
-  async getLatestByMortgageId(
-    mortgageId: string
-  ): Promise<PropertyValueHistoryRecord | undefined> {
+  async getLatestByMortgageId(mortgageId: string): Promise<PropertyValueHistoryRecord | undefined> {
     const history = await this.findByMortgageId(mortgageId);
     return history[0]; // Already sorted by date descending
   }
 
   async create(payload: InsertPropertyValueHistory): Promise<PropertyValueHistoryRecord> {
-    const [created] = await this.database
-      .insert(propertyValueHistory)
-      .values(payload)
-      .returning();
+    const [created] = await this.database.insert(propertyValueHistory).values(payload).returning();
     return created;
   }
 
@@ -66,4 +61,3 @@ export class PropertyValueHistoryRepository {
       .where(eq(propertyValueHistory.mortgageId, mortgageId));
   }
 }
-

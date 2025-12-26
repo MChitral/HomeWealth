@@ -5,9 +5,9 @@
 
 /**
  * Calculate net benefit from Smith Maneuver
- * 
+ *
  * Net Benefit = Investment Returns (after tax) - HELOC Cost (after tax savings) + Tax Savings
- * 
+ *
  * @param investmentReturns - Gross investment returns
  * @param investmentTax - Tax on investment income
  * @param helocInterest - HELOC interest paid
@@ -29,7 +29,7 @@ export function calculateNetBenefit(
 
 /**
  * Calculate annual net benefit
- * 
+ *
  * @param investmentReturns - Annual investment returns
  * @param investmentTaxRate - Effective tax rate on investment income
  * @param helocInterest - Annual HELOC interest
@@ -46,18 +46,18 @@ export function calculateAnnualNetBenefit(
 ): number {
   // Calculate tax on investment income
   const investmentTax = investmentReturns * (investmentTaxRate / 100);
-  
+
   // Calculate tax savings from HELOC interest deduction
   const eligibleInterest = helocInterest * (investmentUsePercent / 100);
   const taxSavings = eligibleInterest * (marginalTaxRate / 100);
-  
+
   // Calculate net benefit
   return calculateNetBenefit(investmentReturns, investmentTax, helocInterest, taxSavings);
 }
 
 /**
  * Calculate cumulative net benefit over time
- * 
+ *
  * @param annualNetBenefits - Array of annual net benefits
  * @returns Cumulative net benefit for each year
  */
@@ -72,4 +72,3 @@ export function calculateCumulativeNetBenefit(annualNetBenefits: number[]): numb
 
   return cumulative;
 }
-

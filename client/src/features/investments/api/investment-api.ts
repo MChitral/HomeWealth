@@ -43,7 +43,11 @@ export const investmentApi = {
     apiRequest<InvestmentTransaction[]>("GET", `/api/investments/${investmentId}/transactions`),
 
   recordTransaction: (investmentId: string, payload: InvestmentTransactionPayload) =>
-    apiRequest<InvestmentTransaction>("POST", `/api/investments/${investmentId}/transactions`, payload),
+    apiRequest<InvestmentTransaction>(
+      "POST",
+      `/api/investments/${investmentId}/transactions`,
+      payload
+    ),
 
   fetchIncome: (investmentId: string, taxYear?: number) => {
     const url = taxYear
@@ -58,4 +62,3 @@ export const investmentApi = {
   fetchIncomeByTaxYear: (taxYear: number) =>
     apiRequest<InvestmentIncome[]>("GET", `/api/investments/income/tax-year/${taxYear}`),
 };
-

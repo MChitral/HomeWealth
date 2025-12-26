@@ -47,4 +47,3 @@ export const insuranceApi = {
       `/api/insurance/rates/${provider}`
     ),
 };
-

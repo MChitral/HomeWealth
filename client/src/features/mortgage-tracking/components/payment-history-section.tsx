@@ -252,14 +252,24 @@ export function PaymentHistorySection({
 
             {/* Clear Filters Button */}
             {hasActiveFilters && (
-              <Button variant="outline" size="sm" onClick={clearFilters} className="whitespace-nowrap">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearFilters}
+                className="whitespace-nowrap"
+              >
                 <X className="h-4 w-4 mr-1" />
                 Clear Filters
               </Button>
             )}
 
             {/* Export CSV Button */}
-            <Button variant="outline" size="sm" onClick={handleExportCSV} className="whitespace-nowrap">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCSV}
+              className="whitespace-nowrap"
+            >
               <Download className="h-4 w-4 mr-1" />
               Export CSV
             </Button>
@@ -323,16 +333,22 @@ export function PaymentHistorySection({
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Badge variant="outline" className="text-xs border-orange-300 text-orange-700 bg-orange-50">
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs border-orange-300 text-orange-700 bg-orange-50"
+                                >
                                   <SkipForward className="h-3 w-3 mr-1" />
                                   Skipped
                                 </Badge>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Payment was skipped. Interest accrued: ${payment.skippedInterestAccrued.toLocaleString(undefined, {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })}</p>
+                                <p>
+                                  Payment was skipped. Interest accrued: $
+                                  {payment.skippedInterestAccrued.toLocaleString(undefined, {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  })}
+                                </p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
@@ -377,7 +393,8 @@ export function PaymentHistorySection({
                     <TableCell className="text-right font-mono text-sm">
                       {payment.isSkipped && payment.skippedInterestAccrued > 0 ? (
                         <span className="text-red-600 font-medium">
-                          ${payment.skippedInterestAccrued.toLocaleString(undefined, {
+                          $
+                          {payment.skippedInterestAccrued.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           })}

@@ -34,25 +34,27 @@ export function MonteCarloResults({ result }: MonteCarloResultsProps) {
   }));
 
   // Prepare data for balance distribution chart
-  const balancePathData = result.samplePaths[0]?.map((_, monthIndex) => {
-    const balances = result.samplePaths
-      .map((path) => path[monthIndex]?.balance ?? 0)
-      .filter((b) => b > 0);
-    if (balances.length === 0) return null;
+  const balancePathData = result.samplePaths[0]
+    ?.map((_, monthIndex) => {
+      const balances = result.samplePaths
+        .map((path) => path[monthIndex]?.balance ?? 0)
+        .filter((b) => b > 0);
+      if (balances.length === 0) return null;
 
-    balances.sort((a, b) => a - b);
-    const p10Index = Math.floor(balances.length * 0.1);
-    const p50Index = Math.floor(balances.length * 0.5);
-    const p90Index = Math.floor(balances.length * 0.9);
+      balances.sort((a, b) => a - b);
+      const p10Index = Math.floor(balances.length * 0.1);
+      const p50Index = Math.floor(balances.length * 0.5);
+      const p90Index = Math.floor(balances.length * 0.9);
 
-    return {
-      month: monthIndex,
-      p10: balances[p10Index],
-      p50: balances[p50Index],
-      p90: balances[p90Index],
-      mean: balances.reduce((sum, b) => sum + b, 0) / balances.length,
-    };
-  }).filter(Boolean);
+      return {
+        month: monthIndex,
+        p10: balances[p10Index],
+        p50: balances[p50Index],
+        p90: balances[p90Index],
+        mean: balances.reduce((sum, b) => sum + b, 0) / balances.length,
+      };
+    })
+    .filter(Boolean);
 
   return (
     <div className="space-y-6">
@@ -64,9 +66,7 @@ export function MonteCarloResults({ result }: MonteCarloResultsProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatPercent(result.probabilityOfPayoff)}</div>
-            <p className="text-xs text-muted-foreground">
-              {result.iterations} iterations
-            </p>
+            <p className="text-xs text-muted-foreground">{result.iterations} iterations</p>
           </CardContent>
         </Card>
 
@@ -117,9 +117,7 @@ export function MonteCarloResults({ result }: MonteCarloResultsProps) {
       <Card>
         <CardHeader>
           <CardTitle>Interest Rate Paths</CardTitle>
-          <CardDescription>
-            Simulated interest rate paths with confidence intervals
-          </CardDescription>
+          <CardDescription>Simulated interest rate paths with confidence intervals</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>
@@ -201,9 +199,7 @@ export function MonteCarloResults({ result }: MonteCarloResultsProps) {
         <Card>
           <CardHeader>
             <CardTitle>Balance Distribution Over Time</CardTitle>
-            <CardDescription>
-              Mortgage balance paths with confidence intervals
-            </CardDescription>
+            <CardDescription>Mortgage balance paths with confidence intervals</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={400}>
@@ -314,7 +310,9 @@ export function MonteCarloResults({ result }: MonteCarloResultsProps) {
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">Mean:</span>
-              <span className="font-medium">{formatCurrency(result.interestDistribution.mean)}</span>
+              <span className="font-medium">
+                {formatCurrency(result.interestDistribution.mean)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">Total Interest:</span>
@@ -328,4 +326,3 @@ export function MonteCarloResults({ result }: MonteCarloResultsProps) {
     </div>
   );
 }
-

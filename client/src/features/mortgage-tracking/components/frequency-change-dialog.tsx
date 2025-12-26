@@ -8,13 +8,7 @@ import {
 } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
 import { Label } from "@/shared/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { mortgageApi, type FrequencyChangeResult, type FrequencyChangeApplyResponse } from "../api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Calculator, CheckCircle2 } from "lucide-react";
@@ -131,7 +125,8 @@ export function FrequencyChangeDialog({
     onOpenChange(false);
   };
 
-  const currentFrequencyLabel = frequencyOptions.find((opt) => opt.value === currentFrequency)?.label || currentFrequency;
+  const currentFrequencyLabel =
+    frequencyOptions.find((opt) => opt.value === currentFrequency)?.label || currentFrequency;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -251,4 +246,3 @@ export function FrequencyChangeDialog({
     </Dialog>
   );
 }
-

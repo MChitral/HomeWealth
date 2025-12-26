@@ -234,10 +234,7 @@ export class RecastService {
   /**
    * Get recast history for a mortgage
    */
-  async getRecastHistory(
-    mortgageId: string,
-    userId: string
-  ): Promise<any[] | undefined> {
+  async getRecastHistory(mortgageId: string, userId: string): Promise<any[] | undefined> {
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
     if (!mortgage) {
       return undefined;
@@ -246,4 +243,3 @@ export class RecastService {
     return this.recastEvents.findByMortgageId(mortgageId);
   }
 }
-

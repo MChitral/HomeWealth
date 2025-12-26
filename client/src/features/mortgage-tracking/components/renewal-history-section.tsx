@@ -1,14 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { mortgageApi } from "@/features/mortgage-tracking/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/shared/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
 import { Badge } from "@/shared/ui/badge";
 import { format, parseISO } from "date-fns";
 import { Loader2, TrendingUp, TrendingDown, Minus } from "lucide-react";
@@ -141,13 +134,9 @@ export function RenewalHistorySection({ mortgageId }: RenewalHistorySectionProps
                 const rateChange = entry.newRate - entry.previousRate;
                 return (
                   <TableRow key={entry.id}>
-                    <TableCell>
-                      {format(parseISO(entry.renewalDate), "MMM d, yyyy")}
-                    </TableCell>
+                    <TableCell>{format(parseISO(entry.renewalDate), "MMM d, yyyy")}</TableCell>
                     <TableCell>{entry.previousRate.toFixed(2)}%</TableCell>
-                    <TableCell className="font-medium">
-                      {entry.newRate.toFixed(2)}%
-                    </TableCell>
+                    <TableCell className="font-medium">{entry.newRate.toFixed(2)}%</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
                         {getRateChangeIcon(entry)}
@@ -174,4 +163,3 @@ export function RenewalHistorySection({ mortgageId }: RenewalHistorySectionProps
     </div>
   );
 }
-

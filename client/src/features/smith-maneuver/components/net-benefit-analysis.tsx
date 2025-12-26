@@ -42,7 +42,9 @@ export function NetBenefitAnalysis({
               <TrendingUp className="h-4 w-4 text-green-600" />
               <span className="text-sm font-medium">Investment Returns (After Tax)</span>
             </div>
-            <span className="font-bold text-green-600">{formatCurrency(afterTaxInvestmentReturns)}</span>
+            <span className="font-bold text-green-600">
+              {formatCurrency(afterTaxInvestmentReturns)}
+            </span>
           </div>
 
           <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-950/20 rounded-lg">
@@ -94,4 +96,3 @@ export function NetBenefitAnalysis({
     </Card>
   );
 }
-

@@ -28,13 +28,17 @@ export function RiskAssessment({
     }).format(amount);
   };
 
-  const getLeverageRiskLevel = (ratio: number): { level: "low" | "moderate" | "high"; color: string } => {
+  const getLeverageRiskLevel = (
+    ratio: number
+  ): { level: "low" | "moderate" | "high"; color: string } => {
     if (ratio < 1.0) return { level: "low", color: "text-green-600" };
     if (ratio <= 2.0) return { level: "moderate", color: "text-yellow-600" };
     return { level: "high", color: "text-red-600" };
   };
 
-  const getCoverageRiskLevel = (coverage: number): { level: "low" | "moderate" | "high"; color: string } => {
+  const getCoverageRiskLevel = (
+    coverage: number
+  ): { level: "low" | "moderate" | "high"; color: string } => {
     if (coverage >= 1.5) return { level: "low", color: "text-green-600" };
     if (coverage >= 1.0) return { level: "moderate", color: "text-yellow-600" };
     return { level: "high", color: "text-red-600" };
@@ -56,31 +60,43 @@ export function RiskAssessment({
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-muted-foreground">Leverage Ratio</span>
-              <Badge variant={leverageRisk.level === "high" ? "destructive" : leverageRisk.level === "moderate" ? "secondary" : "default"}>
+              <Badge
+                variant={
+                  leverageRisk.level === "high"
+                    ? "destructive"
+                    : leverageRisk.level === "moderate"
+                      ? "secondary"
+                      : "default"
+                }
+              >
                 {leverageRisk.level.toUpperCase()}
               </Badge>
             </div>
             <p className={`text-2xl font-bold ${leverageRisk.color}`}>
               {leverageRatio.toFixed(2)}x
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              HELOC Balance / Investment Value
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">HELOC Balance / Investment Value</p>
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-muted-foreground">Interest Coverage</span>
-              <Badge variant={coverageRisk.level === "high" ? "destructive" : coverageRisk.level === "moderate" ? "secondary" : "default"}>
+              <Badge
+                variant={
+                  coverageRisk.level === "high"
+                    ? "destructive"
+                    : coverageRisk.level === "moderate"
+                      ? "secondary"
+                      : "default"
+                }
+              >
                 {coverageRisk.level.toUpperCase()}
               </Badge>
             </div>
             <p className={`text-2xl font-bold ${coverageRisk.color}`}>
               {interestCoverage.toFixed(2)}x
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Investment Income / HELOC Interest
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Investment Income / HELOC Interest</p>
           </div>
         </div>
 
@@ -127,4 +143,3 @@ export function RiskAssessment({
     </Card>
   );
 }
-

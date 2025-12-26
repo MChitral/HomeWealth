@@ -3,12 +3,12 @@ import { getPrepaymentYear } from "@server-shared/calculations/prepayment-year";
 
 /**
  * Check all mortgages for recast opportunities
- * 
+ *
  * A recast opportunity exists when:
  * - A large prepayment has been made (typically > 10% of original balance)
  * - The mortgage could benefit from payment reduction
  * - The recast would reduce monthly payments significantly
- * 
+ *
  * This job should run weekly to analyze mortgages for recast opportunities.
  */
 export async function checkRecastOpportunities(services: ApplicationServices): Promise<void> {
@@ -125,4 +125,3 @@ export async function checkRecastOpportunities(services: ApplicationServices): P
     }
   }
 }
-

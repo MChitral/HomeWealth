@@ -21,9 +21,24 @@ import type { HelocAccount } from "@shared/schema";
 const helocAccountUpdateSchema = z.object({
   accountName: z.string().min(1, "Account name is required").optional(),
   lenderName: z.string().min(1, "Lender name is required").optional(),
-  maxLtvPercent: z.union([z.string(), z.number()]).optional().transform((val) => (val === undefined ? undefined : typeof val === "number" ? val : parseFloat(val))),
-  interestSpread: z.union([z.string(), z.number()]).optional().transform((val) => (val === undefined ? undefined : typeof val === "number" ? val : parseFloat(val))),
-  homeValueReference: z.union([z.string(), z.number()]).optional().transform((val) => (val === "" || val === undefined ? undefined : typeof val === "number" ? val : parseFloat(val))),
+  maxLtvPercent: z
+    .union([z.string(), z.number()])
+    .optional()
+    .transform((val) =>
+      val === undefined ? undefined : typeof val === "number" ? val : parseFloat(val)
+    ),
+  interestSpread: z
+    .union([z.string(), z.number()])
+    .optional()
+    .transform((val) =>
+      val === undefined ? undefined : typeof val === "number" ? val : parseFloat(val)
+    ),
+  homeValueReference: z
+    .union([z.string(), z.number()])
+    .optional()
+    .transform((val) =>
+      val === "" || val === undefined ? undefined : typeof val === "number" ? val : parseFloat(val)
+    ),
 });
 
 type HelocAccountUpdateFormData = z.infer<typeof helocAccountUpdateSchema>;
@@ -45,7 +60,9 @@ export function EditHelocDialog({ open, onOpenChange, account }: EditHelocDialog
       lenderName: account.lenderName,
       maxLtvPercent: Number(account.maxLtvPercent),
       interestSpread: Number(account.interestSpread),
-      homeValueReference: account.homeValueReference ? Number(account.homeValueReference) : undefined,
+      homeValueReference: account.homeValueReference
+        ? Number(account.homeValueReference)
+        : undefined,
     },
   });
 
@@ -56,7 +73,9 @@ export function EditHelocDialog({ open, onOpenChange, account }: EditHelocDialog
         lenderName: account.lenderName,
         maxLtvPercent: Number(account.maxLtvPercent),
         interestSpread: Number(account.interestSpread),
-        homeValueReference: account.homeValueReference ? Number(account.homeValueReference) : undefined,
+        homeValueReference: account.homeValueReference
+          ? Number(account.homeValueReference)
+          : undefined,
       });
     }
   }, [open, account, form]);
@@ -70,7 +89,9 @@ export function EditHelocDialog({ open, onOpenChange, account }: EditHelocDialog
           lenderName: data.lenderName,
           maxLtvPercent: data.maxLtvPercent?.toFixed(2),
           interestSpread: data.interestSpread?.toFixed(3),
-          homeValueReference: data.homeValueReference?.toFixed(2) || null,
+          homeValueReference: data.homeValueReference
+            ? data.homeValueReference.toFixed(2)
+            : undefined,
         },
       });
       toast({
@@ -177,7 +198,9 @@ export function EditHelocDialog({ open, onOpenChange, account }: EditHelocDialog
                       step="0.01"
                       {...field}
                       value={field.value || ""}
-                      onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                      onChange={(e) =>
+                        field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)
+                      }
                     />
                   </FormControl>
                   <FormMessage />
@@ -200,4 +223,3 @@ export function EditHelocDialog({ open, onOpenChange, account }: EditHelocDialog
     </Dialog>
   );
 }
-

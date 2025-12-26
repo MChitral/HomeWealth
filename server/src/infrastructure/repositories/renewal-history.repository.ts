@@ -39,10 +39,7 @@ export class RenewalHistoryRepository {
   }
 
   async create(payload: InsertRenewalHistory): Promise<RenewalHistoryRecord> {
-    const [created] = await this.database
-      .insert(renewalHistory)
-      .values(payload)
-      .returning();
+    const [created] = await this.database.insert(renewalHistory).values(payload).returning();
     return created;
   }
 
@@ -60,16 +57,11 @@ export class RenewalHistoryRepository {
   }
 
   async delete(id: string): Promise<boolean> {
-    const result = await this.database
-      .delete(renewalHistory)
-      .where(eq(renewalHistory.id, id));
+    const result = await this.database.delete(renewalHistory).where(eq(renewalHistory.id, id));
     return Boolean(result.rowCount && result.rowCount > 0);
   }
 
   async deleteByMortgageId(mortgageId: string): Promise<void> {
-    await this.database
-      .delete(renewalHistory)
-      .where(eq(renewalHistory.mortgageId, mortgageId));
+    await this.database.delete(renewalHistory).where(eq(renewalHistory.mortgageId, mortgageId));
   }
 }
-

@@ -22,9 +22,7 @@ export function BlendAndExtendComparison({
   onApplyBlendAndExtend,
   selectedOption,
 }: BlendAndExtendComparisonProps) {
-  const newTermPayment = newTermData?.paymentAmount
-    ? parseFloat(newTermData.paymentAmount)
-    : null;
+  const newTermPayment = newTermData?.paymentAmount ? parseFloat(newTermData.paymentAmount) : null;
 
   return (
     <div className="grid grid-cols-2 gap-4 mt-4">
@@ -38,7 +36,8 @@ export function BlendAndExtendComparison({
             <div>
               <div className="text-sm text-muted-foreground">Payment Amount</div>
               <div className="text-2xl font-bold">
-                ${newTermPayment.toLocaleString(undefined, {
+                $
+                {newTermPayment.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -68,7 +67,8 @@ export function BlendAndExtendComparison({
           <div>
             <div className="text-sm text-muted-foreground">Payment Amount</div>
             <div className="text-2xl font-bold text-green-600">
-              ${blendAndExtendResults.newPaymentAmount.toLocaleString(undefined, {
+              $
+              {blendAndExtendResults.newPaymentAmount.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
@@ -104,4 +104,3 @@ export function BlendAndExtendComparison({
     </div>
   );
 }
-

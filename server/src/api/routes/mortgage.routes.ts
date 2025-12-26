@@ -334,8 +334,8 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         detectedMortgageType = "open";
       } else if (mortgageId && !openClosedMortgageType) {
         // Fetch mortgage to check openClosedMortgageType
-        const mortgage = await services.mortgages.findById(mortgageId);
-        if (mortgage && mortgage.userId === user.id) {
+        const mortgage = await services.mortgages.getByIdForUser(mortgageId, user.id);
+        if (mortgage) {
           // Verify ownership
           if (mortgage.openClosedMortgageType === "open") {
             isOpenMortgage = true;
@@ -437,7 +437,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       // Old stub implementation - kept for backward compatibility
       const fixed5Yr = await services.marketRateService.getMarketRate("fixed", 5);
       const variable5Yr = await services.marketRateService.getMarketRate("variable-changing", 5);
-      
+
       res.json({
         fixed5Yr: fixed5Yr ? fixed5Yr * 100 : null,
         variable5Yr: variable5Yr ? variable5Yr * 100 : null,
@@ -459,18 +459,14 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
             total: req.query.closingCostsTotal
               ? parseFloat(req.query.closingCostsTotal as string)
               : undefined,
-            legalFees: req.query.legalFees
-              ? parseFloat(req.query.legalFees as string)
-              : undefined,
+            legalFees: req.query.legalFees ? parseFloat(req.query.legalFees as string) : undefined,
             appraisalFees: req.query.appraisalFees
               ? parseFloat(req.query.appraisalFees as string)
               : undefined,
             dischargeFees: req.query.dischargeFees
               ? parseFloat(req.query.dischargeFees as string)
               : undefined,
-            otherFees: req.query.otherFees
-              ? parseFloat(req.query.otherFees as string)
-              : undefined,
+            otherFees: req.query.otherFees ? parseFloat(req.query.otherFees as string) : undefined,
           }
         : undefined;
 
@@ -764,7 +760,11 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
   // Recast endpoints
   router.post("/mortgages/:id/recast/calculate", async (req, res) => {
     try {
-      const userId = requireUser(req);
+      const user = requireUser(req, res);
+      if (!user) {
+        return sendError(res, 401, "Unauthorized");
+      }
+      const userId = user.id;
       const { id } = req.params;
       const { prepaymentAmount, recastDate } = req.body;
 
@@ -790,7 +790,11 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
   router.post("/mortgages/:id/recast/apply", async (req, res) => {
     try {
-      const userId = requireUser(req);
+      const user = requireUser(req, res);
+      if (!user) {
+        return sendError(res, 401, "Unauthorized");
+      }
+      const userId = user.id;
       const { id } = req.params;
       const { prepaymentAmount, recastDate } = req.body;
 
@@ -816,7 +820,11 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
   router.get("/mortgages/:id/recast/history", async (req, res) => {
     try {
-      const userId = requireUser(req);
+      const user = requireUser(req, res);
+      if (!user) {
+        return sendError(res, 401, "Unauthorized");
+      }
+      const userId = user.id;
       const { id } = req.params;
 
       const history = await services.recast.getRecastHistory(id, userId);
@@ -834,7 +842,11 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
   // Payment Frequency Change endpoints
   router.post("/mortgage-terms/:id/frequency-change/calculate", async (req, res) => {
     try {
-      const userId = requireUser(req);
+      const user = requireUser(req, res);
+      if (!user) {
+        return sendError(res, 401, "Unauthorized");
+      }
+      const userId = user.id;
       const { id } = req.params;
       const { newFrequency } = req.body;
 
@@ -866,7 +878,11 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
   router.post("/mortgage-terms/:id/frequency-change/apply", async (req, res) => {
     try {
-      const userId = requireUser(req);
+      const user = requireUser(req, res);
+      if (!user) {
+        return sendError(res, 401, "Unauthorized");
+      }
+      const userId = user.id;
       const { id } = req.params;
       const { newFrequency, changeDate } = req.body;
 
@@ -903,7 +919,11 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
   router.get("/mortgages/:id/frequency-changes", async (req, res) => {
     try {
-      const userId = requireUser(req);
+      const user = requireUser(req, res);
+      if (!user) {
+        return sendError(res, 401, "Unauthorized");
+      }
+      const userId = user.id;
       const { id } = req.params;
 
       const history = await services.paymentFrequency.getFrequencyChangeHistory(id, userId);
@@ -921,7 +941,11 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
   // Mortgage Portability endpoints
   router.post("/mortgages/:id/portability/calculate", async (req, res) => {
     try {
-      const userId = requireUser(req);
+      const user = requireUser(req, res);
+      if (!user) {
+        return sendError(res, 401, "Unauthorized");
+      }
+      const userId = user.id;
       const { id } = req.params;
       const { newPropertyPrice, portDate } = req.body;
 
@@ -947,7 +971,11 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
   router.post("/mortgages/:id/portability/apply", async (req, res) => {
     try {
-      const userId = requireUser(req);
+      const user = requireUser(req, res);
+      if (!user) {
+        return sendError(res, 401, "Unauthorized");
+      }
+      const userId = user.id;
       const { id } = req.params;
       const { newPropertyPrice, portDate } = req.body;
 
@@ -973,7 +1001,11 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
   router.get("/mortgages/:id/portability/history", async (req, res) => {
     try {
-      const userId = requireUser(req);
+      const user = requireUser(req, res);
+      if (!user) {
+        return sendError(res, 401, "Unauthorized");
+      }
+      const userId = user.id;
       const { id } = req.params;
 
       const history = await services.portability.getPortabilityHistory(id, userId);
@@ -991,7 +1023,11 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
   // Property Value Tracking endpoints
   router.post("/mortgages/:id/property-value", async (req, res) => {
     try {
-      const userId = requireUser(req);
+      const user = requireUser(req, res);
+      if (!user) {
+        return sendError(res, 401, "Unauthorized");
+      }
+      const userId = user.id;
       const { id } = req.params;
       const { propertyValue, valueDate, source, notes } = req.body;
 
@@ -1019,7 +1055,11 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
   router.get("/mortgages/:id/property-value/history", async (req, res) => {
     try {
-      const userId = requireUser(req);
+      const user = requireUser(req, res);
+      if (!user) {
+        return sendError(res, 401, "Unauthorized");
+      }
+      const userId = user.id;
       const { id } = req.params;
 
       const history = await services.propertyValue.getPropertyValueHistory(id, userId);
@@ -1037,7 +1077,11 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
   // Renewal Workflow endpoints
   router.post("/mortgages/:id/renewal/start", async (req, res) => {
     try {
-      const userId = requireUser(req);
+      const user = requireUser(req, res);
+      if (!user) {
+        return sendError(res, 401, "Unauthorized");
+      }
+      const userId = user.id;
       const { id } = req.params;
 
       const result = await services.renewalWorkflow.startRenewalWorkflow(id, userId);
@@ -1054,7 +1098,11 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
   router.post("/mortgages/:id/renewal/negotiations", async (req, res) => {
     try {
-      const userId = requireUser(req);
+      const user = requireUser(req, res);
+      if (!user) {
+        return sendError(res, 401, "Unauthorized");
+      }
+      const userId = user.id;
       const { id } = req.params;
       const { termId, negotiationDate, offeredRate, negotiatedRate, status, notes } = req.body;
 
@@ -1084,7 +1132,11 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
   router.get("/mortgages/:id/renewal/options", async (req, res) => {
     try {
-      const userId = requireUser(req);
+      const user = requireUser(req, res);
+      if (!user) {
+        return sendError(res, 401, "Unauthorized");
+      }
+      const userId = user.id;
       const { id } = req.params;
 
       const options = await services.renewalWorkflow.compareRenewalOptions(id, userId);
@@ -1101,7 +1153,11 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
 
   router.get("/mortgages/:id/renewal/negotiations", async (req, res) => {
     try {
-      const userId = requireUser(req);
+      const user = requireUser(req, res);
+      if (!user) {
+        return sendError(res, 401, "Unauthorized");
+      }
+      const userId = user.id;
       const { id } = req.params;
 
       const history = await services.renewalWorkflow.getNegotiationHistory(id, userId);
@@ -1209,12 +1265,8 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         return sendError(res, 400, "Missing required fields: mortgagePayment, grossIncome");
       }
 
-      const {
-        calculateGDS,
-        calculateTDS,
-        calculateHousingCosts,
-        getDebtServiceRatioStatus,
-      } = await import("@domain/calculations/debt-service-ratios");
+      const { calculateGDS, calculateTDS, calculateHousingCosts, getDebtServiceRatioStatus } =
+        await import("@domain/calculations/debt-service-ratios");
 
       const housingCosts = calculateHousingCosts(
         parseFloat(mortgagePayment),
@@ -1259,13 +1311,15 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       } = req.body;
 
       if (!mortgageAmount || !contractRate || !amortizationMonths || !grossIncome) {
-        return sendError(res, 400, "Missing required fields: mortgageAmount, contractRate, amortizationMonths, grossIncome");
+        return sendError(
+          res,
+          400,
+          "Missing required fields: mortgageAmount, contractRate, amortizationMonths, grossIncome"
+        );
       }
 
-      const {
-        checkStressTest,
-        calculateMaximumMortgageAmount,
-      } = await import("@domain/calculations/stress-test");
+      const { checkStressTest, calculateMaximumMortgageAmount } =
+        await import("@domain/calculations/stress-test");
 
       const stressTestResult = checkStressTest(
         parseFloat(mortgageAmount),
@@ -1295,7 +1349,8 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
           ...(stressTestResult.passes
             ? {}
             : {
-                message: "Mortgage does not pass stress test. Consider reducing mortgage amount or increasing income.",
+                message:
+                  "Mortgage does not pass stress test. Consider reducing mortgage amount or increasing income.",
                 suggestions: [
                   stressTestResult.gdsPass
                     ? null
@@ -1326,7 +1381,11 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
       }
 
       if (!payoffDate || !finalPaymentAmount || remainingBalance === undefined) {
-        return sendError(res, 400, "Missing required fields: payoffDate, finalPaymentAmount, remainingBalance");
+        return sendError(
+          res,
+          400,
+          "Missing required fields: payoffDate, finalPaymentAmount, remainingBalance"
+        );
       }
 
       const result = await services.mortgagePayoff.recordPayoff({
@@ -1376,7 +1435,8 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
   router.get("/mortgage-terms/:termId/payment-amount-changes", requireUser, async (req, res) => {
     try {
       const { termId } = req.params;
-      const changes = await services.paymentAmountChange.getPaymentAmountChangeHistoryByTerm(termId);
+      const changes =
+        await services.paymentAmountChange.getPaymentAmountChangeHistoryByTerm(termId);
       res.json(changes);
     } catch (error) {
       sendError(res, 400, "Failed to fetch payment amount changes", error);

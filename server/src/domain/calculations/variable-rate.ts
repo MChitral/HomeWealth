@@ -1,6 +1,6 @@
 /**
  * Validate variable rate against cap and floor constraints
- * 
+ *
  * @param currentRate - Current variable rate (decimal, e.g., 0.05 for 5%)
  * @param newRate - Proposed new rate (decimal)
  * @param rateCap - Maximum rate cap (decimal, optional)
@@ -42,7 +42,7 @@ export function validateVariableRate(
 
 /**
  * Check if rate is approaching cap or floor
- * 
+ *
  * @param currentRate - Current variable rate (decimal)
  * @param rateCap - Maximum rate cap (decimal, optional)
  * @param rateFloor - Minimum rate floor (decimal, optional)
@@ -75,7 +75,7 @@ export function checkRateApproachingLimits(
 
   if (rateFloor !== null && rateFloor !== undefined) {
     const distance = currentRate - rateFloor;
-    const thresholdAmount = (rateFloor * threshold);
+    const thresholdAmount = rateFloor * threshold;
     distanceToFloor = distance;
     approachingFloor = distance <= thresholdAmount;
   }
@@ -87,4 +87,3 @@ export function checkRateApproachingLimits(
     distanceToFloor,
   };
 }
-

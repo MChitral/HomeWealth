@@ -178,4 +178,3 @@ export function startAlertScheduler(services: ApplicationServices): void {
   scheduler.start(services);
   console.log("[Alert Scheduler] Started with all registered jobs");
 }
-

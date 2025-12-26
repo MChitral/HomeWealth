@@ -1,8 +1,8 @@
 /**
  * Net Tax Benefit Calculations
- * 
+ *
  * Calculates the net tax benefit from Smith Maneuver strategy.
- * 
+ *
  * Net tax benefit = Tax savings from interest deduction - Tax on investment income
  */
 
@@ -35,9 +35,10 @@ export function calculateNetTaxBenefit(
   const netTaxBenefit = interestDeduction.taxSavings - investmentIncomeTax.taxAmount;
 
   // Net benefit as percentage of interest paid
-  const netBenefitPercent = interestDeduction.totalInterest > 0
-    ? (netTaxBenefit / interestDeduction.totalInterest) * 100
-    : 0;
+  const netBenefitPercent =
+    interestDeduction.totalInterest > 0
+      ? (netTaxBenefit / interestDeduction.totalInterest) * 100
+      : 0;
 
   return {
     interestDeduction,
@@ -69,7 +70,10 @@ export function calculateNetTaxBenefitDetailed(
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { calculateInterestDeduction } = require("./interest-deduction");
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { calculateEligibleDividendTaxCredit, calculateNonEligibleDividendTaxCredit } = require("./dividend-tax-credit");
+  const {
+    calculateEligibleDividendTaxCredit,
+    calculateNonEligibleDividendTaxCredit,
+  } = require("./dividend-tax-credit");
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { calculateCapitalGainsTax } = require("./capital-gains-tax");
 
@@ -123,11 +127,7 @@ export function calculateNetTaxBenefitDetailed(
     case "capital_gain": {
       // Capital gains: 50% inclusion rate
       // For this calculation, we assume cost basis is 0 (simplified)
-      const capitalGainResult = calculateCapitalGainsTax(
-        investmentIncome,
-        0,
-        marginalTaxRate
-      );
+      const capitalGainResult = calculateCapitalGainsTax(investmentIncome, 0, marginalTaxRate);
       investmentIncomeTax = {
         grossIncome: investmentIncome,
         taxAmount: capitalGainResult.taxAmount,
@@ -139,4 +139,3 @@ export function calculateNetTaxBenefitDetailed(
 
   return calculateNetTaxBenefit(interestDeduction, investmentIncomeTax);
 }
-

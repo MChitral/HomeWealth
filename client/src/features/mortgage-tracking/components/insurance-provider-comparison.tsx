@@ -49,7 +49,10 @@ export function InsuranceProviderComparison({ comparison }: InsuranceProviderCom
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base">{provider}</CardTitle>
                   {isBest && (
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                    <Badge
+                      variant="outline"
+                      className="bg-green-50 text-green-700 border-green-200"
+                    >
                       <TrendingDown className="h-3 w-3 mr-1" />
                       Best Price
                     </Badge>
@@ -64,7 +67,8 @@ export function InsuranceProviderComparison({ comparison }: InsuranceProviderCom
                 <div>
                   <p className="text-xs text-muted-foreground">Premium Amount</p>
                   <p className="text-xl font-bold text-orange-600">
-                    ${result.premiumAfterDiscount.toLocaleString(undefined, {
+                    $
+                    {result.premiumAfterDiscount.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
@@ -73,7 +77,8 @@ export function InsuranceProviderComparison({ comparison }: InsuranceProviderCom
                 {!isBest && difference > 0 && (
                   <div className="pt-2 border-t">
                     <p className="text-xs text-muted-foreground">
-                      ${difference.toLocaleString(undefined, {
+                      $
+                      {difference.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}{" "}
@@ -96,7 +101,8 @@ export function InsuranceProviderComparison({ comparison }: InsuranceProviderCom
           <p className="text-sm text-blue-900 dark:text-blue-100">
             <strong>Recommendation:</strong> {bestProvider.provider} offers the lowest premium at{" "}
             <strong>
-              ${bestProvider.premium.toLocaleString(undefined, {
+              $
+              {bestProvider.premium.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
@@ -109,4 +115,3 @@ export function InsuranceProviderComparison({ comparison }: InsuranceProviderCom
     </div>
   );
 }
-

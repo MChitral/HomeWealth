@@ -81,7 +81,9 @@ export function HelocTransactionList({ account }: HelocTransactionListProps) {
                     {formatCurrency(transaction.availableCreditAfter)}
                   </TableCell>
                   <TableCell className="text-right font-mono text-sm">
-                    {transaction.interestRate ? `${Number(transaction.interestRate).toFixed(3)}%` : "-"}
+                    {transaction.interestRate
+                      ? `${Number(transaction.interestRate).toFixed(3)}%`
+                      : "-"}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {transaction.description || "-"}
@@ -95,4 +97,3 @@ export function HelocTransactionList({ account }: HelocTransactionListProps) {
     </Card>
   );
 }
-

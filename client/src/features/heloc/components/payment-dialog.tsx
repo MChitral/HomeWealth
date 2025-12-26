@@ -19,7 +19,10 @@ import { Loader2 } from "lucide-react";
 import type { HelocAccount } from "@shared/schema";
 
 const paymentSchema = z.object({
-  amount: z.union([z.string(), z.number()]).transform((val) => (typeof val === "number" ? val : parseFloat(val))).refine((val) => val > 0, "Amount must be greater than 0"),
+  amount: z
+    .union([z.string(), z.number()])
+    .transform((val) => (typeof val === "number" ? val : parseFloat(val)))
+    .refine((val) => val > 0, "Amount must be greater than 0"),
   transactionDate: z.string().min(1, "Transaction date is required"),
   paymentType: z.enum(["interest_only", "interest_principal", "full"]),
   description: z.string().optional(),
@@ -163,4 +166,3 @@ export function PaymentDialog({ open, onOpenChange, account }: PaymentDialogProp
     </Dialog>
   );
 }
-

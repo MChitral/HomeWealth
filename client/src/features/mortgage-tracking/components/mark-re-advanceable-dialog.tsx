@@ -19,13 +19,7 @@ import {
   FormMessage,
   FormDescription,
 } from "@/shared/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { Checkbox } from "@/shared/ui/checkbox";
 import { useMarkMortgageAsReAdvanceable, useHelocAccounts } from "@/features/heloc/hooks";
 import { useToast } from "@/shared/hooks/use-toast";
@@ -72,14 +66,16 @@ export function MarkReAdvanceableDialog({
       });
       toast({
         title: "Mortgage Marked as Re-advanceable",
-        description: "Your mortgage has been successfully linked to the HELOC account. Credit room will update automatically with payments.",
+        description:
+          "Your mortgage has been successfully linked to the HELOC account. Credit room will update automatically with payments.",
       });
       form.reset();
       onOpenChange(false);
     } catch (error) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to mark mortgage as re-advanceable",
+        description:
+          error instanceof Error ? error.message : "Failed to mark mortgage as re-advanceable",
         variant: "destructive",
       });
     }
@@ -182,10 +178,7 @@ export function MarkReAdvanceableDialog({
               render={({ field }) => (
                 <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                   <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
+                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel>I understand this will link my HELOC to this mortgage</FormLabel>
@@ -227,4 +220,3 @@ export function MarkReAdvanceableDialog({
     </Dialog>
   );
 }
-

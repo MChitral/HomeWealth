@@ -48,7 +48,10 @@ export class InvestmentRepository {
     return created;
   }
 
-  async update(id: string, payload: Partial<UpdateInvestment>): Promise<InvestmentRecord | undefined> {
+  async update(
+    id: string,
+    payload: Partial<UpdateInvestment>
+  ): Promise<InvestmentRecord | undefined> {
     const [updated] = await this.database
       .update(investments)
       .set({ ...payload, updatedAt: new Date() })
@@ -64,4 +67,3 @@ export class InvestmentRepository {
     return Boolean(result.rowCount && result.rowCount > 0);
   }
 }
-

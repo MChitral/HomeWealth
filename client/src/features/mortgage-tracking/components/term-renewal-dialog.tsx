@@ -396,8 +396,12 @@ export function TermRenewalDialog({
   onRefreshPrime,
   isPrimeRateLoading,
 }: TermRenewalDialogProps) {
-  const [blendAndExtendResults, setBlendAndExtendResults] = useState<BlendAndExtendResponse | null>(null);
-  const [selectedRenewalOption, setSelectedRenewalOption] = useState<"blend-extend" | "new-term" | undefined>(undefined);
+  const [blendAndExtendResults, setBlendAndExtendResults] = useState<BlendAndExtendResponse | null>(
+    null
+  );
+  const [selectedRenewalOption, setSelectedRenewalOption] = useState<
+    "blend-extend" | "new-term" | undefined
+  >(undefined);
 
   const blendAndExtendMutation = useMutation({
     mutationFn: async (data: BlendAndExtendFormData) => {
@@ -424,12 +428,12 @@ export function TermRenewalDialog({
 
   const handleApplyBlendAndExtend = () => {
     if (!blendAndExtendResults) return;
-    
+
     // Apply blended rate to the form
     form.setValue("termType", "fixed");
     form.setValue("fixedRate", blendAndExtendResults.blendedRatePercent);
     form.setValue("paymentAmount", blendAndExtendResults.newPaymentAmount.toFixed(2));
-    
+
     // Switch to new term tab
     // Note: We can't directly control tabs from here, but we can set a state
     // For now, we'll just update the form values

@@ -41,9 +41,7 @@ export class SmithManeuverRepository {
       .orderBy(desc(smithManeuverStrategies.createdAt));
   }
 
-  async createStrategy(
-    payload: InsertSmithManeuverStrategy
-  ): Promise<SmithManeuverStrategyRecord> {
+  async createStrategy(payload: InsertSmithManeuverStrategy): Promise<SmithManeuverStrategyRecord> {
     const [created] = await this.database
       .insert(smithManeuverStrategies)
       .values(payload)
@@ -66,7 +64,9 @@ export class SmithManeuverRepository {
 
   async deleteStrategy(id: string, tx?: Database): Promise<boolean> {
     const db = tx || this.database;
-    const result = await db.delete(smithManeuverStrategies).where(eq(smithManeuverStrategies.id, id));
+    const result = await db
+      .delete(smithManeuverStrategies)
+      .where(eq(smithManeuverStrategies.id, id));
     return Boolean(result.rowCount && result.rowCount > 0);
   }
 
@@ -100,9 +100,7 @@ export class SmithManeuverRepository {
   }
 
   // Tax calculation methods
-  async findTaxCalculationById(
-    id: string
-  ): Promise<SmithManeuverTaxCalculationRecord | undefined> {
+  async findTaxCalculationById(id: string): Promise<SmithManeuverTaxCalculationRecord | undefined> {
     const result = await this.database
       .select()
       .from(smithManeuverTaxCalculations)
@@ -186,4 +184,3 @@ export class SmithManeuverRepository {
     return updated;
   }
 }
-

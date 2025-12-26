@@ -198,10 +198,7 @@ export class PortabilityService {
   /**
    * Get portability history for a mortgage
    */
-  async getPortabilityHistory(
-    mortgageId: string,
-    userId: string
-  ): Promise<any[] | undefined> {
+  async getPortabilityHistory(mortgageId: string, userId: string): Promise<any[] | undefined> {
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
     if (!mortgage) {
       return undefined;
@@ -210,4 +207,3 @@ export class PortabilityService {
     return this.mortgagePortability.findByMortgageId(mortgageId);
   }
 }
-

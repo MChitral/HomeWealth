@@ -71,9 +71,7 @@ export function CreditRoomHistory({ mortgageId }: CreditRoomHistoryProps) {
   // Calculate increases between entries
   const historyWithIncreases = history.map((entry, index) => {
     const previousEntry = index > 0 ? history[index - 1] : null;
-    const increase = previousEntry
-      ? entry.creditRoom - previousEntry.creditRoom
-      : entry.creditRoom;
+    const increase = previousEntry ? entry.creditRoom - previousEntry.creditRoom : entry.creditRoom;
     return { ...entry, increase };
   });
 
@@ -115,8 +113,7 @@ export function CreditRoomHistory({ mortgageId }: CreditRoomHistoryProps) {
                   <TableCell className="text-right">
                     {entry.increase > 0 ? (
                       <Badge variant="default" className="bg-green-600">
-                        <TrendingUp className="h-3 w-3 mr-1" />
-                        +{formatCurrency(entry.increase)}
+                        <TrendingUp className="h-3 w-3 mr-1" />+{formatCurrency(entry.increase)}
                       </Badge>
                     ) : (
                       <span className="text-muted-foreground">-</span>
@@ -131,4 +128,3 @@ export function CreditRoomHistory({ mortgageId }: CreditRoomHistoryProps) {
     </Card>
   );
 }
-

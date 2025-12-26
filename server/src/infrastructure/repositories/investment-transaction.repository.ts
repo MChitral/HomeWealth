@@ -40,9 +40,7 @@ export class InvestmentTransactionRepository {
       .orderBy(desc(investmentTransactions.transactionDate));
   }
 
-  async create(
-    payload: InsertInvestmentTransaction
-  ): Promise<InvestmentTransactionRecord> {
+  async create(payload: InsertInvestmentTransaction): Promise<InvestmentTransactionRecord> {
     const [created] = await this.database
       .insert(investmentTransactions)
       .values(payload)
@@ -56,4 +54,3 @@ export class InvestmentTransactionRepository {
     return Boolean(result.rowCount && result.rowCount > 0);
   }
 }
-

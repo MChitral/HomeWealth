@@ -109,7 +109,8 @@ export function PrepaymentStrategyRecommendations({
     }
 
     // Scenario 4: Maximize annual prepayment limit
-    const annualLimit = Number(mortgage.originalAmount) * ((mortgage.annualPrepaymentLimitPercent || 20) / 100);
+    const annualLimit =
+      Number(mortgage.originalAmount) * ((mortgage.annualPrepaymentLimitPercent || 20) / 100);
     if (annualLimit >= 1000 && annualLimit <= currentBalance) {
       const scenario = calculatePrepaymentImpact(
         currentBalance,
@@ -171,17 +172,22 @@ export function PrepaymentStrategyRecommendations({
 
     const today = new Date();
     const termEndDate = new Date(currentTerm.endDate);
-    const monthsToRenewal = Math.max(0, (termEndDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24 * 30));
+    const monthsToRenewal = Math.max(
+      0,
+      (termEndDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24 * 30)
+    );
 
     if (monthsToRenewal < 6) {
       return {
         timing: "soon",
-        message: "Consider waiting until renewal to make larger prepayments, as you may avoid penalties.",
+        message:
+          "Consider waiting until renewal to make larger prepayments, as you may avoid penalties.",
       };
     } else if (monthsToRenewal > 18) {
       return {
         timing: "now",
-        message: "Good time to prepay - you have plenty of time until renewal and will maximize interest savings.",
+        message:
+          "Good time to prepay - you have plenty of time until renewal and will maximize interest savings.",
       };
     } else {
       return {
@@ -325,9 +331,7 @@ export function PrepaymentStrategyRecommendations({
                         <div className="text-2xl font-bold text-green-600">
                           {formatCurrency(investmentComparison.prepaymentInterestSavings)}
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          Guaranteed, tax-free
-                        </div>
+                        <div className="text-xs text-muted-foreground">Guaranteed, tax-free</div>
                       </div>
                       <div className="space-y-2">
                         <div className="text-sm text-muted-foreground">Investment Returns</div>
@@ -355,7 +359,9 @@ export function PrepaymentStrategyRecommendations({
                           }
                         >
                           {formatCurrency(Math.abs(investmentComparison.netDifference))}
-                          {investmentComparison.netDifference > 0 ? " better with prepayment" : " better with investment"}
+                          {investmentComparison.netDifference > 0
+                            ? " better with prepayment"
+                            : " better with investment"}
                         </Badge>
                       </div>
                       <Alert>
@@ -406,7 +412,8 @@ export function PrepaymentStrategyRecommendations({
                     <div>
                       <div className="font-medium">Early in Term</div>
                       <div className="text-muted-foreground">
-                        Prepayments early in your term save the most interest due to compound growth.
+                        Prepayments early in your term save the most interest due to compound
+                        growth.
                       </div>
                     </div>
                   </div>
@@ -416,7 +423,8 @@ export function PrepaymentStrategyRecommendations({
                     <div>
                       <div className="font-medium">Before Renewal</div>
                       <div className="text-muted-foreground">
-                        Consider prepayment limits and potential penalties. Larger prepayments may be better at renewal.
+                        Consider prepayment limits and potential penalties. Larger prepayments may
+                        be better at renewal.
                       </div>
                     </div>
                   </div>
@@ -426,7 +434,8 @@ export function PrepaymentStrategyRecommendations({
                     <div>
                       <div className="font-medium">When Rates Are High</div>
                       <div className="text-muted-foreground">
-                        Higher mortgage rates make prepayments more valuable as you're saving on higher-cost debt.
+                        Higher mortgage rates make prepayments more valuable as you're saving on
+                        higher-cost debt.
                       </div>
                     </div>
                   </div>
@@ -460,7 +469,10 @@ function calculatePrepaymentImpact(
   }
 
   // Calculate remaining periods and interest
-  const calculateAmortization = (balance: number, payment: number): { periods: number; totalInterest: number } => {
+  const calculateAmortization = (
+    balance: number,
+    payment: number
+  ): { periods: number; totalInterest: number } => {
     if (payment <= balance * monthlyRate) return { periods: 999, totalInterest: 0 };
 
     let tempBalance = balance;
@@ -501,4 +513,3 @@ function calculatePrepaymentImpact(
     roi,
   };
 }
-

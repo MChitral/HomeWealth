@@ -1,23 +1,19 @@
 /**
  * HELOC Interest Calculations
- * 
+ *
  * HELOC interest is calculated daily and compounds monthly.
  * Rate structure: Prime + Spread (variable rate)
  */
 
 /**
  * Calculate daily interest on HELOC balance
- * 
+ *
  * @param balance - Current HELOC balance
  * @param primeRate - Bank of Canada Prime Rate (as percentage, e.g., 6.45)
  * @param spread - Interest rate spread (as percentage, e.g., 0.5 for Prime + 0.5%)
  * @returns Daily interest amount
  */
-export function calculateDailyInterest(
-  balance: number,
-  primeRate: number,
-  spread: number
-): number {
+export function calculateDailyInterest(balance: number, primeRate: number, spread: number): number {
   const annualRate = (primeRate + spread) / 100;
   const dailyRate = annualRate / 365;
   return balance * dailyRate;
@@ -25,7 +21,7 @@ export function calculateDailyInterest(
 
 /**
  * Calculate monthly interest on HELOC balance
- * 
+ *
  * @param balance - Current HELOC balance
  * @param primeRate - Bank of Canada Prime Rate (as percentage)
  * @param spread - Interest rate spread (as percentage)
@@ -44,7 +40,7 @@ export function calculateMonthlyInterest(
 
 /**
  * Calculate accrued interest for a specific period
- * 
+ *
  * @param balance - HELOC balance during the period
  * @param primeRate - Prime rate during the period
  * @param spread - Interest rate spread
@@ -66,7 +62,7 @@ export function calculateAccruedInterest(
 
 /**
  * Calculate interest-only payment (minimum payment)
- * 
+ *
  * @param balance - Current HELOC balance
  * @param primeRate - Current Prime Rate
  * @param spread - Interest rate spread
@@ -81,4 +77,3 @@ export function calculateInterestOnlyPayment(
 ): number {
   return calculateMonthlyInterest(balance, primeRate, spread, daysInPeriod);
 }
-

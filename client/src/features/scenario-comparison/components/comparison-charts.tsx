@@ -56,8 +56,12 @@ export function ComparisonCharts({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => handleExport("csv")}>Export as CSV</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExport("json")}>Export as JSON</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport("csv")}>
+                  Export as CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport("json")}>
+                  Export as JSON
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

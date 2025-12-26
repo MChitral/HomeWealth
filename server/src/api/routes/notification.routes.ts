@@ -107,15 +107,49 @@ export function registerNotificationRoutes(router: Router, services: Application
 
     try {
       const updateSchema = z.object({
-        emailEnabled: z.boolean().optional(),
-        inAppEnabled: z.boolean().optional(),
-        renewalReminders: z.boolean().optional(),
+        emailEnabled: z
+          .union([z.boolean(), z.number()])
+          .optional()
+          .transform((val) => (val === undefined ? undefined : val === true || val === 1 ? 1 : 0)),
+        inAppEnabled: z
+          .union([z.boolean(), z.number()])
+          .optional()
+          .transform((val) => (val === undefined ? undefined : val === true || val === 1 ? 1 : 0)),
+        renewalReminders: z
+          .union([z.boolean(), z.number()])
+          .optional()
+          .transform((val) => (val === undefined ? undefined : val === true || val === 1 ? 1 : 0)),
         renewalReminderDays: z.string().optional(),
-        triggerRateAlerts: z.boolean().optional(),
-        triggerRateThreshold: z.union([z.string(), z.number()]).optional(),
-        rateChangeAlerts: z.boolean().optional(),
-        penaltyAlerts: z.boolean().optional(),
-        blendExtendAlerts: z.boolean().optional(),
+        triggerRateAlerts: z
+          .union([z.boolean(), z.number()])
+          .optional()
+          .transform((val) => (val === undefined ? undefined : val === true || val === 1 ? 1 : 0)),
+        triggerRateThreshold: z
+          .union([z.string(), z.number()])
+          .optional()
+          .transform((val) =>
+            val === undefined ? undefined : typeof val === "number" ? val.toFixed(3) : val
+          ),
+        rateChangeAlerts: z
+          .union([z.boolean(), z.number()])
+          .optional()
+          .transform((val) => (val === undefined ? undefined : val === true || val === 1 ? 1 : 0)),
+        penaltyAlerts: z
+          .union([z.boolean(), z.number()])
+          .optional()
+          .transform((val) => (val === undefined ? undefined : val === true || val === 1 ? 1 : 0)),
+        blendExtendAlerts: z
+          .union([z.boolean(), z.number()])
+          .optional()
+          .transform((val) => (val === undefined ? undefined : val === true || val === 1 ? 1 : 0)),
+        prepaymentLimitAlerts: z
+          .union([z.boolean(), z.number()])
+          .optional()
+          .transform((val) => (val === undefined ? undefined : val === true || val === 1 ? 1 : 0)),
+        paymentDueReminders: z
+          .union([z.boolean(), z.number()])
+          .optional()
+          .transform((val) => (val === undefined ? undefined : val === true || val === 1 ? 1 : 0)),
       });
 
       const data = updateSchema.parse(req.body);
@@ -126,4 +160,3 @@ export function registerNotificationRoutes(router: Router, services: Application
     }
   });
 }
-

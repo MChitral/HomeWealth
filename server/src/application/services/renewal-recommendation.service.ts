@@ -62,7 +62,8 @@ export class RenewalRecommendationService {
     // Get market rate for renewal
     const termType = currentTerm.termType as "fixed" | "variable-changing" | "variable-fixed";
     const termYears = currentTerm.termYears;
-    const marketRate = (await this.marketRateService.getMarketRate(termType, termYears)) ?? currentRate;
+    const marketRate =
+      (await this.marketRateService.getMarketRate(termType, termYears)) ?? currentRate;
 
     // Calculate estimated new payment based on market rate
     const currentBalance = Number(mortgage.currentBalance);
@@ -96,7 +97,11 @@ export class RenewalRecommendationService {
     let confidence: "high" | "medium" | "low" = "medium";
 
     // Decision logic
-    if (refinanceAnalysis && refinanceAnalysis.isBeneficial && refinanceAnalysis.breakEvenMonths < 24) {
+    if (
+      refinanceAnalysis &&
+      refinanceAnalysis.isBeneficial &&
+      refinanceAnalysis.breakEvenMonths < 24
+    ) {
       recommendation = "refinance";
       reasoning = `Refinancing is beneficial with ${refinanceAnalysis.monthlySavings.toFixed(2)}/month savings and ${refinanceAnalysis.breakEvenMonths.toFixed(1)} month break-even. You'll save approximately $${refinanceAnalysis.totalTermSavings.toFixed(2)} over the term.`;
       confidence = refinanceAnalysis.breakEvenMonths < 12 ? "high" : "medium";
@@ -155,4 +160,3 @@ export class RenewalRecommendationService {
     return result;
   }
 }
-

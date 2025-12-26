@@ -20,7 +20,7 @@ export interface SimulationParams {
   rateModel?: RateModel; // "gbm" or "vasicek" (default: "gbm")
   interestRateVolatility: number; // Annualized volatility of interest rates (e.g., 0.20)
   interestRateDrift?: number; // Expected annual drift (e.g., 0.0 for neutral, default: 0.0)
-  
+
   // Mean-reverting model parameters (Vasicek)
   meanReversionSpeed?: number; // Speed of mean reversion (default: 0.1)
   longTermMeanRate?: number; // Long-term mean rate (default: startRate)
@@ -157,11 +157,7 @@ export class MonteCarloEngine {
   /**
    * Applies rate constraints (cap and floor)
    */
-  private static applyRateConstraints(
-    rate: number,
-    cap?: number,
-    floor?: number
-  ): number {
+  private static applyRateConstraints(rate: number, cap?: number, floor?: number): number {
     let constrainedRate = rate;
     if (cap !== undefined) {
       constrainedRate = Math.min(constrainedRate, cap);
@@ -301,7 +297,8 @@ export class MonteCarloEngine {
     if (!fixedPayment) {
       const monthlyRate = startRate / 12;
       fixedPayment =
-        (startBalance * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -remainingAmortizationMonths));
+        (startBalance * monthlyRate) /
+        (1 - Math.pow(1 + monthlyRate, -remainingAmortizationMonths));
     }
 
     const finalBalances: number[] = [];

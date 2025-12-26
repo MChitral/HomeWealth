@@ -19,7 +19,10 @@ import type { HelocAccount } from "@shared/schema";
 import { calculateAvailableCredit } from "@server-shared/calculations/heloc/available-credit";
 
 const borrowSchema = z.object({
-  amount: z.union([z.string(), z.number()]).transform((val) => (typeof val === "number" ? val : parseFloat(val))).refine((val) => val > 0, "Amount must be greater than 0"),
+  amount: z
+    .union([z.string(), z.number()])
+    .transform((val) => (typeof val === "number" ? val : parseFloat(val)))
+    .refine((val) => val > 0, "Amount must be greater than 0"),
   transactionDate: z.string().min(1, "Transaction date is required"),
   description: z.string().optional(),
 });
@@ -153,4 +156,3 @@ export function BorrowDialog({ open, onOpenChange, account }: BorrowDialogProps)
     </Dialog>
   );
 }
-

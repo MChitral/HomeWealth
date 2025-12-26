@@ -7,7 +7,10 @@ import {
 import { TaxCalculationService } from "./tax-calculation.service";
 import { calculateCreditRoomIncrease } from "@server-shared/calculations/smith-maneuver/credit-room";
 import { calculateNetBenefit } from "@server-shared/calculations/smith-maneuver/net-benefit";
-import { calculateLeverageRatio, calculateInterestCoverage } from "@server-shared/calculations/smith-maneuver/risk-metrics";
+import {
+  calculateLeverageRatio,
+  calculateInterestCoverage,
+} from "@server-shared/calculations/smith-maneuver/risk-metrics";
 import { calculateInterestDeduction } from "@domain/calculations/tax/interest-deduction";
 import type {
   InsertSmithManeuverStrategy,
@@ -16,7 +19,10 @@ import type {
 } from "@shared/schema";
 import { fetchLatestPrimeRate } from "@server-shared/services/prime-rate";
 
-export interface CreateSmithManeuverStrategyParams extends Omit<InsertSmithManeuverStrategy, "userId"> {
+export interface CreateSmithManeuverStrategyParams extends Omit<
+  InsertSmithManeuverStrategy,
+  "userId"
+> {
   userId: string;
 }
 
@@ -180,7 +186,10 @@ export class SmithManeuverService {
   /**
    * Validate borrowing amount against available credit
    */
-  validateBorrowing(borrowingAmount: number, availableCredit: number): {
+  validateBorrowing(
+    borrowingAmount: number,
+    availableCredit: number
+  ): {
     valid: boolean;
     error?: string;
   } {
@@ -263,7 +272,11 @@ export class SmithManeuverService {
    * Generate projections for a strategy
    * Simplified version - full implementation would require complex month-by-month modeling
    */
-  async projectStrategy(strategyId: string, userId: string, years: number = 30): Promise<YearlyProjection[]> {
+  async projectStrategy(
+    strategyId: string,
+    userId: string,
+    years: number = 30
+  ): Promise<YearlyProjection[]> {
     const strategy = await this.getStrategyById(strategyId, userId);
     if (!strategy) {
       throw new Error("Strategy not found");
@@ -437,9 +450,7 @@ export class SmithManeuverService {
     const netBenefit = lastProjection.netBenefit;
     const roi = totalInvestment > 0 ? (netBenefit / totalInvestment) * 100 : 0;
     const effectiveReturn =
-      totalInvestment > 0
-        ? ((totalReturns - totalInvestmentTax) / totalInvestment) * 100
-        : 0;
+      totalInvestment > 0 ? ((totalReturns - totalInvestmentTax) / totalInvestment) * 100 : 0;
 
     return {
       totalInvestment,
@@ -491,7 +502,8 @@ export class SmithManeuverService {
     // Simplified interest saved calculation
     // In reality, this would require full amortization schedule
     const averageBalance = (initialBalance + finalBalance) / 2;
-    const interestSaved = averageBalance * mortgageRate * years - finalBalance * mortgageRate * years;
+    const interestSaved =
+      averageBalance * mortgageRate * years - finalBalance * mortgageRate * years;
 
     const directPrepayment = {
       totalPrepayments,
@@ -527,4 +539,3 @@ export class SmithManeuverService {
     };
   }
 }
-

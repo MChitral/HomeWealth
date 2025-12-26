@@ -42,15 +42,17 @@ export const notificationApi = {
 
   getUnreadCount: () => apiRequest<{ count: number }>("GET", "/api/notifications/unread-count"),
 
-  markAsRead: (id: string) => apiRequest<{ success: boolean }>("PATCH", `/api/notifications/${id}/read`),
+  markAsRead: (id: string) =>
+    apiRequest<{ success: boolean }>("PATCH", `/api/notifications/${id}/read`),
 
   markAllAsRead: () => apiRequest<{ count: number }>("PATCH", "/api/notifications/read-all"),
 
-  deleteNotification: (id: string) => apiRequest<{ success: boolean }>("DELETE", `/api/notifications/${id}`),
+  deleteNotification: (id: string) =>
+    apiRequest<{ success: boolean }>("DELETE", `/api/notifications/${id}`),
 
-  getPreferences: () => apiRequest<NotificationPreferences>("GET", "/api/notifications/preferences"),
+  getPreferences: () =>
+    apiRequest<NotificationPreferences>("GET", "/api/notifications/preferences"),
 
   updatePreferences: (updates: Partial<NotificationPreferences>) =>
     apiRequest<NotificationPreferences>("PATCH", "/api/notifications/preferences", updates),
 };
-

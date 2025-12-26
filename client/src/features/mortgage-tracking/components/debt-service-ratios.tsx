@@ -25,9 +25,7 @@ export function DebtServiceRatios({
   const [mortgagePayment, setMortgagePayment] = useState<string>(
     initialMortgagePayment?.toString() || ""
   );
-  const [grossIncome, setGrossIncome] = useState<string>(
-    initialGrossIncome?.toString() || ""
-  );
+  const [grossIncome, setGrossIncome] = useState<string>(initialGrossIncome?.toString() || "");
   const [propertyTax, setPropertyTax] = useState<string>("");
   const [heatingCosts, setHeatingCosts] = useState<string>("");
   const [condoFees, setCondoFees] = useState<string>("");
@@ -166,9 +164,7 @@ export function DebtServiceRatios({
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">Max: 39% (B-20 Guidelines)</p>
-                {result.gdsWarning && (
-                  <p className="text-xs text-yellow-600">Approaching limit</p>
-                )}
+                {result.gdsWarning && <p className="text-xs text-yellow-600">Approaching limit</p>}
               </div>
 
               <div className="space-y-2">
@@ -182,9 +178,7 @@ export function DebtServiceRatios({
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">Max: 44% (B-20 Guidelines)</p>
-                {result.tdsWarning && (
-                  <p className="text-xs text-yellow-600">Approaching limit</p>
-                )}
+                {result.tdsWarning && <p className="text-xs text-yellow-600">Approaching limit</p>}
               </div>
             </div>
 
@@ -225,4 +219,3 @@ export function DebtServiceRatios({
     </Card>
   );
 }
-

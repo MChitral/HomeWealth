@@ -4,8 +4,10 @@ import type { CreditRoomResponse, CreditRoomHistoryItem } from "../api/heloc-api
 
 export const reAdvanceableQueryKeys = {
   all: ["/api/mortgages"] as const,
-  creditRoom: (mortgageId: string) => [...reAdvanceableQueryKeys.all, mortgageId, "credit-room"] as const,
-  creditRoomHistory: (mortgageId: string) => [...reAdvanceableQueryKeys.all, mortgageId, "credit-room-history"] as const,
+  creditRoom: (mortgageId: string) =>
+    [...reAdvanceableQueryKeys.all, mortgageId, "credit-room"] as const,
+  creditRoomHistory: (mortgageId: string) =>
+    [...reAdvanceableQueryKeys.all, mortgageId, "credit-room-history"] as const,
 };
 
 export function useCreditRoom(mortgageId: string | null) {
@@ -36,9 +38,12 @@ export function useMarkMortgageAsReAdvanceable() {
       // Invalidate HELOC accounts to refresh linked status
       queryClient.invalidateQueries({ queryKey: ["/api/heloc/accounts"] });
       // Invalidate credit room queries
-      queryClient.invalidateQueries({ queryKey: reAdvanceableQueryKeys.creditRoom(variables.mortgageId) });
-      queryClient.invalidateQueries({ queryKey: reAdvanceableQueryKeys.creditRoomHistory(variables.mortgageId) });
+      queryClient.invalidateQueries({
+        queryKey: reAdvanceableQueryKeys.creditRoom(variables.mortgageId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: reAdvanceableQueryKeys.creditRoomHistory(variables.mortgageId),
+      });
     },
   });
 }
-

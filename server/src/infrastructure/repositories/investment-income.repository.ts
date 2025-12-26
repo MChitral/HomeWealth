@@ -2,7 +2,7 @@ import { eq, and, desc } from "drizzle-orm";
 import { db } from "@infrastructure/db/connection";
 import type { NeonDatabase } from "drizzle-orm/neon-serverless";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
-import type * as schema from "@shared/schema";
+import * as schema from "@shared/schema";
 import {
   investmentIncome,
   type InvestmentIncome as InvestmentIncomeRecord,
@@ -38,18 +38,12 @@ export class InvestmentIncomeRepository {
       .select()
       .from(investmentIncome)
       .where(
-        and(
-          eq(investmentIncome.investmentId, investmentId),
-          eq(investmentIncome.taxYear, taxYear)
-        )
+        and(eq(investmentIncome.investmentId, investmentId), eq(investmentIncome.taxYear, taxYear))
       )
       .orderBy(desc(investmentIncome.incomeDate));
   }
 
-  async findByUserIdAndTaxYear(
-    userId: string,
-    taxYear: number
-  ): Promise<InvestmentIncomeRecord[]> {
+  async findByUserIdAndTaxYear(userId: string, taxYear: number): Promise<InvestmentIncomeRecord[]> {
     // This requires a join with investments table
     const result = await this.database
       .select({
@@ -63,16 +57,8 @@ export class InvestmentIncomeRepository {
         createdAt: investmentIncome.createdAt,
       })
       .from(investmentIncome)
-      .innerJoin(
-        schema.investments,
-        eq(investmentIncome.investmentId, schema.investments.id)
-      )
-      .where(
-        and(
-          eq(schema.investments.userId, userId),
-          eq(investmentIncome.taxYear, taxYear)
-        )
-      )
+      .innerJoin(schema.investments, eq(investmentIncome.investmentId, schema.investments.id))
+      .where(and(eq(schema.investments.userId, userId), eq(investmentIncome.taxYear, taxYear)))
       .orderBy(desc(investmentIncome.incomeDate));
 
     return result as InvestmentIncomeRecord[];
@@ -89,4 +75,3 @@ export class InvestmentIncomeRepository {
     return Boolean(result.rowCount && result.rowCount > 0);
   }
 }
-

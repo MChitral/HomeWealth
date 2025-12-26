@@ -64,4 +64,3 @@ export class MortgagePortabilityRepository {
       .where(eq(mortgagePortability.mortgageId, mortgageId));
   }
 }
-

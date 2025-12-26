@@ -39,8 +39,8 @@ export function InsuranceInfo() {
             <AccordionContent className="space-y-3">
               <div className="space-y-2">
                 <p>
-                  <strong>High-Ratio Mortgages:</strong> Insurance is required when your down payment
-                  is less than 20% of the property purchase price.
+                  <strong>High-Ratio Mortgages:</strong> Insurance is required when your down
+                  payment is less than 20% of the property purchase price.
                 </p>
                 <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ml-4">
                   <li>Down payment &lt; 20% = High-ratio mortgage (insurance required)</li>
@@ -91,8 +91,8 @@ export function InsuranceInfo() {
                     <strong>Option 1: Pay Upfront</strong>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Pay the full premium amount at closing. Your mortgage amount remains the original
-                    loan amount.
+                    Pay the full premium amount at closing. Your mortgage amount remains the
+                    original loan amount.
                   </p>
                 </div>
                 <div className="border-l-4 border-green-500 pl-4">
@@ -139,8 +139,8 @@ export function InsuranceInfo() {
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground mt-3">
-                  Eligibility criteria change over time. Always verify current requirements with your
-                  lender and insurance provider.
+                  Eligibility criteria change over time. Always verify current requirements with
+                  your lender and insurance provider.
                 </p>
               </div>
             </AccordionContent>
@@ -170,8 +170,8 @@ export function InsuranceInfo() {
                   </p>
                 </div>
                 <p className="text-sm text-muted-foreground mt-3">
-                  Premium rates may vary slightly between providers. Compare options to find the best
-                  rate for your situation.
+                  Premium rates may vary slightly between providers. Compare options to find the
+                  best rate for your situation.
                 </p>
               </div>
             </AccordionContent>
@@ -223,4 +223,3 @@ export function InsuranceInfo() {
     </Card>
   );
 }
-

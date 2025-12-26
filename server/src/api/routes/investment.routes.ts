@@ -8,9 +8,21 @@ import { z } from "zod";
 const investmentTransactionSchema = z.object({
   transactionDate: z.string(),
   transactionType: z.enum(["purchase", "sale", "dividend", "interest", "capital_gain"]),
-  amount: z.union([z.string(), z.number()]).transform((val) => (typeof val === "number" ? val : parseFloat(val))),
-  quantity: z.union([z.string(), z.number()]).optional(),
-  pricePerUnit: z.union([z.string(), z.number()]).optional(),
+  amount: z
+    .union([z.string(), z.number()])
+    .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+  quantity: z
+    .union([z.string(), z.number(), z.null(), z.undefined()])
+    .optional()
+    .transform((val) =>
+      val === null || val === undefined ? undefined : typeof val === "number" ? val.toFixed(4) : val
+    ),
+  pricePerUnit: z
+    .union([z.string(), z.number(), z.null(), z.undefined()])
+    .optional()
+    .transform((val) =>
+      val === null || val === undefined ? undefined : typeof val === "number" ? val.toFixed(4) : val
+    ),
   description: z.string().optional(),
   linkedHelocTransactionId: z.string().optional(),
 });
@@ -18,7 +30,9 @@ const investmentTransactionSchema = z.object({
 const investmentIncomeSchema = z.object({
   incomeType: z.enum(["dividend", "interest", "capital_gain"]),
   incomeDate: z.string(),
-  amount: z.union([z.string(), z.number()]).transform((val) => (typeof val === "number" ? val : parseFloat(val))),
+  amount: z
+    .union([z.string(), z.number()])
+    .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
   taxYear: z.number().int().min(2000).max(2100),
   taxTreatment: z.enum(["eligible_dividend", "non_eligible_dividend", "interest", "capital_gain"]),
 });
@@ -79,7 +93,11 @@ export function registerInvestmentRoutes(router: Router, services: ApplicationSe
 
     try {
       const validated = updateInvestmentSchema.parse(req.body);
-      const investment = await services.investments.updateInvestment(req.params.id, user.id, validated);
+      const investment = await services.investments.updateInvestment(
+        req.params.id,
+        user.id,
+        validated
+      );
       if (!investment) {
         sendError(res, 404, "Investment not found");
         return;
@@ -117,7 +135,10 @@ export function registerInvestmentRoutes(router: Router, services: ApplicationSe
     if (!user) return;
 
     try {
-      const transactions = await services.investments.getTransactionsByInvestmentId(req.params.id, user.id);
+      const transactions = await services.investments.getTransactionsByInvestmentId(
+        req.params.id,
+        user.id
+      );
       res.json(transactions);
     } catch (error) {
       sendError(res, 500, "Failed to fetch investment transactions", error);
@@ -131,7 +152,10 @@ export function registerInvestmentRoutes(router: Router, services: ApplicationSe
 
     try {
       const validated = investmentTransactionSchema.parse(req.body);
-      const transaction = await services.investments.recordTransaction(req.params.id, user.id, validated);
+      const transaction = await services.investments.recordTransaction(req.params.id, user.id, {
+        ...validated,
+        investmentId: req.params.id,
+      });
       if (!transaction) {
         sendError(res, 404, "Investment not found");
         return;
@@ -172,7 +196,10 @@ export function registerInvestmentRoutes(router: Router, services: ApplicationSe
 
     try {
       const validated = investmentIncomeSchema.parse(req.body);
-      const income = await services.investments.recordIncome(req.params.id, user.id, validated);
+      const income = await services.investments.recordIncome(req.params.id, user.id, {
+        ...validated,
+        investmentId: req.params.id,
+      });
       if (!income) {
         sendError(res, 404, "Investment not found");
         return;
@@ -205,4 +232,3 @@ export function registerInvestmentRoutes(router: Router, services: ApplicationSe
     }
   });
 }
-

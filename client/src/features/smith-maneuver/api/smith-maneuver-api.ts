@@ -54,7 +54,8 @@ export type PrepaymentComparison = {
 };
 
 export const smithManeuverApi = {
-  fetchStrategies: () => apiRequest<SmithManeuverStrategy[]>("GET", "/api/smith-maneuver/strategies"),
+  fetchStrategies: () =>
+    apiRequest<SmithManeuverStrategy[]>("GET", "/api/smith-maneuver/strategies"),
 
   fetchStrategy: (id: string) =>
     apiRequest<SmithManeuverStrategy>("GET", `/api/smith-maneuver/strategies/${id}`),
@@ -76,7 +77,10 @@ export const smithManeuverApi = {
   },
 
   fetchTransactions: (strategyId: string) =>
-    apiRequest<SmithManeuverTransaction[]>("GET", `/api/smith-maneuver/strategies/${strategyId}/transactions`),
+    apiRequest<SmithManeuverTransaction[]>(
+      "GET",
+      `/api/smith-maneuver/strategies/${strategyId}/transactions`
+    ),
 
   fetchTaxCalculations: (strategyId: string) =>
     apiRequest<SmithManeuverTaxCalculation[]>(
@@ -92,9 +96,12 @@ export const smithManeuverApi = {
   },
 
   compareWithDirectPrepayment: (strategyId: string, years: number, mortgageRate: number) =>
-    apiRequest<PrepaymentComparison>("POST", `/api/smith-maneuver/strategies/${strategyId}/compare-prepayment`, {
-      years,
-      mortgageRate,
-    }),
+    apiRequest<PrepaymentComparison>(
+      "POST",
+      `/api/smith-maneuver/strategies/${strategyId}/compare-prepayment`,
+      {
+        years,
+        mortgageRate,
+      }
+    ),
 };
-

@@ -80,4 +80,3 @@ export function createPropertyValueRoutes(services: ApplicationServices): Router
 
   return router;
 }
-

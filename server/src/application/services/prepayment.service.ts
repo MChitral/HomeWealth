@@ -36,11 +36,19 @@ export class PrepaymentService {
     const { getPrepaymentYear } = await import("@server-shared/calculations/prepayment-year");
     const payments = await this.mortgagePaymentRepository.findByMortgageId(mortgageId);
     const today = new Date().toISOString().split("T")[0];
-    const currentPrepaymentYear = getPrepaymentYear(today, mortgage.prepaymentLimitResetDate, mortgage.startDate);
+    const currentPrepaymentYear = getPrepaymentYear(
+      today,
+      mortgage.prepaymentLimitResetDate,
+      mortgage.startDate
+    );
 
     // Filter for current prepayment year (anniversary or calendar)
     const currentYearPayments = payments.filter((p: MortgagePayment) => {
-      const paymentYear = getPrepaymentYear(p.paymentDate, mortgage.prepaymentLimitResetDate, mortgage.startDate);
+      const paymentYear = getPrepaymentYear(
+        p.paymentDate,
+        mortgage.prepaymentLimitResetDate,
+        mortgage.startDate
+      );
       return paymentYear === currentPrepaymentYear;
     });
 
@@ -81,7 +89,7 @@ export class PrepaymentService {
     const percent = mortgage.annualPrepaymentLimitPercent || 20; // Default 20%
     const annualLimit = Number(mortgage.originalAmount) * (percent / 100);
     const carryForward = Number(mortgage.prepaymentCarryForward || 0);
-    
+
     // Available limit includes carry-forward from previous year
     const limit = annualLimit + carryForward;
 

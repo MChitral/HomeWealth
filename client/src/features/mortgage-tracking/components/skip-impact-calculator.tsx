@@ -66,9 +66,7 @@ export function SkipImpactCalculator({
           <Calculator className="h-5 w-5 text-indigo-500" />
           Skip Payment Impact Calculator
         </CardTitle>
-        <CardDescription>
-          Calculate the impact of skipping multiple payments
-        </CardDescription>
+        <CardDescription>Calculate the impact of skipping multiple payments</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
@@ -109,7 +107,8 @@ export function SkipImpactCalculator({
               <div className="p-3 bg-muted rounded-md">
                 <p className="text-xs text-muted-foreground mb-1">Total Interest Accrued</p>
                 <p className="text-xl font-mono font-semibold text-orange-600">
-                  ${impact.totalInterestAccrued.toLocaleString(undefined, {
+                  $
+                  {impact.totalInterestAccrued.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}
@@ -118,7 +117,8 @@ export function SkipImpactCalculator({
               <div className="p-3 bg-muted rounded-md">
                 <p className="text-xs text-muted-foreground mb-1">Balance Increase</p>
                 <p className="text-xl font-mono font-semibold text-red-600">
-                  +${impact.balanceIncrease.toLocaleString(undefined, {
+                  +$
+                  {impact.balanceIncrease.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}
@@ -127,7 +127,8 @@ export function SkipImpactCalculator({
               <div className="p-3 bg-muted rounded-md">
                 <p className="text-xs text-muted-foreground mb-1">Final Balance</p>
                 <p className="text-xl font-mono font-semibold">
-                  ${impact.finalBalance.toLocaleString(undefined, {
+                  $
+                  {impact.finalBalance.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}
@@ -136,7 +137,7 @@ export function SkipImpactCalculator({
               <div className="p-3 bg-muted rounded-md">
                 <p className="text-xs text-muted-foreground mb-1">Extended Amortization</p>
                 <p className="text-xl font-mono font-semibold">
-                  {Math.round(impact.extendedAmortizationMonths / 12 * 10) / 10} years
+                  {Math.round((impact.extendedAmortizationMonths / 12) * 10) / 10} years
                   <span className="text-xs text-muted-foreground ml-1">
                     ({impact.extendedAmortizationMonths} months)
                   </span>
@@ -150,7 +151,8 @@ export function SkipImpactCalculator({
                 <strong>Warning:</strong> Skipping {numberOfSkips} payment
                 {numberOfSkips !== 1 ? "s" : ""} will increase your balance by{" "}
                 <strong>
-                  ${impact.balanceIncrease.toLocaleString(undefined, {
+                  $
+                  {impact.balanceIncrease.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}
@@ -165,7 +167,8 @@ export function SkipImpactCalculator({
                 <DollarSign className="h-4 w-4 text-blue-600 mt-0.5" />
                 <div className="text-sm">
                   <p className="font-medium text-blue-900 dark:text-blue-100 mb-1">
-                    Current Balance: ${currentBalance.toLocaleString(undefined, {
+                    Current Balance: $
+                    {currentBalance.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
@@ -174,7 +177,8 @@ export function SkipImpactCalculator({
                     After skipping {numberOfSkips} payment{numberOfSkips !== 1 ? "s" : ""}, your
                     balance will be{" "}
                     <strong>
-                      ${impact.finalBalance.toLocaleString(undefined, {
+                      $
+                      {impact.finalBalance.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}
@@ -190,4 +194,3 @@ export function SkipImpactCalculator({
     </Card>
   );
 }
-

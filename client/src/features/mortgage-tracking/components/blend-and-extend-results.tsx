@@ -48,7 +48,8 @@ export function BlendAndExtendResults({ results, currentPayment }: BlendAndExten
             <div className="space-y-1">
               <div className="text-xs text-muted-foreground">Current Payment</div>
               <div className="text-lg font-semibold">
-                ${results.oldRatePaymentAmount.toLocaleString(undefined, {
+                $
+                {results.oldRatePaymentAmount.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -57,7 +58,8 @@ export function BlendAndExtendResults({ results, currentPayment }: BlendAndExten
             <div className="space-y-1">
               <div className="text-xs text-muted-foreground">Blend-and-Extend</div>
               <div className="text-lg font-semibold text-green-600">
-                ${results.newPaymentAmount.toLocaleString(undefined, {
+                $
+                {results.newPaymentAmount.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -66,7 +68,8 @@ export function BlendAndExtendResults({ results, currentPayment }: BlendAndExten
             <div className="space-y-1">
               <div className="text-xs text-muted-foreground">Market Rate</div>
               <div className="text-lg font-semibold">
-                ${results.marketRatePaymentAmount.toLocaleString(undefined, {
+                $
+                {results.marketRatePaymentAmount.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -79,10 +82,12 @@ export function BlendAndExtendResults({ results, currentPayment }: BlendAndExten
             <Alert className="bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800">
               <DollarSign className="h-4 w-4 text-green-600" />
               <AlertDescription className="text-green-900 dark:text-green-100">
-                <strong>Payment Reduction:</strong> ${paymentReduction.toLocaleString(undefined, {
+                <strong>Payment Reduction:</strong> $
+                {paymentReduction.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
-                })} per payment
+                })}{" "}
+                per payment
               </AlertDescription>
             </Alert>
           )}
@@ -91,10 +96,15 @@ export function BlendAndExtendResults({ results, currentPayment }: BlendAndExten
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                You save <strong>${results.interestSavingsPerPayment.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}</strong> per payment compared to market rate renewal.
+                You save{" "}
+                <strong>
+                  $
+                  {results.interestSavingsPerPayment.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </strong>{" "}
+                per payment compared to market rate renewal.
               </AlertDescription>
             </Alert>
           )}
@@ -108,4 +118,3 @@ export function BlendAndExtendResults({ results, currentPayment }: BlendAndExten
     </div>
   );
 }
-

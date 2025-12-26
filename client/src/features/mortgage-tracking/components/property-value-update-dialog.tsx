@@ -9,13 +9,7 @@ import {
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { Textarea } from "@/shared/ui/textarea";
 import { mortgageApi, type PropertyValueUpdateResponse } from "../api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -230,4 +224,3 @@ export function PropertyValueUpdateDialog({
     </Dialog>
   );
 }
-

@@ -82,4 +82,3 @@ export class NotificationRepository {
     return (result.rowCount || 0) > 0;
   }
 }
-

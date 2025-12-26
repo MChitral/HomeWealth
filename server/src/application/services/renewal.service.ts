@@ -165,7 +165,7 @@ export class RenewalService {
       newRate: (newRate / 100).toFixed(3), // Store as decimal
       decisionType,
       lenderName,
-      estimatedSavings: estimatedSavings ? estimatedSavings.toFixed(2) : undefined,
+      estimatedSavings: estimatedSavings ? estimatedSavings.toFixed(2) : null,
       notes,
     });
 

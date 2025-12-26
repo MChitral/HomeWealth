@@ -111,7 +111,7 @@ export function createServices(repositories: Repositories): ApplicationServices 
   );
 
   const taxCalculationService = new TaxCalculationService();
-  
+
   // Create payment amount change service for prime rate tracking
   const paymentAmountChangeService = new PaymentAmountChangeService(
     repositories.paymentAmountChangeEvents,
@@ -242,7 +242,7 @@ export function createServices(repositories: Repositories): ApplicationServices 
       repositories.renewalNegotiations,
       marketRateService,
       renewalService,
-      renewalRecommendationServiceWithRefinance
+      renewalRecommendationService
     ),
     paymentCorrections: new PaymentCorrectionsService(
       repositories.paymentCorrections,

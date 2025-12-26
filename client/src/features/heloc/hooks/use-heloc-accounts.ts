@@ -6,7 +6,8 @@ export const helocQueryKeys = {
   all: ["/api/heloc/accounts"] as const,
   accounts: () => [...helocQueryKeys.all, "list"] as const,
   account: (id: string) => [...helocQueryKeys.all, id] as const,
-  transactions: (accountId: string) => [...helocQueryKeys.account(accountId), "transactions"] as const,
+  transactions: (accountId: string) =>
+    [...helocQueryKeys.account(accountId), "transactions"] as const,
 };
 
 export function useHelocAccounts() {
@@ -58,4 +59,3 @@ export function useDeleteHelocAccount() {
     },
   });
 }
-

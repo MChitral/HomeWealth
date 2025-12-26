@@ -2,14 +2,10 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Bell, Check, CheckCheck, Trash2 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/shared/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
 import { Badge } from "@/shared/ui/badge";
 import { ScrollArea } from "@/shared/ui/scroll-area";
-import { notificationApi, type Notification } from "../api";
+import { notificationApi, type Notification } from "../api/notification-api";
 import { formatDistanceToNow } from "date-fns";
 
 export function NotificationCenter() {
@@ -116,7 +112,9 @@ function NotificationItem({
   onDelete: () => void;
 }) {
   return (
-    <div className={`p-4 hover:bg-muted/50 ${!notification.read ? "bg-blue-50 dark:bg-blue-950/20" : ""}`}>
+    <div
+      className={`p-4 hover:bg-muted/50 ${!notification.read ? "bg-blue-50 dark:bg-blue-950/20" : ""}`}
+    >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
@@ -134,21 +132,11 @@ function NotificationItem({
         </div>
         <div className="flex items-center gap-1">
           {!notification.read && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6"
-              onClick={onMarkAsRead}
-            >
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onMarkAsRead}>
               <Check className="h-3 w-3" />
             </Button>
           )}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            onClick={onDelete}
-          >
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onDelete}>
             <Trash2 className="h-3 w-3" />
           </Button>
         </div>
@@ -156,4 +144,3 @@ function NotificationItem({
     </div>
   );
 }
-

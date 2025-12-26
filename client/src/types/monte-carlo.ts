@@ -39,4 +39,3 @@ export interface MonteCarloResult {
     balance: number;
   }[][];
 }
-

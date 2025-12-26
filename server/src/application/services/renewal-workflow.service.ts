@@ -51,12 +51,18 @@ export class RenewalWorkflowService {
   /**
    * Start renewal workflow
    */
-  async startRenewalWorkflow(mortgageId: string, userId: string): Promise<{
-    mortgage: Mortgage;
-    currentTerm: MortgageTerm | undefined;
-    renewalStatus: any;
-    recommendation?: any;
-  } | undefined> {
+  async startRenewalWorkflow(
+    mortgageId: string,
+    userId: string
+  ): Promise<
+    | {
+        mortgage: Mortgage;
+        currentTerm: MortgageTerm | undefined;
+        renewalStatus: any;
+        recommendation?: any;
+      }
+    | undefined
+  > {
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
     if (!mortgage) {
       return undefined;
@@ -102,8 +108,8 @@ export class RenewalWorkflowService {
       mortgageId,
       termId: input.termId,
       negotiationDate,
-      offeredRate: input.offeredRate ? (input.offeredRate / 100).toFixed(3) : undefined,
-      negotiatedRate: input.negotiatedRate ? (input.negotiatedRate / 100).toFixed(3) : undefined,
+      offeredRate: input.offeredRate ? (input.offeredRate / 100).toFixed(3) : null,
+      negotiatedRate: input.negotiatedRate ? (input.negotiatedRate / 100).toFixed(3) : null,
       status: input.status,
       notes: input.notes,
     });
@@ -156,10 +162,7 @@ export class RenewalWorkflowService {
   /**
    * Get negotiation history for a mortgage
    */
-  async getNegotiationHistory(
-    mortgageId: string,
-    userId: string
-  ): Promise<any[] | undefined> {
+  async getNegotiationHistory(mortgageId: string, userId: string): Promise<any[] | undefined> {
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
     if (!mortgage) {
       return undefined;
@@ -168,4 +171,3 @@ export class RenewalWorkflowService {
     return this.renewalNegotiations.findByMortgageId(mortgageId);
   }
 }
-

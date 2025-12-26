@@ -68,23 +68,23 @@ export class PropertyValueService {
     // Recalculate HELOC credit limits if HELOC exists
     let previousCreditLimit = 0;
     let newCreditLimit = 0;
-    
+
     if (this.helocCreditLimitService && this.helocAccounts) {
       try {
         // Get HELOC accounts for this mortgage
         const helocAccounts = await this.helocAccounts.findByMortgageId(mortgageId);
-        
+
         for (const helocAccount of helocAccounts) {
           previousCreditLimit = Number(helocAccount.creditLimit);
-          
+
           // Recalculate credit limit
           await this.helocCreditLimitService.recalculateCreditLimit(mortgageId);
-          
+
           // Get updated HELOC account to check new limit
           const updatedAccount = await this.helocAccounts.findById(helocAccount.id);
           if (updatedAccount) {
             newCreditLimit = Number(updatedAccount.creditLimit);
-            
+
             // Check if credit limit increased and send notification
             if (newCreditLimit > previousCreditLimit && this.notificationService) {
               const increase = newCreditLimit - previousCreditLimit;
@@ -117,10 +117,7 @@ export class PropertyValueService {
   /**
    * Get property value history for a mortgage
    */
-  async getPropertyValueHistory(
-    mortgageId: string,
-    userId: string
-  ): Promise<any[] | undefined> {
+  async getPropertyValueHistory(mortgageId: string, userId: string): Promise<any[] | undefined> {
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
     if (!mortgage) {
       return undefined;
@@ -132,10 +129,7 @@ export class PropertyValueService {
   /**
    * Get latest property value
    */
-  async getLatestPropertyValue(
-    mortgageId: string,
-    userId: string
-  ): Promise<any | undefined> {
+  async getLatestPropertyValue(mortgageId: string, userId: string): Promise<any | undefined> {
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
     if (!mortgage) {
       return undefined;
@@ -151,20 +145,23 @@ export class PropertyValueService {
     mortgageId: string,
     userId: string,
     timeRangeMonths: number = 24
-  ): Promise<{
-    history: any[];
-    averageGrowthRate: number; // Annual percentage
-    trendDirection: "increasing" | "decreasing" | "stable";
-    projectedValue?: number;
-    growthRatePercent: number;
-  } | undefined> {
+  ): Promise<
+    | {
+        history: any[];
+        averageGrowthRate: number; // Annual percentage
+        trendDirection: "increasing" | "decreasing" | "stable";
+        projectedValue?: number;
+        growthRatePercent: number;
+      }
+    | undefined
+  > {
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
     if (!mortgage) {
       return undefined;
     }
 
     const history = await this.propertyValueHistory.findByMortgageId(mortgageId);
-    
+
     if (history.length === 0) {
       return {
         history: [],
@@ -203,11 +200,11 @@ export class PropertyValueService {
       const currValue = Number(filteredHistory[i].propertyValue);
       const prevDate = new Date(filteredHistory[i - 1].valueDate);
       const currDate = new Date(filteredHistory[i].valueDate);
-      
-      const monthsDiff = 
+
+      const monthsDiff =
         (currDate.getFullYear() - prevDate.getFullYear()) * 12 +
         (currDate.getMonth() - prevDate.getMonth());
-      
+
       if (monthsDiff > 0 && prevValue > 0) {
         // Calculate annualized growth rate
         const totalGrowth = (currValue - prevValue) / prevValue;
@@ -234,9 +231,7 @@ export class PropertyValueService {
     const latestEntry = filteredHistory[filteredHistory.length - 1];
     const latestValue = Number(latestEntry.propertyValue);
     const projectedValue =
-      averageGrowthRate > 0
-        ? latestValue * (1 + averageGrowthRate / 100)
-        : undefined;
+      averageGrowthRate > 0 ? latestValue * (1 + averageGrowthRate / 100) : undefined;
 
     return {
       history: filteredHistory,
@@ -262,7 +257,7 @@ export class PropertyValueService {
 
     const latestEntry = trend.history[trend.history.length - 1];
     const latestValue = Number(latestEntry.propertyValue);
-    
+
     if (trend.averageGrowthRate === 0) {
       return latestValue;
     }
@@ -272,4 +267,3 @@ export class PropertyValueService {
     return latestValue * Math.pow(1 + monthlyGrowthRate, monthsAhead);
   }
 }
-

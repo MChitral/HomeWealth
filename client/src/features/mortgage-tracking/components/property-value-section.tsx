@@ -16,8 +16,10 @@ interface PropertyValueSectionProps {
   currentPropertyValue?: number;
 }
 
-
-export function PropertyValueSection({ mortgageId, currentPropertyValue }: PropertyValueSectionProps) {
+export function PropertyValueSection({
+  mortgageId,
+  currentPropertyValue,
+}: PropertyValueSectionProps) {
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
 
   const { data: history, isLoading: isLoadingHistory } = useQuery({
@@ -48,9 +50,8 @@ export function PropertyValueSection({ mortgageId, currentPropertyValue }: Prope
     );
   }
 
-  const latestValue = history && history.length > 0
-    ? parseFloat(history[0].propertyValue)
-    : currentPropertyValue;
+  const latestValue =
+    history && history.length > 0 ? parseFloat(history[0].propertyValue) : currentPropertyValue;
 
   const getTrendIcon = () => {
     if (!trend) return null;
@@ -125,12 +126,8 @@ export function PropertyValueSection({ mortgageId, currentPropertyValue }: Prope
           {/* Projected Value */}
           {projection && (
             <div className="rounded-lg border p-4 bg-muted/50">
-              <p className="text-sm text-muted-foreground mb-1">
-                Projected Value (12 months)
-              </p>
-              <p className="text-xl font-semibold">
-                {formatCurrency(projection.projectedValue)}
-              </p>
+              <p className="text-sm text-muted-foreground mb-1">Projected Value (12 months)</p>
+              <p className="text-xl font-semibold">{formatCurrency(projection.projectedValue)}</p>
             </div>
           )}
 
@@ -166,9 +163,7 @@ export function PropertyValueSection({ mortgageId, currentPropertyValue }: Prope
                       </p>
                     </div>
                     {entry.notes && (
-                      <p className="text-sm text-muted-foreground pt-2 border-t">
-                        {entry.notes}
-                      </p>
+                      <p className="text-sm text-muted-foreground pt-2 border-t">{entry.notes}</p>
                     )}
                   </div>
                 ))}
@@ -179,7 +174,9 @@ export function PropertyValueSection({ mortgageId, currentPropertyValue }: Prope
           {(!history || history.length === 0) && (
             <div className="text-center py-8 text-muted-foreground">
               <p>No property value history yet.</p>
-              <p className="text-sm mt-2">Click "Update Value" to add your first property value entry.</p>
+              <p className="text-sm mt-2">
+                Click "Update Value" to add your first property value entry.
+              </p>
             </div>
           )}
         </CardContent>
@@ -196,4 +193,3 @@ export function PropertyValueSection({ mortgageId, currentPropertyValue }: Prope
     </div>
   );
 }
-

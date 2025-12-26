@@ -133,9 +133,20 @@ export function RecastDialog({ open, onOpenChange, mortgageId }: RecastDialogPro
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
                 Your mortgage payment has been updated from{" "}
-                <strong>${parseFloat(calculationResult?.previousPaymentAmount.toString() || "0").toLocaleString()}</strong>{" "}
+                <strong>
+                  $
+                  {parseFloat(
+                    calculationResult?.previousPaymentAmount.toString() || "0"
+                  ).toLocaleString()}
+                </strong>{" "}
                 to{" "}
-                <strong>${parseFloat(calculationResult?.newPaymentAmount.toString() || "0").toLocaleString()}</strong>.
+                <strong>
+                  $
+                  {parseFloat(
+                    calculationResult?.newPaymentAmount.toString() || "0"
+                  ).toLocaleString()}
+                </strong>
+                .
               </p>
               <Button onClick={handleClose} className="w-full">
                 Close
@@ -220,4 +231,3 @@ export function RecastDialog({ open, onOpenChange, mortgageId }: RecastDialogPro
     </Dialog>
   );
 }
-

@@ -1,5 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import type { YearlyProjection } from "../api";
 
 interface ProjectionChartsProps {
@@ -125,4 +134,3 @@ export function ProjectionCharts({ projections }: ProjectionChartsProps) {
     </div>
   );
 }
-

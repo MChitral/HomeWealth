@@ -16,19 +16,11 @@ export class MarketRatesRepository {
   /**
    * Get the latest market rate for a given rate type and term length
    */
-  async findLatest(
-    rateType: string,
-    termYears: number
-  ): Promise<MarketRate | undefined> {
+  async findLatest(rateType: string, termYears: number): Promise<MarketRate | undefined> {
     const [result] = await this.db
       .select()
       .from(marketRates)
-      .where(
-        and(
-          eq(marketRates.rateType, rateType),
-          eq(marketRates.termYears, termYears)
-        )
-      )
+      .where(and(eq(marketRates.rateType, rateType), eq(marketRates.termYears, termYears)))
       .orderBy(desc(marketRates.effectiveDate), desc(marketRates.createdAt))
       .limit(1);
     return result;
@@ -79,4 +71,3 @@ export class MarketRatesRepository {
     return existing !== undefined;
   }
 }
-

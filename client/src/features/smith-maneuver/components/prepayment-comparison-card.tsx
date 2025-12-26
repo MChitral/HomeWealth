@@ -23,7 +23,11 @@ export function PrepaymentComparisonCard({
   const [mortgageRate, setMortgageRate] = useState(initialMortgageRate?.toString() || "");
   const [isCalculating, setIsCalculating] = useState(false);
 
-  const { data: comparison, isLoading, refetch } = useQuery({
+  const {
+    data: comparison,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["smith-maneuver", "prepayment-comparison", strategyId, years, mortgageRate],
     queryFn: () => {
       if (!mortgageRate) return null;
@@ -59,7 +63,9 @@ export function PrepaymentComparisonCard({
           <Scale className="h-5 w-5" />
           Smith Maneuver vs Direct Prepayment
         </CardTitle>
-        <CardDescription>Compare Smith Maneuver strategy with direct prepayment approach</CardDescription>
+        <CardDescription>
+          Compare Smith Maneuver strategy with direct prepayment approach
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {!comparison && (
@@ -95,65 +101,71 @@ export function PrepaymentComparisonCard({
         {comparison && (
           <>
             <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2 rounded-lg border p-4">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-blue-600" />
-                <p className="font-semibold">Smith Maneuver</p>
+              <div className="space-y-2 rounded-lg border p-4">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-blue-600" />
+                  <p className="font-semibold">Smith Maneuver</p>
+                </div>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Net Benefit:</span>
+                    <span className="font-semibold text-green-600">
+                      $
+                      {comparison.smithManeuver.netBenefit.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Investment Value:</span>
+                    <span className="font-semibold">
+                      $
+                      {comparison.smithManeuver.investmentValue.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Final Balance:</span>
+                    <span className="font-semibold">
+                      $
+                      {comparison.smithManeuver.finalMortgageBalance.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Net Benefit:</span>
-                  <span className="font-semibold text-green-600">
-                    ${comparison.smithManeuver.netBenefit.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Investment Value:</span>
-                  <span className="font-semibold">
-                    ${comparison.smithManeuver.investmentValue.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Final Balance:</span>
-                  <span className="font-semibold">
-                    ${comparison.smithManeuver.finalMortgageBalance.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </span>
-                </div>
-              </div>
-            </div>
 
-            <div className="space-y-2 rounded-lg border p-4">
-              <div className="flex items-center gap-2">
-                <TrendingDown className="h-4 w-4 text-orange-600" />
-                <p className="font-semibold">Direct Prepayment</p>
-              </div>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Interest Saved:</span>
-                  <span className="font-semibold text-green-600">
-                    ${comparison.directPrepayment.interestSaved.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </span>
+              <div className="space-y-2 rounded-lg border p-4">
+                <div className="flex items-center gap-2">
+                  <TrendingDown className="h-4 w-4 text-orange-600" />
+                  <p className="font-semibold">Direct Prepayment</p>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Final Balance:</span>
-                  <span className="font-semibold">
-                    ${comparison.directPrepayment.finalMortgageBalance.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </span>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Interest Saved:</span>
+                    <span className="font-semibold text-green-600">
+                      $
+                      {comparison.directPrepayment.interestSaved.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Final Balance:</span>
+                    <span className="font-semibold">
+                      $
+                      {comparison.directPrepayment.finalMortgageBalance.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -187,8 +199,8 @@ export function PrepaymentComparisonCard({
                       : "secondary"
                 }
               >
-                {comparison.advantage.netAdvantage > 0 ? "+" : ""}
-                ${comparison.advantage.netAdvantage.toLocaleString(undefined, {
+                {comparison.advantage.netAdvantage > 0 ? "+" : ""}$
+                {comparison.advantage.netAdvantage.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -204,4 +216,3 @@ export function PrepaymentComparisonCard({
     </Card>
   );
 }
-

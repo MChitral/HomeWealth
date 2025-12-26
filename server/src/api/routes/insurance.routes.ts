@@ -12,7 +12,9 @@ const calculateInsuranceSchema = z.object({
   propertyPrice: z.number().positive("Property price must be greater than zero"),
   downPayment: z.number().min(0, "Down payment cannot be negative"),
   provider: z.enum(["CMHC", "Sagen", "Genworth"]),
-  mliSelectDiscount: z.union([z.literal(0), z.literal(10), z.literal(20), z.literal(30)]).optional(),
+  mliSelectDiscount: z
+    .union([z.literal(0), z.literal(10), z.literal(20), z.literal(30)])
+    .optional(),
   premiumPaymentType: z.enum(["upfront", "added-to-principal"]).optional(),
 });
 
@@ -28,7 +30,8 @@ router.post("/calculate", requireUser, async (req, res) => {
       return sendError(res, 400, "Invalid request data", validationResult.error.errors);
     }
 
-    const { propertyPrice, downPayment, provider, mliSelectDiscount, premiumPaymentType } = validationResult.data;
+    const { propertyPrice, downPayment, provider, mliSelectDiscount, premiumPaymentType } =
+      validationResult.data;
 
     // Additional validation: down payment must be less than property price
     if (downPayment >= propertyPrice) {
@@ -67,7 +70,8 @@ router.post("/compare", requireUser, async (req, res) => {
       return sendError(res, 400, "Invalid request data", validationResult.error.errors);
     }
 
-    const { propertyPrice, downPayment, mliSelectDiscount, premiumPaymentType } = validationResult.data;
+    const { propertyPrice, downPayment, mliSelectDiscount, premiumPaymentType } =
+      validationResult.data;
 
     // Additional validation
     if (downPayment >= propertyPrice) {
@@ -104,7 +108,9 @@ router.get("/rates/:provider", requireUser, async (req, res) => {
       return sendError(res, 400, "Invalid provider. Must be CMHC, Sagen, or Genworth");
     }
 
-    const rateTable = insuranceCalculator.getPremiumRateTable(provider as "CMHC" | "Sagen" | "Genworth");
+    const rateTable = insuranceCalculator.getPremiumRateTable(
+      provider as "CMHC" | "Sagen" | "Genworth"
+    );
 
     return res.status(200).json({
       provider,
@@ -118,4 +124,3 @@ router.get("/rates/:provider", requireUser, async (req, res) => {
 });
 
 export default router;
-

@@ -19,10 +19,10 @@ export function DisclaimerBanner() {
           <li>Leverage amplifies both gains and losses</li>
         </ul>
         <p className="text-sm font-semibold mt-2">
-          Professional tax and investment advice is strongly recommended before implementing the Smith Maneuver.
+          Professional tax and investment advice is strongly recommended before implementing the
+          Smith Maneuver.
         </p>
       </AlertDescription>
     </Alert>
   );
 }
-

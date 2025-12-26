@@ -59,4 +59,3 @@ export function stopMarketRateScheduler(): void {
   // node-cron doesn't have a built-in stop method for all tasks
   // In a real implementation, you'd track the task and call destroy()
 }
-

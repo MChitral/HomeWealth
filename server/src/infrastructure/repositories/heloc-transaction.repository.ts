@@ -69,4 +69,3 @@ export class HelocTransactionRepository {
     return Boolean(result.rowCount && result.rowCount > 0);
   }
 }
-

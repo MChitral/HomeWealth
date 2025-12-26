@@ -1,4 +1,8 @@
-import { calculateDailyInterest, calculateMonthlyInterest, calculateAccruedInterest } from "@server-shared/calculations/heloc/interest";
+import {
+  calculateDailyInterest,
+  calculateMonthlyInterest,
+  calculateAccruedInterest,
+} from "@server-shared/calculations/heloc/interest";
 
 /**
  * HELOC Interest Service
@@ -56,4 +60,3 @@ export class HelocInterestService {
     return primeRate + spread;
   }
 }
-

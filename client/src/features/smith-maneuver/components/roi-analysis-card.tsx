@@ -44,7 +44,8 @@ export function ROIAnalysisCard({ strategyId, years = 10 }: ROIAnalysisCardProps
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Total Investment</p>
             <p className="text-2xl font-bold">
-              ${analysis.totalInvestment.toLocaleString(undefined, {
+              $
+              {analysis.totalInvestment.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
@@ -53,7 +54,8 @@ export function ROIAnalysisCard({ strategyId, years = 10 }: ROIAnalysisCardProps
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Total Returns</p>
             <p className="text-2xl font-bold text-green-600">
-              ${analysis.totalReturns.toLocaleString(undefined, {
+              $
+              {analysis.totalReturns.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
@@ -84,7 +86,8 @@ export function ROIAnalysisCard({ strategyId, years = 10 }: ROIAnalysisCardProps
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Tax Savings</p>
             <p className="text-lg font-semibold text-green-600">
-              ${analysis.totalTaxSavings.toLocaleString(undefined, {
+              $
+              {analysis.totalTaxSavings.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
@@ -93,7 +96,8 @@ export function ROIAnalysisCard({ strategyId, years = 10 }: ROIAnalysisCardProps
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Investment Tax</p>
             <p className="text-lg font-semibold text-red-600">
-              ${analysis.totalInvestmentTax.toLocaleString(undefined, {
+              $
+              {analysis.totalInvestmentTax.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
@@ -108,7 +112,8 @@ export function ROIAnalysisCard({ strategyId, years = 10 }: ROIAnalysisCardProps
               <p className="text-sm font-medium text-slate-900 dark:text-slate-100">Net Benefit</p>
             </div>
             <p className="text-2xl font-bold text-indigo-600">
-              ${analysis.netBenefit.toLocaleString(undefined, {
+              $
+              {analysis.netBenefit.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
@@ -122,4 +127,3 @@ export function ROIAnalysisCard({ strategyId, years = 10 }: ROIAnalysisCardProps
     </Card>
   );
 }
-

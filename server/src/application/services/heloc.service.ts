@@ -80,7 +80,9 @@ export class HelocService {
     if (payload.currentBalance && payload.interestSpread) {
       const { primeRate } = await fetchLatestPrimeRate();
       const annualRate = (primeRate + Number(payload.interestSpread)) / 100;
-      const paymentType = (payload.helocPaymentType || "interest_only") as "interest_only" | "principal_plus_interest";
+      const paymentType = (payload.helocPaymentType || "interest_only") as
+        | "interest_only"
+        | "principal_plus_interest";
       const minPayment = calculateHelocMinimumPayment(
         Number(payload.currentBalance || 0),
         annualRate,
@@ -103,22 +105,24 @@ export class HelocService {
   /**
    * Update HELOC account
    */
-  async updateAccount(
-    id: string,
-    userId: string,
-    payload: Partial<HelocAccountUpdateInput>
-  ) {
+  async updateAccount(id: string, userId: string, payload: Partial<HelocAccountUpdateInput>) {
     const account = await this.getAccountById(id, userId);
     if (!account) {
       return undefined;
     }
 
     // Recalculate minimum payment if balance, rate, or payment type changed
-    if (payload.currentBalance !== undefined || payload.interestSpread !== undefined || payload.helocPaymentType !== undefined) {
+    if (
+      payload.currentBalance !== undefined ||
+      payload.interestSpread !== undefined ||
+      payload.helocPaymentType !== undefined
+    ) {
       const balance = Number(payload.currentBalance ?? account.currentBalance);
       const spread = Number(payload.interestSpread ?? account.interestSpread);
-      const paymentType = (payload.helocPaymentType ?? account.helocPaymentType ?? "interest_only") as "interest_only" | "principal_plus_interest";
-      
+      const paymentType = (payload.helocPaymentType ??
+        account.helocPaymentType ??
+        "interest_only") as "interest_only" | "principal_plus_interest";
+
       if (balance > 0 && spread !== undefined) {
         const { primeRate } = await fetchLatestPrimeRate();
         const annualRate = (primeRate + spread) / 100;
@@ -191,7 +195,9 @@ export class HelocService {
     const availableCredit = calculateAvailableCredit(creditLimit, currentBalance);
 
     if (amount > availableCredit) {
-      throw new Error(`Borrowing amount exceeds available credit. Available: $${availableCredit.toFixed(2)}`);
+      throw new Error(
+        `Borrowing amount exceeds available credit. Available: $${availableCredit.toFixed(2)}`
+      );
     }
 
     // Get current prime rate
@@ -269,7 +275,9 @@ export class HelocService {
       );
 
       if (amount < interestPortion) {
-        throw new Error(`Payment amount must be at least the interest portion: $${interestPortion.toFixed(2)}`);
+        throw new Error(
+          `Payment amount must be at least the interest portion: $${interestPortion.toFixed(2)}`
+        );
       }
 
       const principalPortion = amount - interestPortion;
@@ -330,4 +338,3 @@ export class HelocService {
     });
   }
 }
-

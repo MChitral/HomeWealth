@@ -20,13 +20,7 @@ import {
   FormMessage,
 } from "@/shared/ui/form";
 import { Input } from "@/shared/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { useCreateSmithManeuverStrategy, useUpdateSmithManeuverStrategy } from "../hooks";
 import type { SmithManeuverStrategy, InsertSmithManeuverStrategy } from "@shared/schema";
 import { useState, useEffect } from "react";
@@ -75,7 +69,11 @@ export function StrategyForm({
           mortgageId: strategy.mortgageId,
           helocAccountId: strategy.helocAccountId,
           prepaymentAmount: strategy.prepaymentAmount,
-          prepaymentFrequency: strategy.prepaymentFrequency as "monthly" | "quarterly" | "annually" | "lump_sum",
+          prepaymentFrequency: strategy.prepaymentFrequency as
+            | "monthly"
+            | "quarterly"
+            | "annually"
+            | "lump_sum",
           borrowingPercentage: strategy.borrowingPercentage,
           expectedReturnRate: strategy.expectedReturnRate,
           annualIncome: strategy.annualIncome,
@@ -140,9 +138,7 @@ export function StrategyForm({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{strategy ? "Edit Strategy" : "Create Smith Maneuver Strategy"}</DialogTitle>
-          <DialogDescription>
-            Configure your Smith Maneuver strategy parameters
-          </DialogDescription>
+          <DialogDescription>Configure your Smith Maneuver strategy parameters</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -328,7 +324,9 @@ export function StrategyForm({
                       </SelectContent>
                     </Select>
                     {marginalTaxRate && (
-                      <FormDescription>Marginal Tax Rate: {marginalTaxRate.toFixed(2)}%</FormDescription>
+                      <FormDescription>
+                        Marginal Tax Rate: {marginalTaxRate.toFixed(2)}%
+                      </FormDescription>
                     )}
                     <FormMessage />
                   </FormItem>
@@ -394,4 +392,3 @@ function formatCurrency(amount: number) {
     minimumFractionDigits: 0,
   }).format(amount);
 }
-

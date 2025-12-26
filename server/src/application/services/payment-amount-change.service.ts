@@ -2,10 +2,7 @@ import {
   PaymentAmountChangeEventsRepository,
   MortgageTermsRepository,
 } from "@infrastructure/repositories";
-import type {
-  InsertPaymentAmountChangeEvent,
-  PaymentAmountChangeEvent,
-} from "@shared/schema";
+import type { InsertPaymentAmountChangeEvent, PaymentAmountChangeEvent } from "@shared/schema";
 
 export interface PaymentAmountChangeRequest {
   mortgageId: string;
@@ -45,22 +42,15 @@ export class PaymentAmountChangeService {
     return { event, termUpdated: !!termUpdated };
   }
 
-  async getPaymentAmountChangeHistory(
-    mortgageId: string
-  ): Promise<PaymentAmountChangeEvent[]> {
+  async getPaymentAmountChangeHistory(mortgageId: string): Promise<PaymentAmountChangeEvent[]> {
     return this.paymentAmountChangeEventsRepo.findByMortgageId(mortgageId);
   }
 
-  async getPaymentAmountChangeHistoryByTerm(
-    termId: string
-  ): Promise<PaymentAmountChangeEvent[]> {
+  async getPaymentAmountChangeHistoryByTerm(termId: string): Promise<PaymentAmountChangeEvent[]> {
     return this.paymentAmountChangeEventsRepo.findByTermId(termId);
   }
 
-  async getPaymentAmountChangeEvent(
-    id: string
-  ): Promise<PaymentAmountChangeEvent | undefined> {
+  async getPaymentAmountChangeEvent(id: string): Promise<PaymentAmountChangeEvent | undefined> {
     return this.paymentAmountChangeEventsRepo.findById(id);
   }
 }
-

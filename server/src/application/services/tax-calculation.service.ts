@@ -1,4 +1,8 @@
-import { calculateMarginalTaxRate, getTaxBrackets, type TaxBracketData } from "@infrastructure/data/tax-brackets";
+import {
+  calculateMarginalTaxRate,
+  getTaxBrackets,
+  type TaxBracketData,
+} from "@infrastructure/data/tax-brackets";
 
 export interface TaxDeductionResult {
   eligibleInterest: number;
@@ -41,7 +45,7 @@ export class TaxCalculationService {
 
   /**
    * Calculate tax deduction for HELOC interest
-   * 
+   *
    * @param helocInterest - Total HELOC interest paid
    * @param investmentUsePercent - Percentage of HELOC funds used for investment (0-100)
    * @param marginalTaxRate - User's marginal tax rate (as percentage, e.g., 45.0 for 45%)
@@ -54,10 +58,10 @@ export class TaxCalculationService {
   ): Promise<TaxDeductionResult> {
     // Eligible interest is pro-rated by investment use percentage
     const eligibleInterest = helocInterest * (investmentUsePercent / 100);
-    
+
     // Tax deduction equals eligible interest
     const taxDeduction = eligibleInterest;
-    
+
     // Tax savings = deduction × marginal tax rate
     const taxSavings = taxDeduction * (marginalTaxRate / 100);
 
@@ -77,7 +81,7 @@ export class TaxCalculationService {
 
   /**
    * Calculate tax on investment income
-   * 
+   *
    * Handles different types of investment income:
    * - Eligible dividends: Gross-up and dividend tax credit
    * - Non-eligible dividends: Gross-up and dividend tax credit (lower rate)
@@ -100,13 +104,13 @@ export class TaxCalculationService {
         const grossUp = 1.38;
         const grossedUpAmount = income * grossUp;
         taxableIncome = grossedUpAmount;
-        
+
         // Dividend tax credit: 15.0198% of grossed-up amount (federal) + provincial credit
         // Simplified calculation - actual credit varies by province
         const federalCredit = grossedUpAmount * 0.150198;
         const provincialCreditRate = this.getProvincialDividendCreditRate(province);
         const provincialCredit = grossedUpAmount * provincialCreditRate;
-        
+
         const taxOnGrossedUp = grossedUpAmount * (marginalTaxRate / 100);
         taxAmount = Math.max(0, taxOnGrossedUp - federalCredit - provincialCredit);
         break;
@@ -117,12 +121,12 @@ export class TaxCalculationService {
         const grossUp = 1.15;
         const grossedUpAmount = income * grossUp;
         taxableIncome = grossedUpAmount;
-        
+
         // Dividend tax credit: 9.0301% of grossed-up amount (federal) + provincial credit
         const federalCredit = grossedUpAmount * 0.090301;
         const provincialCreditRate = this.getProvincialDividendCreditRate(province, false);
         const provincialCredit = grossedUpAmount * provincialCreditRate;
-        
+
         const taxOnGrossedUp = grossedUpAmount * (marginalTaxRate / 100);
         taxAmount = Math.max(0, taxOnGrossedUp - federalCredit - provincialCredit);
         break;
@@ -178,7 +182,7 @@ export class TaxCalculationService {
 
   /**
    * Calculate net tax benefit from Smith Maneuver
-   * 
+   *
    * Net benefit = Investment returns (after tax) - HELOC cost (after tax savings) + Tax savings
    */
   async calculateNetTaxBenefit(
@@ -194,4 +198,3 @@ export class TaxCalculationService {
     return netBenefit;
   }
 }
-

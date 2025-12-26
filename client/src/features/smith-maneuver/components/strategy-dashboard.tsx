@@ -61,7 +61,8 @@ export function StrategyDashboard({ onSelectStrategy, onCreateStrategy }: Strate
             <TrendingUp className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No Strategies Yet</h3>
             <p className="text-muted-foreground mb-4">
-              Create your first Smith Maneuver strategy to start modeling tax-optimized mortgage strategies.
+              Create your first Smith Maneuver strategy to start modeling tax-optimized mortgage
+              strategies.
             </p>
             <Button onClick={onCreateStrategy}>
               <Plus className="h-4 w-4 mr-2" />
@@ -100,9 +101,7 @@ export function StrategyDashboard({ onSelectStrategy, onCreateStrategy }: Strate
                   <div>
                     <p className="text-muted-foreground">Prepayment</p>
                     <p className="font-semibold">{formatCurrency(strategy.prepaymentAmount)}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {strategy.prepaymentFrequency}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{strategy.prepaymentFrequency}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Expected Return</p>
@@ -133,4 +132,3 @@ export function StrategyDashboard({ onSelectStrategy, onCreateStrategy }: Strate
     </div>
   );
 }
-

@@ -213,7 +213,8 @@ export class ScenarioProjectionService {
     // Get scenario if provided, otherwise use default
     let scenario: Scenario | null = null;
     if (params.scenarioId) {
-      scenario = await this.scenarios.findById(params.scenarioId);
+      const foundScenario = await this.scenarios.findById(params.scenarioId);
+      scenario = foundScenario ?? null;
     }
 
     // Calculate baseline metrics
@@ -263,7 +264,13 @@ export class ScenarioProjectionService {
       );
 
       // Calculate impact vs baseline
-      const netWorthChange = metrics.netWorth[timeHorizon] - baselineMetrics.netWorth[timeHorizon];
+      const getNetWorth = (m: ScenarioMetrics, years: number) => {
+        if (years <= 10) return m.netWorth10yr;
+        if (years <= 20) return m.netWorth20yr;
+        return m.netWorth30yr;
+      };
+      const netWorthChange =
+        getNetWorth(metrics, timeHorizon) - getNetWorth(baselineMetrics, timeHorizon);
       const interestPaidChange = metrics.totalInterestPaid - baselineMetrics.totalInterestPaid;
       const payoffYearChange = metrics.mortgagePayoffYear - baselineMetrics.mortgagePayoffYear;
 

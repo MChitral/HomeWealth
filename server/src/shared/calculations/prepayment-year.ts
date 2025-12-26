@@ -1,9 +1,9 @@
 /**
  * Determine which prepayment year a payment date belongs to
- * 
+ *
  * If prepaymentLimitResetDate is set, use anniversary-based year (resets on anniversary date)
  * If prepaymentLimitResetDate is null, use calendar year (resets on January 1st)
- * 
+ *
  * @param paymentDate - Date of the payment
  * @param prepaymentLimitResetDate - Anniversary date for reset (null = calendar year)
  * @param mortgageStartDate - Start date of the mortgage (used to calculate anniversary)
@@ -15,7 +15,8 @@ export function getPrepaymentYear(
   mortgageStartDate: string | Date
 ): string {
   const payment = typeof paymentDate === "string" ? new Date(paymentDate) : paymentDate;
-  const startDate = typeof mortgageStartDate === "string" ? new Date(mortgageStartDate) : mortgageStartDate;
+  const startDate =
+    typeof mortgageStartDate === "string" ? new Date(mortgageStartDate) : mortgageStartDate;
 
   // If no reset date specified, use calendar year
   if (!prepaymentLimitResetDate) {
@@ -42,7 +43,7 @@ export function getPrepaymentYear(
 
 /**
  * Get the start and end dates for a prepayment year
- * 
+ *
  * @param prepaymentYear - Year identifier from getPrepaymentYear
  * @param prepaymentLimitResetDate - Anniversary date for reset (null = calendar year)
  * @param mortgageStartDate - Start date of the mortgage
@@ -73,4 +74,3 @@ export function getPrepaymentYearDates(
     endDate: new Date(year + 1, resetMonth, resetDay, 23, 59, 59),
   };
 }
-

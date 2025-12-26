@@ -1,8 +1,8 @@
 /**
  * Capital Gains Tax Calculations
- * 
+ *
  * Calculates capital gains tax in Canada.
- * 
+ *
  * Key rules:
  * - 50% inclusion rate (only 50% of capital gains are taxable)
  * - Taxed at marginal tax rate
@@ -78,4 +78,3 @@ export function calculateAggregateCapitalGainsTax(
 
   return calculateCapitalGainsTax(totalProceeds, totalCostBasis, marginalTaxRate);
 }
-

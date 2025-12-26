@@ -10,10 +10,7 @@ export class RecastEventsRepository {
   constructor(private readonly database = db) {}
 
   async findById(id: string): Promise<RecastEventRecord | undefined> {
-    const result = await this.database
-      .select()
-      .from(recastEvents)
-      .where(eq(recastEvents.id, id));
+    const result = await this.database.select().from(recastEvents).where(eq(recastEvents.id, id));
     return result[0];
   }
 
@@ -60,4 +57,3 @@ export class RecastEventsRepository {
     await this.database.delete(recastEvents).where(eq(recastEvents.mortgageId, mortgageId));
   }
 }
-

@@ -27,7 +27,8 @@ export function RecastResults({ results }: RecastResultsProps) {
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Previous Payment</p>
               <p className="text-2xl font-bold">
-                ${parseFloat(results.previousPaymentAmount.toString()).toLocaleString(undefined, {
+                $
+                {parseFloat(results.previousPaymentAmount.toString()).toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -36,7 +37,8 @@ export function RecastResults({ results }: RecastResultsProps) {
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">New Payment</p>
               <p className="text-2xl font-bold text-green-600">
-                ${parseFloat(results.newPaymentAmount.toString()).toLocaleString(undefined, {
+                $
+                {parseFloat(results.newPaymentAmount.toString()).toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -52,7 +54,8 @@ export function RecastResults({ results }: RecastResultsProps) {
               </p>
             </div>
             <p className="text-2xl font-bold text-green-600">
-              ${parseFloat(results.paymentReduction.toString()).toLocaleString(undefined, {
+              $
+              {parseFloat(results.paymentReduction.toString()).toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}{" "}
@@ -66,7 +69,8 @@ export function RecastResults({ results }: RecastResultsProps) {
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Previous Balance</p>
               <p className="text-lg font-semibold">
-                ${parseFloat(results.previousBalance.toString()).toLocaleString(undefined, {
+                $
+                {parseFloat(results.previousBalance.toString()).toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -75,7 +79,8 @@ export function RecastResults({ results }: RecastResultsProps) {
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">New Balance</p>
               <p className="text-lg font-semibold">
-                ${parseFloat(results.newBalance.toString()).toLocaleString(undefined, {
+                $
+                {parseFloat(results.newBalance.toString()).toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -98,4 +103,3 @@ export function RecastResults({ results }: RecastResultsProps) {
     </div>
   );
 }
-

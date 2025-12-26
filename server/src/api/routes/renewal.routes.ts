@@ -53,13 +53,27 @@ export function createRenewalRoutes(services: ApplicationServices): Router {
       } = req.body;
 
       // Validate required fields
-      if (!termId || !renewalDate || previousRate === undefined || newRate === undefined || !decisionType) {
-        return sendError(res, 400, "Missing required fields: termId, renewalDate, previousRate, newRate, decisionType");
+      if (
+        !termId ||
+        !renewalDate ||
+        previousRate === undefined ||
+        newRate === undefined ||
+        !decisionType
+      ) {
+        return sendError(
+          res,
+          400,
+          "Missing required fields: termId, renewalDate, previousRate, newRate, decisionType"
+        );
       }
 
       // Validate decisionType
       if (!["stayed", "switched", "refinanced"].includes(decisionType)) {
-        return sendError(res, 400, "Invalid decisionType. Must be: stayed, switched, or refinanced");
+        return sendError(
+          res,
+          400,
+          "Invalid decisionType. Must be: stayed, switched, or refinanced"
+        );
       }
 
       // Verify mortgage ownership
@@ -175,4 +189,3 @@ export function createRenewalRoutes(services: ApplicationServices): Router {
 
   return router;
 }
-

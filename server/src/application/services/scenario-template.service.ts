@@ -98,7 +98,11 @@ export class ScenarioTemplateService {
   /**
    * Create a scenario payload from a template
    */
-  createFromTemplate(templateId: string, name?: string, description?: string): ScenarioPayload | null {
+  createFromTemplate(
+    templateId: string,
+    name?: string,
+    description?: string
+  ): ScenarioPayload | null {
     const template = this.getTemplateById(templateId);
     if (!template) {
       return null;
@@ -111,4 +115,3 @@ export class ScenarioTemplateService {
     };
   }
 }
-

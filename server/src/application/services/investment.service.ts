@@ -143,4 +143,3 @@ export class InvestmentService {
     return this.investmentIncome.findByUserIdAndTaxYear(userId, taxYear);
   }
 }
-

@@ -19,9 +19,7 @@ export function SkipPaymentWarnings() {
           <Info className="h-5 w-5 text-indigo-500" />
           Understanding Payment Skipping
         </CardTitle>
-        <CardDescription>
-          Important information about skipping mortgage payments
-        </CardDescription>
+        <CardDescription>Important information about skipping mortgage payments</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <Alert variant="destructive">
@@ -44,8 +42,8 @@ export function SkipPaymentWarnings() {
                 <p className="text-sm font-medium mb-1">Example:</p>
                 <p className="text-sm">
                   If your balance is $400,000 and you skip a payment with a 5% interest rate, you
-                  will accrue approximately $1,667 in interest (depending on payment frequency). This
-                  interest is added to your balance, so your new balance becomes $401,667.
+                  will accrue approximately $1,667 in interest (depending on payment frequency).
+                  This interest is added to your balance, so your new balance becomes $401,667.
                 </p>
               </div>
               <p className="text-sm text-muted-foreground">
@@ -118,8 +116,8 @@ export function SkipPaymentWarnings() {
             <AccordionTrigger>When Should You Skip a Payment?</AccordionTrigger>
             <AccordionContent className="space-y-2">
               <p>
-                Payment skipping should be used carefully and only when necessary. Consider
-                skipping if:
+                Payment skipping should be used carefully and only when necessary. Consider skipping
+                if:
               </p>
               <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-3 rounded-md">
                 <ul className="text-sm list-disc list-inside space-y-1">
@@ -190,4 +188,3 @@ export function SkipPaymentWarnings() {
     </Card>
   );
 }
-

@@ -30,10 +30,7 @@ export class PaymentCorrectionsRepository {
       .orderBy(paymentCorrections.createdAt);
   }
 
-  async create(
-    payload: InsertPaymentCorrection,
-    tx?: Database
-  ): Promise<PaymentCorrectionRecord> {
+  async create(payload: InsertPaymentCorrection, tx?: Database): Promise<PaymentCorrectionRecord> {
     const db = tx || this.database;
     const [created] = await db.insert(paymentCorrections).values(payload).returning();
     return created;
@@ -58,4 +55,3 @@ export class PaymentCorrectionsRepository {
     return result.rowCount !== undefined ? result.rowCount > 0 : false;
   }
 }
-

@@ -6,13 +6,17 @@ import { sendError } from "@server-shared/utils/api-response";
 import { z } from "zod";
 
 const borrowSchema = z.object({
-  amount: z.union([z.string(), z.number()]).transform((val) => (typeof val === "number" ? val : parseFloat(val))),
+  amount: z
+    .union([z.string(), z.number()])
+    .transform((val) => (typeof val === "number" ? val : parseFloat(val))),
   transactionDate: z.string(),
   description: z.string().optional(),
 });
 
 const paymentSchema = z.object({
-  amount: z.union([z.string(), z.number()]).transform((val) => (typeof val === "number" ? val : parseFloat(val))),
+  amount: z
+    .union([z.string(), z.number()])
+    .transform((val) => (typeof val === "number" ? val : parseFloat(val))),
   transactionDate: z.string(),
   paymentType: z.enum(["interest_only", "interest_principal", "full"]),
   description: z.string().optional(),
@@ -96,15 +100,17 @@ export function registerHelocRoutes(router: Router, services: ApplicationService
 
       const { calculateHelocMinimumPayment } = await import("@domain/calculations/heloc-payment");
       const { fetchLatestPrimeRate } = await import("@server-shared/services/prime-rate");
-      
+
       const balance = Number(account.currentBalance);
       const spread = Number(account.interestSpread);
       const { primeRate } = await fetchLatestPrimeRate();
       const annualRate = (primeRate + spread) / 100;
-      const paymentType = (account.helocPaymentType || "interest_only") as "interest_only" | "principal_plus_interest";
-      
+      const paymentType = (account.helocPaymentType || "interest_only") as
+        | "interest_only"
+        | "principal_plus_interest";
+
       const minimumPayment = calculateHelocMinimumPayment(balance, annualRate, paymentType);
-      
+
       res.json({
         minimumPayment,
         paymentType,
@@ -240,4 +246,3 @@ export function registerHelocRoutes(router: Router, services: ApplicationService
     }
   });
 }
-

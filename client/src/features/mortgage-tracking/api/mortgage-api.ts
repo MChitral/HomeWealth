@@ -280,10 +280,7 @@ export const mortgageApi = {
 
   // Renewal History
   fetchRenewalHistory: (mortgageId: string) =>
-    apiRequest<RenewalHistoryEntry[]>(
-      "GET",
-      `/api/mortgages/${mortgageId}/renewal-history`
-    ),
+    apiRequest<RenewalHistoryEntry[]>("GET", `/api/mortgages/${mortgageId}/renewal-history`),
 
   recordRenewalDecision: (mortgageId: string, request: RecordRenewalDecisionRequest) =>
     apiRequest<RenewalHistoryEntry>(
@@ -293,10 +290,7 @@ export const mortgageApi = {
     ),
 
   fetchRenewalAnalytics: (mortgageId: string) =>
-    apiRequest<RenewalAnalyticsResponse>(
-      "GET",
-      `/api/mortgages/${mortgageId}/renewal-analytics`
-    ),
+    apiRequest<RenewalAnalyticsResponse>("GET", `/api/mortgages/${mortgageId}/renewal-analytics`),
 
   fetchRenewalRateComparison: (mortgageId: string) =>
     apiRequest<RenewalRateComparisonResponse>(

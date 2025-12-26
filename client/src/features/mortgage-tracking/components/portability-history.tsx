@@ -57,9 +57,7 @@ export function PortabilityHistory({ mortgageId }: PortabilityHistoryProps) {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">
-                    {format(new Date(event.portDate), "MMMM d, yyyy")}
-                  </p>
+                  <p className="font-medium">{format(new Date(event.portDate), "MMMM d, yyyy")}</p>
                   {event.description && (
                     <p className="text-sm text-muted-foreground">{event.description}</p>
                   )}
@@ -67,7 +65,8 @@ export function PortabilityHistory({ mortgageId }: PortabilityHistoryProps) {
                 <div className="text-right">
                   <p className="text-sm text-muted-foreground">Ported Amount</p>
                   <p className="font-semibold">
-                    ${parseFloat(event.portedAmount).toLocaleString(undefined, {
+                    $
+                    {parseFloat(event.portedAmount).toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
@@ -79,7 +78,8 @@ export function PortabilityHistory({ mortgageId }: PortabilityHistoryProps) {
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Old Property</p>
                   <p className="text-sm font-semibold">
-                    ${parseFloat(event.oldPropertyPrice).toLocaleString(undefined, {
+                    $
+                    {parseFloat(event.oldPropertyPrice).toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
@@ -88,7 +88,8 @@ export function PortabilityHistory({ mortgageId }: PortabilityHistoryProps) {
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">New Property</p>
                   <p className="text-sm font-semibold text-blue-600">
-                    ${parseFloat(event.newPropertyPrice).toLocaleString(undefined, {
+                    $
+                    {parseFloat(event.newPropertyPrice).toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
@@ -102,7 +103,8 @@ export function PortabilityHistory({ mortgageId }: PortabilityHistoryProps) {
                     Top-Up Required
                   </p>
                   <p className="text-lg font-bold text-amber-600">
-                    ${parseFloat(event.topUpAmount).toLocaleString(undefined, {
+                    $
+                    {parseFloat(event.topUpAmount).toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
@@ -122,4 +124,3 @@ export function PortabilityHistory({ mortgageId }: PortabilityHistoryProps) {
     </Card>
   );
 }
-

@@ -22,7 +22,8 @@ export function PortabilityResults({ results }: PortabilityResultsProps) {
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Old Property Price</p>
               <p className="text-lg font-semibold">
-                ${parseFloat(results.oldPropertyPrice.toString()).toLocaleString(undefined, {
+                $
+                {parseFloat(results.oldPropertyPrice.toString()).toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -31,7 +32,8 @@ export function PortabilityResults({ results }: PortabilityResultsProps) {
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">New Property Price</p>
               <p className="text-lg font-semibold">
-                ${parseFloat(results.newPropertyPrice.toString()).toLocaleString(undefined, {
+                $
+                {parseFloat(results.newPropertyPrice.toString()).toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -47,7 +49,8 @@ export function PortabilityResults({ results }: PortabilityResultsProps) {
               </p>
             </div>
             <p className="text-2xl font-bold text-blue-600">
-              ${parseFloat(results.portedAmount.toString()).toLocaleString(undefined, {
+              $
+              {parseFloat(results.portedAmount.toString()).toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
@@ -66,7 +69,8 @@ export function PortabilityResults({ results }: PortabilityResultsProps) {
                 </p>
               </div>
               <p className="text-2xl font-bold text-amber-600">
-                ${parseFloat(results.topUpAmount.toString()).toLocaleString(undefined, {
+                $
+                {parseFloat(results.topUpAmount.toString()).toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -95,4 +99,3 @@ export function PortabilityResults({ results }: PortabilityResultsProps) {
     </div>
   );
 }
-

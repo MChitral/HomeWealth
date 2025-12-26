@@ -135,7 +135,10 @@ export class EmailService {
         this.service = new ResendEmailService();
         console.log("[Email Service] Using Resend (production mode)");
       } catch (error) {
-        console.warn("[Email Service] Failed to initialize Resend, falling back to local SMTP:", error);
+        console.warn(
+          "[Email Service] Failed to initialize Resend, falling back to local SMTP:",
+          error
+        );
         this.service = new LocalSMTPEmailService();
         console.log("[Email Service] Using local SMTP (fallback mode)");
       }
@@ -494,8 +497,9 @@ export class EmailService {
                 })}
               </span>
             </p>
-            ${options.projectedBalanceAtTermEnd !== undefined
-              ? `
+            ${
+              options.projectedBalanceAtTermEnd !== undefined
+                ? `
                 <p style="margin: 8px 0;">
                   <strong>Projected Balance at Term End:</strong> 
                   <span style="color: #dc2626; font-size: 18px;">
@@ -506,9 +510,11 @@ export class EmailService {
                   </span>
                 </p>
               `
-              : ""}
-            ${options.requiredPayment !== undefined
-              ? `
+                : ""
+            }
+            ${
+              options.requiredPayment !== undefined
+                ? `
                 <p style="margin: 8px 0;">
                   <strong>Required Payment to Prevent Increase:</strong> 
                   <span style="color: #16a34a; font-size: 18px;">
@@ -519,12 +525,15 @@ export class EmailService {
                   </span>
                 </p>
               `
-              : ""}
+                : ""
+            }
           </div>
           <p style="margin: 10px 0 0 0; font-size: 14px; color: #64748b;">
-            ${alertType === "trigger_rate_hit"
-              ? "Your mortgage balance is now increasing each month. Take action immediately."
-              : "If your rate hits the trigger rate, your balance will start increasing."}
+            ${
+              alertType === "trigger_rate_hit"
+                ? "Your mortgage balance is now increasing each month. Take action immediately."
+                : "If your rate hits the trigger rate, your balance will start increasing."
+            }
           </p>
         </div>
       `;
@@ -577,9 +586,11 @@ export class EmailService {
               <div class="highlight-box">
                 <p style="font-size: 20px; margin: 0 0 10px 0;">
                   <strong style="color: ${headerColor};">
-                    ${alertType === "trigger_rate_hit"
-                      ? "Your trigger rate has been hit"
-                      : `You are ${distancePercent}% away from your trigger rate`}
+                    ${
+                      alertType === "trigger_rate_hit"
+                        ? "Your trigger rate has been hit"
+                        : `You are ${distancePercent}% away from your trigger rate`
+                    }
                   </strong>
                 </p>
                 <div style="margin-top: 15px; space-y-2">
@@ -642,4 +653,3 @@ export class EmailService {
 }
 
 export const emailService = new EmailService();
-

@@ -80,8 +80,7 @@ export class RefinancingService {
 
     // 4. Compare against best market option (assuming Fixed 5Yr is usually the target provided)
     // We could compare against both, but let's pick the one with better spread.
-    const targetRate =
-      (await this.marketRateService.getMarketRate("fixed", 5)) ?? currentRate;
+    const targetRate = (await this.marketRateService.getMarketRate("fixed", 5)) ?? currentRate;
 
     // Calculate closing costs: use provided total, or sum of breakdown, or default
     let totalClosingCosts = 0;

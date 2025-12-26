@@ -40,7 +40,8 @@ export function TriggerRateStatusCard({ mortgageId }: TriggerRateStatusCardProps
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Trigger rate monitoring is only available for variable-rate mortgages with fixed payments.
+            Trigger rate monitoring is only available for variable-rate mortgages with fixed
+            payments.
           </p>
         </CardContent>
       </Card>
@@ -55,10 +56,7 @@ export function TriggerRateStatusCard({ mortgageId }: TriggerRateStatusCardProps
   // Calculate progress (0% = at trigger, 100% = safe)
   // We'll show how close we are to trigger rate
   const maxDistance = 0.05; // 5% buffer for visualization
-  const progressValue = Math.max(
-    0,
-    Math.min(100, (distanceToTrigger / maxDistance) * 100)
-  );
+  const progressValue = Math.max(0, Math.min(100, (distanceToTrigger / maxDistance) * 100));
 
   const getStatusColor = () => {
     if (triggerStatus.isHit) return "destructive";
@@ -107,7 +105,13 @@ export function TriggerRateStatusCard({ mortgageId }: TriggerRateStatusCardProps
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-medium">Distance to Trigger</span>
               <Badge
-                variant={distancePercent <= 0 ? "destructive" : distancePercent <= 0.5 ? "default" : "secondary"}
+                variant={
+                  distancePercent <= 0
+                    ? "destructive"
+                    : distancePercent <= 0.5
+                      ? "default"
+                      : "secondary"
+                }
               >
                 {distancePercent > 0 ? "+" : ""}
                 {distancePercent.toFixed(2)}%
@@ -130,12 +134,14 @@ export function TriggerRateStatusCard({ mortgageId }: TriggerRateStatusCardProps
             </div>
             {triggerStatus.isHit && (
               <p className="text-sm text-slate-700 dark:text-slate-300">
-                Your mortgage balance is increasing each month. Take immediate action to prevent further increase.
+                Your mortgage balance is increasing each month. Take immediate action to prevent
+                further increase.
               </p>
             )}
             {triggerStatus.isRisk && (
               <p className="text-sm text-slate-700 dark:text-slate-300">
-                You are very close to your trigger rate. Consider increasing your payment to build a buffer.
+                You are very close to your trigger rate. Consider increasing your payment to build a
+                buffer.
               </p>
             )}
           </div>
@@ -172,9 +178,7 @@ export function TriggerRateStatusCard({ mortgageId }: TriggerRateStatusCardProps
         {/* Action Buttons */}
         <div className="flex gap-2 pt-2">
           <Button variant="outline" size="sm" className="flex-1" asChild>
-            <Link href={`/mortgages/${mortgageId}`}>
-              View Details
-            </Link>
+            <Link href={`/mortgages/${mortgageId}`}>View Details</Link>
           </Button>
           <Button variant="outline" size="sm" className="flex-1" asChild>
             <Link href={`/mortgages/${mortgageId}?tab=prepayments`}>
@@ -187,4 +191,3 @@ export function TriggerRateStatusCard({ mortgageId }: TriggerRateStatusCardProps
     </Card>
   );
 }
-

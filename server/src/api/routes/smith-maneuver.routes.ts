@@ -12,7 +12,9 @@ const projectQuerySchema = z.object({
   years: z
     .union([z.string(), z.number()])
     .optional()
-    .transform((val) => (val === undefined ? 30 : typeof val === "string" ? parseInt(val, 10) : val))
+    .transform((val) =>
+      val === undefined ? 30 : typeof val === "string" ? parseInt(val, 10) : val
+    )
     .refine((val) => val > 0 && val <= 50, "Years must be between 1 and 50"),
 });
 
@@ -200,4 +202,3 @@ export function registerSmithManeuverRoutes(router: Router, services: Applicatio
     }
   });
 }
-

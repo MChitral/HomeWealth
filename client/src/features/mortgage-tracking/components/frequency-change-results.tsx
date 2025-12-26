@@ -36,7 +36,8 @@ export function FrequencyChangeResults({ results }: FrequencyChangeResultsProps)
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Previous Payment</p>
               <p className="text-2xl font-bold">
-                ${parseFloat(results.oldPaymentAmount.toString()).toLocaleString(undefined, {
+                $
+                {parseFloat(results.oldPaymentAmount.toString()).toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -48,7 +49,8 @@ export function FrequencyChangeResults({ results }: FrequencyChangeResultsProps)
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">New Payment</p>
               <p className="text-2xl font-bold text-blue-600">
-                ${parseFloat(results.newPaymentAmount.toString()).toLocaleString(undefined, {
+                $
+                {parseFloat(results.newPaymentAmount.toString()).toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -87,8 +89,8 @@ export function FrequencyChangeResults({ results }: FrequencyChangeResultsProps)
                 results.paymentDifference > 0 ? "text-blue-600" : "text-green-600"
               }`}
             >
-              {results.paymentDifference > 0 ? "+" : ""}
-              ${parseFloat(Math.abs(results.paymentDifference).toString()).toLocaleString(
+              {results.paymentDifference > 0 ? "+" : ""}$
+              {parseFloat(Math.abs(results.paymentDifference).toString()).toLocaleString(
                 undefined,
                 {
                   minimumFractionDigits: 2,
@@ -122,4 +124,3 @@ export function FrequencyChangeResults({ results }: FrequencyChangeResultsProps)
     </div>
   );
 }
-

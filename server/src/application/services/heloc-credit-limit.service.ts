@@ -1,7 +1,4 @@
-import {
-  HelocAccountRepository,
-  MortgagesRepository,
-} from "@infrastructure/repositories";
+import { HelocAccountRepository, MortgagesRepository } from "@infrastructure/repositories";
 import {
   calculateCreditLimit,
   recalculateCreditLimitOnPrepayment,
@@ -107,4 +104,3 @@ export class HelocCreditLimitService {
     return calculateAvailableCredit(creditLimit, currentBalance);
   }
 }
-

@@ -67,11 +67,7 @@ export function HelocDashboard() {
         </div>
       )}
 
-      <CreateHelocDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-      />
+      <CreateHelocDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
     </div>
   );
 }
-

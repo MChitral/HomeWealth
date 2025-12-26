@@ -146,8 +146,9 @@ export function SkipPaymentDialog({
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                You have already skipped {skippedThisYear} payment{skippedThisYear !== 1 ? "s" : ""} this year.
-                The limit of {skipLimit} skip{skipLimit !== 1 ? "s" : ""} per calendar year has been reached.
+                You have already skipped {skippedThisYear} payment{skippedThisYear !== 1 ? "s" : ""}{" "}
+                this year. The limit of {skipLimit} skip{skipLimit !== 1 ? "s" : ""} per calendar
+                year has been reached.
               </AlertDescription>
             </Alert>
           )}
@@ -185,7 +186,8 @@ export function SkipPaymentDialog({
                       <div>
                         <p className="text-muted-foreground">Interest That Will Accrue</p>
                         <p className="text-lg font-mono font-semibold text-orange-600">
-                          ${skipImpact.interestAccrued.toLocaleString(undefined, {
+                          $
+                          {skipImpact.interestAccrued.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           })}
@@ -194,7 +196,8 @@ export function SkipPaymentDialog({
                       <div>
                         <p className="text-muted-foreground">New Balance After Skip</p>
                         <p className="text-lg font-mono font-semibold">
-                          ${skipImpact.newBalance.toLocaleString(undefined, {
+                          $
+                          {skipImpact.newBalance.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           })}
@@ -203,7 +206,7 @@ export function SkipPaymentDialog({
                       <div>
                         <p className="text-muted-foreground">Extended Amortization</p>
                         <p className="text-lg font-mono font-semibold">
-                          {Math.round(skipImpact.extendedAmortizationMonths / 12 * 10) / 10} years
+                          {Math.round((skipImpact.extendedAmortizationMonths / 12) * 10) / 10} years
                           <span className="text-xs text-muted-foreground ml-1">
                             ({skipImpact.extendedAmortizationMonths} months)
                           </span>
@@ -212,7 +215,8 @@ export function SkipPaymentDialog({
                       <div>
                         <p className="text-muted-foreground">Balance Increase</p>
                         <p className="text-lg font-mono font-semibold text-red-600">
-                          +${skipImpact.interestAccrued.toLocaleString(undefined, {
+                          +$
+                          {skipImpact.interestAccrued.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           })}
@@ -225,20 +229,22 @@ export function SkipPaymentDialog({
                   <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription>
-                      <strong>Warning:</strong> Skipping this payment will result in negative amortization.
-                      Your mortgage balance will increase by ${skipImpact.interestAccrued.toLocaleString(undefined, {
+                      <strong>Warning:</strong> Skipping this payment will result in negative
+                      amortization. Your mortgage balance will increase by $
+                      {skipImpact.interestAccrued.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
-                      })}, and your amortization period will extend.
+                      })}
+                      , and your amortization period will extend.
                     </AlertDescription>
                   </Alert>
 
                   <Alert>
                     <Info className="h-4 w-4" />
                     <AlertDescription>
-                      <strong>Important:</strong> Skipped payments still accrue interest. This interest is
-                      added to your principal balance, which means you'll pay interest on interest over time.
-                      Consider this carefully before proceeding.
+                      <strong>Important:</strong> Skipped payments still accrue interest. This
+                      interest is added to your principal balance, which means you'll pay interest
+                      on interest over time. Consider this carefully before proceeding.
                     </AlertDescription>
                   </Alert>
 
@@ -255,7 +261,8 @@ export function SkipPaymentDialog({
                     <Label htmlFor="confirm-skip" className="text-sm cursor-pointer">
                       I understand that skipping this payment will increase my balance by{" "}
                       <strong>
-                        ${skipImpact.interestAccrued.toLocaleString(undefined, {
+                        $
+                        {skipImpact.interestAccrued.toLocaleString(undefined, {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
@@ -277,10 +284,7 @@ export function SkipPaymentDialog({
             <Button
               onClick={handleSkipPayment}
               disabled={
-                !paymentDate ||
-                !isConfirmed ||
-                !skipImpact ||
-                skipPaymentMutation.isPending
+                !paymentDate || !isConfirmed || !skipImpact || skipPaymentMutation.isPending
               }
               variant="destructive"
               data-testid="button-confirm-skip-payment"
@@ -293,4 +297,3 @@ export function SkipPaymentDialog({
     </Dialog>
   );
 }
-

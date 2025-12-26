@@ -179,7 +179,9 @@ export const mortgages = pgTable("mortgages", {
   // Canadian lender prepayment constraints
   annualPrepaymentLimitPercent: integer("annual_prepayment_limit_percent").notNull().default(20), // 10-20% typical
   prepaymentLimitResetDate: date("prepayment_limit_reset_date"), // Anniversary date vs calendar year (null = calendar year)
-  prepaymentCarryForward: decimal("prepayment_carry_forward", { precision: 12, scale: 2 }).default("0.00"), // Unused prepayment room from previous year
+  prepaymentCarryForward: decimal("prepayment_carry_forward", { precision: 12, scale: 2 }).default(
+    "0.00"
+  ), // Unused prepayment room from previous year
 
   // Mortgage default insurance (for high-ratio mortgages)
   insuranceProvider: text("insurance_provider"), // "CMHC" | "Sagen" | "Genworth" | null
@@ -940,11 +942,11 @@ export const helocAccounts = pgTable(
     accountOpeningDate: date("account_opening_date").notNull(),
     accountStatus: text("account_status").notNull().default("active"), // 'active', 'closed', 'suspended'
     isReAdvanceable: integer("is_re_advanceable").notNull().default(0), // boolean (0/1)
-    
+
     // HELOC payment options
     helocPaymentType: text("heloc_payment_type").default("interest_only"), // "interest_only" | "principal_plus_interest"
     helocMinimumPayment: decimal("heloc_minimum_payment", { precision: 10, scale: 2 }), // Calculated minimum payment
-    
+
     // HELOC draw period tracking
     helocDrawPeriodEndDate: date("heloc_draw_period_end_date"), // End date of draw period (after this, repayment period begins)
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -1674,7 +1676,10 @@ export const recastEvents = pgTable(
     prepaymentAmount: decimal("prepayment_amount", { precision: 12, scale: 2 }).notNull(),
     previousBalance: decimal("previous_balance", { precision: 12, scale: 2 }).notNull(),
     newBalance: decimal("new_balance", { precision: 12, scale: 2 }).notNull(),
-    previousPaymentAmount: decimal("previous_payment_amount", { precision: 10, scale: 2 }).notNull(),
+    previousPaymentAmount: decimal("previous_payment_amount", {
+      precision: 10,
+      scale: 2,
+    }).notNull(),
     newPaymentAmount: decimal("new_payment_amount", { precision: 10, scale: 2 }).notNull(),
     remainingAmortizationMonths: integer("remaining_amortization_months").notNull(),
     description: text("description"),
@@ -1843,15 +1848,11 @@ export const insertRenewalNegotiationSchema = createInsertSchema(renewalNegotiat
     offeredRate: z
       .union([z.string(), z.number(), z.null(), z.undefined()])
       .optional()
-      .transform((val) =>
-        val == null ? null : typeof val === "number" ? val.toFixed(3) : val
-      ),
+      .transform((val) => (val == null ? null : typeof val === "number" ? val.toFixed(3) : val)),
     negotiatedRate: z
       .union([z.string(), z.number(), z.null(), z.undefined()])
       .optional()
-      .transform((val) =>
-        val == null ? null : typeof val === "number" ? val.toFixed(3) : val
-      ),
+      .transform((val) => (val == null ? null : typeof val === "number" ? val.toFixed(3) : val)),
   });
 
 export type InsertRenewalNegotiation = z.infer<typeof insertRenewalNegotiationSchema>;
@@ -1898,9 +1899,7 @@ export const insertRenewalHistorySchema = createInsertSchema(renewalHistory)
     estimatedSavings: z
       .union([z.string(), z.number(), z.null(), z.undefined()])
       .optional()
-      .transform((val) =>
-        val == null ? null : typeof val === "number" ? val.toFixed(2) : val
-      ),
+      .transform((val) => (val == null ? null : typeof val === "number" ? val.toFixed(2) : val)),
   });
 
 export type InsertRenewalHistory = z.infer<typeof insertRenewalHistorySchema>;

@@ -6,14 +6,7 @@ import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { scenarioApi } from "@/features/scenario-management/api/scenario-api";
 import { formatCurrency } from "@/shared/lib/utils";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/shared/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
 import { Loader2, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import {
   LineChart,
@@ -70,7 +63,8 @@ export function WhatIfRateAnalysis() {
         <CardHeader>
           <CardTitle>What-If Rate Change Analysis</CardTitle>
           <CardDescription>
-            See how different interest rate changes would affect your mortgage and financial strategy
+            See how different interest rate changes would affect your mortgage and financial
+            strategy
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -111,9 +105,7 @@ export function WhatIfRateAnalysis() {
           <Card>
             <CardHeader>
               <CardTitle>Impact Summary</CardTitle>
-              <CardDescription>
-                Baseline rate: {formatRate(result.baseline.rate)}
-              </CardDescription>
+              <CardDescription>Baseline rate: {formatRate(result.baseline.rate)}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
@@ -145,9 +137,7 @@ export function WhatIfRateAnalysis() {
                         <TableCell>{formatRate(scenario.newRate)}</TableCell>
                         <TableCell
                           className={
-                            scenario.impact.netWorthChange >= 0
-                              ? "text-green-600"
-                              : "text-red-600"
+                            scenario.impact.netWorthChange >= 0 ? "text-green-600" : "text-red-600"
                           }
                         >
                           {formatPercent(
@@ -196,9 +186,7 @@ export function WhatIfRateAnalysis() {
                     dataKey="year"
                     label={{ value: "Year", position: "insideBottom", offset: -5 }}
                   />
-                  <YAxis
-                    label={{ value: "Net Worth ($)", angle: -90, position: "insideLeft" }}
-                  />
+                  <YAxis label={{ value: "Net Worth ($)", angle: -90, position: "insideLeft" }} />
                   <Tooltip formatter={(value: number) => formatCurrency(value)} />
                   <Legend />
                   <Line
@@ -233,4 +221,3 @@ export function WhatIfRateAnalysis() {
     </div>
   );
 }
-

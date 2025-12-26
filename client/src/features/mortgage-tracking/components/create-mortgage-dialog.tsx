@@ -61,23 +61,30 @@ function Step1Fields({
       : "0.00";
   const isHighRatio = Number(downPaymentPercent) < 20;
 
-  const handleInsuranceResult = (result: InsuranceCalculationResult | null) => {
+  const handleInsuranceResult = (
+    result: (InsuranceCalculationResult & { premiumPaymentType?: string }) | null
+  ) => {
     if (onInsuranceResultChange) {
       onInsuranceResultChange(result);
     }
     // Store insurance data in form for later use
     if (result && result.isHighRatio) {
       setValue("insuranceProvider", result.provider, { shouldValidate: false });
-      setValue("insurancePremium", result.premiumAfterDiscount.toString(), { shouldValidate: false });
+      setValue("insurancePremium", result.premiumAfterDiscount.toString(), {
+        shouldValidate: false,
+      });
+      const premiumPaymentType = result.premiumPaymentType || "upfront";
       setValue(
         "insuranceAddedToPrincipal",
-        result.premiumPaymentType === "added-to-principal" ? "1" : "0",
+        premiumPaymentType === "added-to-principal" ? "1" : "0",
         { shouldValidate: false }
       );
       setValue("isHighRatio", "1", { shouldValidate: false });
       // Update loan amount if premium is added to principal
-      if (result.premiumPaymentType === "added-to-principal") {
-        setValue("adjustedLoanAmount", result.totalMortgageAmount.toString(), { shouldValidate: false });
+      if (premiumPaymentType === "added-to-principal") {
+        setValue("adjustedLoanAmount", result.totalMortgageAmount.toString(), {
+          shouldValidate: false,
+        });
       }
     } else {
       setValue("insuranceProvider", "", { shouldValidate: false });
@@ -118,7 +125,9 @@ function Step1Fields({
               <FormLabel htmlFor="down-payment">
                 Down Payment ($)
                 {downPaymentPercent && propertyPrice && (
-                  <span className="ml-2 text-sm text-muted-foreground">({downPaymentPercent}%)</span>
+                  <span className="ml-2 text-sm text-muted-foreground">
+                    ({downPaymentPercent}%)
+                  </span>
                 )}
               </FormLabel>
               <FormControl>
@@ -594,10 +603,12 @@ export function CreateMortgageDialog({
           </DialogHeader>
 
           {wizardStep === 1 ? (
-            <Step1Fields onInsuranceResultChange={(result) => {
-              // Store insurance result for use in form submission
-              // This will be handled by the form state hook
-            }} />
+            <Step1Fields
+              onInsuranceResultChange={(result) => {
+                // Store insurance result for use in form submission
+                // This will be handled by the form state hook
+              }}
+            />
           ) : (
             <Step2Fields
               loanAmount={loanAmount}

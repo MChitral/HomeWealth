@@ -20,7 +20,11 @@ interface RenewalTabProps {
   currentTerm?: any;
 }
 
-export function RenewalTab({ mortgageId, onTermRenewalDialogOpenChange, currentTerm }: RenewalTabProps) {
+export function RenewalTab({
+  mortgageId,
+  onTermRenewalDialogOpenChange,
+  currentTerm,
+}: RenewalTabProps) {
   const [penaltyCalculatorOpen, setPenaltyCalculatorOpen] = useState(false);
   const [termRenewalOpen, setTermRenewalOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -61,13 +65,13 @@ export function RenewalTab({ mortgageId, onTermRenewalDialogOpenChange, currentT
       queryClient.invalidateQueries({ queryKey: ["/api/mortgages", mortgageId, "terms"] });
       queryClient.invalidateQueries({ queryKey: ["renewal-history", mortgageId] });
       queryClient.invalidateQueries({ queryKey: ["renewal-analytics", mortgageId] });
-      
+
       // Record renewal decision if we have the required data
       if (currentTerm && newTerm?.id && renewalStatus) {
         try {
           const formData = renewalForm.form.getValues();
           const previousRate = renewalStatus.currentRate;
-          
+
           // Extract new rate from created term or form data
           let newRate = previousRate;
           if (newTerm.fixedRate) {
@@ -79,14 +83,15 @@ export function RenewalTab({ mortgageId, onTermRenewalDialogOpenChange, currentT
           } else if (formData.primeRate && formData.lockedSpread) {
             newRate = (parseFloat(formData.primeRate) + parseFloat(formData.lockedSpread)) * 100;
           }
-          
+
           // Determine decision type (stayed vs switched)
           // For now, assume "stayed" - this could be enhanced to detect lender changes
           const decisionType: "stayed" | "switched" | "refinanced" = "stayed";
-          
+
           await mortgageApi.recordRenewalDecision(mortgageId, {
             termId: newTerm.id,
-            renewalDate: formData.startDate || newTerm.startDate || new Date().toISOString().split("T")[0],
+            renewalDate:
+              formData.startDate || newTerm.startDate || new Date().toISOString().split("T")[0],
             previousRate,
             newRate,
             decisionType,
@@ -99,7 +104,7 @@ export function RenewalTab({ mortgageId, onTermRenewalDialogOpenChange, currentT
           console.error("Failed to record renewal decision:", error);
         }
       }
-      
+
       toast({
         title: "Term Renewed",
         description: "Your new mortgage term has been created successfully.",
@@ -133,9 +138,7 @@ export function RenewalTab({ mortgageId, onTermRenewalDialogOpenChange, currentT
 
   const currentRatePercent = renewalStatus.currentRate;
   const marketRatePercent = marketRate?.rate ? marketRate.rate * 100 : null;
-  const rateDifference = marketRatePercent
-    ? marketRatePercent - currentRatePercent
-    : null;
+  const rateDifference = marketRatePercent ? marketRatePercent - currentRatePercent : null;
 
   return (
     <div className="space-y-6">
@@ -217,11 +220,7 @@ export function RenewalTab({ mortgageId, onTermRenewalDialogOpenChange, currentT
             <CardDescription>Start a new term with updated rates</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button
-              variant="default"
-              className="w-full"
-              onClick={() => setTermRenewalOpen(true)}
-            >
+            <Button variant="default" className="w-full" onClick={() => setTermRenewalOpen(true)}>
               Renew Term
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
@@ -277,7 +276,8 @@ export function RenewalTab({ mortgageId, onTermRenewalDialogOpenChange, currentT
             <div>
               <p className="text-sm text-muted-foreground mb-1">Estimated Penalty</p>
               <p className="font-semibold">
-                ${renewalStatus.estimatedPenalty.amount.toLocaleString(undefined, {
+                $
+                {renewalStatus.estimatedPenalty.amount.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}

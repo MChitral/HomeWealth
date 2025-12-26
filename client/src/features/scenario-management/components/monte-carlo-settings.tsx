@@ -3,13 +3,7 @@ import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Label } from "@/shared/ui/label";
 import { Input } from "@/shared/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { Switch } from "@/shared/ui/switch";
 import { useMutation } from "@tanstack/react-query";
 import { scenarioApi } from "../api/scenario-api";
@@ -113,7 +107,9 @@ export function MonteCarloSettings({ onResult }: MonteCarloSettingsProps) {
               value={interestRateVolatility}
               onChange={(e) => setInterestRateVolatility(parseFloat(e.target.value) || 0.15)}
             />
-            <p className="text-xs text-muted-foreground">Annualized volatility (e.g., 0.15 = 15%)</p>
+            <p className="text-xs text-muted-foreground">
+              Annualized volatility (e.g., 0.15 = 15%)
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="drift">Interest Rate Drift</Label>
@@ -152,9 +148,7 @@ export function MonteCarloSettings({ onResult }: MonteCarloSettingsProps) {
                 step="0.001"
                 value={longTermMeanRate ?? ""}
                 onChange={(e) =>
-                  setLongTermMeanRate(
-                    e.target.value ? parseFloat(e.target.value) : undefined
-                  )
+                  setLongTermMeanRate(e.target.value ? parseFloat(e.target.value) : undefined)
                 }
                 placeholder="Auto (current rate)"
               />
@@ -172,9 +166,7 @@ export function MonteCarloSettings({ onResult }: MonteCarloSettingsProps) {
               max="1"
               step="0.001"
               value={rateCap ?? ""}
-              onChange={(e) =>
-                setRateCap(e.target.value ? parseFloat(e.target.value) : undefined)
-              }
+              onChange={(e) => setRateCap(e.target.value ? parseFloat(e.target.value) : undefined)}
               placeholder="No cap"
             />
             <p className="text-xs text-muted-foreground">Maximum rate (e.g., 0.15 = 15%)</p>
@@ -223,4 +215,3 @@ export function MonteCarloSettings({ onResult }: MonteCarloSettingsProps) {
     </Card>
   );
 }
-

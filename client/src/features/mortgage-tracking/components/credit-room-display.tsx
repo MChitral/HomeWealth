@@ -48,9 +48,10 @@ export function CreditRoomDisplay({ mortgageId, onViewHistory }: CreditRoomDispl
     );
   }
 
-  const utilization = creditRoom.creditRoom > 0
-    ? calculateCreditUtilization(creditRoom.helocBalance, creditRoom.creditRoom)
-    : 0;
+  const utilization =
+    creditRoom.creditRoom > 0
+      ? calculateCreditUtilization(creditRoom.helocBalance, creditRoom.creditRoom)
+      : 0;
 
   return (
     <Card className="border-green-200 bg-gradient-to-br from-green-50/50 to-background">
@@ -61,9 +62,7 @@ export function CreditRoomDisplay({ mortgageId, onViewHistory }: CreditRoomDispl
               <TrendingUp className="h-5 w-5 text-green-600" />
               Credit Room
             </CardTitle>
-            <CardDescription>
-              Available credit from your re-advanceable mortgage
-            </CardDescription>
+            <CardDescription>Available credit from your re-advanceable mortgage</CardDescription>
           </div>
           <Badge variant="outline" className="bg-green-50 border-green-300">
             Re-advanceable
@@ -89,7 +88,11 @@ export function CreditRoomDisplay({ mortgageId, onViewHistory }: CreditRoomDispl
         <div className="space-y-2 pt-2 border-t">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Credit Utilization</span>
-            <Badge variant={utilization > 80 ? "destructive" : utilization > 50 ? "default" : "secondary"}>
+            <Badge
+              variant={
+                utilization > 80 ? "destructive" : utilization > 50 ? "default" : "secondary"
+              }
+            >
               {utilization.toFixed(1)}%
             </Badge>
           </div>
@@ -119,4 +122,3 @@ export function CreditRoomDisplay({ mortgageId, onViewHistory }: CreditRoomDispl
     </Card>
   );
 }
-

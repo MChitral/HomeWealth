@@ -1,6 +1,6 @@
 /**
  * Calculate HELOC minimum payment based on payment type
- * 
+ *
  * @param balance - Current HELOC balance
  * @param annualRate - Annual interest rate (decimal, e.g., 0.05 for 5%)
  * @param paymentType - Payment type: "interest_only" or "principal_plus_interest"
@@ -29,16 +29,15 @@ export function calculateHelocMinimumPayment(
   // r = monthly rate
   // PV = present value (balance)
   // n = number of payments (months)
-  
+
   const monthlyRate = annualRate / 12;
-  
+
   if (monthlyRate === 0) {
     // If rate is 0, just divide balance by months
     return balance / amortizationMonths;
   }
 
-  const payment =
-    (monthlyRate * balance) / (1 - Math.pow(1 + monthlyRate, -amortizationMonths));
+  const payment = (monthlyRate * balance) / (1 - Math.pow(1 + monthlyRate, -amortizationMonths));
 
   // Round to nearest cent
   return Math.round(payment * 100) / 100;
@@ -46,7 +45,7 @@ export function calculateHelocMinimumPayment(
 
 /**
  * Calculate HELOC payment breakdown (principal and interest)
- * 
+ *
  * @param balance - Current HELOC balance
  * @param paymentAmount - Payment amount made
  * @param annualRate - Annual interest rate (decimal)
@@ -70,4 +69,3 @@ export function calculateHelocPaymentBreakdown(
     principalPortion: Math.round(principalPortion * 100) / 100,
   };
 }
-

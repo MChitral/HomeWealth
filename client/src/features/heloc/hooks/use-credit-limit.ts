@@ -18,8 +18,9 @@ export function useRecalculateCreditLimit() {
     onSuccess: (_, accountId) => {
       queryClient.invalidateQueries({ queryKey: helocQueryKeys.accounts() });
       queryClient.invalidateQueries({ queryKey: helocQueryKeys.account(accountId) });
-      queryClient.invalidateQueries({ queryKey: [...helocQueryKeys.account(accountId), "credit-limit"] });
+      queryClient.invalidateQueries({
+        queryKey: [...helocQueryKeys.account(accountId), "credit-limit"],
+      });
     },
   });
 }
-

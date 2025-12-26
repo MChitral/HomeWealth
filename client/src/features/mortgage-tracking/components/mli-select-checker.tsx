@@ -26,7 +26,11 @@ export function MLISelectChecker({ onDiscountSelected }: MLISelectCheckerProps) 
       question: "What type of property is this?",
       options: [
         { value: "standard", label: "Standard Residential Property", discount: 10 },
-        { value: "energyEfficient", label: "Energy-Efficient Home (ENERGY STAR certified)", discount: 20 },
+        {
+          value: "energyEfficient",
+          label: "Energy-Efficient Home (ENERGY STAR certified)",
+          discount: 20,
+        },
         { value: "affordable", label: "Affordable Housing Program", discount: 30 },
         { value: "other", label: "Other", discount: 0 },
       ],
@@ -35,7 +39,11 @@ export function MLISelectChecker({ onDiscountSelected }: MLISelectCheckerProps) 
       id: "location",
       question: "Is the property located in a designated area?",
       options: [
-        { value: "yes", label: "Yes (certain locations qualify for additional discounts)", discount: 20 },
+        {
+          value: "yes",
+          label: "Yes (certain locations qualify for additional discounts)",
+          discount: 20,
+        },
         { value: "no", label: "No", discount: 0 },
       ],
     },
@@ -135,7 +143,9 @@ export function MLISelectChecker({ onDiscountSelected }: MLISelectCheckerProps) 
                     Question {step} of {questions.length}
                   </span>
                   <Badge variant="outline">
-                    {discount !== null && discount > 0 ? `${discount}% discount` : "No discount yet"}
+                    {discount !== null && discount > 0
+                      ? `${discount}% discount`
+                      : "No discount yet"}
                   </Badge>
                 </div>
                 <div>
@@ -154,10 +164,7 @@ export function MLISelectChecker({ onDiscountSelected }: MLISelectCheckerProps) 
                     {currentQuestion.options.map((option) => (
                       <div key={option.value} className="flex items-center space-x-2 py-2">
                         <RadioGroupItem value={option.value} id={option.value} />
-                        <Label
-                          htmlFor={option.value}
-                          className="flex-1 cursor-pointer font-normal"
-                        >
+                        <Label htmlFor={option.value} className="flex-1 cursor-pointer font-normal">
                           {option.label}
                           {option.discount > 0 && (
                             <Badge variant="secondary" className="ml-2">
@@ -186,4 +193,3 @@ export function MLISelectChecker({ onDiscountSelected }: MLISelectCheckerProps) 
     </Card>
   );
 }
-

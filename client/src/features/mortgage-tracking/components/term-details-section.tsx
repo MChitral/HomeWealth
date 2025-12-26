@@ -130,11 +130,7 @@ export function TermDetailsSection({
               />
             )}
             {mortgage && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsFrequencyChangeOpen(true)}
-              >
+              <Button variant="outline" size="sm" onClick={() => setIsFrequencyChangeOpen(true)}>
                 <Calendar className="h-4 w-4 mr-2" />
                 Change Frequency
               </Button>

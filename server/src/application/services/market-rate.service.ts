@@ -64,11 +64,7 @@ export class MarketRateService {
         try {
           // Check if rate already exists for today
           const today = new Date().toISOString().split("T")[0];
-          const exists = await this.marketRatesRepo.existsForDate(
-            rateType,
-            termYears,
-            today
-          );
+          const exists = await this.marketRatesRepo.existsForDate(rateType, termYears, today);
 
           if (exists) {
             continue; // Skip if already fetched today
@@ -83,10 +79,7 @@ export class MarketRateService {
             source: "Bank of Canada",
           });
         } catch (error) {
-          console.error(
-            `Failed to fetch market rate for ${rateType} ${termYears}yr:`,
-            error
-          );
+          console.error(`Failed to fetch market rate for ${rateType} ${termYears}yr:`, error);
           // Continue with other rates
         }
       }

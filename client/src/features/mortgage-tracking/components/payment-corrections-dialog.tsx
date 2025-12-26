@@ -13,17 +13,14 @@ import { Label } from "@/shared/ui/label";
 import { Input } from "@/shared/ui/input";
 import { Textarea } from "@/shared/ui/textarea";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
-import { correctPayment, fetchPaymentCorrections, type PaymentCorrection } from "../api/mortgage-api";
+import {
+  correctPayment,
+  fetchPaymentCorrections,
+  type PaymentCorrection,
+} from "../api/mortgage-api";
 import { formatCurrency } from "@/shared/utils/format";
 import { History } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/shared/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
 
 interface PaymentCorrectionsDialogProps {
   paymentId: string;
@@ -164,11 +161,11 @@ export function PaymentCorrectionsDialog({
                 <TableBody>
                   {corrections.map((correction: PaymentCorrection) => (
                     <TableRow key={correction.id}>
-                      <TableCell>
-                        {new Date(correction.createdAt).toLocaleDateString()}
-                      </TableCell>
+                      <TableCell>{new Date(correction.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell>{formatCurrency(parseFloat(correction.originalAmount))}</TableCell>
-                      <TableCell>{formatCurrency(parseFloat(correction.correctedAmount))}</TableCell>
+                      <TableCell>
+                        {formatCurrency(parseFloat(correction.correctedAmount))}
+                      </TableCell>
                       <TableCell className="max-w-xs truncate">{correction.reason}</TableCell>
                     </TableRow>
                   ))}
@@ -181,4 +178,3 @@ export function PaymentCorrectionsDialog({
     </Dialog>
   );
 }
-

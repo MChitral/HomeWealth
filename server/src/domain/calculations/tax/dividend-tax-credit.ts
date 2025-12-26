@@ -1,13 +1,13 @@
 /**
  * Dividend Tax Credit Calculations
- * 
+ *
  * Calculates tax credits for eligible and non-eligible dividends in Canada.
- * 
+ *
  * Eligible dividends:
  * - 38% gross-up
  * - Federal dividend tax credit: 15.0198% of grossed-up amount
  * - Provincial dividend tax credit varies by province
- * 
+ *
  * Non-eligible dividends:
  * - 15% gross-up
  * - Federal dividend tax credit: 9.0301% of grossed-up amount
@@ -31,10 +31,7 @@ export interface DividendTaxCreditResult {
  * @param isEligible Whether the dividend is eligible
  * @returns Provincial dividend tax credit rate (as decimal)
  */
-function getProvincialDividendTaxCreditRate(
-  province: string,
-  isEligible: boolean
-): number {
+function getProvincialDividendTaxCreditRate(province: string, isEligible: boolean): number {
   // Provincial dividend tax credit rates (as percentage of grossed-up amount)
   // These are simplified rates - actual rates vary by province and tax bracket
   const rates: Record<string, { eligible: number; nonEligible: number }> = {
@@ -156,4 +153,3 @@ export function calculateNonEligibleDividendTaxCredit(
     effectiveTaxRate,
   };
 }
-

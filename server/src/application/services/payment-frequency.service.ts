@@ -195,10 +195,7 @@ export class PaymentFrequencyService {
   /**
    * Get payment frequency change history for a mortgage
    */
-  async getFrequencyChangeHistory(
-    mortgageId: string,
-    userId: string
-  ): Promise<any[] | undefined> {
+  async getFrequencyChangeHistory(mortgageId: string, userId: string): Promise<any[] | undefined> {
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
     if (!mortgage) {
       return undefined;
@@ -207,4 +204,3 @@ export class PaymentFrequencyService {
     return this.paymentFrequencyChangeEvents.findByMortgageId(mortgageId);
   }
 }
-

@@ -250,7 +250,12 @@ export function calculatePenaltyByMethod(
       methodName = "IRD (Posted Rate)";
       break;
     case "ird_discounted_rate":
-      irdPenalty = calculateIRDDiscountedRate(balance, currentRate, comparisonRate, remainingMonths);
+      irdPenalty = calculateIRDDiscountedRate(
+        balance,
+        currentRate,
+        comparisonRate,
+        remainingMonths
+      );
       methodName = "IRD (Discounted Rate)";
       break;
     case "ird_origination_comparison":

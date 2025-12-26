@@ -1,4 +1,13 @@
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceLine,
+} from "recharts";
 import { format, parseISO } from "date-fns";
 import type { PropertyValueTrend } from "../api/property-value-api";
 
@@ -17,19 +26,21 @@ export function PropertyValueTrendChart({ trend }: PropertyValueTrendChartProps)
     .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime());
 
   // Calculate trend line data points (linear projection)
-  const trendLineData = chartData.length > 1
-    ? chartData.map((point, index) => {
-        if (index === 0) return null;
-        const prevPoint = chartData[index - 1];
-        const timeDiff = new Date(point.fullDate).getTime() - new Date(prevPoint.fullDate).getTime();
-        const valueDiff = point.value - prevPoint.value;
-        const slope = timeDiff > 0 ? valueDiff / (timeDiff / (1000 * 60 * 60 * 24 * 30)) : 0; // Monthly slope
-        return {
-          ...point,
-          trendValue: prevPoint.value + slope,
-        };
-      })
-    : [];
+  const trendLineData =
+    chartData.length > 1
+      ? chartData.map((point, index) => {
+          if (index === 0) return null;
+          const prevPoint = chartData[index - 1];
+          const timeDiff =
+            new Date(point.fullDate).getTime() - new Date(prevPoint.fullDate).getTime();
+          const valueDiff = point.value - prevPoint.value;
+          const slope = timeDiff > 0 ? valueDiff / (timeDiff / (1000 * 60 * 60 * 24 * 30)) : 0; // Monthly slope
+          return {
+            ...point,
+            trendValue: prevPoint.value + slope,
+          };
+        })
+      : [];
 
   // Add projection point if available
   if (trend.projectedValue && chartData.length > 0) {
@@ -60,9 +71,7 @@ export function PropertyValueTrendChart({ trend }: PropertyValueTrendChartProps)
         <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="date" />
-          <YAxis
-            tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-          />
+          <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
           <Tooltip
             formatter={(value: number) => [
               `$${value.toLocaleString(undefined, {
@@ -97,4 +106,3 @@ export function PropertyValueTrendChart({ trend }: PropertyValueTrendChartProps)
     </div>
   );
 }
-

@@ -3,7 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 import { mortgageApi, mortgageQueryKeys, type PropertyValueHistoryEntry } from "../api";
 import { Loader2 } from "lucide-react";
 import { format } from "date-fns";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 interface PropertyValueHistoryProps {
   mortgageId: string;
@@ -66,9 +74,7 @@ export function PropertyValueHistory({ mortgageId }: PropertyValueHistoryProps) 
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
-                <YAxis
-                  tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-                />
+                <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
                 <Tooltip
                   formatter={(value: number) => [
                     `$${value.toLocaleString(undefined, {
@@ -98,9 +104,7 @@ export function PropertyValueHistory({ mortgageId }: PropertyValueHistoryProps) 
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">
-                    {format(new Date(entry.valueDate), "MMMM d, yyyy")}
-                  </p>
+                  <p className="font-medium">{format(new Date(entry.valueDate), "MMMM d, yyyy")}</p>
                   {entry.source && (
                     <p className="text-sm text-muted-foreground">
                       {sourceLabels[entry.source] || entry.source}
@@ -109,7 +113,8 @@ export function PropertyValueHistory({ mortgageId }: PropertyValueHistoryProps) 
                 </div>
                 <div className="text-right">
                   <p className="text-lg font-semibold">
-                    ${parseFloat(entry.propertyValue).toLocaleString(undefined, {
+                    $
+                    {parseFloat(entry.propertyValue).toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
@@ -126,4 +131,3 @@ export function PropertyValueHistory({ mortgageId }: PropertyValueHistoryProps) 
     </Card>
   );
 }
-

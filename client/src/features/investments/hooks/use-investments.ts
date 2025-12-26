@@ -1,5 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { investmentApi, type InvestmentTransactionPayload, type InvestmentIncomePayload } from "../api";
+import {
+  investmentApi,
+  type InvestmentTransactionPayload,
+  type InvestmentIncomePayload,
+} from "../api";
 
 export function useInvestments() {
   return useQuery({
@@ -29,8 +33,13 @@ export function useCreateInvestment() {
 export function useUpdateInvestment() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: Parameters<typeof investmentApi.updateInvestment>[1] }) =>
-      investmentApi.updateInvestment(id, payload),
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: Parameters<typeof investmentApi.updateInvestment>[1];
+    }) => investmentApi.updateInvestment(id, payload),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["investments"] });
       queryClient.invalidateQueries({ queryKey: ["investments", variables.id] });
@@ -67,7 +76,9 @@ export function useRecordInvestmentTransaction() {
       payload: InvestmentTransactionPayload;
     }) => investmentApi.recordTransaction(investmentId, payload),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["investments", variables.investmentId, "transactions"] });
+      queryClient.invalidateQueries({
+        queryKey: ["investments", variables.investmentId, "transactions"],
+      });
     },
   });
 }
@@ -83,11 +94,17 @@ export function useInvestmentIncome(investmentId: string | null, taxYear?: numbe
 export function useRecordInvestmentIncome() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ investmentId, payload }: { investmentId: string; payload: InvestmentIncomePayload }) =>
-      investmentApi.recordIncome(investmentId, payload),
+    mutationFn: ({
+      investmentId,
+      payload,
+    }: {
+      investmentId: string;
+      payload: InvestmentIncomePayload;
+    }) => investmentApi.recordIncome(investmentId, payload),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["investments", variables.investmentId, "income"] });
+      queryClient.invalidateQueries({
+        queryKey: ["investments", variables.investmentId, "income"],
+      });
     },
   });
 }
-

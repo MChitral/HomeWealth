@@ -1,10 +1,18 @@
-import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/shared/ui/form";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+  FormDescription,
+} from "@/shared/ui/form";
 import { Input } from "@/shared/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { useFormContext } from "react-hook-form";
 import { Button } from "@/shared/ui/button";
 import { RefreshCw } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { mortgageApi } from "../api";
 import type { PenaltyCalculatorFormData } from "../hooks/use-penalty-calculator-form";
 
@@ -15,16 +23,22 @@ export function PenaltyCalculatorForm() {
   const termYears = watch("termYears");
 
   // Fetch market rate when term type and years are available
-  const { data: marketRate, isLoading: isMarketRateLoading, refetch } = useQuery({
+  const {
+    data: marketRate,
+    isLoading: isMarketRateLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["/api/market-rates", termType, termYears],
     queryFn: () => mortgageApi.fetchMarketRate(termType!, termYears!),
     enabled: !!termType && !!termYears,
-    onSuccess: (data) => {
-      if (data?.rate) {
-        setValue("marketRate", data.rate.toFixed(2));
-      }
-    },
   });
+
+  // Update form value when market rate is fetched
+  useEffect(() => {
+    if (marketRate?.rate) {
+      setValue("marketRate", marketRate.rate.toFixed(2));
+    }
+  }, [marketRate, setValue]);
 
   const handleFetchMarketRate = () => {
     if (termType && termYears) {
@@ -191,7 +205,8 @@ export function PenaltyCalculatorForm() {
               />
             </FormControl>
             <FormDescription>
-              Current market rate for the remaining term. Click "Auto-fill" to fetch from market rate service.
+              Current market rate for the remaining term. Click "Auto-fill" to fetch from market
+              rate service.
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -205,11 +220,7 @@ export function PenaltyCalculatorForm() {
           <FormItem>
             <FormLabel>Lender Name (Optional)</FormLabel>
             <FormControl>
-              <Input
-                type="text"
-                placeholder="RBC, TD, BMO, etc."
-                {...field}
-              />
+              <Input type="text" placeholder="RBC, TD, BMO, etc." {...field} />
             </FormControl>
             <FormDescription>
               Optional: Enter your lender name for lender-specific penalty calculations
@@ -234,14 +245,17 @@ export function PenaltyCalculatorForm() {
               <SelectContent>
                 <SelectItem value="ird_posted_rate">IRD (Posted Rate)</SelectItem>
                 <SelectItem value="ird_discounted_rate">IRD (Discounted Rate)</SelectItem>
-                <SelectItem value="ird_origination_comparison">IRD (Origination Comparison)</SelectItem>
+                <SelectItem value="ird_origination_comparison">
+                  IRD (Origination Comparison)
+                </SelectItem>
                 <SelectItem value="three_month_interest">3-Month Interest Only</SelectItem>
                 <SelectItem value="variable_rate">Variable Rate (3-Month Interest)</SelectItem>
                 <SelectItem value="open_mortgage">Open Mortgage (No Penalty)</SelectItem>
               </SelectContent>
             </Select>
             <FormDescription>
-              Select a specific calculation method. Leave blank to use standard "greater of" calculation.
+              Select a specific calculation method. Leave blank to use standard "greater of"
+              calculation.
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -250,4 +264,3 @@ export function PenaltyCalculatorForm() {
     </div>
   );
 }
-

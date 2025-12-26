@@ -34,10 +34,7 @@ export class RenewalNegotiationsRepository {
   }
 
   async create(payload: InsertRenewalNegotiation): Promise<RenewalNegotiationRecord> {
-    const [created] = await this.database
-      .insert(renewalNegotiations)
-      .values(payload)
-      .returning();
+    const [created] = await this.database.insert(renewalNegotiations).values(payload).returning();
     return created;
   }
 
@@ -67,4 +64,3 @@ export class RenewalNegotiationsRepository {
       .where(eq(renewalNegotiations.mortgageId, mortgageId));
   }
 }
-

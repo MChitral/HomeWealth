@@ -61,7 +61,8 @@ export function RecastHistory({ mortgageId }: RecastHistoryProps) {
                 <div className="text-right">
                   <p className="text-sm text-muted-foreground">Prepayment</p>
                   <p className="font-semibold">
-                    ${parseFloat(event.prepaymentAmount).toLocaleString(undefined, {
+                    $
+                    {parseFloat(event.prepaymentAmount).toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
@@ -74,13 +75,15 @@ export function RecastHistory({ mortgageId }: RecastHistoryProps) {
                   <p className="text-xs text-muted-foreground mb-1">Payment Change</p>
                   <div className="flex items-baseline gap-2">
                     <span className="text-sm line-through text-muted-foreground">
-                      ${parseFloat(event.previousPaymentAmount).toLocaleString(undefined, {
+                      $
+                      {parseFloat(event.previousPaymentAmount).toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}
                     </span>
                     <span className="text-lg font-semibold text-green-600">
-                      ${parseFloat(event.newPaymentAmount).toLocaleString(undefined, {
+                      $
+                      {parseFloat(event.newPaymentAmount).toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}
@@ -90,7 +93,8 @@ export function RecastHistory({ mortgageId }: RecastHistoryProps) {
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Balance After</p>
                   <p className="text-lg font-semibold">
-                    ${parseFloat(event.newBalance).toLocaleString(undefined, {
+                    $
+                    {parseFloat(event.newBalance).toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
@@ -104,4 +108,3 @@ export function RecastHistory({ mortgageId }: RecastHistoryProps) {
     </Card>
   );
 }
-

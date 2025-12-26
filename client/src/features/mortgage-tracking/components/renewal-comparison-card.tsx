@@ -48,7 +48,8 @@ export function RenewalComparisonCard({ mortgageId }: RenewalComparisonCardProps
         <Badge variant={variants[recommendation.recommendation] || "default"}>
           {recommendation.recommendation === "consider_switching"
             ? "Consider Switching"
-            : recommendation.recommendation.charAt(0).toUpperCase() + recommendation.recommendation.slice(1)}
+            : recommendation.recommendation.charAt(0).toUpperCase() +
+              recommendation.recommendation.slice(1)}
         </Badge>
         <Badge variant="outline" className={colors[recommendation.confidence]}>
           {recommendation.confidence} confidence
@@ -204,4 +205,3 @@ export function RenewalComparisonCard({ mortgageId }: RenewalComparisonCardProps
     </Card>
   );
 }
-

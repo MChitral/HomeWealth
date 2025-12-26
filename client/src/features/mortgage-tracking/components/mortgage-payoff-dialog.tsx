@@ -29,9 +29,7 @@ export function MortgagePayoffDialog({
   open,
   onOpenChange,
 }: MortgagePayoffDialogProps) {
-  const [payoffDate, setPayoffDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
-  );
+  const [payoffDate, setPayoffDate] = useState<string>(new Date().toISOString().split("T")[0]);
   const [finalPaymentAmount, setFinalPaymentAmount] = useState<string>(currentBalance.toFixed(2));
   const [remainingBalance, setRemainingBalance] = useState<string>("0.00");
   const [penaltyAmount, setPenaltyAmount] = useState<string>("0.00");
@@ -190,4 +188,3 @@ export function MortgagePayoffDialog({
     </Dialog>
   );
 }
-

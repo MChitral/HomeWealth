@@ -8,10 +8,7 @@ const markReAdvanceableSchema = z.object({
   helocAccountId: z.string().min(1, "HELOC account ID is required"),
 });
 
-export function registerReAdvanceableMortgageRoutes(
-  router: Router,
-  services: ApplicationServices
-) {
+export function registerReAdvanceableMortgageRoutes(router: Router, services: ApplicationServices) {
   // Mark mortgage as re-advanceable
   router.post("/mortgages/:id/mark-re-advanceable", async (req, res) => {
     const user = requireUser(req, res);
@@ -42,9 +39,7 @@ export function registerReAdvanceableMortgageRoutes(
     if (!user) return;
 
     try {
-      const creditRoom = await services.reAdvanceableMortgage.getCurrentCreditRoom(
-        req.params.id
-      );
+      const creditRoom = await services.reAdvanceableMortgage.getCurrentCreditRoom(req.params.id);
 
       if (!creditRoom) {
         sendError(res, 404, "Mortgage is not re-advanceable or not found");
@@ -70,4 +65,3 @@ export function registerReAdvanceableMortgageRoutes(
     }
   });
 }
-

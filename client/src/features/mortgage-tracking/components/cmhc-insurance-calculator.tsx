@@ -27,18 +27,27 @@ export function CMHCInsuranceCalculator({
   showProviderComparison = false,
   compact = false,
 }: CMHCInsuranceCalculatorProps) {
-  const { form, calculateMutation, compareMutation, handleCalculate, handleCompare, downPaymentPercent, isHighRatio } =
-    useInsuranceCalculator({
-      defaultPropertyPrice,
-      defaultDownPayment,
-      onCalculate: (result) => {
-        if (onResultChange) {
-          onResultChange(result);
-        }
-      },
-    });
+  const {
+    form,
+    calculateMutation,
+    compareMutation,
+    handleCalculate,
+    handleCompare,
+    downPaymentPercent,
+    isHighRatio,
+  } = useInsuranceCalculator({
+    defaultPropertyPrice,
+    defaultDownPayment,
+    onCalculate: (result) => {
+      if (onResultChange) {
+        onResultChange(result);
+      }
+    },
+  });
 
-  const [calculationResult, setCalculationResult] = useState<InsuranceCalculationResult | null>(null);
+  const [calculationResult, setCalculationResult] = useState<InsuranceCalculationResult | null>(
+    null
+  );
   const [comparisonResult, setComparisonResult] = useState<any>(null);
 
   // Auto-calculate when form values change (debounced)
@@ -59,10 +68,17 @@ export function CMHCInsuranceCalculator({
     if (calculateMutation.data) {
       setCalculationResult(calculateMutation.data);
       if (onResultChange) {
-        onResultChange(calculateMutation.data);
+        // Pass result with premiumPaymentType from form
+        const resultWithPaymentType = {
+          ...calculateMutation.data,
+          premiumPaymentType: form.getValues("premiumPaymentType") || "upfront",
+        };
+        onResultChange(
+          resultWithPaymentType as InsuranceCalculationResult & { premiumPaymentType: string }
+        );
       }
     }
-  }, [calculateMutation.data, onResultChange]);
+  }, [calculateMutation.data, onResultChange, form]);
 
   const propertyPrice = form.watch("propertyPrice");
   const downPayment = form.watch("downPayment");
@@ -80,7 +96,7 @@ export function CMHCInsuranceCalculator({
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleCalculate)} className="space-y-4">
+          <form onSubmit={handleCalculate} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -136,21 +152,21 @@ export function CMHCInsuranceCalculator({
 
             {/* High-ratio warning or conventional message */}
             {propertyPrice && downPayment && Number(propertyPrice) > 0 && (
-              <Alert variant={isHighRatio ? "default" : "secondary"}>
+              <Alert variant={isHighRatio ? "default" : "default"}>
                 {isHighRatio ? (
                   <>
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>
-                      This is a <strong>high-ratio mortgage</strong> (down payment &lt; 20%). Mortgage default
-                      insurance is required.
+                      This is a <strong>high-ratio mortgage</strong> (down payment &lt; 20%).
+                      Mortgage default insurance is required.
                     </AlertDescription>
                   </>
                 ) : (
                   <>
                     <Info className="h-4 w-4" />
                     <AlertDescription>
-                      This is a <strong>conventional mortgage</strong> (down payment ≥ 20%). No mortgage default
-                      insurance is required.
+                      This is a <strong>conventional mortgage</strong> (down payment ≥ 20%). No
+                      mortgage default insurance is required.
                     </AlertDescription>
                   </>
                 )}
@@ -268,7 +284,8 @@ export function CMHCInsuranceCalculator({
                     <div>
                       <Label className="text-muted-foreground">Mortgage Amount</Label>
                       <p className="text-lg font-semibold">
-                        ${calculationResult.mortgageAmount.toLocaleString(undefined, {
+                        $
+                        {calculationResult.mortgageAmount.toLocaleString(undefined, {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
@@ -285,7 +302,8 @@ export function CMHCInsuranceCalculator({
                     <div>
                       <Label className="text-muted-foreground">Premium Amount</Label>
                       <p className="text-lg font-semibold text-orange-600">
-                        ${calculationResult.premiumAfterDiscount.toLocaleString(undefined, {
+                        $
+                        {calculationResult.premiumAfterDiscount.toLocaleString(undefined, {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
@@ -302,17 +320,20 @@ export function CMHCInsuranceCalculator({
                         </span>
                       </div>
                       <p className="text-sm text-green-700 dark:text-green-300">
-                        Base Premium: ${calculationResult.breakdown.basePremium.toLocaleString(undefined, {
+                        Base Premium: $
+                        {calculationResult.breakdown.basePremium.toLocaleString(undefined, {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
                         <br />
-                        Discount: ${calculationResult.breakdown.discountAmount.toLocaleString(undefined, {
+                        Discount: $
+                        {calculationResult.breakdown.discountAmount.toLocaleString(undefined, {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
                         <br />
-                        Final Premium: ${calculationResult.breakdown.finalPremium.toLocaleString(undefined, {
+                        Final Premium: $
+                        {calculationResult.breakdown.finalPremium.toLocaleString(undefined, {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
@@ -320,17 +341,21 @@ export function CMHCInsuranceCalculator({
                     </div>
                   )}
 
-                  {form.watch("premiumPaymentType") === "added-to-principal" && calculationResult && (
-                    <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                      <Label className="text-muted-foreground">Total Mortgage Amount (with premium)</Label>
-                      <p className="text-lg font-semibold text-blue-600">
-                        ${calculationResult.totalMortgageAmount.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </p>
-                    </div>
-                  )}
+                  {form.watch("premiumPaymentType") === "added-to-principal" &&
+                    calculationResult && (
+                      <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                        <Label className="text-muted-foreground">
+                          Total Mortgage Amount (with premium)
+                        </Label>
+                        <p className="text-lg font-semibold text-blue-600">
+                          $
+                          {calculationResult.totalMortgageAmount.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </p>
+                      </div>
+                    )}
                 </div>
               </div>
             )}
@@ -356,9 +381,12 @@ export function CMHCInsuranceCalculator({
                               <p className="text-sm font-semibold">{result.premiumRate}%</p>
                             </div>
                             <div>
-                              <Label className="text-xs text-muted-foreground">Premium Amount</Label>
+                              <Label className="text-xs text-muted-foreground">
+                                Premium Amount
+                              </Label>
                               <p className="text-sm font-semibold">
-                                ${result.premiumAfterDiscount.toLocaleString(undefined, {
+                                $
+                                {result.premiumAfterDiscount.toLocaleString(undefined, {
                                   minimumFractionDigits: 2,
                                   maximumFractionDigits: 2,
                                 })}
@@ -378,4 +406,3 @@ export function CMHCInsuranceCalculator({
     </Card>
   );
 }
-

@@ -22,10 +22,21 @@ const helocAccountSchema = z.object({
   accountName: z.string().min(1, "Account name is required"),
   lenderName: z.string().min(1, "Lender name is required"),
   mortgageId: z.string().optional(),
-  maxLtvPercent: z.union([z.string(), z.number()]).transform((val) => (typeof val === "number" ? val : parseFloat(val))),
-  interestSpread: z.union([z.string(), z.number()]).transform((val) => (typeof val === "number" ? val : parseFloat(val))),
-  currentBalance: z.union([z.string(), z.number()]).transform((val) => (typeof val === "number" ? val : parseFloat(val))),
-  homeValueReference: z.union([z.string(), z.number()]).optional().transform((val) => (val === "" ? undefined : typeof val === "number" ? val : val ? parseFloat(val) : undefined)),
+  maxLtvPercent: z
+    .union([z.string(), z.number()])
+    .transform((val) => (typeof val === "number" ? val : parseFloat(val))),
+  interestSpread: z
+    .union([z.string(), z.number()])
+    .transform((val) => (typeof val === "number" ? val : parseFloat(val))),
+  currentBalance: z
+    .union([z.string(), z.number()])
+    .transform((val) => (typeof val === "number" ? val : parseFloat(val))),
+  homeValueReference: z
+    .union([z.string(), z.number()])
+    .optional()
+    .transform((val) =>
+      val === "" ? undefined : typeof val === "number" ? val : val ? parseFloat(val) : undefined
+    ),
   accountOpeningDate: z.string().min(1, "Account opening date is required"),
   isReAdvanceable: z.boolean().optional(),
 });
@@ -60,11 +71,13 @@ export function CreateHelocDialog({ open, onOpenChange }: CreateHelocDialogProps
       await createAccount.mutateAsync({
         accountName: data.accountName,
         lenderName: data.lenderName,
-        mortgageId: data.mortgageId || null,
+        mortgageId: data.mortgageId || undefined,
         maxLtvPercent: data.maxLtvPercent.toFixed(2),
         interestSpread: data.interestSpread.toFixed(3),
         currentBalance: data.currentBalance.toFixed(2),
-        homeValueReference: data.homeValueReference?.toFixed(2) || null,
+        homeValueReference: data.homeValueReference
+          ? data.homeValueReference.toFixed(2)
+          : undefined,
         accountOpeningDate: data.accountOpeningDate,
         accountStatus: "active",
         isReAdvanceable: data.isReAdvanceable ? 1 : 0,
@@ -91,7 +104,8 @@ export function CreateHelocDialog({ open, onOpenChange }: CreateHelocDialogProps
         <DialogHeader>
           <DialogTitle>Create HELOC Account</DialogTitle>
           <DialogDescription>
-            Add a new Home Equity Line of Credit account to track your credit limit and transactions.
+            Add a new Home Equity Line of Credit account to track your credit limit and
+            transactions.
           </DialogDescription>
         </DialogHeader>
 
@@ -201,7 +215,9 @@ export function CreateHelocDialog({ open, onOpenChange }: CreateHelocDialogProps
                         placeholder="500000"
                         {...field}
                         value={field.value || ""}
-                        onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                        onChange={(e) =>
+                          field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -239,4 +255,3 @@ export function CreateHelocDialog({ open, onOpenChange }: CreateHelocDialogProps
     </Dialog>
   );
 }
-

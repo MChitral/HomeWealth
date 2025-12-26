@@ -1,5 +1,10 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { taxApi, type TaxDeductionPayload, type TaxSavingsPayload, type InvestmentIncomeTaxPayload } from "../api";
+import {
+  taxApi,
+  type TaxDeductionPayload,
+  type TaxSavingsPayload,
+  type InvestmentIncomeTaxPayload,
+} from "../api";
 
 export function useMarginalTaxRate(income: number | null, province: string | null, year?: number) {
   return useQuery({
@@ -23,7 +28,8 @@ export function useCalculateTaxSavings() {
 
 export function useCalculateInvestmentIncomeTax() {
   return useMutation({
-    mutationFn: (payload: InvestmentIncomeTaxPayload) => taxApi.calculateInvestmentIncomeTax(payload),
+    mutationFn: (payload: InvestmentIncomeTaxPayload) =>
+      taxApi.calculateInvestmentIncomeTax(payload),
   });
 }
 
@@ -34,4 +40,3 @@ export function useTaxBrackets(province: string | null, year?: number) {
     enabled: !!province,
   });
 }
-

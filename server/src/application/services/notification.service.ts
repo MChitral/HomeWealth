@@ -4,7 +4,11 @@ import { emailService } from "@infrastructure/email/email.service";
 import { users } from "@shared/schema";
 import { db } from "@infrastructure/db/connection";
 import { eq } from "drizzle-orm";
-import type { InsertNotification, Notification, UpdateNotificationPreferences } from "@shared/schema";
+import type {
+  InsertNotification,
+  Notification,
+  UpdateNotificationPreferences,
+} from "@shared/schema";
 
 export type NotificationType =
   | "renewal_reminder"
@@ -88,21 +92,20 @@ export class NotificationService {
     }
 
     // Send email based on type
+    const metadata = (notification.metadata as Record<string, unknown>) || {};
     let result;
     switch (notification.type) {
       case "renewal_reminder":
         result = await emailService.sendRenewalReminder(
           user.email,
           user.firstName || "User",
-          notification.metadata?.renewalDate || "",
-          notification.metadata?.daysUntil || 0,
-          (notification.metadata?.currentRate || 0) / 100, // Convert from percentage to decimal
+          (metadata.renewalDate as string) || "",
+          (metadata.daysUntil as number) || 0,
+          ((metadata.currentRate as number) || 0) / 100, // Convert from percentage to decimal
           {
-            estimatedPenalty: notification.metadata?.estimatedPenalty,
-            marketRate: notification.metadata?.marketRate
-              ? notification.metadata.marketRate / 100
-              : undefined, // Convert from percentage to decimal if present
-            mortgageId: notification.metadata?.mortgageId,
+            estimatedPenalty: metadata.estimatedPenalty as number | undefined,
+            marketRate: metadata.marketRate ? (metadata.marketRate as number) / 100 : undefined, // Convert from percentage to decimal if present
+            mortgageId: metadata.mortgageId as string | undefined,
           }
         );
         break;
@@ -110,19 +113,19 @@ export class NotificationService {
         result = await emailService.sendTriggerRateAlert(
           user.email,
           user.firstName || "User",
-          notification.metadata?.mortgageName || "Mortgage",
-          (notification.metadata?.currentRate || 0) / 100, // Convert from percentage to decimal
-          (notification.metadata?.triggerRate || 0) / 100, // Convert from percentage to decimal
-          notification.metadata?.balance || 0,
+          (metadata.mortgageName as string) || "Mortgage",
+          ((metadata.currentRate as number) || 0) / 100, // Convert from percentage to decimal
+          ((metadata.triggerRate as number) || 0) / 100, // Convert from percentage to decimal
+          (metadata.balance as number) || 0,
           {
-            alertType: notification.metadata?.alertType,
-            distanceToTrigger: notification.metadata?.distanceToTrigger
-              ? notification.metadata.distanceToTrigger / 100
+            alertType: metadata.alertType as string | undefined,
+            distanceToTrigger: metadata.distanceToTrigger
+              ? (metadata.distanceToTrigger as number) / 100
               : undefined, // Convert from percentage to decimal if present
-            monthlyBalanceIncrease: notification.metadata?.monthlyBalanceIncrease,
-            projectedBalanceAtTermEnd: notification.metadata?.projectedBalanceAtTermEnd,
-            requiredPayment: notification.metadata?.requiredPayment,
-            mortgageId: notification.metadata?.mortgageId,
+            monthlyBalanceIncrease: metadata.monthlyBalanceIncrease as number | undefined,
+            projectedBalanceAtTermEnd: metadata.projectedBalanceAtTermEnd as number | undefined,
+            requiredPayment: metadata.requiredPayment as number | undefined,
+            mortgageId: metadata.mortgageId as string | undefined,
           }
         );
         break;
@@ -173,4 +176,3 @@ export class NotificationService {
     return this.preferencesRepo.update(userId, updates);
   }
 }
-

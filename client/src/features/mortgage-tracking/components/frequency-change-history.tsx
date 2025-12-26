@@ -81,13 +81,15 @@ export function FrequencyChangeHistory({ mortgageId }: FrequencyChangeHistoryPro
                   <p className="text-xs text-muted-foreground mb-1">Payment Change</p>
                   <div className="flex items-baseline gap-2">
                     <span className="text-sm line-through text-muted-foreground">
-                      ${parseFloat(event.oldPaymentAmount).toLocaleString(undefined, {
+                      $
+                      {parseFloat(event.oldPaymentAmount).toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}
                     </span>
                     <span className="text-lg font-semibold text-blue-600">
-                      ${parseFloat(event.newPaymentAmount).toLocaleString(undefined, {
+                      $
+                      {parseFloat(event.newPaymentAmount).toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}
@@ -109,4 +111,3 @@ export function FrequencyChangeHistory({ mortgageId }: FrequencyChangeHistoryPro
     </Card>
   );
 }
-

@@ -1,7 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/shared/hooks/use-toast";
 import { mortgageApi, mortgageQueryKeys } from "../api";
-import { calculateSkippedPayment, canSkipPayment, countSkippedPaymentsInYear } from "@server-shared/calculations/payment-skipping";
+import {
+  calculateSkippedPayment,
+  canSkipPayment,
+  countSkippedPaymentsInYear,
+} from "@server-shared/calculations/payment-skipping";
 import type { PaymentFrequency } from "@server-shared/calculations/mortgage";
 import type { MortgagePayment } from "@shared/schema";
 import { useMemo, useState } from "react";
@@ -19,7 +23,9 @@ interface UseSkipPaymentProps {
 }
 
 interface UseSkipPaymentReturn {
-  skipPaymentMutation: ReturnType<typeof useMutation<MortgagePayment, Error, { paymentDate: string; maxSkipsPerYear?: number }>>;
+  skipPaymentMutation: ReturnType<
+    typeof useMutation<MortgagePayment, Error, { paymentDate: string; maxSkipsPerYear?: number }>
+  >;
   canSkip: boolean;
   skippedThisYear: number;
   skipLimit: number;
@@ -89,12 +95,13 @@ export function useSkipPayment({
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.mortgagePayments(mortgageId) });
       queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.mortgages() });
-      
+
       toast({
         title: "Payment Skipped",
-        description: "Your payment has been skipped. Interest will accrue and your balance will increase.",
+        description:
+          "Your payment has been skipped. Interest will accrue and your balance will increase.",
       });
-      
+
       resetSkipImpact();
     },
     onError: (error: Error) => {
@@ -116,4 +123,3 @@ export function useSkipPayment({
     resetSkipImpact,
   };
 }
-
