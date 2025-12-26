@@ -13,7 +13,7 @@ import { mortgageApi } from "@/features/mortgage-tracking/api";
 export function EquityStrategyDashboard() {
   const { data: helocAccounts, isLoading: helocLoading } = useHelocAccounts();
   const { mortgages, isLoading: mortgageLoading } = useMortgageData();
-  
+
   // Fetch current prime rate for interest calculations
   const { data: primeRateData } = useQuery({
     queryKey: ["prime-rate"],
@@ -51,17 +51,14 @@ export function EquityStrategyDashboard() {
   // Calculate weighted average interest rate: Prime + Spread
   // HELOC accounts have interestSpread (Prime + X%), not a direct interestRate
   const currentPrimeRate = primeRateData?.primeRate || 7.2; // Fallback to 7.2 if not loaded
-  
+
   const weightedInterestRate =
     helocBalance > 0
-      ? linkedHelocs.reduce(
-          (sum, acc) => {
-            const spread = Number(acc.interestSpread);
-            const accountRate = currentPrimeRate + spread;
-            return sum + accountRate * Number(acc.currentBalance);
-          },
-          0
-        ) / helocBalance
+      ? linkedHelocs.reduce((sum, acc) => {
+          const spread = Number(acc.interestSpread);
+          const accountRate = currentPrimeRate + spread;
+          return sum + accountRate * Number(acc.currentBalance);
+        }, 0) / helocBalance
       : linkedHelocs[0]
         ? currentPrimeRate + Number(linkedHelocs[0].interestSpread)
         : 0;

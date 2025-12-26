@@ -205,7 +205,12 @@ export function MortgageContent({
 
   // Fetch insurance provider comparison if high-ratio mortgage
   const { data: insuranceComparison } = useQuery({
-    queryKey: ["insurance-comparison", mortgage?.id, mortgage?.propertyPrice, mortgage?.originalAmount],
+    queryKey: [
+      "insurance-comparison",
+      mortgage?.id,
+      mortgage?.propertyPrice,
+      mortgage?.originalAmount,
+    ],
     queryFn: () => {
       if (!mortgage) return null;
       const downPayment = Number(mortgage.propertyPrice) - Number(mortgage.originalAmount);
@@ -449,7 +454,8 @@ export function MortgageContent({
             <div>
               <h2 className="text-2xl font-semibold mb-4">Regulatory Compliance</h2>
               <p className="text-muted-foreground mb-6">
-                Calculate B-20 stress test and debt service ratios to understand regulatory requirements
+                Calculate B-20 stress test and debt service ratios to understand regulatory
+                requirements
               </p>
             </div>
 

@@ -57,7 +57,7 @@ export function HelocAccountCard({ account }: HelocAccountCardProps) {
 
   const deleteAccount = useDeleteHelocAccount();
   const { mortgages } = useMortgageData();
-  
+
   // Fetch current prime rate for interest calculations
   const { data: primeRateData } = useQuery({
     queryKey: ["prime-rate"],
@@ -248,8 +248,8 @@ export function HelocAccountCard({ account }: HelocAccountCardProps) {
                   <span className="font-mono font-medium">
                     {formatCurrency(
                       (currentBalance *
-                        ((primeRateData?.primeRate || 7.2) + Number(account.interestSpread)) /
-                        100) /
+                        ((primeRateData?.primeRate || 7.2) + Number(account.interestSpread))) /
+                        100 /
                         12
                     )}
                   </span>
