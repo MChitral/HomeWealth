@@ -20,7 +20,13 @@ export function NetWorthProjectionCard({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <NetWorthChart data={netWorthChartData} />
+        {netWorthChartData.length > 0 ? (
+          <NetWorthChart data={netWorthChartData} />
+        ) : (
+          <div className="h-[400px] flex items-center justify-center text-muted-foreground border-2 border-dashed rounded-lg">
+            No projection data available for this scenario.
+          </div>
+        )}
       </CardContent>
     </Card>
   );

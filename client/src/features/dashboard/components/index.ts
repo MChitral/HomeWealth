@@ -13,3 +13,6 @@ export * from "./investment-growth-card";
 export * from "./strategy-summary-card";
 export * from "./empty-widget-state";
 export * from "./prepayment-card";
+export * from "./wealth-hero";
+export * from "./action-center";
+export * from "./activity-feed";

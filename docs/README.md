@@ -30,6 +30,7 @@ docs/
 │
 ├── feature-specifications/               # Detailed feature specs
 │   ├── HELOC_READVANCEABLE_FEATURE_SPEC.md
+│   ├── HELOC_PAGE_STRATEGIC_HUB_FEATURE_SPEC.md
 │   ├── SMITH_MANEUVER_FEATURE_SPEC.md
 │   ├── RENEWAL_TRACKING_WORKFLOW_FEATURE_SPEC.md
 │   ├── VARIABLE_RATE_MORTGAGES_TRIGGER_RATES_FEATURE_SPEC.md
@@ -95,6 +96,7 @@ docs/
 ### Feature Specifications
 
 - [HELOC & Re-Advanceable Mortgage Spec](feature-specifications/HELOC_READVANCEABLE_FEATURE_SPEC.md)
+- [HELOC Page Strategic Hub Spec](feature-specifications/HELOC_PAGE_STRATEGIC_HUB_FEATURE_SPEC.md) ⭐ **NEW**
 - [Smith Maneuver Feature Spec](feature-specifications/SMITH_MANEUVER_FEATURE_SPEC.md)
 - [Renewal Tracking & Workflow Spec](feature-specifications/RENEWAL_TRACKING_WORKFLOW_FEATURE_SPEC.md)
 - [Variable Rate Mortgages & Trigger Rates Spec](feature-specifications/VARIABLE_RATE_MORTGAGES_TRIGGER_RATES_FEATURE_SPEC.md)

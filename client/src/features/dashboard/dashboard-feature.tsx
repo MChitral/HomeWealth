@@ -32,7 +32,6 @@ import { RefinanceScenarioCard } from "./components/refinance-card";
 import {
   DashboardSkeleton,
   DashboardEmptyState,
-  CurrentFinancialStatusCard,
   ProjectionsHeader,
   ScenarioMetricsCards,
   MortgageDetailsCard,
@@ -41,6 +40,10 @@ import {
   StrategySummaryCard,
   EmptyWidgetState,
   PrepaymentCard,
+  WealthHero,
+  ActionCenter,
+  ActivityFeed,
+  type ActivityItem,
 } from "./components";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -170,6 +173,71 @@ export function DashboardFeature() {
     investmentProjections: selectedScenario?.metrics?.investmentProjections,
   });
 
+  // 7. Activity Feed Data Mapping
+  const activities: ActivityItem[] = useMemo(() => {
+    const items: ActivityItem[] = [];
+
+    // Map Payments
+    if (payments) {
+      payments.forEach((p) => {
+        items.push({
+          id: `pay-${p.id}`,
+          type: "payment",
+          title: "Mortgage Payment",
+          date: new Date(p.paymentDate).toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+          }),
+          amount: `$${(Number(p.principal) + Number(p.interest)).toFixed(2)}`,
+          originalDate: new Date(p.paymentDate),
+        });
+      });
+    }
+
+    // Map Rate Changes (Terms)
+    if (terms) {
+      terms.forEach((t) => {
+        items.push({
+          id: `term-${t.id}`,
+          type: "rate_change",
+          title: "Rate/Term Update",
+          date: new Date(t.startDate).toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+          }),
+          amount: `${(Number(t.interestRate) * 100).toFixed(2)}%`,
+          originalDate: new Date(t.startDate),
+        });
+      });
+    }
+
+    // Map Scenarios
+    if (scenarios) {
+      scenarios.forEach((s) => {
+        items.push({
+          id: `scen-${s.id}`,
+          type: "scenario",
+          title: "New Scenario",
+          date: new Date(s.createdAt).toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+          }),
+          amount: s.name,
+          originalDate: new Date(s.createdAt),
+        });
+      });
+    }
+
+    // Sort by date descending
+    return items
+      .sort((a, b) => {
+        const dateA = a.originalDate?.getTime() || 0;
+        const dateB = b.originalDate?.getTime() || 0;
+        return dateB - dateA;
+      })
+      .slice(0, 10); // Limit to top 10
+  }, [payments, terms, scenarios]);
+
   // 7. Loading States
   if (isLoading || mortgageDataLoading) {
     return <DashboardSkeleton />;
@@ -201,80 +269,104 @@ export function DashboardFeature() {
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Left Column: Alerts & Status */}
-        <div className="space-y-8">
-          {/* Impact Alert - NEW */}
-          {latestImpact && <RateChangeAlert impact={latestImpact} newPrimeRate={7.45} />}
+      {/* NEW: Wealth Command Center Layout */}
 
-          {/* Trigger Alert - Existing */}
-          {triggerStatus && (triggerStatus.isHit || triggerStatus.isRisk) && !latestImpact && (
-            <AlertBanner alert={triggerStatus} />
-          )}
+      {/* 1. Hero Summary - Net Worth Focus */}
+      <WealthHero
+        netWorth={
+          selectedScenario?.metrics?.netWorth10yr
+            ? Number(selectedScenario.metrics.netWorth10yr)
+            : homeValue - mortgageBalance + (efBalance || 0)
+        }
+        homeValue={homeValue}
+        mortgageBalance={mortgageBalance}
+      />
 
-          {/* Mortgage Selection */}
-          <div className="lg:w-[340px]">
-            {showNoMortgage ? (
-              <div className="p-4 border rounded-lg bg-muted/20">
-                <p className="text-sm text-muted-foreground mb-3">No mortgages found.</p>
-                <Link href="/mortgages/new">
-                  <Button variant="outline" size="sm" className="w-full">
-                    <Plus className="w-4 h-4 mr-2" /> Add Mortgage
-                  </Button>
-                </Link>
-              </div>
+      {/* 2. Action Center - Quick Actions */}
+      <ActionCenter
+        onLogPayment={() => {
+          // Ideally opens LogPaymentDialog. For MVP, we'll toast or link.
+          toast({
+            title: "Quick Action",
+            description: "Use the Mortgage tab to log payments for now.",
+          });
+          // In Phase 2: Open dialog here.
+        }}
+        onUpdateRate={() => {
+          toast({
+            title: "Quick Action",
+            description: "Use the Mortgage tab to update rates for now.",
+          });
+        }}
+      />
+
+      {/* 3. Main Grid: Health/Status (Left) vs Activity (Right) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Left Column (2/3): Monitoring & Widgets */}
+        <div className="md:col-span-2 space-y-8">
+          {/* Alerts Section (Moved inside main column) */}
+          <div className="space-y-4">
+            {latestImpact && <RateChangeAlert impact={latestImpact} newPrimeRate={7.45} />}
+
+            {triggerStatus && (triggerStatus.isHit || triggerStatus.isRisk) && !latestImpact && (
+              <AlertBanner alert={triggerStatus} />
+            )}
+
+            {/* Mortgage Selector if needed, or hide if single mortgage */}
+            <div className="lg:w-[340px]">
+              {showNoMortgage ? (
+                <div className="p-4 border rounded-lg bg-muted/20">
+                  <p className="text-sm text-muted-foreground mb-3">No mortgages found.</p>
+                  <Link href="/mortgages/new">
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Plus className="w-4 h-4 mr-2" /> Add Mortgage
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <MortgageSelector
+                  mortgages={mortgages || []}
+                  selectedMortgageId={selectedMortgageId}
+                  onSelectMortgage={(id) => setSelectedMortgageId(id)}
+                  onCreateNew={() => {}}
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {activeMortgage && <HealthScoreCard mortgageId={activeMortgage.id} />}
+
+            {renewalStatus ? (
+              <RenewalCard status={renewalStatus} />
             ) : (
-              <MortgageSelector
-                mortgages={mortgages || []}
-                selectedMortgageId={selectedMortgageId}
-                onSelectMortgage={(id) => setSelectedMortgageId(id)}
-                onCreateNew={() => {}}
+              <EmptyWidgetState
+                title="Renewal Analysis"
+                description="Add a mortgage to track your renewal timeline."
+                actionUrl="/mortgages/new"
               />
             )}
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {refinanceAnalysis ? (
+              <RefinanceScenarioCard analysis={refinanceAnalysis} />
+            ) : (
+              <EmptyWidgetState
+                title="Refinance Opportunities"
+                description="See how much you could save by refinancing."
+                actionUrl="/mortgages/new"
+              />
+            )}
+            {activeMortgage && <PrepaymentCard mortgageId={activeMortgage.id} />}
+          </div>
         </div>
 
-        {/* Right Column: Renewal & Future Widgets */}
-        <div className="space-y-8">
-          {/* Health Score - NEW */}
-          {activeMortgage && <HealthScoreCard mortgageId={activeMortgage.id} />}
-
-          {renewalStatus ? (
-            <RenewalCard status={renewalStatus} />
-          ) : (
-            <EmptyWidgetState
-              title="Renewal Analysis"
-              description="Add a mortgage to track your renewal timeline and penalties."
-              actionUrl="/mortgages/new"
-            />
-          )}
-
-          {refinanceAnalysis ? (
-            <RefinanceScenarioCard analysis={refinanceAnalysis} />
-          ) : (
-            <EmptyWidgetState
-              title="Refinance Opportunities"
-              description="See how much you could save by refinancing today."
-              actionUrl="/mortgages/new"
-            />
-          )}
-
-          {/* Prepayment Opportunity - NEW */}
-          {activeMortgage && <PrepaymentCard mortgageId={activeMortgage.id} />}
+        {/* Right Column (1/3): Activity Feed */}
+        <div className="md:col-span-1">
+          <ActivityFeed items={activities} />
         </div>
       </div>
-
-      {/* Financial Status */}
-      <CurrentFinancialStatusCard
-        homeValue={homeValue}
-        mortgageBalance={mortgageBalance}
-        originalMortgageBalance={originalMortgageBalance}
-        efBalance={efBalance}
-        efTargetAmount={efTargetAmount}
-        activeMortgage={activeMortgage}
-        paymentPreview={paymentPreview}
-        triggerStatus={triggerStatus}
-      />
 
       <Separator />
 

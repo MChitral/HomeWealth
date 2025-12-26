@@ -14,7 +14,13 @@ export function InvestmentGrowthCard({ investmentChartData }: InvestmentGrowthCa
       </CardHeader>
       <CardContent>
         <div className="h-[300px]">
-          <NetWorthChart data={investmentChartData} />
+          {investmentChartData.length > 0 ? (
+            <NetWorthChart data={investmentChartData} />
+          ) : (
+            <div className="h-full flex items-center justify-center text-muted-foreground border-2 border-dashed rounded-lg">
+              No investment data available.
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
