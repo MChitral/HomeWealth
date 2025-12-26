@@ -14,7 +14,7 @@ export function createImpactRoutes(services: ApplicationServices, repositories: 
     const impact = services.impactCalculator.getLatestImpact(mortgageId);
 
     if (!impact) {
-      return res.status(404).json({ message: "No recent impact calculation found" });
+      return res.json(null);
     }
 
     res.json(impact);

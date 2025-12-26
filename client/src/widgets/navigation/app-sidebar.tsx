@@ -1,4 +1,13 @@
-import { Home, FileText, GitCompare, DollarSign, Receipt, Shield, CreditCard } from "lucide-react";
+import {
+  Home,
+  FileText,
+  GitCompare,
+  DollarSign,
+  Receipt,
+  Shield,
+  CreditCard,
+  TrendingUp,
+} from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -20,6 +29,7 @@ const navItems = [
   { title: "Comparison", url: "/comparison", icon: GitCompare },
   { title: "Cash Flow", url: "/cash-flow", icon: DollarSign },
   { title: "Emergency Fund", url: "/emergency-fund", icon: Shield },
+  { title: "Smith Maneuver", url: "/smith-maneuver", icon: TrendingUp },
 ] as const;
 
 export function AppSidebar() {
