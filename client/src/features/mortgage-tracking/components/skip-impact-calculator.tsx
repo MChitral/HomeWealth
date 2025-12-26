@@ -68,7 +68,8 @@ export function SkipImpactCalculator({
                 const value = parseInt(e.target.value, 10);
                 if (value >= 1 && value <= 12) {
                   setNumberOfSkips(value);
-                  setImpact(null);
+                  // Reset calculation when number of skips changes
+                  calculateImpactMutation.reset();
                 }
               }}
             />

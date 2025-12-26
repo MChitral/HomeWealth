@@ -1,5 +1,6 @@
 import { AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
+import { Button } from "@/shared/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { AnalyticsDashboard } from "@/features/analytics/analytics-dashboard";
 import PrepaymentFeature from "../prepayment-feature";
@@ -37,6 +38,13 @@ import { PropertyValueUpdateDialog } from "./property-value-update-dialog";
 import { PropertyValueSection } from "./property-value-section";
 import { formatAmortization } from "../utils/format";
 import { useState } from "react";
+import { SkipImpactCalculator } from "./skip-impact-calculator";
+import { MLISelectChecker } from "./mli-select-checker";
+import { InsuranceProviderComparison } from "./insurance-provider-comparison";
+import { StressTestCalculator } from "./stress-test-calculator";
+import { DebtServiceRatios } from "./debt-service-ratios";
+import { useQuery } from "@tanstack/react-query";
+import { insuranceApi } from "../api/insurance-api";
 
 interface MortgageContentProps {
   mortgage: Mortgage | null;
@@ -188,6 +196,26 @@ export function MortgageContent({
   const [isFrequencyChangeOpen, setIsFrequencyChangeOpen] = useState(false);
   const [isPortabilityOpen, setIsPortabilityOpen] = useState(false);
   const [isPropertyValueUpdateOpen, setIsPropertyValueUpdateOpen] = useState(false);
+  const [isStressTestOpen, setIsStressTestOpen] = useState(false);
+
+  // Check if mortgage is high-ratio (down payment < 20%)
+  const isHighRatio = mortgage
+    ? (Number(mortgage.originalAmount) / Number(mortgage.propertyPrice)) * 100 > 80
+    : false;
+
+  // Fetch insurance provider comparison if high-ratio mortgage
+  const { data: insuranceComparison } = useQuery({
+    queryKey: ["insurance-comparison", mortgage?.id, mortgage?.propertyPrice, mortgage?.originalAmount],
+    queryFn: () => {
+      if (!mortgage) return null;
+      const downPayment = Number(mortgage.propertyPrice) - Number(mortgage.originalAmount);
+      return insuranceApi.compareProviders({
+        propertyPrice: Number(mortgage.propertyPrice),
+        downPayment,
+      });
+    },
+    enabled: !!mortgage && isHighRatio,
+  });
 
   if (!mortgage) {
     return null;
@@ -355,6 +383,16 @@ export function MortgageContent({
             payments={payments || []}
           />
 
+          {/* Skip Impact Calculator */}
+          {uiCurrentTerm && (
+            <SkipImpactCalculator
+              currentBalance={lastKnownBalance}
+              currentAmortizationMonths={lastKnownAmortizationMonths}
+              effectiveRate={currentEffectiveRate / 100} // Convert percentage to decimal
+              paymentFrequency={uiCurrentTerm.paymentFrequency}
+            />
+          )}
+
           <PaymentHistorySection
             filteredPayments={filteredPayments}
             availableYears={availableYears}
@@ -379,14 +417,67 @@ export function MortgageContent({
               currentPropertyValue={Number(mortgage.propertyPrice)}
             />
           )}
+
+          {/* Insurance & Compliance Section */}
+          {mortgage && isHighRatio && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-semibold mb-4">Insurance & Compliance</h2>
+                <p className="text-muted-foreground mb-6">
+                  Tools and information for mortgage default insurance and regulatory compliance
+                </p>
+              </div>
+
+              <MLISelectChecker />
+
+              {insuranceComparison && (
+                <InsuranceProviderComparison comparison={insuranceComparison} />
+              )}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="heloc" className="space-y-8">
           <HelocSection mortgageId={mortgage.id} mortgage={mortgage} />
         </TabsContent>
 
-        <TabsContent value="risk">
+        <TabsContent value="risk" className="space-y-8">
           <AnalyticsDashboard mortgageId={mortgage.id} />
+
+          {/* Regulatory Compliance Section */}
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-semibold mb-4">Regulatory Compliance</h2>
+              <p className="text-muted-foreground mb-6">
+                Calculate B-20 stress test and debt service ratios to understand regulatory requirements
+              </p>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">B-20 Stress Test</h3>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsStressTestOpen(true)}
+                    className="w-full md:w-auto"
+                  >
+                    Open Calculator
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Calculate if your mortgage qualifies under B-20 stress test guidelines. Qualifying
+                  rate = max(contract rate + 2%, Bank of Canada 5-year posted rate).
+                </p>
+              </div>
+
+              <DebtServiceRatios
+                mortgagePayment={
+                  uiCurrentTerm ? Number(uiCurrentTerm.regularPaymentAmount) : undefined
+                }
+              />
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="prepayments" className="space-y-6">
@@ -470,6 +561,17 @@ export function MortgageContent({
           mortgageId={mortgage.id}
           termId={uiCurrentTerm.id}
           currentFrequency={uiCurrentTerm.paymentFrequency}
+        />
+      )}
+
+      {/* Stress Test Calculator Dialog */}
+      {mortgage && uiCurrentTerm && (
+        <StressTestCalculator
+          open={isStressTestOpen}
+          onOpenChange={setIsStressTestOpen}
+          mortgageAmount={lastKnownBalance}
+          contractRate={summaryStats.currentRate / 100} // currentRate is percentage, convert to decimal
+          amortizationMonths={lastKnownAmortizationMonths}
         />
       )}
     </div>
