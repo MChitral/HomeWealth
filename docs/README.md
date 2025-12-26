@@ -17,13 +17,7 @@ docs/
 ├── DATA_UPDATE_STRATEGIES.md            # Reference: Data update strategies
 ├── cmhc-insurance-rates.md              # Reference: CMHC insurance rates
 │
-├── guides/                              # Technical & calculation guides
-│   ├── ACCELERATED_PAYMENT_CALCULATION.md
-│   ├── PREPAYMENT_LIMIT_CALCULATION.md
-│   ├── PRIME_RATE_DATA_FLOW.md
-│   ├── PRIME_RATE_SCHEDULER.md
-│   ├── ROUNDING_CONVENTIONS.md
-│   ├── VARIABLE_RATE_MORTGAGE_BEHAVIOR.md
+├── guides/                              # Development guides
 │   ├── FORM_VALIDATION_GUIDE.md
 │   ├── ESLINT_PRETTIER_SETUP.md
 │   └── design_guidelines.md
@@ -77,18 +71,12 @@ docs/
 
 ### Technical Guides
 
-- **Calculation Guides:**
-  - [Accelerated Payment Calculation](guides/ACCELERATED_PAYMENT_CALCULATION.md)
-  - [Prepayment Limit Calculation](guides/PREPAYMENT_LIMIT_CALCULATION.md)
-  - [Variable Rate Mortgage Behavior](guides/VARIABLE_RATE_MORTGAGE_BEHAVIOR.md)
-  - [Rounding Conventions](guides/ROUNDING_CONVENTIONS.md)
-  - [Prime Rate Data Flow](guides/PRIME_RATE_DATA_FLOW.md)
-  - [Prime Rate Scheduler](guides/PRIME_RATE_SCHEDULER.md)
-
 - **Development Guides:**
-  - [Form Validation Guide](guides/FORM_VALIDATION_GUIDE.md)
-  - [ESLint & Prettier Setup](guides/ESLINT_PRETTIER_SETUP.md)
-  - [Design Guidelines](guides/design_guidelines.md)
+  - [Form Validation Guide](guides/FORM_VALIDATION_GUIDE.md) - How to use form validation utilities
+  - [ESLint & Prettier Setup](guides/ESLINT_PRETTIER_SETUP.md) - Development environment setup
+  - [Design Guidelines](guides/design_guidelines.md) - UI/UX design standards
+
+**Note:** Calculation methodologies are documented in [CALCULATION_METHODOLOGIES.md](CALCULATION_METHODOLOGIES.md). Data update strategies are documented in [DATA_UPDATE_STRATEGIES.md](DATA_UPDATE_STRATEGIES.md).
 
 - **Current Status:**
   - [Product Owner Review](PRODUCT_OWNER_REVIEW.md) - Comprehensive feature assessment with completeness matrix
@@ -204,7 +192,7 @@ See [Product Owner Review](PRODUCT_OWNER_REVIEW.md) for detailed assessment and 
 
 **Kept:**
 
-- Technical calculation guides (still accurate and referenced)
+- Calculation methodologies and data update strategies (reference documents)
 - Feature specifications (20 comprehensive specs covering all features)
 - Architecture documentation
 - Product Owner Review (authoritative assessment)

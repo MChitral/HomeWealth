@@ -20,26 +20,45 @@ This document describes all calculation methodologies used in the HomeWealth app
 
 ## Mortgage Payment Calculations
 
-### Standard Amortization Formula
+### Canadian Semi-Annual Compounding
 
-The standard mortgage payment is calculated using the amortization formula:
+**Important:** Canadian mortgages use **semi-annual compounding** (not monthly like US mortgages). This affects the effective interest rate calculation.
 
-```
-P = (P₀ × r × (1 + r)ⁿ) / ((1 + r)ⁿ - 1)
-```
+### Effective Rate Calculation
+
+Canadian mortgages require a three-step conversion:
+
+1. **Annual rate → Semi-annual effective rate:**
+   ```
+   semiAnnualRate = annualRate / 2
+   effectiveAnnualRate = (1 + semiAnnualRate)² - 1
+   ```
+
+2. **Effective annual rate → Periodic rate:**
+   ```
+   paymentsPerYear = getPaymentsPerYear(frequency)
+   periodicRate = (1 + effectiveAnnualRate)^(1/paymentsPerYear) - 1
+   ```
+
+3. **Payment calculation:**
+   ```
+   P = (P₀ × r × (1 + r)ⁿ) / ((1 + r)ⁿ - 1)
+   ```
 
 Where:
-- `P` = Monthly payment amount
+- `P` = Payment amount per period
 - `P₀` = Principal (mortgage balance)
-- `r` = Monthly interest rate (annual rate / 12)
-- `n` = Total number of payments (amortization period in months)
+- `r` = Effective periodic rate (from step 2 above)
+- `n` = Total number of payments (amortization period × payments per year)
 
-**Example:**
+**Example (Monthly Payment):**
 - Principal: $500,000
 - Annual rate: 5.49% (0.0549)
 - Amortization: 25 years (300 months)
-- Monthly rate: 0.0549 / 12 = 0.004575
-- Payment = (500,000 × 0.004575 × (1.004575)³⁰⁰) / ((1.004575)³⁰⁰ - 1) = $3,055.23
+- Step 1: semiAnnualRate = 0.0549 / 2 = 0.02745
+- Step 2: effectiveAnnualRate = (1.02745)² - 1 = 0.05566
+- Step 3: periodicRate = (1.05566)^(1/12) - 1 = 0.004527
+- Payment = (500,000 × 0.004527 × (1.004527)³⁰⁰) / ((1.004527)³⁰⁰ - 1) ≈ $3,055.23
 
 ### Payment Frequency Adjustments
 
