@@ -115,12 +115,12 @@ docs/
 
 ### Strategic Documents
 
-**Note:** These are strategic planning documents, not current state assessments. For current product state, see [Product Owner Review](PRODUCT_OWNER_REVIEW.md).
+**Note:** These are strategic planning documents that guide product direction and future enhancements. For current product state, see [Product Owner Review](PRODUCT_OWNER_REVIEW.md).
 
-- [Product Strategy: Mortgage Health Monitor](strategic/PRODUCT_STRATEGY_MORTGAGE_HEALTH_MONITOR.md)
-- [AI Integration Strategy](strategic/AI_INTEGRATION_STRATEGY.md)
-- [Subscription Value Framework](strategic/SUBSCRIPTION_VALUE_FRAMEWORK.md)
-- [Competitive Analysis](strategic/COMPETITIVE_ANALYSIS.md)
+- [Product Strategy: Mortgage Health Monitor](strategic/PRODUCT_STRATEGY_MORTGAGE_HEALTH_MONITOR.md) - Strategic roadmap (Phase 1-2 implemented)
+- [AI Integration Strategy](strategic/AI_INTEGRATION_STRATEGY.md) - Future enhancement planning
+- [Subscription Value Framework](strategic/SUBSCRIPTION_VALUE_FRAMEWORK.md) - Timeless strategic framework
+- [Competitive Analysis](strategic/COMPETITIVE_ANALYSIS.md) - Competitive intelligence (requires periodic review)
 
 ---
 

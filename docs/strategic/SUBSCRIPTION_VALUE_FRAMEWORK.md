@@ -1,9 +1,11 @@
 # Subscription Value Framework: From Calculator to Platform
 
-**Date:** December 2025  
+**Date:** January 2025  
 **Purpose:** Define what creates recurring subscription value vs. one-time calculator value  
 **Audience:** Product Team, Stakeholders, Development Team  
 **Status:** Strategic Framework Document
+
+> **Note:** This is a strategic framework document that provides timeless principles for evaluating subscription value. The product has successfully implemented many features that align with this framework, including automated monitoring, proactive alerts, and continuous data updates.
 
 ---
 
@@ -734,6 +736,7 @@ The answer: **Ongoing value that changes over time and requires continuous engag
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** December 2025  
-**Maintained By:** Product Team
+**Document Version:** 1.1  
+**Last Updated:** January 2025  
+**Maintained By:** Product Team  
+**Status:** Strategic Framework - Timeless Principles
