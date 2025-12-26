@@ -13,7 +13,9 @@ import {
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/shared/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { useUpdateHelocAccount } from "../hooks";
+import { useMortgageData } from "@/features/mortgage-tracking/hooks/use-mortgage-data";
 import { useToast } from "@/shared/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import type { HelocAccount } from "@shared/schema";
@@ -21,6 +23,7 @@ import type { HelocAccount } from "@shared/schema";
 const helocAccountUpdateSchema = z.object({
   accountName: z.string().min(1, "Account name is required").optional(),
   lenderName: z.string().min(1, "Lender name is required").optional(),
+  mortgageId: z.string().optional(),
   maxLtvPercent: z
     .union([z.string(), z.number()])
     .optional()
@@ -52,12 +55,14 @@ interface EditHelocDialogProps {
 export function EditHelocDialog({ open, onOpenChange, account }: EditHelocDialogProps) {
   const { toast } = useToast();
   const updateAccount = useUpdateHelocAccount();
+  const { mortgages } = useMortgageData();
 
   const form = useForm<HelocAccountUpdateFormData>({
     resolver: zodResolver(helocAccountUpdateSchema),
     defaultValues: {
       accountName: account.accountName,
       lenderName: account.lenderName,
+      mortgageId: account.mortgageId || "none",
       maxLtvPercent: Number(account.maxLtvPercent),
       interestSpread: Number(account.interestSpread),
       homeValueReference: account.homeValueReference
@@ -71,6 +76,7 @@ export function EditHelocDialog({ open, onOpenChange, account }: EditHelocDialog
       form.reset({
         accountName: account.accountName,
         lenderName: account.lenderName,
+        mortgageId: account.mortgageId || "none",
         maxLtvPercent: Number(account.maxLtvPercent),
         interestSpread: Number(account.interestSpread),
         homeValueReference: account.homeValueReference
@@ -87,6 +93,7 @@ export function EditHelocDialog({ open, onOpenChange, account }: EditHelocDialog
         payload: {
           accountName: data.accountName,
           lenderName: data.lenderName,
+          mortgageId: data.mortgageId && data.mortgageId !== "none" ? data.mortgageId : null, // Explicitly set to null if unlinking
           maxLtvPercent: data.maxLtvPercent?.toFixed(2),
           interestSpread: data.interestSpread?.toFixed(3),
           homeValueReference: data.homeValueReference
@@ -110,7 +117,7 @@ export function EditHelocDialog({ open, onOpenChange, account }: EditHelocDialog
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit HELOC Account</DialogTitle>
           <DialogDescription>Update your HELOC account details</DialogDescription>
@@ -141,6 +148,37 @@ export function EditHelocDialog({ open, onOpenChange, account }: EditHelocDialog
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="mortgageId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Linked Mortgage</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a mortgage to link" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">None (Unlinked)</SelectItem>
+                      {mortgages.map((mortgage) => (
+                        <SelectItem key={mortgage.id} value={mortgage.id}>
+                          {mortgage.lenderName || "Mortgage"} - $
+                          {Number(mortgage.currentBalance).toLocaleString()}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

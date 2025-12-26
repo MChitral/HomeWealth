@@ -12,7 +12,9 @@ import {
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/shared/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { useCreateHelocAccount } from "../hooks";
+import { useMortgageData } from "@/features/mortgage-tracking/hooks/use-mortgage-data";
 import { useToast } from "@/shared/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
@@ -49,6 +51,7 @@ interface CreateHelocDialogProps {
 export function CreateHelocDialog({ open, onOpenChange }: CreateHelocDialogProps) {
   const { toast } = useToast();
   const createAccount = useCreateHelocAccount();
+  const { mortgages } = useMortgageData();
 
   const form = useForm<HelocAccountFormData>({
     resolver: zodResolver(helocAccountSchema),
@@ -68,7 +71,7 @@ export function CreateHelocDialog({ open, onOpenChange }: CreateHelocDialogProps
       await createAccount.mutateAsync({
         accountName: data.accountName,
         lenderName: data.lenderName,
-        mortgageId: data.mortgageId || undefined,
+        mortgageId: data.mortgageId && data.mortgageId !== "none" ? data.mortgageId : undefined,
         maxLtvPercent: data.maxLtvPercent.toFixed(2),
         interestSpread: data.interestSpread.toFixed(3),
         currentBalance: data.currentBalance.toFixed(2),
@@ -92,6 +95,18 @@ export function CreateHelocDialog({ open, onOpenChange }: CreateHelocDialogProps
         description: error instanceof Error ? error.message : "Failed to create HELOC account",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleMortgageSelect = (mortgageId: string) => {
+    form.setValue("mortgageId", mortgageId);
+
+    // Auto-fill home value if a mortgage is selected
+    if (mortgageId && mortgageId !== "none") {
+      const selectedMortgage = mortgages.find((m) => m.id === mortgageId);
+      if (selectedMortgage?.propertyPrice) {
+        form.setValue("homeValueReference", Number(selectedMortgage.propertyPrice));
+      }
     }
   };
 
@@ -131,6 +146,33 @@ export function CreateHelocDialog({ open, onOpenChange }: CreateHelocDialogProps
                   <FormControl>
                     <Input placeholder="e.g., TD Bank" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="mortgageId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Link to Mortgage (Optional)</FormLabel>
+                  <Select onValueChange={handleMortgageSelect} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a mortgage to link" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {mortgages.map((mortgage) => (
+                        <SelectItem key={mortgage.id} value={mortgage.id}>
+                          {mortgage.lenderName || "Mortgage"} - $
+                          {Number(mortgage.currentBalance).toLocaleString()}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
