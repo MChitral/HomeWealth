@@ -24,7 +24,7 @@ vi.mock("@/shared/hooks/use-toast", () => ({
 }));
 
 // Mock calculation functions
-vi.mock("@server-shared/calculations/payment-skipping", () => ({
+vi.mock("@/shared/calculations/payment-skipping", () => ({
   calculateSkippedPayment: vi.fn((balance, rate, frequency, amortization) => ({
     interestAccrued: balance * (rate / 12), // Simplified calculation
     newBalance: balance + balance * (rate / 12),

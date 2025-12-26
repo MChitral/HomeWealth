@@ -1,15 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/shared/hooks/use-toast";
 import { mortgageApi, mortgageQueryKeys } from "../api";
-import {
-  calculateSkippedPayment,
-  canSkipPayment,
-  countSkippedPaymentsInYear,
-} from "@server-shared/calculations/payment-skipping";
-import type { PaymentFrequency } from "@server-shared/calculations/mortgage";
+import { canSkipPayment, countSkippedPaymentsInYear } from "@/shared/utils/payment-skipping";
+import { calculateSkipImpact } from "../api/mortgage-api";
+import type { PaymentFrequency } from "@/shared/calculations/mortgage";
 import type { MortgagePayment } from "@shared/schema";
 import { useMemo, useState } from "react";
-import type { SkippedPaymentCalculation } from "@server-shared/calculations/payment-skipping";
+import { useMutation } from "@tanstack/react-query";
+import type { SkipImpactResponse } from "../api/mortgage-api";
 
 interface UseSkipPaymentProps {
   mortgageId: string;
@@ -50,7 +48,7 @@ export function useSkipPayment({
 }: UseSkipPaymentProps): UseSkipPaymentReturn {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [skipImpact, setSkipImpact] = useState<SkippedPaymentCalculation | null>(null);
+  const [skipImpact, setSkipImpact] = useState<SkipImpactResponse | null>(null);
 
   // Calculate skip eligibility
   const currentYear = new Date().getFullYear();
@@ -63,20 +61,32 @@ export function useSkipPayment({
     return canSkipPayment(skippedThisYear, skipLimit);
   }, [skippedThisYear, skipLimit]);
 
-  // Calculate skip impact preview
-  const calculateSkipImpact = (_paymentDate: string) => {
-    try {
-      const impact = calculateSkippedPayment(
+  // Calculate skip impact preview using API
+  const calculateSkipImpactMutation = useMutation({
+    mutationFn: () =>
+      calculateSkipImpact({
         currentBalance,
-        effectiveRate,
+        annualRate: effectiveRate,
         paymentFrequency,
-        currentAmortizationMonths
-      );
-      setSkipImpact(impact);
-    } catch (error) {
+        currentAmortizationMonths,
+        numberOfSkips: 1,
+      }),
+    onSuccess: (data) => {
+      setSkipImpact({
+        totalInterestAccrued: data.totalInterestAccrued,
+        finalBalance: data.finalBalance,
+        extendedAmortizationMonths: data.extendedAmortizationMonths,
+        balanceIncrease: data.balanceIncrease,
+      });
+    },
+    onError: (error) => {
       console.error("Error calculating skip impact:", error);
       setSkipImpact(null);
-    }
+    },
+  });
+
+  const calculateSkipImpactPreview = (_paymentDate: string) => {
+    calculateSkipImpactMutation.mutate();
   };
 
   const resetSkipImpact = () => {
@@ -119,7 +129,7 @@ export function useSkipPayment({
     skippedThisYear,
     skipLimit,
     skipImpact,
-    calculateSkipImpact,
+    calculateSkipImpact: calculateSkipImpactPreview,
     resetSkipImpact,
   };
 }

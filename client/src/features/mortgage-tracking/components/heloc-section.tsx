@@ -8,10 +8,7 @@ import { Progress } from "@/shared/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog";
 import { CreditCard, ExternalLink, Loader2, TrendingUp } from "lucide-react";
 import { helocApi } from "@/features/heloc/api";
-import {
-  calculateAvailableCredit,
-  calculateCreditUtilization,
-} from "@server-shared/calculations/heloc/available-credit";
+import { calculateAvailableCredit, calculateCreditUtilization } from "@/shared/utils/heloc";
 import { CreditRoomDisplay } from "./credit-room-display";
 import { CreditRoomHistory } from "./credit-room-history";
 import { MarkReAdvanceableDialog } from "./mark-re-advanceable-dialog";

@@ -3,7 +3,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Progress } from "@/shared/ui/progress";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Calendar, AlertTriangle, CheckCircle2 } from "lucide-react";
-import { countSkippedPaymentsInYear } from "@server-shared/calculations/payment-skipping";
+import { countSkippedPaymentsInYear } from "@/shared/utils/payment-skipping";
 import type { MortgagePayment } from "@shared/schema";
 
 interface SkipLimitTrackerProps {

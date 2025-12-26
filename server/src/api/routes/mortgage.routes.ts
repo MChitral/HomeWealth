@@ -1492,6 +1492,66 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
     }
   });
 
+  // Calculate skip payment impact
+  router.post("/mortgages/calculate-skip-impact", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+
+    try {
+      const {
+        currentBalance,
+        annualRate,
+        paymentFrequency,
+        currentAmortizationMonths,
+        numberOfSkips = 1,
+      } = req.body as {
+        currentBalance: number;
+        annualRate: number;
+        paymentFrequency: PaymentFrequency;
+        currentAmortizationMonths: number;
+        numberOfSkips?: number;
+      };
+
+      if (
+        currentBalance == null ||
+        annualRate == null ||
+        paymentFrequency == null ||
+        currentAmortizationMonths == null
+      ) {
+        sendError(res, 400, "Missing required parameters");
+        return;
+      }
+
+      const { calculateSkippedPayment } =
+        await import("@server-shared/calculations/payment-skipping");
+
+      let runningBalance = currentBalance;
+      let totalInterest = 0;
+      let extendedAmortization = currentAmortizationMonths;
+
+      for (let i = 0; i < numberOfSkips; i++) {
+        const skipCalc = calculateSkippedPayment(
+          runningBalance,
+          annualRate,
+          paymentFrequency,
+          extendedAmortization
+        );
+        runningBalance = skipCalc.newBalance;
+        totalInterest += skipCalc.interestAccrued;
+        extendedAmortization = skipCalc.extendedAmortizationMonths;
+      }
+
+      res.json({
+        totalInterestAccrued: Math.round(totalInterest * 100) / 100,
+        finalBalance: Math.round(runningBalance * 100) / 100,
+        extendedAmortizationMonths: Math.round(extendedAmortization),
+        balanceIncrease: Math.round((runningBalance - currentBalance) * 100) / 100,
+      });
+    } catch (error) {
+      sendError(res, 400, "Failed to calculate skip impact", error);
+    }
+  });
+
   // Amortization projection endpoint - uses the authoritative Canadian mortgage calculation engine
   const projectionSchema = z.object({
     currentBalance: z.number().positive(),

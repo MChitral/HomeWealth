@@ -16,7 +16,7 @@ import { useHelocBorrowing } from "../hooks";
 import { useToast } from "@/shared/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import type { HelocAccount } from "@shared/schema";
-import { calculateAvailableCredit } from "@server-shared/calculations/heloc/available-credit";
+import { calculateAvailableCredit } from "@/shared/utils/heloc";
 
 const borrowSchema = z.object({
   amount: z

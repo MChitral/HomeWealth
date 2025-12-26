@@ -245,4 +245,60 @@ export function registerHelocRoutes(router: Router, services: ApplicationService
       sendError(res, 500, "Failed to recalculate credit limit", error);
     }
   });
+
+  // Calculate credit limit impact from prepayment
+  router.post("/heloc/calculate-credit-limit-impact", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+
+    try {
+      const { homeValue, maxLTV, currentMortgageBalance, projectedMortgageBalance, helocBalance } =
+        req.body as {
+          homeValue: number;
+          maxLTV: number;
+          currentMortgageBalance: number;
+          projectedMortgageBalance: number;
+          helocBalance: number;
+        };
+
+      if (
+        homeValue == null ||
+        maxLTV == null ||
+        currentMortgageBalance == null ||
+        projectedMortgageBalance == null ||
+        helocBalance == null
+      ) {
+        sendError(res, 400, "Missing required parameters");
+        return;
+      }
+
+      const { calculateCreditLimit } =
+        await import("@server-shared/calculations/heloc/credit-limit");
+      const { calculateAvailableCredit } =
+        await import("@server-shared/calculations/heloc/available-credit");
+
+      const currentCreditLimit = calculateCreditLimit(homeValue, maxLTV, currentMortgageBalance);
+      const projectedCreditLimit = calculateCreditLimit(
+        homeValue,
+        maxLTV,
+        projectedMortgageBalance
+      );
+      const creditRoomIncrease = projectedCreditLimit - currentCreditLimit;
+
+      const currentAvailableCredit = calculateAvailableCredit(currentCreditLimit, helocBalance);
+      const projectedAvailableCredit = calculateAvailableCredit(projectedCreditLimit, helocBalance);
+      const availableCreditIncrease = projectedAvailableCredit - currentAvailableCredit;
+
+      res.json({
+        currentCreditLimit,
+        projectedCreditLimit,
+        creditRoomIncrease,
+        currentAvailableCredit,
+        projectedAvailableCredit,
+        availableCreditIncrease,
+      });
+    } catch (error) {
+      sendError(res, 400, "Failed to calculate credit limit impact", error);
+    }
+  });
 }

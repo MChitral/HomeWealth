@@ -17,7 +17,7 @@ import { AlertTriangle, Info, TrendingUp, Calendar } from "lucide-react";
 import { useSkipPayment } from "../hooks/use-skip-payment";
 import type { UiTerm } from "../types";
 import type { MortgagePayment } from "@shared/schema";
-import type { PaymentFrequency } from "@server-shared/calculations/mortgage";
+import type { PaymentFrequency } from "@/shared/calculations/mortgage";
 
 interface SkipPaymentDialogProps {
   open: boolean;

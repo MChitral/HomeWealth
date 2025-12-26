@@ -203,12 +203,16 @@ export class ReAdvanceableMortgageService {
 
     const creditRoom = calculateCreditLimit(homeValue, maxLTV, mortgageBalance);
     const availableCredit = calculateAvailableCredit(creditRoom, helocBalance);
+    const { calculateCreditUtilization } =
+      await import("@server-shared/calculations/heloc/available-credit");
+    const utilization = creditRoom > 0 ? calculateCreditUtilization(helocBalance, creditRoom) : 0;
 
     return {
       creditRoom,
       availableCredit,
       mortgageBalance,
       helocBalance,
+      utilization,
     };
   }
 }

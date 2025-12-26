@@ -53,6 +53,19 @@ export const helocApi = {
 
   recalculateCreditLimit: (accountId: string) =>
     apiRequest<HelocAccount>("POST", `/api/heloc/accounts/${accountId}/recalculate-credit-limit`),
+
+  calculateCreditLimitImpact: (payload: {
+    homeValue: number;
+    maxLTV: number;
+    currentMortgageBalance: number;
+    projectedMortgageBalance: number;
+    helocBalance: number;
+  }) =>
+    apiRequest<CreditLimitImpactResponse>(
+      "POST",
+      "/api/heloc/calculate-credit-limit-impact",
+      payload
+    ),
 };
 
 export type CreditRoomResponse = {
@@ -60,6 +73,23 @@ export type CreditRoomResponse = {
   availableCredit: number;
   mortgageBalance: number;
   helocBalance: number;
+  utilization: number;
+};
+
+export type CreditLimitImpactResponse = {
+  currentCreditLimit: number;
+  projectedCreditLimit: number;
+  creditRoomIncrease: number;
+  currentAvailableCredit: number;
+  projectedAvailableCredit: number;
+  availableCreditIncrease: number;
+};
+
+export type SkipImpactResponse = {
+  totalInterestAccrued: number;
+  finalBalance: number;
+  extendedAmortizationMonths: number;
+  balanceIncrease: number;
 };
 
 export type CreditRoomHistoryItem = {

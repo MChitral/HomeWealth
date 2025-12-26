@@ -4,10 +4,7 @@ import { Button } from "@/shared/ui/button";
 import { Progress } from "@/shared/ui/progress";
 import { CreditCard, Edit, Trash2 } from "lucide-react";
 import type { HelocAccount } from "@shared/schema";
-import {
-  calculateAvailableCredit,
-  calculateCreditUtilization,
-} from "@server-shared/calculations/heloc/available-credit";
+import { calculateAvailableCredit, calculateCreditUtilization } from "@/shared/utils/heloc";
 import { useState } from "react";
 import { EditHelocDialog } from "./edit-heloc-dialog";
 import { useDeleteHelocAccount } from "../hooks";

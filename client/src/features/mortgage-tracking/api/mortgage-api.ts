@@ -853,3 +853,40 @@ export async function fetchMortgagePayoffHistory(mortgageId: string): Promise<Mo
 
   return response.json();
 }
+
+// Skip Payment Impact Calculator
+export type SkipImpactRequest = {
+  currentBalance: number;
+  annualRate: number;
+  paymentFrequency:
+    | "monthly"
+    | "semi-monthly"
+    | "biweekly"
+    | "accelerated-biweekly"
+    | "weekly"
+    | "accelerated-weekly";
+  currentAmortizationMonths: number;
+  numberOfSkips?: number;
+};
+
+export type SkipImpactResponse = {
+  totalInterestAccrued: number;
+  finalBalance: number;
+  extendedAmortizationMonths: number;
+  balanceIncrease: number;
+};
+
+export async function calculateSkipImpact(request: SkipImpactRequest): Promise<SkipImpactResponse> {
+  const response = await fetch("/api/mortgages/calculate-skip-impact", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Failed to calculate skip impact");
+  }
+
+  return response.json();
+}

@@ -4,7 +4,6 @@ import { Badge } from "@/shared/ui/badge";
 import { Progress } from "@/shared/ui/progress";
 import { TrendingUp, History, Loader2, AlertCircle } from "lucide-react";
 import { useCreditRoom } from "@/features/heloc/hooks";
-import { calculateCreditUtilization } from "@server-shared/calculations/heloc/available-credit";
 
 interface CreditRoomDisplayProps {
   mortgageId: string;
@@ -48,10 +47,7 @@ export function CreditRoomDisplay({ mortgageId, onViewHistory }: CreditRoomDispl
     );
   }
 
-  const utilization =
-    creditRoom.creditRoom > 0
-      ? calculateCreditUtilization(creditRoom.helocBalance, creditRoom.creditRoom)
-      : 0;
+  const utilization = creditRoom.utilization ?? 0;
 
   return (
     <Card className="border-green-200 bg-gradient-to-br from-green-50/50 to-background">

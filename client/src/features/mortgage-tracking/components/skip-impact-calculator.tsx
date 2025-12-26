@@ -3,10 +3,11 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
-import { Calculator, TrendingUp, AlertTriangle, DollarSign } from "lucide-react";
-import { calculateSkippedPayment } from "@server-shared/calculations/payment-skipping";
-import type { PaymentFrequency } from "@server-shared/calculations/mortgage";
+import { Calculator, TrendingUp, AlertTriangle, DollarSign, Loader2 } from "lucide-react";
+import { calculateSkipImpact } from "../api/mortgage-api";
+import type { PaymentFrequency } from "@/shared/calculations/mortgage";
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 
 interface SkipImpactCalculatorProps {
   currentBalance: number;
@@ -26,37 +27,23 @@ export function SkipImpactCalculator({
   paymentFrequency,
 }: SkipImpactCalculatorProps) {
   const [numberOfSkips, setNumberOfSkips] = useState(1);
-  const [impact, setImpact] = useState<{
-    totalInterestAccrued: number;
-    finalBalance: number;
-    extendedAmortizationMonths: number;
-    balanceIncrease: number;
-  } | null>(null);
+
+  const calculateImpactMutation = useMutation({
+    mutationFn: () =>
+      calculateSkipImpact({
+        currentBalance,
+        annualRate: effectiveRate,
+        paymentFrequency,
+        currentAmortizationMonths,
+        numberOfSkips,
+      }),
+  });
 
   const calculateImpact = () => {
-    let runningBalance = currentBalance;
-    let totalInterest = 0;
-    let extendedAmortization = currentAmortizationMonths;
-
-    for (let i = 0; i < numberOfSkips; i++) {
-      const skipCalc = calculateSkippedPayment(
-        runningBalance,
-        effectiveRate,
-        paymentFrequency,
-        extendedAmortization
-      );
-      runningBalance = skipCalc.newBalance;
-      totalInterest += skipCalc.interestAccrued;
-      extendedAmortization = skipCalc.extendedAmortizationMonths;
-    }
-
-    setImpact({
-      totalInterestAccrued: totalInterest,
-      finalBalance: runningBalance,
-      extendedAmortizationMonths: extendedAmortization,
-      balanceIncrease: runningBalance - currentBalance,
-    });
+    calculateImpactMutation.mutate();
   };
+
+  const impact = calculateImpactMutation.data;
 
   return (
     <Card>
@@ -85,12 +72,32 @@ export function SkipImpactCalculator({
                 }
               }}
             />
-            <Button onClick={calculateImpact}>Calculate Impact</Button>
+            <Button onClick={calculateImpact} disabled={calculateImpactMutation.isPending}>
+              {calculateImpactMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Calculating...
+                </>
+              ) : (
+                "Calculate Impact"
+              )}
+            </Button>
           </div>
           <p className="text-xs text-muted-foreground">
             Enter the number of consecutive payments you want to skip (1-12)
           </p>
         </div>
+
+        {calculateImpactMutation.isError && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              {calculateImpactMutation.error instanceof Error
+                ? calculateImpactMutation.error.message
+                : "Failed to calculate skip impact"}
+            </AlertDescription>
+          </Alert>
+        )}
 
         {impact && (
           <div className="space-y-4">

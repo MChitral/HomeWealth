@@ -26,7 +26,7 @@ vi.mock("@/shared/hooks/use-toast", () => ({
 }));
 
 // Mock calculation functions
-vi.mock("@server-shared/calculations/payment-skipping", () => ({
+vi.mock("@/shared/calculations/payment-skipping", () => ({
   calculateSkippedPayment: vi.fn((_balance, _rate, _frequency, _amortization) => ({
     interestAccrued: 1830.0,
     newBalance: 401830.0,
@@ -222,7 +222,7 @@ describe("SkipPaymentDialog Integration", () => {
     ];
 
     // Mock countSkippedPaymentsInYear to return 2
-    vi.doMock("@server-shared/calculations/payment-skipping", () => ({
+    vi.doMock("@/shared/calculations/payment-skipping", () => ({
       calculateSkippedPayment: vi.fn(),
       canSkipPayment: vi.fn(() => false),
       countSkippedPaymentsInYear: vi.fn(() => 2),
