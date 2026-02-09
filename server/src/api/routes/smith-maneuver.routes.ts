@@ -55,11 +55,11 @@ export function registerSmithManeuverRoutes(router: Router, services: Applicatio
     if (!user) return;
 
     try {
-      const validated = insertSmithManeuverStrategySchema.parse(req.body);
-      const strategy = await services.smithManeuver.createStrategy({
-        ...validated,
+      const validated = insertSmithManeuverStrategySchema.parse({
+        ...req.body,
         userId: user.id,
       });
+      const strategy = await services.smithManeuver.createStrategy(validated);
       res.status(201).json(strategy);
     } catch (error) {
       if (error instanceof z.ZodError) {
