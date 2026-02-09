@@ -7,6 +7,7 @@ import {
   Shield,
   CreditCard,
   TrendingUp,
+  Bell,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
@@ -32,6 +33,10 @@ const navItems = [
   { title: "Smith Maneuver", url: "/smith-maneuver", icon: TrendingUp },
 ] as const;
 
+const settingsItems = [
+  { title: "Notifications", url: "/notifications/preferences", icon: Bell },
+] as const;
+
 export function AppSidebar() {
   const [location] = useLocation();
 
@@ -52,6 +57,28 @@ export function AppSidebar() {
                     asChild
                     isActive={location === item.url}
                     data-testid={`link-${item.title.toLowerCase()}`}
+                    aria-label={item.title}
+                  >
+                    <Link href={item.url} aria-label={item.title}>
+                      <item.icon aria-hidden="true" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Settings</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {settingsItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location === item.url}
+                    data-testid={`link-${item.title.toLowerCase().replace(/\s+/g, "-")}`}
                     aria-label={item.title}
                   >
                     <Link href={item.url} aria-label={item.title}>
