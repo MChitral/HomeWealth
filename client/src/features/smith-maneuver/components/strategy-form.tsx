@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useCreateSmithManeuverStrategy, useUpdateSmithManeuverStrategy } from "../hooks";
 import type { SmithManeuverStrategy, InsertSmithManeuverStrategy } from "@shared/schema";
 import { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
 import { useMarginalTaxRate } from "@/features/tax";
 
 const strategyFormSchema = z.object({
@@ -48,6 +49,8 @@ interface StrategyFormProps {
   strategy?: SmithManeuverStrategy | null;
   mortgages: Array<{ id: string; propertyPrice: string }>;
   helocAccounts: Array<{ id: string; accountName: string }>;
+  onCreated?: (strategy: SmithManeuverStrategy) => void;
+  onUpdated?: () => void;
 }
 
 export function StrategyForm({
@@ -56,6 +59,8 @@ export function StrategyForm({
   strategy,
   mortgages,
   helocAccounts,
+  onCreated,
+  onUpdated,
 }: StrategyFormProps) {
   const createStrategy = useCreateSmithManeuverStrategy();
   const updateStrategy = useUpdateSmithManeuverStrategy();
@@ -123,11 +128,13 @@ export function StrategyForm({
 
       if (strategy) {
         await updateStrategy.mutateAsync({ id: strategy.id, payload });
+        form.reset();
+        onUpdated?.();
       } else {
-        await createStrategy.mutateAsync(payload);
+        const created = await createStrategy.mutateAsync(payload);
+        form.reset();
+        onCreated?.(created);
       }
-      onOpenChange(false);
-      form.reset();
     } catch (error) {
       console.error("Failed to save strategy:", error);
     }
@@ -374,7 +381,14 @@ export function StrategyForm({
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={createStrategy.isPending || updateStrategy.isPending}>
+              <Button
+                type="submit"
+                data-testid="button-submit-strategy"
+                disabled={createStrategy.isPending || updateStrategy.isPending}
+              >
+                {(createStrategy.isPending || updateStrategy.isPending) && (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                )}
                 {strategy ? "Update" : "Create"} Strategy
               </Button>
             </DialogFooter>

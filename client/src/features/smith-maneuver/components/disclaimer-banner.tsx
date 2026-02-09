@@ -1,27 +1,38 @@
-import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription } from "@/shared/ui/alert";
+import { AlertTriangle, ChevronDown } from "lucide-react";
+import { useState } from "react";
+import { cn } from "@/shared/lib/utils";
 
 export function DisclaimerBanner() {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   return (
-    <Alert variant="destructive" className="mb-6">
-      <AlertTriangle className="h-4 w-4" />
-      <AlertTitle>Important Disclaimer</AlertTitle>
-      <AlertDescription className="mt-2 space-y-2">
-        <p>
-          <strong>This tool provides educational modeling only, not tax advice.</strong>
-        </p>
-        <ul className="list-disc list-inside space-y-1 text-sm">
-          <li>Tax laws may change and affect strategy viability</li>
-          <li>Individual circumstances vary - consult a tax professional</li>
-          <li>CRA interpretation may differ from model assumptions</li>
-          <li>No guarantee of tax deduction acceptance</li>
-          <li>Investment returns are not guaranteed</li>
-          <li>Leverage amplifies both gains and losses</li>
-        </ul>
-        <p className="text-sm font-semibold mt-2">
-          Professional tax and investment advice is strongly recommended before implementing the
-          Smith Maneuver.
-        </p>
+    <Alert
+      className="cursor-pointer border-yellow-200 dark:border-yellow-800 bg-yellow-50/50 dark:bg-yellow-950/20"
+      data-testid="smith-disclaimer"
+      onClick={() => setIsExpanded(!isExpanded)}
+    >
+      <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
+      <AlertDescription>
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+            Educational modeling only — not tax advice. Consult a professional before implementing.
+          </p>
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 text-yellow-600 dark:text-yellow-500 transition-transform flex-shrink-0 ml-2",
+              isExpanded && "rotate-180"
+            )}
+          />
+        </div>
+        {isExpanded && (
+          <ul className="mt-2 list-disc list-inside space-y-0.5 text-xs text-yellow-700 dark:text-yellow-300" data-testid="smith-disclaimer-details">
+            <li>Tax laws may change and affect strategy viability</li>
+            <li>CRA interpretation may differ from model assumptions</li>
+            <li>Investment returns are not guaranteed</li>
+            <li>Leverage amplifies both gains and losses</li>
+          </ul>
+        )}
       </AlertDescription>
     </Alert>
   );
