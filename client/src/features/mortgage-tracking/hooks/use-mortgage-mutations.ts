@@ -159,6 +159,24 @@ export function useMortgageMutations({
     },
   });
 
+  const deleteMortgageMutation = useMutation({
+    mutationFn: (mortgageId: string) => mortgageApi.deleteMortgage(mortgageId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.mortgages() });
+      toast({
+        title: "Mortgage deleted",
+        description: "The mortgage has been removed from your records",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete mortgage",
+        variant: "destructive",
+      });
+    },
+  });
+
   const editMortgageMutation = useMutation({
     mutationFn: (updates: UpdateMortgagePayload) => {
       if (!mortgage?.id) throw new Error("No mortgage selected");
@@ -209,6 +227,7 @@ export function useMortgageMutations({
     createTermMutation,
     backfillPaymentsMutation,
     deletePaymentMutation,
+    deleteMortgageMutation,
     editMortgageMutation,
     updateTermMutation,
   };

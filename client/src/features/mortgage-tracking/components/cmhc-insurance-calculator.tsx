@@ -33,6 +33,7 @@ export function CMHCInsuranceCalculator({
     handleCompare,
     downPaymentPercent,
     isHighRatio,
+    comparisonResult,
   } = useInsuranceCalculator({
     defaultPropertyPrice,
     defaultDownPayment,

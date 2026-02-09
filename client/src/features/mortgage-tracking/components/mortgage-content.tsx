@@ -133,7 +133,9 @@ interface MortgageContentProps {
   createPaymentMutation: UseMutationResult<any, Error, any, unknown>;
   backfillPaymentsMutation: UseMutationResult<any, Error, any, unknown>;
   deletePaymentMutation: UseMutationResult<any, Error, any, unknown>;
+  deleteMortgageMutation: UseMutationResult<any, Error, any, unknown>;
   editMortgageMutation: UseMutationResult<any, Error, any, unknown>;
+  onDeleteMortgage?: () => void;
 }
 
 /**
@@ -190,7 +192,9 @@ export function MortgageContent({
   createPaymentMutation,
   backfillPaymentsMutation,
   deletePaymentMutation,
+  deleteMortgageMutation,
   editMortgageMutation,
+  onDeleteMortgage,
 }: MortgageContentProps) {
   const [isRecastOpen, setIsRecastOpen] = useState(false);
   const [isFrequencyChangeOpen, setIsFrequencyChangeOpen] = useState(false);
@@ -234,6 +238,7 @@ export function MortgageContent({
       onEditMortgage={() => onEditMortgageDialogOpenChange(true)}
       onBackfillPayments={() => setIsBackfillOpen(true)}
       onLogPayment={() => setIsDialogOpen(true)}
+      onDeleteMortgage={onDeleteMortgage}
       onExport={handleExport}
       primeBanner={primeBanner}
       canCreateTerm={Boolean(uiCurrentTerm)}

@@ -142,6 +142,8 @@ export const mortgageApi = {
     }),
   deletePayment: (paymentId: string) =>
     apiRequest<{ success: boolean }>("DELETE", `/api/mortgage-payments/${paymentId}`),
+  deleteMortgage: (mortgageId: string) =>
+    apiRequest<{ success: boolean }>("DELETE", `/api/mortgages/${mortgageId}`),
 
   // Skip Payment
   skipPayment: (

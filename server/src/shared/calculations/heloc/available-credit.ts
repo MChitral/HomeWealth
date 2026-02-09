@@ -26,3 +26,5 @@ export function calculateCreditUtilization(currentBalance: number, creditLimit: 
   if (creditLimit === 0) return 0;
   return Math.min(100, (currentBalance / creditLimit) * 100);
 }
+
+

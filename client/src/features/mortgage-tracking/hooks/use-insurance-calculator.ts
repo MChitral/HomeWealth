@@ -127,6 +127,7 @@ export function useInsuranceCalculator({
     handleCompare,
     downPaymentPercent,
     isHighRatio,
+    comparisonResult: compareMutation.data,
     isValid: form.formState.isValid,
   };
 }

@@ -104,6 +104,7 @@ export function useMortgageTrackingState() {
     createTermMutation,
     backfillPaymentsMutation,
     deletePaymentMutation,
+    deleteMortgageMutation,
     editMortgageMutation,
     updateTermMutation,
   } = mutations;
@@ -168,6 +169,7 @@ export function useMortgageTrackingState() {
     createTermMutation,
     backfillPaymentsMutation,
     deletePaymentMutation,
+    deleteMortgageMutation,
     editMortgageMutation,
     updateTermMutation,
   };

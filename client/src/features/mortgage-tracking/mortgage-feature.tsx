@@ -4,6 +4,7 @@ import { MortgageLayout } from "./components/mortgage-layout";
 import { MortgageEmptyState } from "./components/mortgage-empty-state";
 import { MortgagePrimeBanner } from "./components/mortgage-prime-banner";
 import { CreateMortgageDialog } from "./components/create-mortgage-dialog";
+import { DeleteMortgageDialog } from "./components/delete-mortgage-dialog";
 import { MortgageContent } from "./components/mortgage-content";
 import { useState, useEffect, useCallback } from "react";
 import { useMortgageTrackingState } from "./hooks/use-mortgage-tracking-state";
@@ -19,6 +20,7 @@ export default function MortgageFeature() {
 
   const [isCreateMortgageOpen, setIsCreateMortgageOpen] = useState(false);
   const [isSkipPaymentOpen, setIsSkipPaymentOpen] = useState(false);
+  const [isDeleteMortgageOpen, setIsDeleteMortgageOpen] = useState(false);
 
   const {
     selectedMortgageId,
@@ -58,6 +60,7 @@ export default function MortgageFeature() {
     createPaymentMutation,
     backfillPaymentsMutation,
     deletePaymentMutation,
+    deleteMortgageMutation,
     editMortgageMutation,
     // updateTermMutation, // Unused
     currentPrimeRateValue,
@@ -174,6 +177,13 @@ export default function MortgageFeature() {
     });
   };
 
+  const handleDeleteMortgageSuccess = () => {
+    // Clear selection if the deleted mortgage was selected
+    if (selectedMortgageId && mortgage?.id === selectedMortgageId) {
+      setSelectedMortgageId(null);
+    }
+  };
+
   return (
     <>
       <CreateMortgageDialog
@@ -195,6 +205,13 @@ export default function MortgageFeature() {
         primeRateData={primeRateData}
         onRefreshPrime={() => refetchPrimeRate()}
         isPrimeRateLoading={isPrimeRateLoading}
+      />
+      <DeleteMortgageDialog
+        open={isDeleteMortgageOpen}
+        onOpenChange={setIsDeleteMortgageOpen}
+        mortgage={mortgage}
+        deleteMortgageMutation={deleteMortgageMutation}
+        onDeleteSuccess={handleDeleteMortgageSuccess}
       />
       <MortgageLayout
         isLoading={isLoading}
@@ -250,7 +267,9 @@ export default function MortgageFeature() {
           createPaymentMutation={createPaymentMutation}
           backfillPaymentsMutation={backfillPaymentsMutation}
           deletePaymentMutation={deletePaymentMutation}
+          deleteMortgageMutation={deleteMortgageMutation}
           editMortgageMutation={editMortgageMutation}
+          onDeleteMortgage={() => setIsDeleteMortgageOpen(true)}
         />
       </MortgageLayout>
     </>

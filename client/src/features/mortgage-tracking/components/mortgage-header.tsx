@@ -1,7 +1,7 @@
 import { Button } from "@/shared/ui/button";
 import { PageHeader } from "@/shared/ui/page-header";
 import type { Mortgage } from "@shared/schema";
-import { Download, Plus, Pencil, History } from "lucide-react";
+import { Download, Plus, Pencil, History, Trash2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { MortgageSelector } from "./mortgage-selector";
 
@@ -12,6 +12,7 @@ interface MortgageHeaderProps {
   onEditMortgage: () => void;
   onBackfillPayments: () => void;
   onLogPayment: () => void;
+  onDeleteMortgage?: () => void;
   onExport?: () => void;
   actionsExtra?: ReactNode;
   primeBanner?: ReactNode;
@@ -26,6 +27,7 @@ export function MortgageHeader({
   onEditMortgage,
   onBackfillPayments,
   onLogPayment,
+  onDeleteMortgage,
   onExport,
   actionsExtra,
   primeBanner,
@@ -87,6 +89,17 @@ export function MortgageHeader({
             >
               <Download className="h-4 w-4 mr-2" />
               Export
+            </Button>
+
+            <Button
+              variant="ghost"
+              data-testid="button-delete-mortgage"
+              onClick={onDeleteMortgage}
+              disabled={!onDeleteMortgage}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
             </Button>
 
             {actionsExtra}

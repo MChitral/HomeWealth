@@ -14,3 +14,5 @@ export const HELOC_TRANSACTION_TYPES = [
 ] as const;
 
 export type HelocTransactionType = (typeof HELOC_TRANSACTION_TYPES)[number];
+
+

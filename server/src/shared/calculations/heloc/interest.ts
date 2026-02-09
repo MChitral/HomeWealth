@@ -77,3 +77,5 @@ export function calculateInterestOnlyPayment(
 ): number {
   return calculateMonthlyInterest(balance, primeRate, spread, daysInPeriod);
 }
+
+
