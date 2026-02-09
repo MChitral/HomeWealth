@@ -283,7 +283,7 @@ export function CreateHelocDialog({ open, onOpenChange }: CreateHelocDialogProps
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={createAccount.isPending}>
+              <Button type="submit" data-testid="button-create-heloc-submit" disabled={createAccount.isPending}>
                 {createAccount.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Create Account
               </Button>

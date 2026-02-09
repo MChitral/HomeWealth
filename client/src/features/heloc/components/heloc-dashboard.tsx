@@ -42,7 +42,7 @@ export function HelocDashboard() {
               Manage your home equity liquidity and borrowing power.
             </p>
           </div>
-          <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Button data-testid="button-add-heloc" onClick={() => setIsCreateDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Add Account
           </Button>
@@ -80,7 +80,7 @@ export function HelocDashboard() {
               Add your Home Equity Line of Credit to visualize your available borrowing power and
               track the &quot;Smith Manoeuvre&quot; potential.
             </p>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
+            <Button data-testid="button-add-first-heloc" onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Add Your First HELOC Account
             </Button>

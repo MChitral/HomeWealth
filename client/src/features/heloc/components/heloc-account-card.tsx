@@ -99,7 +99,7 @@ export function HelocAccountCard({ account }: HelocAccountCardProps) {
 
   return (
     <>
-      <Card className="hover:shadow-lg transition-shadow flex flex-col h-full">
+      <Card data-testid={`card-heloc-${account.id}`} className="hover:shadow-lg transition-shadow flex flex-col h-full">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex-1 overflow-hidden">
@@ -122,6 +122,7 @@ export function HelocAccountCard({ account }: HelocAccountCardProps) {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
+                data-testid={`button-edit-heloc-${account.id}`}
                 onClick={() => setIsEditDialogOpen(true)}
               >
                 <Edit className="h-4 w-4" />
@@ -130,6 +131,7 @@ export function HelocAccountCard({ account }: HelocAccountCardProps) {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 text-destructive hover:text-destructive"
+                data-testid={`button-delete-heloc-${account.id}`}
                 onClick={() => setIsDeleteDialogOpen(true)}
               >
                 <Trash2 className="h-4 w-4" />
@@ -145,7 +147,7 @@ export function HelocAccountCard({ account }: HelocAccountCardProps) {
               <span className="text-xs text-muted-foreground uppercase tracking-wider">
                 Available
               </span>
-              <div className="text-2xl font-bold text-green-600">
+              <div data-testid={`text-available-credit-${account.id}`} className="text-2xl font-bold text-green-600">
                 {formatCurrency(availableCredit)}
               </div>
             </div>
@@ -276,6 +278,7 @@ export function HelocAccountCard({ account }: HelocAccountCardProps) {
             variant="outline"
             size="sm"
             className="w-full text-xs h-8"
+            data-testid={`button-borrow-${account.id}`}
             onClick={() => setIsBorrowDialogOpen(true)}
           >
             <Plus className="h-3 w-3 mr-1.5" />
@@ -285,6 +288,7 @@ export function HelocAccountCard({ account }: HelocAccountCardProps) {
             variant="outline"
             size="sm"
             className="w-full text-xs h-8"
+            data-testid={`button-pay-${account.id}`}
             onClick={() => setIsPaymentDialogOpen(true)}
           >
             <Minus className="h-3 w-3 mr-1.5" />
@@ -294,6 +298,7 @@ export function HelocAccountCard({ account }: HelocAccountCardProps) {
             variant="outline"
             size="sm"
             className="w-full text-xs h-8"
+            data-testid={`button-history-${account.id}`}
             onClick={() => setIsHistoryDialogOpen(true)}
           >
             <History className="h-3 w-3 mr-1.5" />

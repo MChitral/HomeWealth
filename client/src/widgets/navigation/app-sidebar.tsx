@@ -58,7 +58,7 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     asChild
                     isActive={location === item.url}
-                    data-testid={`link-${item.title.toLowerCase()}`}
+                    data-testid={`link-${item.title.toLowerCase().replace(/\s+/g, "-")}`}
                     aria-label={item.title}
                   >
                     <Link href={item.url} aria-label={item.title}>

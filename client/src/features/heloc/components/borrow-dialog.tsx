@@ -145,7 +145,7 @@ export function BorrowDialog({ open, onOpenChange, account }: BorrowDialogProps)
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={borrow.isPending}>
+              <Button type="submit" data-testid="button-borrow-submit" disabled={borrow.isPending}>
                 {borrow.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Record Borrowing
               </Button>

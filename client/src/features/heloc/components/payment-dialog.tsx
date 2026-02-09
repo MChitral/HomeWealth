@@ -155,7 +155,7 @@ export function PaymentDialog({ open, onOpenChange, account }: PaymentDialogProp
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={payment.isPending}>
+              <Button type="submit" data-testid="button-payment-submit" disabled={payment.isPending}>
                 {payment.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Record Payment
               </Button>
