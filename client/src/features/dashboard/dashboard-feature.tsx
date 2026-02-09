@@ -188,7 +188,7 @@ export function DashboardFeature() {
             month: "short",
             day: "numeric",
           }),
-          amount: `$${(Number(p.principal) + Number(p.interest)).toFixed(2)}`,
+          amount: `$${(Number(p.principalPaid) + Number(p.interestPaid)).toFixed(2)}`,
           originalDate: new Date(p.paymentDate),
         });
       });
@@ -205,7 +205,7 @@ export function DashboardFeature() {
             month: "short",
             day: "numeric",
           }),
-          amount: `${(Number(t.interestRate) * 100).toFixed(2)}%`,
+          amount: `${(Number(t.fixedRate || t.lockedSpread || 0)).toFixed(2)}%`,
           originalDate: new Date(t.startDate),
         });
       });
