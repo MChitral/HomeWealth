@@ -61,18 +61,21 @@ export class HelocService {
    * Create a new HELOC account
    */
   async createAccount(userId: string, payload: Omit<HelocAccountCreateInput, "userId">) {
-    // Calculate credit limit if home value and mortgage are provided
     let creditLimit = Number(payload.creditLimit || 0);
 
-    if (payload.mortgageId && payload.homeValueReference) {
-      const mortgage = await this.mortgages.findById(payload.mortgageId);
-      if (mortgage) {
-        creditLimit = calculateCreditLimit(
-          Number(payload.homeValueReference),
-          Number(payload.maxLtvPercent || 65),
-          Number(mortgage.currentBalance)
-        );
+    if (payload.homeValueReference) {
+      let mortgageBalance = 0;
+      if (payload.mortgageId) {
+        const mortgage = await this.mortgages.findById(payload.mortgageId);
+        if (mortgage) {
+          mortgageBalance = Number(mortgage.currentBalance);
+        }
       }
+      creditLimit = calculateCreditLimit(
+        Number(payload.homeValueReference),
+        Number(payload.maxLtvPercent || 65),
+        mortgageBalance
+      );
     }
 
     // Calculate minimum payment if balance and rate are available
