@@ -8,6 +8,7 @@ import {
   CreditCard,
   TrendingUp,
   Bell,
+  LineChart,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
@@ -31,6 +32,7 @@ const navItems = [
   { title: "Cash Flow", url: "/cash-flow", icon: DollarSign },
   { title: "Emergency Fund", url: "/emergency-fund", icon: Shield },
   { title: "Smith Maneuver", url: "/smith-maneuver", icon: TrendingUp },
+  { title: "Forecasting", url: "/forecasting", icon: LineChart },
 ] as const;
 
 const settingsItems = [
