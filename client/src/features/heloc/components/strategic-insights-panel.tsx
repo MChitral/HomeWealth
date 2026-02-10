@@ -76,7 +76,7 @@ export function StrategicInsightsPanel({
                 "border-green-200 bg-green-50 dark:bg-green-900/10 text-green-900 dark:text-green-100",
               insight.type === "success" &&
                 "border-blue-200 bg-blue-50 dark:bg-blue-900/10 text-blue-900 dark:text-blue-100",
-              insight.type === "info" && "border-slate-200 bg-slate-50 dark:bg-slate-900/10"
+              insight.type === "info" && "border-border bg-muted/50"
             )}
           >
             <insight.icon className="h-4 w-4" />

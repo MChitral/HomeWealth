@@ -110,7 +110,7 @@ function AccountImpactDisplay({
 
       {availableCreditIncrease > 0 && (
         <div className="pt-2 border-t">
-          <Badge variant="default" className="bg-green-600 hover:bg-green-700">
+          <Badge variant="default" className="bg-green-600">
             +{formatCurrency(availableCreditIncrease)} available credit
           </Badge>
         </div>

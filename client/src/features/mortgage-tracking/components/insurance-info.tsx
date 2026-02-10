@@ -85,9 +85,9 @@ export function InsuranceInfo() {
             <AccordionTrigger>Premium Payment Options</AccordionTrigger>
             <AccordionContent className="space-y-3">
               <div className="space-y-3">
-                <div className="border-l-4 border-blue-500 pl-4">
+                <div className="pl-4 border-l-2 border-primary/30">
                   <div className="flex items-center gap-2 mb-1">
-                    <DollarSign className="h-4 w-4 text-blue-500" />
+                    <DollarSign className="h-4 w-4 text-primary" />
                     <strong>Option 1: Pay Upfront</strong>
                   </div>
                   <p className="text-sm text-muted-foreground">
@@ -95,9 +95,9 @@ export function InsuranceInfo() {
                     original loan amount.
                   </p>
                 </div>
-                <div className="border-l-4 border-green-500 pl-4">
+                <div className="pl-4 border-l-2 border-green-500 dark:border-green-600">
                   <div className="flex items-center gap-2 mb-1">
-                    <Percent className="h-4 w-4 text-green-500" />
+                    <Percent className="h-4 w-4 text-green-600 dark:text-green-400" />
                     <strong>Option 2: Add to Principal</strong>
                   </div>
                   <p className="text-sm text-muted-foreground">

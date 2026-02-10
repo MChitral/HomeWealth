@@ -169,7 +169,7 @@ export function StrategySelector({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground"
               data-testid="button-confirm-delete-strategy"
             >
               {deleteStrategy.isPending ? "Deleting..." : "Delete"}

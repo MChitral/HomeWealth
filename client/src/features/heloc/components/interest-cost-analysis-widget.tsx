@@ -47,7 +47,7 @@ export function InterestCostAnalysisWidget({
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <div>
             <CardTitle className="flex items-center gap-2">
               <TrendingDown className="h-5 w-5 text-amber-600" />

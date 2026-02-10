@@ -163,11 +163,10 @@ export function DashboardFeature() {
   const showNoMortgage = !mortgages || mortgages.length === 0;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader
         title="Dashboard"
         description="Mortgage health overview"
-        className="mb-8"
       />
 
       <WealthHero
@@ -176,8 +175,8 @@ export function DashboardFeature() {
         mortgageBalance={mortgageBalance}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-2 space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 space-y-6">
           <div className="space-y-4">
             {latestImpact && <RateChangeAlert impact={latestImpact} newPrimeRate={7.45} />}
 

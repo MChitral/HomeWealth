@@ -43,7 +43,7 @@ export function WinnerCard({ winner, timeHorizon, getMetricForHorizon }: WinnerC
               </div>
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Investment Value</p>
-                <p className="font-mono font-semibold text-xl text-green-600">
+                <p className="font-mono font-semibold text-xl text-green-600 dark:text-green-400">
                   ${getMetricForHorizon(winner.metrics, "investments").toLocaleString()}
                 </p>
               </div>

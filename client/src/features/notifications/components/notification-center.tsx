@@ -113,7 +113,7 @@ function NotificationItem({
 }) {
   return (
     <div
-      className={`p-4 hover:bg-muted/50 ${!notification.read ? "bg-blue-50 dark:bg-blue-950/20" : ""}`}
+      className={`p-4 hover-elevate ${!notification.read ? "bg-blue-50 dark:bg-blue-950/20" : ""}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">

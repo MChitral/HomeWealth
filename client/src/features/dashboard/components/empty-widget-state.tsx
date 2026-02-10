@@ -26,7 +26,7 @@ export function EmptyWidgetState({
   );
 
   return (
-    <Card className="h-full border-dashed border-2 bg-muted/10 hover:bg-muted/20 transition-colors duration-200">
+    <Card className="h-full border-dashed border-2 bg-muted/10">
       <CardHeader>
         <CardTitle className="text-base font-medium text-muted-foreground">{title}</CardTitle>
       </CardHeader>

@@ -99,7 +99,7 @@ export function HelocAccountCard({ account }: HelocAccountCardProps) {
 
   return (
     <>
-      <Card data-testid={`card-heloc-${account.id}`} className="hover:shadow-lg transition-shadow flex flex-col h-full">
+      <Card data-testid={`card-heloc-${account.id}`} className="flex flex-col h-full">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex-1 overflow-hidden">
@@ -121,7 +121,6 @@ export function HelocAccountCard({ account }: HelocAccountCardProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8"
                 data-testid={`button-edit-heloc-${account.id}`}
                 onClick={() => setIsEditDialogOpen(true)}
               >
@@ -130,7 +129,7 @@ export function HelocAccountCard({ account }: HelocAccountCardProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-destructive hover:text-destructive"
+                className="text-destructive"
                 data-testid={`button-delete-heloc-${account.id}`}
                 onClick={() => setIsDeleteDialogOpen(true)}
               >
@@ -203,7 +202,7 @@ export function HelocAccountCard({ account }: HelocAccountCardProps) {
                           </div>
                         </div>
                         {Math.abs(creditLimit - theoreticalLimit) > 1 && (
-                          <p className="text-xs text-yellow-600 mt-2 bg-yellow-50 p-2 rounded">
+                          <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-2 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded">
                             Note: Actual limit differs from calculated limit (Manually set or
                             capped).
                           </p>
@@ -232,7 +231,7 @@ export function HelocAccountCard({ account }: HelocAccountCardProps) {
           {/* Strategy / Breakdown Accordion */}
           <Accordion type="single" collapsible className="w-full border rounded-md">
             <AccordionItem value="details" className="border-0">
-              <AccordionTrigger className="px-3 py-2 text-xs hover:no-underline hover:bg-muted/50 rounded-t-md">
+              <AccordionTrigger className="px-3 py-2 text-xs hover:no-underline hover-elevate rounded-t-md">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-3 w-3" />
                   <span>Account Details & Strategy</span>
@@ -277,7 +276,7 @@ export function HelocAccountCard({ account }: HelocAccountCardProps) {
           <Button
             variant="outline"
             size="sm"
-            className="w-full text-xs h-8"
+            className="w-full text-xs"
             data-testid={`button-borrow-${account.id}`}
             onClick={() => setIsBorrowDialogOpen(true)}
           >
@@ -287,7 +286,7 @@ export function HelocAccountCard({ account }: HelocAccountCardProps) {
           <Button
             variant="outline"
             size="sm"
-            className="w-full text-xs h-8"
+            className="w-full text-xs"
             data-testid={`button-pay-${account.id}`}
             onClick={() => setIsPaymentDialogOpen(true)}
           >
@@ -297,7 +296,7 @@ export function HelocAccountCard({ account }: HelocAccountCardProps) {
           <Button
             variant="outline"
             size="sm"
-            className="w-full text-xs h-8"
+            className="w-full text-xs"
             data-testid={`button-history-${account.id}`}
             onClick={() => setIsHistoryDialogOpen(true)}
           >
@@ -347,7 +346,7 @@ export function HelocAccountCard({ account }: HelocAccountCardProps) {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground"
               disabled={deleteAccount.isPending}
             >
               {deleteAccount.isPending ? "Deleting..." : "Delete"}

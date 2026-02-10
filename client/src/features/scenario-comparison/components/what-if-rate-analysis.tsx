@@ -137,7 +137,7 @@ export function WhatIfRateAnalysis() {
                         <TableCell>{formatRate(scenario.newRate)}</TableCell>
                         <TableCell
                           className={
-                            scenario.impact.netWorthChange >= 0 ? "text-green-600" : "text-red-600"
+                            scenario.impact.netWorthChange >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
                           }
                         >
                           {formatPercent(
@@ -146,7 +146,7 @@ export function WhatIfRateAnalysis() {
                               100
                           )}
                         </TableCell>
-                        <TableCell className="text-red-600">
+                        <TableCell className="text-red-600 dark:text-red-400">
                           {formatCurrency(scenario.impact.interestPaidChange)}
                         </TableCell>
                         <TableCell>

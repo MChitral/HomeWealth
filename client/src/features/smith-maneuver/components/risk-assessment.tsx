@@ -31,17 +31,17 @@ export function RiskAssessment({
   const getLeverageRiskLevel = (
     ratio: number
   ): { level: "low" | "moderate" | "high"; color: string } => {
-    if (ratio < 1.0) return { level: "low", color: "text-green-600" };
-    if (ratio <= 2.0) return { level: "moderate", color: "text-yellow-600" };
-    return { level: "high", color: "text-red-600" };
+    if (ratio < 1.0) return { level: "low", color: "text-green-600 dark:text-green-400" };
+    if (ratio <= 2.0) return { level: "moderate", color: "text-yellow-600 dark:text-yellow-400" };
+    return { level: "high", color: "text-red-600 dark:text-red-400" };
   };
 
   const getCoverageRiskLevel = (
     coverage: number
   ): { level: "low" | "moderate" | "high"; color: string } => {
-    if (coverage >= 1.5) return { level: "low", color: "text-green-600" };
-    if (coverage >= 1.0) return { level: "moderate", color: "text-yellow-600" };
-    return { level: "high", color: "text-red-600" };
+    if (coverage >= 1.5) return { level: "low", color: "text-green-600 dark:text-green-400" };
+    if (coverage >= 1.0) return { level: "moderate", color: "text-yellow-600 dark:text-yellow-400" };
+    return { level: "high", color: "text-red-600 dark:text-red-400" };
   };
 
   const leverageRisk = getLeverageRiskLevel(leverageRatio);

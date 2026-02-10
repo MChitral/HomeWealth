@@ -68,7 +68,7 @@ export function DeleteMortgageDialog({
           <AlertDialogAction
             onClick={handleDeleteConfirm}
             disabled={deleteMortgageMutation.isPending}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="bg-destructive text-destructive-foreground"
             data-testid="button-confirm-delete-mortgage"
           >
             {deleteMortgageMutation.isPending ? "Deleting..." : "Delete Mortgage"}

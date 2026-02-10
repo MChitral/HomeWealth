@@ -42,7 +42,7 @@ export function StrategyDashboard({ onSelectStrategy, onCreateStrategy }: Strate
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div>
           <h2 className="text-2xl font-bold">Smith Maneuver Strategies</h2>
           <p className="text-muted-foreground mt-1">
@@ -75,7 +75,7 @@ export function StrategyDashboard({ onSelectStrategy, onCreateStrategy }: Strate
           {strategies.map((strategy) => (
             <Card
               key={strategy.id}
-              className={`cursor-pointer transition-all hover:shadow-md ${
+              className={`cursor-pointer hover-elevate ${
                 selectedStrategyId === strategy.id ? "ring-2 ring-primary" : ""
               }`}
               onClick={() => {

@@ -41,15 +41,14 @@ export function PrepaymentCard({ mortgageId, className }: PrepaymentCardProps) {
   return (
     <Card className={`overflow-hidden ${className}`}>
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-medium flex items-center gap-2">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <CardTitle className="text-base font-medium flex items-center gap-2">
             <PiggyBank className="h-5 w-5 text-primary" />
             Prepayment Opportunity
           </CardTitle>
           {isSurplusAvailable && (
             <Badge
               variant="secondary"
-              className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
             >
               Surplus Detected
             </Badge>

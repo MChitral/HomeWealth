@@ -92,7 +92,7 @@ export function ProjectedMortgageOutcomeCard({
           </div>
           <div>
             <p className="text-sm text-muted-foreground mb-1">Interest Saved</p>
-            <p className="text-2xl font-bold font-mono text-green-600">
+            <p className="text-2xl font-bold font-mono text-green-600 dark:text-green-400">
               ${interestSaved.toLocaleString()}
             </p>
             <p className="text-xs text-muted-foreground">vs minimum payments</p>
@@ -173,10 +173,10 @@ export function ProjectedMortgageOutcomeCard({
                       <TableCell className="text-right font-mono">
                         ${row.totalPaid.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-right font-mono text-green-600">
+                      <TableCell className="text-right font-mono text-green-600 dark:text-green-400">
                         ${row.principalPaid.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-right font-mono text-blue-600">
+                      <TableCell className="text-right font-mono text-blue-600 dark:text-blue-400">
                         ${row.interestPaid.toLocaleString()}
                       </TableCell>
                       <TableCell className="text-right font-mono">
@@ -192,13 +192,13 @@ export function ProjectedMortgageOutcomeCard({
                       $
                       {yearlyAmortization.reduce((sum, r) => sum + r.totalPaid, 0).toLocaleString()}
                     </TableCell>
-                    <TableCell className="text-right font-mono text-green-600">
+                    <TableCell className="text-right font-mono text-green-600 dark:text-green-400">
                       $
                       {yearlyAmortization
                         .reduce((sum, r) => sum + r.principalPaid, 0)
                         .toLocaleString()}
                     </TableCell>
-                    <TableCell className="text-right font-mono text-blue-600">
+                    <TableCell className="text-right font-mono text-blue-600 dark:text-blue-400">
                       $
                       {yearlyAmortization
                         .reduce((sum, r) => sum + r.interestPaid, 0)

@@ -28,7 +28,7 @@ export function PenaltyCalculatorResults({ results }: PenaltyCalculatorResultsPr
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Total Penalty */}
-          <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 border-2 border-indigo-200 dark:border-indigo-800">
+          <div className="bg-muted/50 rounded-lg p-4 border-2 border-indigo-200 dark:border-indigo-800">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-medium text-muted-foreground">Total Penalty</span>
               <Badge
@@ -59,7 +59,7 @@ export function PenaltyCalculatorResults({ results }: PenaltyCalculatorResultsPr
                 </Alert>
               )}
             </div>
-            <div className="text-3xl font-bold text-slate-900 dark:text-white">
+            <div className="text-3xl font-bold">
               $
               {results.totalPenalty.toLocaleString(undefined, {
                 minimumFractionDigits: 2,

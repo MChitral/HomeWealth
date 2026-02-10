@@ -68,11 +68,10 @@ export function ForecastingFeature() {
   const showEmptyState = !scenarios || scenarios.length === 0;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader
         title="Forecasting"
         description="Long-term mortgage paydown and wealth projections based on your scenarios"
-        className="mb-8"
       />
 
       <ProjectionsHeader

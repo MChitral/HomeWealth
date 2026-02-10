@@ -56,13 +56,13 @@ export function RenewalCard({ status }: RenewalCardProps) {
   const getStatusColor = (s: string) => {
     switch (s) {
       case "urgent":
-        return "text-red-600 bg-red-100 border-red-200";
+        return "text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-800";
       case "soon":
-        return "text-orange-600 bg-orange-100 border-orange-200";
+        return "text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800";
       case "upcoming":
-        return "text-blue-600 bg-blue-100 border-blue-200";
+        return "text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800";
       default:
-        return "text-green-600 bg-green-100 border-green-200";
+        return "text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800";
     }
   };
 
@@ -101,7 +101,7 @@ export function RenewalCard({ status }: RenewalCardProps) {
   );
 
   return (
-    <Card className="shadow-sm hover:shadow-md transition-shadow duration-200 relative overflow-hidden border-t-4 border-t-indigo-500">
+    <Card className="relative overflow-visible">
       {hasUnreadReminder && (
         <div className="absolute top-2 right-2">
           <Badge variant="destructive" className="flex items-center gap-1">
@@ -111,9 +111,9 @@ export function RenewalCard({ status }: RenewalCardProps) {
         </div>
       )}
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-800 dark:text-slate-100">
-            <CalendarDays className="h-5 w-5 text-indigo-500" />
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <CalendarDays className="h-5 w-5 text-primary" />
             Renewal Status
           </CardTitle>
           <div className="flex items-center gap-2">
@@ -133,10 +133,10 @@ export function RenewalCard({ status }: RenewalCardProps) {
           {/* Timeline */}
           <div className="space-y-1">
             <div className="flex justify-between items-end">
-              <span className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+              <span className="text-3xl font-bold tracking-tight">
                 {status.daysUntilRenewal}
               </span>
-              <span className="text-sm font-medium text-slate-500 mb-1">days remaining</span>
+              <span className="text-sm font-medium text-muted-foreground mb-1">days remaining</span>
             </div>
             <Progress value={progressValue} className="h-2" />
             <div className="flex justify-between text-xs text-muted-foreground pt-1">
@@ -146,16 +146,16 @@ export function RenewalCard({ status }: RenewalCardProps) {
           </div>
 
           {/* Penalty Estimation */}
-          <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3 border border-slate-100 dark:border-slate-800">
+          <div className="bg-muted/50 rounded-md p-3 border">
             <div className="flex justify-between items-center mb-1">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 Cost to Break Today
               </span>
-              <span className="text-[10px] bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-400">
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5 font-normal">
                 Est. {status.estimatedPenalty.method === "IRD" ? "IRD" : "3-Mo Int"}
-              </span>
+              </Badge>
             </div>
-            <div className="text-lg font-semibold text-slate-700 dark:text-slate-200">
+            <div className="text-lg font-semibold">
               $
               {status.estimatedPenalty.amount.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
@@ -182,11 +182,11 @@ export function RenewalCard({ status }: RenewalCardProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 flex-shrink-0"
+                  className="flex-shrink-0"
                   onClick={handleDismissReminder}
                   disabled={markReminderAsRead.isPending}
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
             </div>

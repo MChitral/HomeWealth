@@ -82,7 +82,7 @@ export function ComparisonMetrics({
                       <PiggyBank className="h-3 w-3" />
                       Investment Returns
                     </span>
-                    <span className="text-sm font-mono font-medium text-green-600">
+                    <span className="text-sm font-mono font-medium text-green-600 dark:text-green-400">
                       +$
                       {getMetricForHorizon(scenario.metrics, "investmentReturns").toLocaleString()}
                     </span>

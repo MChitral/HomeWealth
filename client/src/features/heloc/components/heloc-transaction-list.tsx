@@ -77,7 +77,7 @@ export function HelocTransactionList({ account }: HelocTransactionListProps) {
         <CardHeader>
           <div className="space-y-2">
             <CardTitle>Transaction History</CardTitle>
-            <div className="h-4 w-32 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
+            <div className="h-4 w-32 bg-muted rounded animate-pulse" />
           </div>
         </CardHeader>
         <CardContent>
@@ -85,7 +85,7 @@ export function HelocTransactionList({ account }: HelocTransactionListProps) {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-12 w-full bg-slate-50 dark:bg-slate-900 rounded animate-pulse"
+                className="h-12 w-full bg-muted/50 rounded animate-pulse"
               />
             ))}
           </div>
@@ -194,7 +194,7 @@ export function HelocTransactionList({ account }: HelocTransactionListProps) {
                               ? "border-green-200 text-green-700 bg-green-50"
                               : transaction.transactionType === "interest_payment"
                                 ? "border-blue-200 text-blue-700 bg-blue-50"
-                                : "border-slate-200"
+                                : "border-border"
                         }
                       >
                         {transaction.transactionType === "borrowing"

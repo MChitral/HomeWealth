@@ -78,7 +78,7 @@ export function CurrentMortgagePositionCard({
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div>
             <p className="text-sm text-muted-foreground mb-1">Principal Paid So Far</p>
-            <p className="text-base font-mono text-green-600">
+            <p className="text-base font-mono text-green-600 dark:text-green-400">
               ${currentMortgageData.principalPaid.toLocaleString()}
             </p>
           </div>
@@ -104,7 +104,7 @@ export function CurrentMortgagePositionCard({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Next Payment Principal</p>
-                <p className="text-base font-mono text-green-600">
+                <p className="text-base font-mono text-green-600 dark:text-green-400">
                   ${paymentPreview.principal.toFixed(2)}
                 </p>
               </div>
@@ -129,7 +129,7 @@ export function CurrentMortgagePositionCard({
           </div>
         )}
         <Separator className="my-4" />
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <div>
             <p className="text-sm text-muted-foreground mb-1">Current Term Type</p>
             <p className="text-base font-medium">{currentMortgageData.termType}</p>

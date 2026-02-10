@@ -261,7 +261,7 @@ export function RefinancingEventsCard({
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <div>
             <CardTitle>Refinancing Events</CardTitle>
             <CardDescription>Model refinancing scenarios at renewal points</CardDescription>

@@ -38,10 +38,10 @@ export function ActivityFeed({ items }: ActivityFeedProps) {
                 <div
                   className={`
                   p-2 rounded-full mt-0.5
-                  ${item.type === "payment" ? "bg-green-100 text-green-600" : ""}
-                  ${item.type === "rate_change" ? "bg-orange-100 text-orange-600" : ""}
-                  ${item.type === "scenario" ? "bg-blue-100 text-blue-600" : ""}
-                  ${item.type === "system" ? "bg-gray-100 text-gray-600" : ""}
+                  ${item.type === "payment" ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400" : ""}
+                  ${item.type === "rate_change" ? "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400" : ""}
+                  ${item.type === "scenario" ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" : ""}
+                  ${item.type === "system" ? "bg-muted text-muted-foreground" : ""}
                 `}
                 >
                   {item.type === "payment" && <ArrowUpRight className="h-3 w-3" />}

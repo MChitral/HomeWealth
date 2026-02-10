@@ -127,7 +127,7 @@ export function ComparisonTable({
                 {scenarios.map((scenario) => (
                   <td
                     key={scenario.id}
-                    className="text-right py-3 px-4 font-mono text-sm text-green-600"
+                    className="text-right py-3 px-4 font-mono text-sm text-green-600 dark:text-green-400"
                   >
                     +${getMetricForHorizon(scenario.metrics, "investmentReturns").toLocaleString()}
                   </td>

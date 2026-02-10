@@ -17,19 +17,19 @@ export function RefinanceScenarioCard({ analysis }: RefinanceScenarioCardProps) 
   const isBeneficial = analysis.isBeneficial;
 
   return (
-    <Card className="shadow-sm hover:shadow-md transition-shadow duration-200 relative overflow-hidden border-t-4 border-t-emerald-500">
+    <Card className="relative overflow-visible">
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-800 dark:text-slate-100">
-            <TrendingDown className="h-5 w-5 text-emerald-500" />
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <TrendingDown className="h-5 w-5 text-green-600 dark:text-green-400" />
             Refinance Opportunity
           </CardTitle>
           <Badge
             variant="outline"
             className={`flex items-center gap-1 ${
               isBeneficial
-                ? "text-emerald-700 bg-emerald-50 border-emerald-200"
-                : "text-slate-500 bg-slate-50 border-slate-200"
+                ? "text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800"
+                : ""
             }`}
           >
             {isBeneficial ? (
@@ -51,7 +51,7 @@ export function RefinanceScenarioCard({ analysis }: RefinanceScenarioCardProps) 
               <div className="text-xs text-muted-foreground uppercase tracking-wide">
                 Current Rate
               </div>
-              <div className="text-lg font-bold text-slate-700 dark:text-slate-200">
+              <div className="text-lg font-bold">
                 {analysis.currentRate.toFixed(2)}%
               </div>
             </div>
@@ -68,28 +68,28 @@ export function RefinanceScenarioCard({ analysis }: RefinanceScenarioCardProps) 
             </div>
           </div>
 
-          <div className="h-px bg-slate-100 dark:bg-slate-800" />
+          <div className="h-px bg-border" />
 
           {/* Analysis Result */}
           {isBeneficial ? (
             <div className="space-y-3">
-              <div className="flex items-center justify-between bg-emerald-50/50 dark:bg-emerald-900/10 p-3 rounded-lg border border-emerald-100 dark:border-emerald-800/20">
+              <div className="flex items-center justify-between bg-green-50 dark:bg-green-900/20 p-3 rounded-md border border-green-100 dark:border-green-800">
                 <div>
-                  <div className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
+                  <div className="text-sm font-medium text-green-900 dark:text-green-100">
                     Monthly Savings
                   </div>
-                  <div className="text-xs text-emerald-600 dark:text-emerald-400">
+                  <div className="text-xs text-green-600 dark:text-green-400">
                     After switching
                   </div>
                 </div>
-                <div className="text-xl font-bold text-emerald-700 dark:text-emerald-300">
+                <div className="text-xl font-bold text-green-700 dark:text-green-300">
                   +${analysis.monthlySavings.toFixed(2)}
                 </div>
               </div>
 
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Break-even Point:</span>
-                <span className="font-medium text-slate-700 dark:text-slate-200">
+                <span className="font-medium">
                   {analysis.breakEvenMonths.toFixed(1)} months
                 </span>
               </div>
@@ -118,8 +118,8 @@ export function RefinanceScenarioCard({ analysis }: RefinanceScenarioCardProps) 
               )}
             </div>
           ) : (
-            <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg text-sm text-slate-600 dark:text-slate-300 flex gap-2">
-              <AlertCircle className="h-4 w-4 shrink-0 text-slate-400 mt-0.5" />
+            <div className="bg-muted/50 p-3 rounded-md text-sm text-muted-foreground flex gap-2">
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
               <div>
                 Refinancing now would cost{" "}
                 <strong>

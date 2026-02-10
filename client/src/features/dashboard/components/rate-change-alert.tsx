@@ -16,16 +16,15 @@ export function RateChangeAlert({ impact, newPrimeRate }: RateChangeAlertProps) 
   const isTriggerRisk = impact.impactType === "trigger_risk";
 
   return (
-    <Card className="border-l-4 border-l-blue-600 shadow-md bg-gradient-to-r from-blue-50 to-white dark:from-blue-950 dark:to-background">
+    <Card className="bg-accent/30 dark:bg-accent/20">
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold flex items-center gap-2 text-blue-900 dark:text-blue-100">
-            <Info className="h-5 w-5 text-blue-600" />
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <Info className="h-5 w-5 text-primary" />
             Prime Rate Impact Analysis
           </CardTitle>
           <Badge
             variant="secondary"
-            className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-blue-200"
           >
             Effect of {newPrimeRate}% Prime
           </Badge>
@@ -41,7 +40,7 @@ export function RateChangeAlert({ impact, newPrimeRate }: RateChangeAlertProps) 
             {isTriggerRisk ? (
               <AlertCircle className="h-4 w-4" />
             ) : (
-              <ArrowUpRight className="h-4 w-4 text-blue-600" />
+              <ArrowUpRight className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             )}
             <AlertTitle className="mb-2 text-base">
               {isPaymentIncrease
@@ -53,7 +52,7 @@ export function RateChangeAlert({ impact, newPrimeRate }: RateChangeAlertProps) 
 
           {isPaymentIncrease && (
             <div className="grid grid-cols-2 gap-4 mt-1">
-              <div className="p-3 bg-white dark:bg-slate-800 rounded-lg border shadow-sm">
+              <div className="p-3 bg-muted/50 rounded-md border">
                 <div className="text-xs text-muted-foreground uppercase tracking-wide">
                   Old Payment
                 </div>
@@ -61,13 +60,13 @@ export function RateChangeAlert({ impact, newPrimeRate }: RateChangeAlertProps) 
                   ${impact.oldValue.toFixed(2)}
                 </div>
               </div>
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800 shadow-sm">
-                <div className="text-xs text-blue-600 dark:text-blue-400 uppercase tracking-wide font-medium">
+              <div className="p-3 bg-accent/50 rounded-md border">
+                <div className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
                   New Payment
                 </div>
-                <div className="text-xl font-bold text-blue-700 dark:text-blue-300">
+                <div className="text-xl font-bold">
                   ${impact.newValue.toFixed(2)}
-                  <span className="ml-2 text-xs font-normal text-red-500">
+                  <span className="ml-2 text-xs font-normal text-destructive">
                     (+${impact.delta.toFixed(2)})
                   </span>
                 </div>

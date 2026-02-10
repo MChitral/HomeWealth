@@ -31,7 +31,7 @@ export function DeleteScenarioDialog({ open, onOpenChange, onConfirm }: DeleteSc
           <AlertDialogAction
             onClick={onConfirm}
             data-testid="button-confirm-delete"
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="bg-destructive text-destructive-foreground"
           >
             Delete
           </AlertDialogAction>

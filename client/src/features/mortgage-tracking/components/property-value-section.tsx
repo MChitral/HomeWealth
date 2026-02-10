@@ -147,7 +147,7 @@ export function PropertyValueSection({
                 {history.map((entry: PropertyValueHistoryEntry) => (
                   <div
                     key={entry.id}
-                    className="rounded-lg border p-4 space-y-2 hover:bg-accent/50 transition-colors"
+                    className="rounded-lg border p-4 space-y-2 hover-elevate"
                   >
                     <div className="flex items-center justify-between">
                       <div>

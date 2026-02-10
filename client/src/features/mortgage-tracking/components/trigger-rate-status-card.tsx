@@ -79,9 +79,9 @@ export function TriggerRateStatusCard({ mortgageId }: TriggerRateStatusCardProps
   };
 
   return (
-    <Card className="border-t-4 border-t-orange-500">
+    <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <CardTitle className="flex items-center gap-2">
             {getStatusIcon()}
             Trigger Rate Status
@@ -127,19 +127,19 @@ export function TriggerRateStatusCard({ mortgageId }: TriggerRateStatusCardProps
 
         {/* Impact Analysis (if hit or close) */}
         {(triggerStatus.isHit || triggerStatus.isRisk) && (
-          <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3 border border-slate-200 dark:border-slate-800">
+          <div className="bg-muted/50 rounded-lg p-3 border border-border">
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-4 w-4 text-slate-600" />
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium">Impact Analysis</span>
             </div>
             {triggerStatus.isHit && (
-              <p className="text-sm text-slate-700 dark:text-slate-300">
+              <p className="text-sm text-muted-foreground">
                 Your mortgage balance is increasing each month. Take immediate action to prevent
                 further increase.
               </p>
             )}
             {triggerStatus.isRisk && (
-              <p className="text-sm text-slate-700 dark:text-slate-300">
+              <p className="text-sm text-muted-foreground">
                 You are very close to your trigger rate. Consider increasing your payment to build a
                 buffer.
               </p>

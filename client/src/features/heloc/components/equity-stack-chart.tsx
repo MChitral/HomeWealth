@@ -49,7 +49,7 @@ export function EquityStackChart({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+        <CardTitle className="flex items-center justify-between gap-2">
           <span>Capital Stack & Equity</span>
           <span className="text-sm font-normal text-muted-foreground">
             Total: {formatCurrency(propertyValue)}
@@ -62,14 +62,14 @@ export function EquityStackChart({
       <CardContent>
         <div className="flex flex-col md:flex-row gap-8 items-center md:items-stretch h-full">
           {/* The Stacked Bar */}
-          <div className="w-24 md:w-32 h-[300px] flex flex-col rounded-lg overflow-hidden border bg-slate-100 dark:bg-slate-900 shadow-inner relative shrink-0">
+          <div className="w-24 md:w-32 h-[300px] flex flex-col rounded-lg overflow-hidden border bg-muted shadow-inner relative shrink-0">
             {/* Top Segment: Remaining / Locked Equity */}
             {remainingPct > 0 && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div
-                      className="w-full flex items-center justify-center bg-slate-200 dark:bg-slate-800 text-slate-400 transition-colors hover:bg-slate-300 dark:hover:bg-slate-700 cursor-help"
+                      className="w-full flex items-center justify-center bg-muted text-muted-foreground transition-colors cursor-help"
                       style={{ height: `${remainingPct}%` }}
                     >
                       <Lock className="h-4 w-4" />
@@ -95,7 +95,7 @@ export function EquityStackChart({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div
-                      className="w-full flex items-center justify-center bg-green-100 dark:bg-green-900/30 text-green-600 transition-colors hover:bg-green-200 dark:hover:bg-green-900/50 cursor-help border-t border-white/20"
+                      className="w-full flex items-center justify-center bg-green-100 dark:bg-green-900/30 text-green-600 hover-elevate cursor-help border-t border-white/20"
                       style={{ height: `${availablePct}%` }}
                     >
                       <span className="text-xs font-bold writing-v rotate-180 md:rotate-0 tracking-wider">
@@ -123,7 +123,7 @@ export function EquityStackChart({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div
-                      className="w-full flex items-center justify-center bg-amber-400 dark:bg-amber-600 text-amber-900 dark:text-amber-100 transition-colors hover:bg-amber-500 cursor-help border-t border-white/20"
+                      className="w-full flex items-center justify-center bg-amber-400 dark:bg-amber-600 text-amber-900 dark:text-amber-100 hover-elevate cursor-help border-t border-white/20"
                       style={{ height: `${helocUsedPct}%` }}
                     >
                       <span className="text-xs font-bold">USED</span>
@@ -145,7 +145,7 @@ export function EquityStackChart({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div
-                      className="w-full flex items-center justify-center bg-blue-500 dark:bg-blue-600 text-white transition-colors hover:bg-blue-600 cursor-help border-t border-white/20"
+                      className="w-full flex items-center justify-center bg-blue-500 dark:bg-blue-600 text-white hover-elevate cursor-help border-t border-white/20"
                       style={{ height: `${mortgagePct}%` }}
                     >
                       <span className="text-xs font-bold">MORTGAGE</span>
@@ -228,7 +228,7 @@ export function EquityStackChart({
                 </div>
                 <div className="w-full bg-muted rounded-full h-1.5 mt-2">
                   <div
-                    className="bg-slate-500 h-1.5 rounded-full"
+                    className="bg-muted-foreground h-1.5 rounded-full"
                     style={{
                       width: `${((mortgageBalance + helocBalance) / propertyValue) * 100}%`,
                     }}

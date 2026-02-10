@@ -244,7 +244,7 @@ export default function PrepaymentFeature({ isEmbedded = false }: PrepaymentFeat
                   <span className="text-sm font-medium">Monthly Surplus</span>
                   <Button
                     variant="ghost"
-                    className="h-auto p-0 text-green-600 hover:bg-transparent hover:underline"
+                    className="h-auto p-0 text-green-600 no-default-hover-elevate hover:underline"
                     onClick={handleUseSurplus}
                   >
                     {opportunityData?.monthlySurplus
@@ -256,7 +256,7 @@ export default function PrepaymentFeature({ isEmbedded = false }: PrepaymentFeat
                   <span className="text-sm font-medium">Annual Limit Remaining</span>
                   <Button
                     variant="ghost"
-                    className="h-auto p-0 text-blue-600 hover:bg-transparent hover:underline"
+                    className="h-auto p-0 text-blue-600 no-default-hover-elevate hover:underline"
                     onClick={handleUseRoom}
                   >
                     {opportunityData?.prepaymentRoom
@@ -280,13 +280,13 @@ export default function PrepaymentFeature({ isEmbedded = false }: PrepaymentFeat
                   onValueChange={(v) => setSimulationType(v as any)}
                   className="grid grid-cols-2 gap-4"
                 >
-                  <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-accent cursor-pointer">
+                  <div className="flex items-center space-x-2 border rounded-md p-3 hover-elevate cursor-pointer">
                     <RadioGroupItem value="lump-sum" id="lump-sum" />
                     <Label htmlFor="lump-sum" className="cursor-pointer">
                       Lump Sum
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-accent cursor-pointer">
+                  <div className="flex items-center space-x-2 border rounded-md p-3 hover-elevate cursor-pointer">
                     <RadioGroupItem value="payment-increase" id="payment-increase" />
                     <Label htmlFor="payment-increase" className="cursor-pointer">
                       Monthly +
@@ -406,7 +406,7 @@ export default function PrepaymentFeature({ isEmbedded = false }: PrepaymentFeat
                     <Button
                       size="lg"
                       onClick={handleSave}
-                      className="bg-green-600 hover:bg-green-700"
+                      className="bg-green-600"
                     >
                       {simulationType === "lump-sum"
                         ? "Log This Prepayment"

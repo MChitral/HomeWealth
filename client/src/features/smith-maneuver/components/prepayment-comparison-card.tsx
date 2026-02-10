@@ -103,13 +103,13 @@ export function PrepaymentComparisonCard({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2 rounded-lg border p-4">
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-blue-600" />
+                  <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   <p className="font-semibold">Smith Maneuver</p>
                 </div>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Net Benefit:</span>
-                    <span className="font-semibold text-green-600">
+                    <span className="font-semibold text-green-600 dark:text-green-400">
                       $
                       {comparison.smithManeuver.netBenefit.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
@@ -148,7 +148,7 @@ export function PrepaymentComparisonCard({
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Interest Saved:</span>
-                    <span className="font-semibold text-green-600">
+                    <span className="font-semibold text-green-600 dark:text-green-400">
                       $
                       {comparison.directPrepayment.interestSaved.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
@@ -179,7 +179,7 @@ export function PrepaymentComparisonCard({
                 ? "bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800"
                 : comparison.advantage.strategy === "direct_prepayment"
                   ? "bg-orange-50 dark:bg-orange-950 border-orange-200 dark:border-orange-800"
-                  : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                  : "bg-muted/50 border-border"
             }`}
           >
             <div className="flex items-center justify-between mb-2">

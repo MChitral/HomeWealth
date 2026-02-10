@@ -61,13 +61,13 @@ export function AlertBanner({ alert, notificationId, onDismiss }: AlertBannerPro
   return (
     <Alert
       variant={isCritical ? "destructive" : "default"}
-      className={`mb-6 relative ${!isCritical ? "border-yellow-500 bg-yellow-50 text-yellow-900" : ""}`}
+      className={`mb-6 relative ${!isCritical ? "border-yellow-500 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-900 dark:text-yellow-100" : ""}`}
     >
       {notificationId && (
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-2 right-2 h-6 w-6"
+          className="absolute top-2 right-2"
           onClick={handleDismiss}
           disabled={markAsReadMutation.isPending}
         >
@@ -79,8 +79,8 @@ export function AlertBanner({ alert, notificationId, onDismiss }: AlertBannerPro
       ) : (
         <AlertTriangle className="h-4 w-4 text-yellow-600" />
       )}
-      <AlertTitle className={!isCritical ? "text-yellow-800" : ""}>{title}</AlertTitle>
-      <AlertDescription className={!isCritical ? "text-yellow-700" : ""}>
+      <AlertTitle className={!isCritical ? "text-yellow-800 dark:text-yellow-200" : ""}>{title}</AlertTitle>
+      <AlertDescription className={!isCritical ? "text-yellow-700 dark:text-yellow-300" : ""}>
         <div className="space-y-4">
           <div>
             {isCritical ? (

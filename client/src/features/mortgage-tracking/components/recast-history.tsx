@@ -47,7 +47,7 @@ export function RecastHistory({ mortgageId }: RecastHistoryProps) {
           {history.map((event: RecastEvent) => (
             <div
               key={event.id}
-              className="rounded-lg border p-4 space-y-3 hover:bg-accent/50 transition-colors"
+              className="rounded-lg border p-4 space-y-3 hover-elevate"
             >
               <div className="flex items-center justify-between">
                 <div>

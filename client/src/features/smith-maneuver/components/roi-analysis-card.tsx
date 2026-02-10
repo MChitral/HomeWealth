@@ -53,7 +53,7 @@ export function ROIAnalysisCard({ strategyId, years = 10 }: ROIAnalysisCardProps
           </div>
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Total Returns</p>
-            <p className="text-2xl font-bold text-green-600">
+            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
               $
               {analysis.totalReturns.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
@@ -66,7 +66,7 @@ export function ROIAnalysisCard({ strategyId, years = 10 }: ROIAnalysisCardProps
         <div className="rounded-lg bg-blue-50 dark:bg-blue-950 p-4 border border-blue-200 dark:border-blue-800">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <Percent className="h-4 w-4 text-blue-600" />
+              <Percent className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               <p className="text-sm font-medium text-blue-900 dark:text-blue-100">ROI</p>
             </div>
             <Badge
@@ -85,7 +85,7 @@ export function ROIAnalysisCard({ strategyId, years = 10 }: ROIAnalysisCardProps
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Tax Savings</p>
-            <p className="text-lg font-semibold text-green-600">
+            <p className="text-lg font-semibold text-green-600 dark:text-green-400">
               $
               {analysis.totalTaxSavings.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
@@ -95,7 +95,7 @@ export function ROIAnalysisCard({ strategyId, years = 10 }: ROIAnalysisCardProps
           </div>
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Investment Tax</p>
-            <p className="text-lg font-semibold text-red-600">
+            <p className="text-lg font-semibold text-red-600 dark:text-red-400">
               $
               {analysis.totalInvestmentTax.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
@@ -105,11 +105,11 @@ export function ROIAnalysisCard({ strategyId, years = 10 }: ROIAnalysisCardProps
           </div>
         </div>
 
-        <div className="rounded-lg bg-slate-50 dark:bg-slate-900/50 p-4 border-2 border-indigo-200 dark:border-indigo-800">
+        <div className="rounded-lg bg-muted/50 p-4 border-2 border-indigo-200 dark:border-indigo-800">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-indigo-600" />
-              <p className="text-sm font-medium text-slate-900 dark:text-slate-100">Net Benefit</p>
+              <p className="text-sm font-medium">Net Benefit</p>
             </div>
             <p className="text-2xl font-bold text-indigo-600">
               $

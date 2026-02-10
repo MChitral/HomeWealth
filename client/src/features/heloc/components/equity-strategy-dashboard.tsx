@@ -22,7 +22,7 @@ export function EquityStrategyDashboard() {
 
   if (helocLoading || mortgageLoading) {
     return (
-      <div className="h-[400px] flex items-center justify-center border rounded-lg bg-slate-50">
+      <div className="h-[400px] flex items-center justify-center border rounded-lg bg-muted/50">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
