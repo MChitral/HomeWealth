@@ -166,7 +166,7 @@ export async function checkRenewalsAndSendReminders(services: ApplicationService
         // Get market rate for comparison (optional, don't fail if unavailable)
         let marketRate: number | undefined;
         try {
-          const activeTerm = (await services.mortgageTerms.findByMortgageId(mortgage.id)).sort(
+          const activeTerm = (await services.mortgageTerms.listForMortgage(mortgage.id, mortgage.userId) ?? []).sort(
             (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
           )[0];
 

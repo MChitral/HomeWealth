@@ -180,6 +180,7 @@ export class ReAdvanceableMortgageService {
     availableCredit: number;
     mortgageBalance: number;
     helocBalance: number;
+    utilization: number;
   } | null> {
     const mortgage = await this.mortgages.findById(mortgageId);
     if (!mortgage || !mortgage.isReAdvanceable) {

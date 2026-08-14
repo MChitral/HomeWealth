@@ -41,12 +41,14 @@ export async function checkHelocDrawPeriodTransitions(
         unreadOnly: false,
       });
 
-      const alreadyProcessed = existingNotifications.some(
-        (n) =>
+      const alreadyProcessed = existingNotifications.some((n) => {
+        const meta = n.metadata as Record<string, unknown> | null;
+        return (
           n.type === "heloc_draw_period_transition" &&
-          n.metadata?.helocAccountId === account.id &&
-          n.metadata?.transitionDate === drawPeriodEndDate.toISOString().split("T")[0]
-      );
+          meta?.helocAccountId === account.id &&
+          meta?.transitionDate === drawPeriodEndDate.toISOString().split("T")[0]
+        );
+      });
 
       if (alreadyProcessed) {
         continue; // Already processed this transition
@@ -85,7 +87,7 @@ export async function checkHelocDrawPeriodTransitions(
       const oldMinimumPayment = Number(account.helocMinimumPayment || 0);
 
       // Update HELOC account with new payment type and minimum payment
-      await services.helocAccounts.updateAccount(account.id, account.userId, {
+      await services.heloc.updateAccount(account.id, account.userId, {
         helocPaymentType: newPaymentType,
         helocMinimumPayment: newMinimumPayment.toFixed(2),
       });

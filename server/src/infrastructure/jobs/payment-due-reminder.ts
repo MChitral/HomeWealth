@@ -3,8 +3,10 @@ import type { ApplicationServices } from "@application/services";
 /**
  * Check all active mortgages for upcoming payment due dates and send reminders
  *
- * This job should run daily to check payment due dates and send reminders
- * based on user preferences (3, 7, 14 days before due date).
+ * This job should run daily to check payment due dates and send reminders.
+ * Respects the user's inAppEnabled notification preference; skips if disabled.
+ * Reminder lead times default to 3, 7, 14 days (paymentDueReminderDays column
+ * does not yet exist in the schema — use defaults until it is added).
  */
 export async function checkPaymentDueReminders(services: ApplicationServices): Promise<void> {
   const allMortgages = await services.mortgages.findAll();
@@ -16,20 +18,17 @@ export async function checkPaymentDueReminders(services: ApplicationServices): P
       // Get user's notification preferences
       const preferences = await services.notificationPreferences.findByUserId(mortgage.userId);
 
-      // Check if payment due reminders are enabled
-      if (!preferences || preferences.paymentDueReminders === 0) {
+      // Skip if the user has disabled in-app notifications entirely
+      if (preferences && preferences.inAppEnabled === 0) {
         continue;
       }
 
-      // Get reminder days (default: 3, 7, 14)
-      const reminderDays = (preferences.paymentDueReminderDays || "3,7,14")
-        .split(",")
-        .map((d) => parseInt(d.trim(), 10))
-        .filter((d) => !isNaN(d));
+      // Default reminder days (paymentDueReminderDays column not yet in schema)
+      const reminderDays = [3, 7, 14];
 
       // Get active term
-      const terms = await services.mortgageTerms.findByMortgageId(mortgage.id);
-      const activeTerm = terms.find((term) => {
+      const terms = await services.mortgageTerms.listForMortgage(mortgage.id, mortgage.userId);
+      const activeTerm = (terms ?? []).find((term) => {
         const startDate = new Date(term.startDate);
         const endDate = new Date(term.endDate);
         return today >= startDate && today <= endDate;
@@ -40,8 +39,11 @@ export async function checkPaymentDueReminders(services: ApplicationServices): P
       }
 
       // Calculate next payment date based on payment frequency
-      const lastPayment = await services.mortgagePayments.findByTermId(activeTerm.id);
-      const sortedPayments = lastPayment.sort(
+      const lastPayment = await services.mortgagePayments.listByTerm(
+        activeTerm.id,
+        mortgage.userId
+      );
+      const sortedPayments = (lastPayment ?? []).sort(
         (a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime()
       );
       const latestPayment = sortedPayments[0];
@@ -67,7 +69,8 @@ export async function checkPaymentDueReminders(services: ApplicationServices): P
         // Check if today is the reminder date
         if (
           today.getTime() === reminderDate.getTime() ||
-          (today.getTime() > reminderDate.getTime() && today.getTime() < nextPaymentDate.getTime())
+          (today.getTime() > reminderDate.getTime() &&
+            today.getTime() < nextPaymentDate.getTime())
         ) {
           // Check if we've already sent a reminder for this payment
           const existingNotifications = await services.notifications.getNotifications(
@@ -75,13 +78,15 @@ export async function checkPaymentDueReminders(services: ApplicationServices): P
             { unreadOnly: false }
           );
 
-          const alreadyNotified = existingNotifications.some(
-            (n) =>
+          const alreadyNotified = existingNotifications.some((n) => {
+            const meta = n.metadata as Record<string, unknown> | null;
+            return (
               n.type === "payment_due_reminder" &&
-              n.metadata?.mortgageId === mortgage.id &&
-              n.metadata?.paymentDate === nextPaymentDate.toISOString().split("T")[0] &&
-              n.metadata?.daysBefore === daysBefore
-          );
+              meta?.mortgageId === mortgage.id &&
+              meta?.paymentDate === nextPaymentDate.toISOString().split("T")[0] &&
+              meta?.daysBefore === daysBefore
+            );
+          });
 
           if (!alreadyNotified) {
             await services.notifications.createNotification(

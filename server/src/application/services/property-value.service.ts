@@ -79,8 +79,8 @@ export class PropertyValueService {
         for (const helocAccount of helocAccounts) {
           previousCreditLimit = Number(helocAccount.creditLimit);
 
-          // Recalculate credit limit
-          await this.helocCreditLimitService.recalculateCreditLimit(mortgageId);
+          // Recalculate credit limit based on updated property value (scoped to this mortgage)
+          await this.helocCreditLimitService.recalculateCreditLimitForMortgage(mortgageId, input.propertyValue);
 
           // Get updated HELOC account to check new limit
           const updatedAccount = await this.helocAccounts.findById(helocAccount.id);

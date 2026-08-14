@@ -16,19 +16,12 @@ export async function checkRecastOpportunities(services: ApplicationServices): P
 
   for (const mortgage of allMortgages) {
     try {
-      // Get user's notification preferences
-      const _preferences = await services.notificationPreferences.findByUserId(mortgage.userId);
-
-      // Check if recast opportunity alerts are enabled (default: enabled)
-      // We'll check for any notification preference, but recast is a new feature
-      // so we'll enable by default if preferences exist
-
       // Get all payments for this mortgage
-      const payments = await services.mortgagePayments.findByMortgageId(mortgage.id);
+      const payments = await services.mortgagePayments.listByMortgage(mortgage.id, mortgage.userId);
 
       // Get current term
-      const terms = await services.mortgageTerms.findByMortgageId(mortgage.id);
-      const activeTerm = terms.find((term) => {
+      const terms = await services.mortgageTerms.listForMortgage(mortgage.id, mortgage.userId);
+      const activeTerm = (terms ?? []).find((term) => {
         const today = new Date();
         const startDate = new Date(term.startDate);
         const endDate = new Date(term.endDate);
@@ -47,7 +40,7 @@ export async function checkRecastOpportunities(services: ApplicationServices): P
         mortgage.startDate
       );
 
-      const currentYearPayments = payments.filter((p) => {
+      const currentYearPayments = (payments ?? []).filter((p) => {
         const paymentYear = getPrepaymentYear(
           p.paymentDate,
           mortgage.prepaymentLimitResetDate,
@@ -58,7 +51,7 @@ export async function checkRecastOpportunities(services: ApplicationServices): P
 
       // Calculate cumulative prepayments this year
       const yearToDatePrepayments = currentYearPayments.reduce(
-        (sum, p) => sum + Number(p.prepaymentAmount || 0),
+        (sum: number, p) => sum + Number(p.prepaymentAmount || 0),
         0
       );
 
@@ -83,12 +76,14 @@ export async function checkRecastOpportunities(services: ApplicationServices): P
           { unreadOnly: false }
         );
 
-        const alreadyNotified = existingNotifications.some(
-          (n) =>
+        const alreadyNotified = existingNotifications.some((n) => {
+          const meta = n.metadata as Record<string, unknown> | null;
+          return (
             n.type === "recast_opportunity" &&
-            n.metadata?.mortgageId === mortgage.id &&
-            n.metadata?.prepaymentYear === currentPrepaymentYear
-        );
+            meta?.mortgageId === mortgage.id &&
+            meta?.prepaymentYear === currentPrepaymentYear
+          );
+        });
 
         if (!alreadyNotified && reductionPercent >= 10) {
           // Calculate potential payment reduction

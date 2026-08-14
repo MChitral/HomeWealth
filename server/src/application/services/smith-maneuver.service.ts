@@ -125,8 +125,6 @@ export class SmithManeuverService {
         2025
       );
       marginalTaxRate = calculatedRate.toString();
-    } else if (typeof marginalTaxRate !== "string") {
-      marginalTaxRate = marginalTaxRate.toString();
     }
 
     return this.smithManeuver.createStrategy({

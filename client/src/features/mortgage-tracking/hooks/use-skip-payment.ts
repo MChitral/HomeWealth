@@ -6,7 +6,6 @@ import { calculateSkipImpact } from "../api/mortgage-api";
 import type { PaymentFrequency } from "@/shared/calculations/mortgage";
 import type { MortgagePayment } from "@shared/schema";
 import { useMemo, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
 import type { SkipImpactResponse } from "../api/mortgage-api";
 
 interface UseSkipPaymentProps {
@@ -27,7 +26,7 @@ interface UseSkipPaymentReturn {
   canSkip: boolean;
   skippedThisYear: number;
   skipLimit: number;
-  skipImpact: SkippedPaymentCalculation | null;
+  skipImpact: SkipImpactResponse | null;
   calculateSkipImpact: (paymentDate: string) => void;
   resetSkipImpact: () => void;
 }

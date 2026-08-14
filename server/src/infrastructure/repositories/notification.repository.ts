@@ -27,24 +27,22 @@ export class NotificationRepository {
       conditions.push(eq(notifications.read, 0));
     }
 
-    const baseQuery = db
-      .select()
-      .from(notifications)
-      .where(and(...conditions))
-      .orderBy(desc(notifications.createdAt));
+    const where = and(...conditions);
+    const order = desc(notifications.createdAt);
 
-    if (options?.limit !== undefined || options?.offset !== undefined) {
-      let query = baseQuery;
-      if (options?.limit !== undefined) {
-        query = query.limit(options.limit);
-      }
-      if (options?.offset !== undefined) {
-        query = query.offset(options.offset);
-      }
-      return query;
+    const limit = options?.limit;
+    const offset = options?.offset;
+
+    if (limit !== undefined && offset !== undefined) {
+      return db.select().from(notifications).where(where).orderBy(order).limit(limit).offset(offset);
     }
-
-    return baseQuery;
+    if (limit !== undefined) {
+      return db.select().from(notifications).where(where).orderBy(order).limit(limit);
+    }
+    if (offset !== undefined) {
+      return db.select().from(notifications).where(where).orderBy(order).offset(offset);
+    }
+    return db.select().from(notifications).where(where).orderBy(order);
   }
 
   async countUnread(userId: string): Promise<number> {

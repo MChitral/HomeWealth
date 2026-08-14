@@ -65,7 +65,7 @@ async function bootstrap() {
       log(`  3. Run the helper script: .\\scripts\\check-port.ps1\n`);
       process.exit(1);
     } else {
-      log("Server error:", error);
+      log(`Server error: ${String(error)}`);
       process.exit(1);
     }
   });
@@ -88,7 +88,7 @@ async function bootstrap() {
         scheduler.stop();
         log("Alert scheduler stopped");
       } catch (error) {
-        log("Error stopping alert scheduler:", error);
+        log(`Error stopping alert scheduler: ${String(error)}`);
       }
 
       log("Graceful shutdown complete");
@@ -108,15 +108,15 @@ async function bootstrap() {
   // Handle uncaught errors (but not port errors - those are handled above)
   process.on("uncaughtException", (error) => {
     // Don't handle EADDRINUSE here - it's already handled by server.on('error')
-    if (error.code === "EADDRINUSE") {
+    if ((error as NodeJS.ErrnoException).code === "EADDRINUSE") {
       return;
     }
-    log("Uncaught Exception:", error);
+    log(`Uncaught Exception: ${String(error)}`);
     gracefulShutdown("uncaughtException");
   });
 
   process.on("unhandledRejection", (reason) => {
-    log("Unhandled Rejection:", reason);
+    log(`Unhandled Rejection: ${String(reason)}`);
     gracefulShutdown("unhandledRejection");
   });
 }

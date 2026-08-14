@@ -98,6 +98,33 @@ export class HelocCreditLimitService {
   }
 
   /**
+   * Recalculate credit limit after home value update, scoped to a single mortgage.
+   * Only updates HELOC accounts linked to the given mortgage.
+   */
+  async recalculateCreditLimitForMortgage(
+    mortgageId: string,
+    newHomeValue: number
+  ): Promise<void> {
+    const linkedAccounts = await this.helocAccounts.findByMortgageId(mortgageId);
+    const mortgage = await this.mortgages.findById(mortgageId);
+    const mortgageBalance = mortgage ? Number(mortgage.currentBalance) : 0;
+
+    for (const account of linkedAccounts) {
+      const maxLTV = Number(account.maxLtvPercent);
+      const newCreditLimit = recalculateCreditLimitOnHomeValueUpdate(
+        newHomeValue,
+        maxLTV,
+        mortgageBalance
+      );
+
+      await this.helocAccounts.update(account.id, {
+        creditLimit: newCreditLimit.toFixed(2),
+        homeValueReference: newHomeValue.toFixed(2),
+      });
+    }
+  }
+
+  /**
    * Get available credit for an account
    */
   getAvailableCredit(creditLimit: number, currentBalance: number): number {

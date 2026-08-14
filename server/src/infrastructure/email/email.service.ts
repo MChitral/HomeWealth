@@ -92,7 +92,7 @@ class ResendEmailService implements IEmailService {
     textContent?: string
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
-      const { data, error } = await this.resend.emails.send({
+      const { data, error } = await (this.resend as { emails: { send: (args: unknown) => Promise<{ data: { id: string } | null; error: { message: string } | null }> } }).emails.send({
         from: process.env.EMAIL_FROM || "noreply@homewealth.app",
         to,
         subject,

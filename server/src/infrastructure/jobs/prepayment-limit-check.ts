@@ -6,28 +6,31 @@ import { getPrepaymentYear } from "@server-shared/calculations/prepayment-year";
  *
  * This job should run daily to check prepayment usage and alert users when they
  * approach or reach their annual prepayment limits.
+ * Respects the user's inAppEnabled notification preference; skips if disabled.
+ * Alert thresholds default to 80%, 90%, 100% (prepaymentLimitThresholds column
+ * does not yet exist in the schema — use defaults until it is added).
  */
 export async function checkPrepaymentLimits(services: ApplicationServices): Promise<void> {
   const allMortgages = await services.mortgages.findAll();
+
+  // Default thresholds (80%, 90%, 100%)
+  const thresholds = [80, 90, 100];
 
   for (const mortgage of allMortgages) {
     try {
       // Get user's notification preferences
       const preferences = await services.notificationPreferences.findByUserId(mortgage.userId);
 
-      // Check if prepayment limit alerts are enabled
-      if (!preferences || preferences.prepaymentLimitAlerts === 0) {
+      // Skip if the user has disabled in-app notifications entirely
+      if (preferences && preferences.inAppEnabled === 0) {
         continue;
       }
 
-      // Get thresholds (default: 80, 90, 100)
-      const thresholds = (preferences.prepaymentLimitThresholds || "80,90,100")
-        .split(",")
-        .map((t) => parseInt(t.trim(), 10))
-        .filter((t) => !isNaN(t));
-
       // Get all payments for this mortgage
-      const payments = await services.mortgagePayments.findByMortgageId(mortgage.id);
+      const payments = await services.mortgagePayments.listByMortgage(
+        mortgage.id,
+        mortgage.userId
+      );
 
       // Calculate current prepayment year
       const today = new Date().toISOString().split("T")[0];
@@ -38,7 +41,7 @@ export async function checkPrepaymentLimits(services: ApplicationServices): Prom
       );
 
       // Filter payments for current prepayment year
-      const currentYearPayments = payments.filter((p) => {
+      const currentYearPayments = (payments ?? []).filter((p) => {
         const paymentYear = getPrepaymentYear(
           p.paymentDate,
           mortgage.prepaymentLimitResetDate,
@@ -53,7 +56,10 @@ export async function checkPrepaymentLimits(services: ApplicationServices): Prom
       const carryForward = Number(mortgage.prepaymentCarryForward || 0);
       const totalLimit = annualLimit + carryForward;
 
-      const used = currentYearPayments.reduce((sum, p) => sum + Number(p.prepaymentAmount || 0), 0);
+      const used = currentYearPayments.reduce(
+        (sum: number, p) => sum + Number(p.prepaymentAmount || 0),
+        0
+      );
 
       const usagePercent = totalLimit > 0 ? (used / totalLimit) * 100 : 0;
 
@@ -66,17 +72,21 @@ export async function checkPrepaymentLimits(services: ApplicationServices): Prom
             { unreadOnly: false }
           );
 
-          const alreadyNotified = existingNotifications.some(
-            (n) =>
+          const alreadyNotified = existingNotifications.some((n) => {
+            const meta = n.metadata as Record<string, unknown> | null;
+            return (
               n.type === `prepayment_limit_${threshold}` &&
-              n.metadata?.mortgageId === mortgage.id &&
-              n.metadata?.prepaymentYear === currentPrepaymentYear
-          );
+              meta?.mortgageId === mortgage.id &&
+              meta?.prepaymentYear === currentPrepaymentYear
+            );
+          });
 
           if (!alreadyNotified) {
             await services.notifications.createNotification(
               mortgage.userId,
-              `prepayment_limit_${threshold}` as NotificationType,
+              `prepayment_limit_${threshold}` as Parameters<
+                typeof services.notifications.createNotification
+              >[1],
               `Prepayment Limit Alert: ${threshold}% Used`,
               `You have used ${usagePercent.toFixed(1)}% of your annual prepayment limit (${threshold}% threshold). Used: ${used.toFixed(2)}, Limit: ${totalLimit.toFixed(2)}.`,
               {

@@ -1,5 +1,6 @@
 import type { ApplicationServices } from "@application/services";
 import { eq, and, gte } from "drizzle-orm";
+import { db } from "@infrastructure/db/connection";
 import { notifications } from "@shared/schema";
 import { calculatePayment, type PaymentFrequency } from "@server-shared/calculations/mortgage";
 
@@ -70,7 +71,7 @@ function calculateRequiredPayment(
 ): number {
   // Calculate payment that would cover interest at trigger rate
   const annualRate = triggerRate;
-  return calculatePayment(balance, annualRate, paymentFrequency, amortizationMonths);
+  return calculatePayment(balance, annualRate, amortizationMonths, paymentFrequency);
 }
 
 /**

@@ -1726,7 +1726,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
           user.id
         );
         if (scenarioRefinancingEvents) {
-          refinancingEventsFromScenario = scenarioRefinancingEvents;
+          refinancingEventsFromScenario = scenarioRefinancingEvents as RefinancingEvent[];
         }
       }
 
@@ -1735,7 +1735,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
         ...data.refinancingEvents,
         ...refinancingEventsFromScenario.map((event) => ({
           refinancingYear: event.refinancingYear ?? undefined,
-          atTermEnd: event.atTermEnd === 1 || event.atTermEnd === true,
+          atTermEnd: event.atTermEnd === 1,
           newRate: Number(event.newRate), // Already stored as decimal (e.g., 0.0549 for 5.49%)
           termType: event.termType,
           newAmortizationMonths: event.newAmortizationMonths ?? undefined,

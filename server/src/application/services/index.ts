@@ -33,6 +33,7 @@ import { RenewalWorkflowService } from "./renewal-workflow.service";
 import { PaymentCorrectionsService } from "./payment-corrections.service";
 import { PaymentAmountChangeService } from "./payment-amount-change.service";
 import { MortgagePayoffService } from "./mortgage-payoff.service";
+import type { NotificationPreferencesRepository } from "@infrastructure/repositories/notification-preferences.repository";
 
 export interface ApplicationServices {
   cashFlows: CashFlowService;
@@ -55,6 +56,7 @@ export interface ApplicationServices {
   simulationService: SimulationService;
   healthScoreService: HealthScoreService;
   notifications: NotificationService;
+  notificationPreferences: NotificationPreferencesRepository;
   heloc: HelocService;
   helocCreditLimit: HelocCreditLimitService;
   helocInterest: HelocInterestService;
@@ -193,6 +195,7 @@ export function createServices(repositories: Repositories): ApplicationServices 
       repositories.notifications,
       repositories.notificationPreferences
     ),
+    notificationPreferences: repositories.notificationPreferences,
     heloc: new HelocService(
       repositories.helocAccounts,
       repositories.helocTransactions,

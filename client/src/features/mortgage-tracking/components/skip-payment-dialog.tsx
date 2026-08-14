@@ -195,7 +195,7 @@ export function SkipPaymentDialog({
                         <p className="text-muted-foreground">Interest That Will Accrue</p>
                         <p className="text-lg font-mono font-semibold text-orange-600">
                           $
-                          {skipImpact.interestAccrued.toLocaleString(undefined, {
+                          {skipImpact.totalInterestAccrued.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           })}
@@ -205,7 +205,7 @@ export function SkipPaymentDialog({
                         <p className="text-muted-foreground">New Balance After Skip</p>
                         <p className="text-lg font-mono font-semibold">
                           $
-                          {skipImpact.newBalance.toLocaleString(undefined, {
+                          {skipImpact.finalBalance.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           })}
@@ -224,7 +224,7 @@ export function SkipPaymentDialog({
                         <p className="text-muted-foreground">Balance Increase</p>
                         <p className="text-lg font-mono font-semibold text-red-600">
                           +$
-                          {skipImpact.interestAccrued.toLocaleString(undefined, {
+                          {skipImpact.balanceIncrease.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           })}
@@ -239,7 +239,7 @@ export function SkipPaymentDialog({
                     <AlertDescription>
                       <strong>Warning:</strong> Skipping this payment will result in negative
                       amortization. Your mortgage balance will increase by $
-                      {skipImpact.interestAccrued.toLocaleString(undefined, {
+                      {skipImpact.totalInterestAccrued.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}
@@ -270,7 +270,7 @@ export function SkipPaymentDialog({
                       I understand that skipping this payment will increase my balance by{" "}
                       <strong>
                         $
-                        {skipImpact.interestAccrued.toLocaleString(undefined, {
+                        {skipImpact.totalInterestAccrued.toLocaleString(undefined, {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
