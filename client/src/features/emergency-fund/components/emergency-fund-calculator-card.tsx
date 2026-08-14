@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Link } from "wouter";
 import { Button } from "@/shared/ui/button";
 import { Separator } from "@/shared/ui/separator";
 import { Calculator } from "lucide-react";
@@ -89,9 +90,9 @@ export function EmergencyFundCalculatorCard({
               your monthly expenses.
             </p>
             <Button variant="outline" asChild>
-              <a href="/cash-flow" data-testid="link-go-to-cash-flow">
+              <Link href="/cash-flow" data-testid="link-go-to-cash-flow">
                 Go to Cash Flow →
-              </a>
+              </Link>
             </Button>
           </div>
         )}

@@ -40,7 +40,6 @@ export function validateMortgagePayment(input: PaymentValidationInput): PaymentV
     term,
     previousPayment,
     paymentAmount,
-    regularPaymentAmount,
     prepaymentAmount,
     effectiveRateOverride,
   } = input;
@@ -56,8 +55,29 @@ export function validateMortgagePayment(input: PaymentValidationInput): PaymentV
     ? Number(previousPayment.remainingBalance)
     : Number(mortgage.currentBalance);
 
-  const interestPayment = calculateInterestPayment(balanceBeforePayment, annualRate, frequency);
-  const principalPayment = calculatePrincipalPayment(paymentAmount, interestPayment);
+  // Reject malformed splits before doing any math — the server's calculated
+  // splits are authoritative, and garbage inputs would silently corrupt the
+  // balance history.
+  if (
+    !Number.isFinite(paymentAmount) ||
+    !Number.isFinite(prepaymentAmount) ||
+    paymentAmount < 0 ||
+    prepaymentAmount < 0
+  ) {
+    throw new Error("Payment amounts must be non-negative numbers");
+  }
+  if (prepaymentAmount > paymentAmount) {
+    throw new Error("Prepayment amount cannot exceed the total payment amount");
+  }
+
+  // The regular portion is what remains after the lump-sum prepayment.
+  // Lump-sum prepayments apply 100% to principal (Canadian convention);
+  // interest is only charged against the regular payment portion.
+  const regularPortion = Math.max(0, paymentAmount - prepaymentAmount);
+  const interestPayment =
+    regularPortion > 0 ? calculateInterestPayment(balanceBeforePayment, annualRate, frequency) : 0;
+  const principalPayment =
+    regularPortion > 0 ? calculatePrincipalPayment(regularPortion, interestPayment) : 0;
   const totalPrincipalPayment = principalPayment + prepaymentAmount;
   const remainingBalance = calculateRemainingBalance(
     balanceBeforePayment,
@@ -67,16 +87,25 @@ export function validateMortgagePayment(input: PaymentValidationInput): PaymentV
 
   const periodicRate = getEffectivePeriodicRate(annualRate, frequency);
   const interestOnlyPayment = balanceBeforePayment * periodicRate;
-  const triggerRateHit = regularPaymentAmount <= interestOnlyPayment;
+  // A pure lump-sum prepayment is not a regular payment, so it can never
+  // count as a trigger-rate hit.
+  const triggerRateHit = regularPortion > 0 && regularPortion <= interestOnlyPayment;
 
   const paymentsPerYear = getPaymentsPerYear(frequency);
   let remainingAmortizationMonths = input.remainingAmortizationMonths ?? amortizationMonths;
-  if (!triggerRateHit && remainingBalance > 0 && periodicRate > 0) {
-    // Use total payment amount (regular + prepayment) for accurate amortization calculation
-    // Prepayments reduce the payoff timeline, so they should be included in the calculation
-    const effectivePaymentAmount = paymentAmount; // paymentAmount already includes prepayments
+  // Recompute the payoff timeline from the RECURRING payment (the regular
+  // portion, or the term's contractual payment for pure lump-sums). A
+  // one-time prepayment shortens amortization via the lower balance — not by
+  // pretending the lump-sum recurs every period.
+  const recurringPayment =
+    regularPortion > 0 ? regularPortion : Number(term.regularPaymentAmount ?? 0);
+  if (
+    remainingBalance > 0 &&
+    periodicRate > 0 &&
+    recurringPayment > remainingBalance * periodicRate
+  ) {
     const remainingPayments =
-      -Math.log(1 - (periodicRate * remainingBalance) / effectivePaymentAmount) /
+      -Math.log(1 - (periodicRate * remainingBalance) / recurringPayment) /
       Math.log(1 + periodicRate);
     remainingAmortizationMonths = Math.round((remainingPayments / paymentsPerYear) * 12);
   }

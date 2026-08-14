@@ -72,9 +72,9 @@ export function useMortgageMutations({
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: mortgageQueryKeys.mortgagePayments(mortgage?.id ?? null),
-      });
+      // Payments change the mortgage balance, term stats, and dashboard
+      // projections — refresh everything under the mortgage hierarchy.
+      queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.all });
       toast({
         title: "Payment logged",
         description: "Mortgage payment has been recorded successfully",

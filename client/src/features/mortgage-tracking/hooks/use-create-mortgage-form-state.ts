@@ -99,7 +99,7 @@ export function useCreateMortgageFormState({
         endDate: termEndDate.toISOString().split("T")[0],
         termYears,
         fixedRate: formData.termType === "fixed" ? formData.fixedRate : undefined,
-        lockedSpread: formData.termType !== "fixed" ? formData.spread : "0",
+        lockedSpread: formData.termType !== "fixed" ? formData.spread : undefined,
         primeRate: formData.termType !== "fixed" ? formData.primeRate : undefined,
         paymentFrequency: formData.frequency,
         regularPaymentAmount: formData.paymentAmount,

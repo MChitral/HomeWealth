@@ -80,7 +80,7 @@ describe("Amortization Calculation with Prepayments", () => {
     );
   });
 
-  it("validateMortgagePayment uses total payment amount for amortization", () => {
+  it("validateMortgagePayment recomputes amortization from the recurring regular payment", () => {
     const result = validateMortgagePayment({
       mortgage: mockMortgage,
       term: mockTerm,
@@ -89,8 +89,9 @@ describe("Amortization Calculation with Prepayments", () => {
       prepaymentAmount: 500,
     });
 
-    // The amortization should be calculated using the total payment (3000), not just regular (2500)
-    // This means it should be shorter than if we only used regularPaymentAmount
+    // Amortization is recomputed from the recurring regular portion ($2500);
+    // the $500 lump-sum accelerates payoff through the reduced balance rather
+    // than by assuming it recurs every period.
     assert.ok(result.remainingAmortizationMonths > 0, "Remaining amortization should be positive");
     assert.ok(
       result.remainingAmortizationMonths < 300,

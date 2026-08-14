@@ -88,4 +88,89 @@ describe("validateMortgagePayment", () => {
     assert.equal(result.triggerRateHit, true);
     assert.equal(result.remainingAmortizationMonths, previous.remainingAmortizationMonths);
   });
+
+  it("applies a pure lump-sum prepayment 100% to principal with zero interest", () => {
+    const result = validateMortgagePayment({
+      mortgage: mockMortgage,
+      term: mockTerm,
+      paymentAmount: 10000,
+      regularPaymentAmount: 0,
+      prepaymentAmount: 10000,
+    });
+
+    // Canadian convention: lump-sum prepayments reduce the balance by exactly
+    // their amount — no interest portion, no double-counting.
+    assert.equal(result.expectedPrincipal, 10000);
+    assert.equal(result.expectedInterest, 0);
+    assert.equal(result.expectedBalance, 580000 - 10000);
+    assert.equal(result.triggerRateHit, false);
+    assert.ok(result.remainingAmortizationMonths > 0);
+  });
+
+  it("does not double-count the prepayment in a combined regular + lump-sum payment", () => {
+    const regularOnly = validateMortgagePayment({
+      mortgage: mockMortgage,
+      term: mockTerm,
+      paymentAmount: 3500,
+      regularPaymentAmount: 3500,
+      prepaymentAmount: 0,
+    });
+    const combined = validateMortgagePayment({
+      mortgage: mockMortgage,
+      term: mockTerm,
+      paymentAmount: 4000,
+      regularPaymentAmount: 3500,
+      prepaymentAmount: 500,
+    });
+
+    // Interest depends only on the balance and rate, so it must be identical.
+    assert.equal(combined.expectedInterest, regularOnly.expectedInterest);
+    // The whole payment is accounted for: principal + interest === total.
+    assert.equal(combined.expectedPrincipal + combined.expectedInterest, 4000);
+    // The $500 prepayment adds exactly $500 of principal (the old bug added $1000).
+    assert.equal(combined.expectedPrincipal, regularOnly.expectedPrincipal + 500);
+    assert.equal(
+      combined.expectedBalance,
+      Number((regularOnly.expectedBalance - 500).toFixed(2))
+    );
+  });
+
+  it("rejects a prepayment larger than the total payment", () => {
+    assert.throws(
+      () =>
+        validateMortgagePayment({
+          mortgage: mockMortgage,
+          term: mockTerm,
+          paymentAmount: 5000,
+          regularPaymentAmount: 0,
+          prepaymentAmount: 10000,
+        }),
+      /cannot exceed/
+    );
+  });
+
+  it("rejects non-finite or negative payment amounts", () => {
+    assert.throws(
+      () =>
+        validateMortgagePayment({
+          mortgage: mockMortgage,
+          term: mockTerm,
+          paymentAmount: NaN,
+          regularPaymentAmount: 0,
+          prepaymentAmount: 0,
+        }),
+      /non-negative/
+    );
+    assert.throws(
+      () =>
+        validateMortgagePayment({
+          mortgage: mockMortgage,
+          term: mockTerm,
+          paymentAmount: 3500,
+          regularPaymentAmount: 3500,
+          prepaymentAmount: -100,
+        }),
+      /non-negative/
+    );
+  });
 });

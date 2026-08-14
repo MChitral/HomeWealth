@@ -1,3 +1,5 @@
+import { Link } from "wouter";
+
 interface EmergencyFundProgressProps {
   targetAmount: number;
   targetMonths: string;
@@ -45,9 +47,9 @@ export function EmergencyFundProgress({
           <p className="font-medium mb-2">No expense data available</p>
           <p>
             Please fill out your{" "}
-            <a href="/cash-flow" className="text-primary underline">
+            <Link href="/cash-flow" className="text-primary underline">
               Cash Flow
-            </a>{" "}
+            </Link>{" "}
             page first to calculate recommended targets.
           </p>
         </div>

@@ -176,8 +176,8 @@ export default function PrepaymentFeature({ isEmbedded = false }: PrepaymentFeat
   };
 
   const handleUseRoom = () => {
-    if (opportunityData?.prepaymentRoom) {
-      setAmount(opportunityData.prepaymentRoom.remaining.toString());
+    if (opportunityData?.remainingRoom) {
+      setAmount(opportunityData.remainingRoom.toString());
       setSimulationType("lump-sum");
     }
   };
@@ -254,8 +254,8 @@ export default function PrepaymentFeature({ isEmbedded = false }: PrepaymentFeat
                     className="h-auto p-0 text-blue-600 no-default-hover-elevate hover:underline"
                     onClick={handleUseRoom}
                   >
-                    {opportunityData?.prepaymentRoom
-                      ? formatCurrency(Number(opportunityData.prepaymentRoom.remaining))
+                    {opportunityData?.remainingRoom != null
+                      ? formatCurrency(Number(opportunityData.remainingRoom))
                       : "$0.00"}
                   </Button>
                 </div>

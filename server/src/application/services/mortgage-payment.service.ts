@@ -222,9 +222,6 @@ export class MortgagePaymentService {
     userId: string,
     payload: Omit<MortgagePaymentCreateInput, "mortgageId">
   ): Promise<MortgagePayment | undefined> {
-    console.error(
-      `[DEBUG] create called with payloadDate=${payload.paymentDate} termId=${payload.termId}`
-    );
     const mortgage = await this.authorizeMortgage(mortgageId, userId);
     if (!mortgage) {
       return undefined;

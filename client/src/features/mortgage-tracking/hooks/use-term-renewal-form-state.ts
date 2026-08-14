@@ -88,7 +88,7 @@ export function useTermRenewalFormState({
         endDate: endDate.toISOString().split("T")[0],
         termYears,
         fixedRate: formData.termType === "fixed" ? formData.fixedRate : undefined,
-        lockedSpread: formData.termType !== "fixed" ? formData.spread : "0",
+        lockedSpread: formData.termType !== "fixed" ? formData.spread : undefined,
         primeRate: formData.termType !== "fixed" ? formData.primeRate : undefined,
         paymentFrequency: formData.paymentFrequency,
         regularPaymentAmount: formData.paymentAmount,
@@ -98,9 +98,9 @@ export function useTermRenewalFormState({
       return mortgageApi.createTerm(mortgage.id, payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: mortgageQueryKeys.mortgageTerms(mortgage?.id ?? null),
-      });
+      // A new term changes payment amounts and projections everywhere —
+      // refresh the whole mortgage hierarchy, not just the terms list.
+      queryClient.invalidateQueries({ queryKey: mortgageQueryKeys.all });
       toast({
         title: "Term renewed",
         description: "New mortgage term has been created successfully",

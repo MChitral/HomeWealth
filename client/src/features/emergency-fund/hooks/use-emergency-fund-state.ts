@@ -55,7 +55,8 @@ export function useEmergencyFundState({ emergencyFund }: UseEmergencyFundStatePr
   });
 
   const handleSave = () => {
-    const targetMonthsNumber = parseFloat(targetMonths || "6");
+    const parsedTargetMonths = parseFloat(targetMonths);
+    const targetMonthsNumber = Number.isFinite(parsedTargetMonths) ? parsedTargetMonths : 6;
     const normalizedTargetMonths = Math.max(1, Math.min(12, Math.round(targetMonthsNumber)));
     const payload: EmergencyFundPayload = {
       targetMonths: normalizedTargetMonths,
