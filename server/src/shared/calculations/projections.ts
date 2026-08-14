@@ -131,12 +131,46 @@ function generatePrepayments(
 }
 
 /**
+ * Post-payoff redirect: once the mortgage is paid off, the freed-up cash flow
+ * (the former mortgage payment plus the surplus share that was going to
+ * prepayments) is redirected into investments. Without this, prepay-heavy
+ * strategies would have their surplus silently vanish after payoff, making
+ * them look artificially poor versus invest-heavy strategies.
+ */
+interface PostPayoffRedirect {
+  payoffMonth: number;
+  extraMonthly: number;
+}
+
+function calculatePostPayoffRedirect(
+  scenario: Scenario | undefined,
+  monthlySurplus: number,
+  basePaymentAmount: number,
+  paymentsPerYear: number,
+  payoffPaymentNumber: number | null
+): PostPayoffRedirect | undefined {
+  if (!payoffPaymentNumber || paymentsPerYear <= 0) return undefined;
+
+  const payoffMonth = Math.ceil((payoffPaymentNumber * 12) / paymentsPerYear);
+  const prepayShareMonthly = Math.max(
+    0,
+    (monthlySurplus * (scenario?.prepaymentMonthlyPercent || 0)) / 100
+  );
+  const basePaymentMonthly = Math.max(0, (basePaymentAmount * paymentsPerYear) / 12);
+  const extraMonthly = prepayShareMonthly + basePaymentMonthly;
+
+  if (extraMonthly <= 0 || !Number.isFinite(extraMonthly)) return undefined;
+  return { payoffMonth, extraMonthly };
+}
+
+/**
  * Calculate investment growth over time
  */
 function calculateInvestments(
   scenario: Scenario | undefined,
   monthlySurplus: number,
-  years: number
+  years: number,
+  postPayoff?: PostPayoffRedirect
 ): { value: number; contributions: number; returns: number } {
   const investmentPercent = scenario?.investmentMonthlyPercent || 0;
   const monthlyInvestment = (monthlySurplus * investmentPercent) / 100;
@@ -147,8 +181,13 @@ function calculateInvestments(
 
   // Compound monthly
   for (let month = 0; month < years * 12; month++) {
-    value += monthlyInvestment;
-    totalContributions += monthlyInvestment;
+    // After mortgage payoff, redirect the freed-up cash flow into investments
+    const contribution =
+      postPayoff && month >= postPayoff.payoffMonth
+        ? monthlyInvestment + postPayoff.extraMonthly
+        : monthlyInvestment;
+    value += contribution;
+    totalContributions += contribution;
 
     // Apply monthly return (annual return / 12)
     value *= 1 + annualReturn / 12;
@@ -216,6 +255,13 @@ export function generateProjections(
 
   const projections: YearlyProjection[] = [];
   const paymentsPerYear = getPaymentsPerYear(mortgage.paymentFrequency as PaymentFrequency);
+  const postPayoff = calculatePostPayoffRedirect(
+    scenario,
+    monthlySurplus,
+    basePaymentAmount,
+    paymentsPerYear,
+    schedule.summary.payoffPaymentNumber
+  );
   const propertyValue = parseFloat(mortgage.propertyPrice);
   const initialBalance = parseFloat(mortgage.currentBalance);
   const initialEF = parseFloat(emergencyFund?.currentBalance || "0");
@@ -238,8 +284,8 @@ export function generateProjections(
     const mortgageData =
       schedule.payments[paymentIndex] || schedule.payments[schedule.payments.length - 1];
 
-    // Calculate investments
-    const investments = calculateInvestments(scenario, monthlySurplus, year);
+    // Calculate investments (with post-payoff redirect of freed-up cash flow)
+    const investments = calculateInvestments(scenario, monthlySurplus, year, postPayoff);
 
     // Calculate emergency fund
     const efValue = calculateEmergencyFund(emergencyFund, monthlySurplus, year);
@@ -304,15 +350,22 @@ export function calculateScenarioMetrics(
     ? schedule.summary.payoffPaymentNumber / paymentsPerYear
     : 30;
   const totalInterest = schedule.summary.totalInterest;
+  const postPayoff = calculatePostPayoffRedirect(
+    scenario,
+    monthlySurplus,
+    basePaymentAmount,
+    paymentsPerYear,
+    schedule.summary.payoffPaymentNumber
+  );
 
   // Projections array now includes year 0, so year 10 is at index 10, etc.
   const proj10 = projections[10]; // Year 10
   const proj20 = projections[20]; // Year 20
   const proj30 = projections[30]; // Year 30
 
-  const investments10 = calculateInvestments(scenario, monthlySurplus, 10);
-  const investments20 = calculateInvestments(scenario, monthlySurplus, 20);
-  const investments30 = calculateInvestments(scenario, monthlySurplus, 30);
+  const investments10 = calculateInvestments(scenario, monthlySurplus, 10, postPayoff);
+  const investments20 = calculateInvestments(scenario, monthlySurplus, 20, postPayoff);
+  const investments30 = calculateInvestments(scenario, monthlySurplus, 30, postPayoff);
 
   // Emergency fund status
   const targetMonths = emergencyFund?.targetMonths || 6;
