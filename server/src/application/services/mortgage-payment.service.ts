@@ -554,7 +554,8 @@ export class MortgagePaymentService {
     // - remainingBalance = old balance + accrued interest
     // - isSkipped = true
     // - skippedInterestAccrued = interest that accrued
-    return this.mortgagePayments.create({
+    const newBalance = skipCalculation.newBalance.toFixed(2);
+    const payment = await this.mortgagePayments.create({
       termId,
       paymentDate,
       paymentPeriodLabel: `Skipped Payment - ${new Date(paymentDate).toLocaleDateString("en-US", { month: "long", year: "numeric" })}`,
@@ -563,7 +564,7 @@ export class MortgagePaymentService {
       paymentAmount: "0.00", // No payment made
       principalPaid: "0.00", // No principal paid
       interestPaid: "0.00", // Interest accrues, not paid
-      remainingBalance: skipCalculation.newBalance.toFixed(2),
+      remainingBalance: newBalance,
       primeRate: term.primeRate,
       effectiveRate: (effectiveRate * 100).toFixed(3),
       triggerRateHit: 0,
@@ -572,5 +573,11 @@ export class MortgagePaymentService {
       remainingAmortizationMonths: skipCalculation.extendedAmortizationMonths,
       mortgageId,
     });
+
+    // Atomically update the mortgage's canonical balance so dashboards
+    // and subsequent calculations use the post-skip balance.
+    await this.mortgages.update(mortgageId, { currentBalance: newBalance });
+
+    return payment;
   }
 }

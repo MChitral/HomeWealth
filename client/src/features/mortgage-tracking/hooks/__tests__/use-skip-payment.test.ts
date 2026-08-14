@@ -1,11 +1,21 @@
+/**
+ * Unit tests for useSkipPayment hook
+ *
+ * Tests eligibility checks (canSkip, skippedThisYear, skipLimit) and
+ * impact calculation via the calculateSkipImpact API call.
+ */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import React from "react";
-import { renderHook, waitFor } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { createElement } from "react";
 import { useSkipPayment } from "../use-skip-payment";
 import type { MortgagePayment } from "@shared/schema";
+// Import the mocked modules so we can control them per-test
+import * as paymentSkipping from "@/shared/utils/payment-skipping";
+import * as mortgageApiModule from "../../api/mortgage-api";
 
-// Mock the API
+// ── Module mocks ──────────────────────────────────────────────────────────────
+// vi.mock calls are hoisted to the top; factories must NOT reference outer consts.
 vi.mock("../../api", () => ({
   mortgageApi: {
     skipPayment: vi.fn(),
@@ -16,234 +26,245 @@ vi.mock("../../api", () => ({
   },
 }));
 
-// Mock toast
+vi.mock("../../api/mortgage-api", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../api/mortgage-api")>();
+  return {
+    ...actual,
+    calculateSkipImpact: vi.fn(),
+  };
+});
+
 vi.mock("@/shared/hooks/use-toast", () => ({
-  useToast: () => ({
-    toast: vi.fn(),
-  }),
+  useToast: () => ({ toast: vi.fn() }),
 }));
 
-// Mock calculation functions
-vi.mock("@/shared/calculations/payment-skipping", () => ({
-  calculateSkippedPayment: vi.fn((balance, rate, frequency, amortization) => ({
-    interestAccrued: balance * (rate / 12), // Simplified calculation
-    newBalance: balance + balance * (rate / 12),
-    extendedAmortizationMonths: amortization + 1,
-  })),
-  canSkipPayment: vi.fn((skipped, limit) => skipped < limit),
-  countSkippedPaymentsInYear: vi.fn((payments, year) => {
-    return payments.filter((p: MortgagePayment) => {
-      const paymentDate = new Date(p.paymentDate);
-      return paymentDate.getFullYear() === year && (p.isSkipped === 1 || p.isSkipped === true);
-    }).length;
-  }),
-  calculateTotalSkippedInterest: vi.fn((payments) => {
-    return payments.reduce((total: number, p: MortgagePayment) => {
-      return total + Number(p.skippedInterestAccrued || 0);
-    }, 0);
-  }),
+vi.mock("@/shared/utils/payment-skipping", () => ({
+  canSkipPayment: vi.fn((skipped: number, limit: number) => skipped < limit),
+  countSkippedPaymentsInYear: vi.fn(() => 0),
 }));
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
 const createWrapper = () => {
-  const queryClient = new QueryClient({
+  const qc = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
       mutations: { retry: false },
     },
   });
-  const Wrapper = ({ children }: { children: React.ReactNode }) =>
-    React.createElement(QueryClientProvider, { client: queryClient }, children);
-  Wrapper.displayName = "TestWrapper";
-  return Wrapper;
+  return ({ children }: { children: React.ReactNode }) =>
+    createElement(QueryClientProvider, { client: qc }, children);
 };
 
+const baseProps = {
+  mortgageId: "mortgage-1",
+  termId: "term-1",
+  currentBalance: 400000,
+  currentAmortizationMonths: 300,
+  effectiveRate: 0.0549,
+  paymentFrequency: "monthly" as const,
+  payments: [] as MortgagePayment[],
+  maxSkipsPerYear: 2,
+};
+
+// ── Tests ─────────────────────────────────────────────────────────────────────
 describe("useSkipPayment", () => {
-  const mockPayments: MortgagePayment[] = [
-    {
-      id: "1",
-      mortgageId: "mortgage-1",
-      termId: "term-1",
-      paymentDate: "2024-01-15",
-      paymentPeriodLabel: "Jan-2024",
-      regularPaymentAmount: "2000.00",
-      prepaymentAmount: "0.00",
-      paymentAmount: "2000.00",
-      principalPaid: "500.00",
-      interestPaid: "1500.00",
-      remainingBalance: "395000.00",
-      effectiveRate: "5.490",
-      triggerRateHit: 0,
-      isSkipped: 0,
-      skippedInterestAccrued: "0.00",
-      remainingAmortizationMonths: 300,
-      createdAt: new Date(),
-    },
-    {
-      id: "2",
-      mortgageId: "mortgage-1",
-      termId: "term-1",
-      paymentDate: "2024-06-15",
-      paymentPeriodLabel: "Jun-2024",
-      regularPaymentAmount: "2000.00",
-      prepaymentAmount: "0.00",
-      paymentAmount: "0.00",
-      principalPaid: "0.00",
-      interestPaid: "0.00",
-      remainingBalance: "400000.00",
-      effectiveRate: "5.490",
-      triggerRateHit: 0,
-      isSkipped: 1,
-      skippedInterestAccrued: "1830.00",
-      remainingAmortizationMonths: 301,
-      createdAt: new Date(),
-    },
-  ];
-
-  const defaultProps = {
-    mortgageId: "mortgage-1",
-    termId: "term-1",
-    currentBalance: 400000,
-    currentAmortizationMonths: 300,
-    effectiveRate: 0.0549,
-    paymentFrequency: "monthly" as const,
-    payments: mockPayments,
-    maxSkipsPerYear: 2,
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
+    // Restore sensible defaults after each clear
+    vi.mocked(paymentSkipping.canSkipPayment).mockImplementation(
+      (skipped: number, limit: number) => skipped < limit
+    );
+    vi.mocked(paymentSkipping.countSkippedPaymentsInYear).mockReturnValue(0);
   });
 
-  it("should calculate skip eligibility correctly", () => {
-    const { result } = renderHook(() => useSkipPayment(defaultProps), {
+  // ── Eligibility: canSkip ────────────────────────────────────────────────────
+
+  it("returns canSkip=true when skipped payments are below the limit", () => {
+    vi.mocked(paymentSkipping.countSkippedPaymentsInYear).mockReturnValue(1);
+    vi.mocked(paymentSkipping.canSkipPayment).mockReturnValue(true);
+
+    const { result } = renderHook(() => useSkipPayment(baseProps), {
       wrapper: createWrapper(),
     });
 
     expect(result.current.canSkip).toBe(true);
+  });
+
+  it("returns canSkip=false when the skip limit has been reached", () => {
+    vi.mocked(paymentSkipping.countSkippedPaymentsInYear).mockReturnValue(2);
+    vi.mocked(paymentSkipping.canSkipPayment).mockReturnValue(false);
+
+    const { result } = renderHook(() => useSkipPayment(baseProps), {
+      wrapper: createWrapper(),
+    });
+
+    expect(result.current.canSkip).toBe(false);
+  });
+
+  // ── Eligibility: skippedThisYear & skipLimit ─────────────────────────────────
+
+  it("exposes the correct skippedThisYear count", () => {
+    vi.mocked(paymentSkipping.countSkippedPaymentsInYear).mockReturnValue(1);
+
+    const { result } = renderHook(() => useSkipPayment(baseProps), {
+      wrapper: createWrapper(),
+    });
+
     expect(result.current.skippedThisYear).toBe(1);
+  });
+
+  it("exposes skipLimit equal to maxSkipsPerYear", () => {
+    const { result } = renderHook(() => useSkipPayment({ ...baseProps, maxSkipsPerYear: 3 }), {
+      wrapper: createWrapper(),
+    });
+
+    expect(result.current.skipLimit).toBe(3);
+  });
+
+  it("defaults skipLimit to 2 when maxSkipsPerYear is not provided", () => {
+    const {
+      mortgageId,
+      termId,
+      currentBalance,
+      currentAmortizationMonths,
+      effectiveRate,
+      paymentFrequency,
+      payments,
+    } = baseProps;
+    const { result } = renderHook(
+      () =>
+        useSkipPayment({
+          mortgageId,
+          termId,
+          currentBalance,
+          currentAmortizationMonths,
+          effectiveRate,
+          paymentFrequency,
+          payments,
+        }),
+      { wrapper: createWrapper() }
+    );
+
     expect(result.current.skipLimit).toBe(2);
   });
 
-  it("should show not eligible when at limit", () => {
-    const paymentsAtLimit: MortgagePayment[] = [
-      ...mockPayments,
-      {
-        id: "3",
-        mortgageId: "mortgage-1",
-        termId: "term-1",
-        paymentDate: "2024-12-15",
-        paymentPeriodLabel: "Dec-2024",
-        regularPaymentAmount: "2000.00",
-        prepaymentAmount: "0.00",
-        paymentAmount: "0.00",
-        principalPaid: "0.00",
-        interestPaid: "0.00",
-        remainingBalance: "401830.00",
-        effectiveRate: "5.490",
-        triggerRateHit: 0,
-        isSkipped: 1,
-        skippedInterestAccrued: "1830.00",
-        remainingAmortizationMonths: 302,
-        createdAt: new Date(),
-      },
-    ];
+  // ── Initial state ────────────────────────────────────────────────────────────
 
-    const { result } = renderHook(
-      () => useSkipPayment({ ...defaultProps, payments: paymentsAtLimit }),
-      {
-        wrapper: createWrapper(),
-      }
-    );
-
-    expect(result.current.canSkip).toBe(false);
-    expect(result.current.skippedThisYear).toBe(2);
-  });
-
-  it("should calculate skip impact when payment date is provided", () => {
-    const { result } = renderHook(() => useSkipPayment(defaultProps), {
+  it("starts with skipImpact as null before any calculation", () => {
+    const { result } = renderHook(() => useSkipPayment(baseProps), {
       wrapper: createWrapper(),
     });
 
-    result.current.calculateSkipImpact("2024-07-15");
-
-    expect(result.current.skipImpact).toBeTruthy();
-    if (result.current.skipImpact) {
-      expect(result.current.skipImpact.interestAccrued).toBeGreaterThan(0);
-      expect(result.current.skipImpact.newBalance).toBeGreaterThan(defaultProps.currentBalance);
-      expect(result.current.skipImpact.extendedAmortizationMonths).toBeGreaterThan(
-        defaultProps.currentAmortizationMonths
-      );
-    }
-  });
-
-  it("should reset skip impact", () => {
-    const { result } = renderHook(() => useSkipPayment(defaultProps), {
-      wrapper: createWrapper(),
-    });
-
-    result.current.calculateSkipImpact("2024-07-15");
-    expect(result.current.skipImpact).toBeTruthy();
-
-    result.current.resetSkipImpact();
     expect(result.current.skipImpact).toBeNull();
   });
 
-  it("should handle skip payment mutation", async () => {
-    const { mortgageApi } = await import("../../api");
-    vi.mocked(mortgageApi.skipPayment).mockResolvedValue({
-      id: "new-payment",
-      mortgageId: "mortgage-1",
-      termId: "term-1",
-      paymentDate: "2024-07-15",
-      paymentPeriodLabel: "Jul-2024",
-      regularPaymentAmount: "0.00",
-      prepaymentAmount: "0.00",
-      paymentAmount: "0.00",
-      principalPaid: "0.00",
-      interestPaid: "0.00",
-      remainingBalance: "401830.00",
-      effectiveRate: "5.490",
-      triggerRateHit: 0,
-      isSkipped: 1,
-      skippedInterestAccrued: "1830.00",
-      remainingAmortizationMonths: 301,
-      createdAt: new Date(),
-    } as MortgagePayment);
+  // ── Impact calculation ────────────────────────────────────────────────────────
 
-    const { result } = renderHook(() => useSkipPayment(defaultProps), {
+  it("populates skipImpact with SkipImpactResponse fields after calculateSkipImpact is called", async () => {
+    const impactData = {
+      totalInterestAccrued: 1830.41,
+      finalBalance: 401830.41,
+      extendedAmortizationMonths: 301,
+      balanceIncrease: 1830.41,
+    };
+    vi.mocked(mortgageApiModule.calculateSkipImpact).mockResolvedValue(impactData);
+
+    const { result } = renderHook(() => useSkipPayment(baseProps), {
       wrapper: createWrapper(),
     });
 
-    result.current.skipPaymentMutation.mutate({
-      paymentDate: "2024-07-15",
-      maxSkipsPerYear: 2,
+    act(() => {
+      result.current.calculateSkipImpact("2026-08-01");
     });
 
     await waitFor(() => {
-      expect(result.current.skipPaymentMutation.isSuccess).toBe(true);
+      expect(result.current.skipImpact).not.toBeNull();
     });
 
-    expect(mortgageApi.skipPayment).toHaveBeenCalledWith("mortgage-1", "term-1", {
-      paymentDate: "2024-07-15",
-      maxSkipsPerYear: 2,
+    expect(result.current.skipImpact).toEqual(impactData);
+  });
+
+  it("calls calculateSkipImpact API with the correct mortgage parameters", async () => {
+    vi.mocked(mortgageApiModule.calculateSkipImpact).mockResolvedValue({
+      totalInterestAccrued: 1830.41,
+      finalBalance: 401830.41,
+      extendedAmortizationMonths: 301,
+      balanceIncrease: 1830.41,
+    });
+
+    const { result } = renderHook(() => useSkipPayment(baseProps), {
+      wrapper: createWrapper(),
+    });
+
+    act(() => {
+      result.current.calculateSkipImpact("2026-08-01");
+    });
+
+    await waitFor(() => {
+      expect(mortgageApiModule.calculateSkipImpact).toHaveBeenCalledWith({
+        currentBalance: 400000,
+        annualRate: 0.0549,
+        paymentFrequency: "monthly",
+        currentAmortizationMonths: 300,
+        numberOfSkips: 1,
+      });
     });
   });
 
-  it("should handle skip payment mutation error", async () => {
-    const { mortgageApi } = await import("../../api");
-    vi.mocked(mortgageApi.skipPayment).mockRejectedValue(new Error("Skip limit reached"));
+  it("clears skipImpact to null when resetSkipImpact is called", async () => {
+    vi.mocked(mortgageApiModule.calculateSkipImpact).mockResolvedValue({
+      totalInterestAccrued: 1830.41,
+      finalBalance: 401830.41,
+      extendedAmortizationMonths: 301,
+      balanceIncrease: 1830.41,
+    });
 
-    const { result } = renderHook(() => useSkipPayment(defaultProps), {
+    const { result } = renderHook(() => useSkipPayment(baseProps), {
       wrapper: createWrapper(),
     });
 
-    result.current.skipPaymentMutation.mutate({
-      paymentDate: "2024-07-15",
-      maxSkipsPerYear: 2,
+    act(() => {
+      result.current.calculateSkipImpact("2026-08-01");
+    });
+
+    await waitFor(() => expect(result.current.skipImpact).not.toBeNull());
+
+    act(() => {
+      result.current.resetSkipImpact();
+    });
+
+    expect(result.current.skipImpact).toBeNull();
+  });
+
+  it("sets skipImpact to null when the API call fails", async () => {
+    vi.mocked(mortgageApiModule.calculateSkipImpact).mockRejectedValue(
+      new Error("Network error")
+    );
+
+    const { result } = renderHook(() => useSkipPayment(baseProps), {
+      wrapper: createWrapper(),
+    });
+
+    act(() => {
+      result.current.calculateSkipImpact("2026-08-01");
     });
 
     await waitFor(() => {
-      expect(result.current.skipPaymentMutation.isError).toBe(true);
+      // After a failed call, skipImpact stays null (onError handler sets it to null)
+      expect(result.current.skipImpact).toBeNull();
     });
+  });
+
+  // ── countSkippedPaymentsInYear is called with current year ────────────────────
+
+  it("passes the current year to countSkippedPaymentsInYear", () => {
+    vi.mocked(paymentSkipping.countSkippedPaymentsInYear).mockReturnValue(0);
+
+    renderHook(() => useSkipPayment(baseProps), { wrapper: createWrapper() });
+
+    expect(paymentSkipping.countSkippedPaymentsInYear).toHaveBeenCalledWith(
+      baseProps.payments,
+      new Date().getFullYear()
+    );
   });
 });

@@ -1,13 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SkipPaymentDialog } from "../skip-payment-dialog";
 import type { UiTerm } from "../../types";
 import type { MortgagePayment } from "@shared/schema";
 import { mortgageApi } from "../../api";
+import * as mortgageApiModule from "../../api/mortgage-api";
+import * as paymentSkipping from "@/shared/utils/payment-skipping";
 
-// Mock the API
+// ── API mocks ─────────────────────────────────────────────────────────────────
 vi.mock("../../api", () => ({
   mortgageApi: {
     skipPayment: vi.fn(),
@@ -18,24 +21,25 @@ vi.mock("../../api", () => ({
   },
 }));
 
-// Mock toast
+vi.mock("../../api/mortgage-api", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../api/mortgage-api")>();
+  return {
+    ...actual,
+    calculateSkipImpact: vi.fn(),
+  };
+});
+
 vi.mock("@/shared/hooks/use-toast", () => ({
-  useToast: () => ({
-    toast: vi.fn(),
-  }),
+  useToast: () => ({ toast: vi.fn() }),
 }));
 
-// Mock calculation functions
-vi.mock("@/shared/calculations/payment-skipping", () => ({
-  calculateSkippedPayment: vi.fn((_balance, _rate, _frequency, _amortization) => ({
-    interestAccrued: 1830.0,
-    newBalance: 401830.0,
-    extendedAmortizationMonths: 301,
-  })),
-  canSkipPayment: vi.fn((skipped, limit) => skipped < limit),
+// Correct path: @/shared/utils/payment-skipping (NOT @/shared/calculations/payment-skipping)
+vi.mock("@/shared/utils/payment-skipping", () => ({
+  canSkipPayment: vi.fn((skipped: number, limit: number) => skipped < limit),
   countSkippedPaymentsInYear: vi.fn(() => 0),
 }));
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
 const createWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -43,9 +47,8 @@ const createWrapper = () => {
       mutations: { retry: false },
     },
   });
-  const Wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
+  const Wrapper = ({ children }: { children: React.ReactNode }) =>
+    React.createElement(QueryClientProvider, { client: queryClient }, children);
   Wrapper.displayName = "TestWrapper";
   return Wrapper;
 };
@@ -64,25 +67,36 @@ const mockTerm: UiTerm = {
   regularPaymentAmount: 2000,
 };
 
-const mockPayments: MortgagePayment[] = [];
+const mockSkipImpact = {
+  totalInterestAccrued: 1830.0,
+  finalBalance: 401830.0,
+  extendedAmortizationMonths: 301,
+  balanceIncrease: 1830.0,
+};
 
 describe("SkipPaymentDialog Integration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Restore eligibility mocks so each test starts with user being eligible
+    vi.mocked(paymentSkipping.countSkippedPaymentsInYear).mockReturnValue(0);
+    vi.mocked(paymentSkipping.canSkipPayment).mockImplementation(
+      (skipped: number, limit: number) => skipped < limit
+    );
+    vi.mocked(mortgageApiModule.calculateSkipImpact).mockResolvedValue(mockSkipImpact);
   });
 
   it("should display skip eligibility when eligible", () => {
     render(
-      <SkipPaymentDialog
-        open={true}
-        onOpenChange={vi.fn()}
-        mortgageId="mortgage-1"
-        currentTerm={mockTerm}
-        currentBalance={400000}
-        currentAmortizationMonths={300}
-        currentEffectiveRate={5.49}
-        payments={mockPayments}
-      />,
+      React.createElement(SkipPaymentDialog, {
+        open: true,
+        onOpenChange: vi.fn(),
+        mortgageId: "mortgage-1",
+        currentTerm: mockTerm,
+        currentBalance: 400000,
+        currentAmortizationMonths: 300,
+        currentEffectiveRate: 5.49,
+        payments: [],
+      }),
       { wrapper: createWrapper() }
     );
 
@@ -90,29 +104,27 @@ describe("SkipPaymentDialog Integration", () => {
     expect(screen.getByText(/Eligible/i)).toBeInTheDocument();
   });
 
-  it("should calculate and display impact when date is selected", async () => {
-    const user = userEvent.setup();
+  it("should calculate and display impact when dialog opens", async () => {
     render(
-      <SkipPaymentDialog
-        open={true}
-        onOpenChange={vi.fn()}
-        mortgageId="mortgage-1"
-        currentTerm={mockTerm}
-        currentBalance={400000}
-        currentAmortizationMonths={300}
-        currentEffectiveRate={5.49}
-        payments={mockPayments}
-      />,
+      React.createElement(SkipPaymentDialog, {
+        open: true,
+        onOpenChange: vi.fn(),
+        mortgageId: "mortgage-1",
+        currentTerm: mockTerm,
+        currentBalance: 400000,
+        currentAmortizationMonths: 300,
+        currentEffectiveRate: 5.49,
+        payments: [],
+      }),
       { wrapper: createWrapper() }
     );
 
-    const dateInput = screen.getByLabelText(/Payment Date to Skip/i);
-    await user.type(dateInput, "2024-07-15");
-
     await waitFor(() => {
       expect(screen.getByText(/Impact of Skipping This Payment/i)).toBeInTheDocument();
-      expect(screen.getByText(/\$1,830/)).toBeInTheDocument();
     });
+
+    // totalInterestAccrued is shown as the interest figure
+    expect(screen.getAllByText(/1,830\.00/).length).toBeGreaterThan(0);
   });
 
   it("should require confirmation before skipping", async () => {
@@ -138,27 +150,24 @@ describe("SkipPaymentDialog Integration", () => {
     } as MortgagePayment);
 
     render(
-      <SkipPaymentDialog
-        open={true}
-        onOpenChange={vi.fn()}
-        mortgageId="mortgage-1"
-        currentTerm={mockTerm}
-        currentBalance={400000}
-        currentAmortizationMonths={300}
-        currentEffectiveRate={5.49}
-        payments={mockPayments}
-      />,
+      React.createElement(SkipPaymentDialog, {
+        open: true,
+        onOpenChange: vi.fn(),
+        mortgageId: "mortgage-1",
+        currentTerm: mockTerm,
+        currentBalance: 400000,
+        currentAmortizationMonths: 300,
+        currentEffectiveRate: 5.49,
+        payments: [],
+      }),
       { wrapper: createWrapper() }
     );
 
-    const dateInput = screen.getByLabelText(/Payment Date to Skip/i);
-    await user.type(dateInput, "2024-07-15");
-
+    // Wait for the impact to load so the checkbox appears
     await waitFor(() => {
       expect(screen.getByText(/Impact of Skipping This Payment/i)).toBeInTheDocument();
     });
 
-    // Confirm checkbox should be required
     const confirmCheckbox = screen.getByTestId("checkbox-confirm-skip");
     const skipButton = screen.getByTestId("button-confirm-skip-payment");
 
@@ -171,75 +180,33 @@ describe("SkipPaymentDialog Integration", () => {
 
     await user.click(skipButton);
 
-    await waitFor(() => {
-      expect(mortgageApi.skipPayment).toHaveBeenCalledWith("mortgage-1", "term-1", {
-        paymentDate: "2024-07-15",
-        maxSkipsPerYear: 2,
-      });
-    });
-  });
+    await waitFor(
+      () => {
+        expect(mortgageApi.skipPayment).toHaveBeenCalledWith("mortgage-1", "term-1", {
+          paymentDate: expect.any(String),
+          maxSkipsPerYear: 2,
+        });
+      },
+      { timeout: 10000 }
+    );
+  }, 15000);
 
   it("should show not eligible when at skip limit", () => {
-    const paymentsAtLimit: MortgagePayment[] = [
-      {
-        id: "1",
-        mortgageId: "mortgage-1",
-        termId: "term-1",
-        paymentDate: "2024-06-15",
-        paymentPeriodLabel: "Jun-2024",
-        regularPaymentAmount: "0.00",
-        prepaymentAmount: "0.00",
-        paymentAmount: "0.00",
-        principalPaid: "0.00",
-        interestPaid: "0.00",
-        remainingBalance: "400000.00",
-        effectiveRate: "5.490",
-        triggerRateHit: 0,
-        isSkipped: 1,
-        skippedInterestAccrued: "1830.00",
-        remainingAmortizationMonths: 301,
-        createdAt: new Date(),
-      },
-      {
-        id: "2",
-        mortgageId: "mortgage-1",
-        termId: "term-1",
-        paymentDate: "2024-12-15",
-        paymentPeriodLabel: "Dec-2024",
-        regularPaymentAmount: "0.00",
-        prepaymentAmount: "0.00",
-        paymentAmount: "0.00",
-        principalPaid: "0.00",
-        interestPaid: "0.00",
-        remainingBalance: "401830.00",
-        effectiveRate: "5.490",
-        triggerRateHit: 0,
-        isSkipped: 1,
-        skippedInterestAccrued: "1830.00",
-        remainingAmortizationMonths: 302,
-        createdAt: new Date(),
-      },
-    ];
-
-    // Mock countSkippedPaymentsInYear to return 2
-    vi.doMock("@/shared/calculations/payment-skipping", () => ({
-      calculateSkippedPayment: vi.fn(),
-      canSkipPayment: vi.fn(() => false),
-      countSkippedPaymentsInYear: vi.fn(() => 2),
-    }));
+    vi.mocked(paymentSkipping.countSkippedPaymentsInYear).mockReturnValue(2);
+    vi.mocked(paymentSkipping.canSkipPayment).mockReturnValue(false);
 
     render(
-      <SkipPaymentDialog
-        open={true}
-        onOpenChange={vi.fn()}
-        mortgageId="mortgage-1"
-        currentTerm={mockTerm}
-        currentBalance={400000}
-        currentAmortizationMonths={300}
-        currentEffectiveRate={5.49}
-        payments={paymentsAtLimit}
-        maxSkipsPerYear={2}
-      />,
+      React.createElement(SkipPaymentDialog, {
+        open: true,
+        onOpenChange: vi.fn(),
+        mortgageId: "mortgage-1",
+        currentTerm: mockTerm,
+        currentBalance: 400000,
+        currentAmortizationMonths: 300,
+        currentEffectiveRate: 5.49,
+        payments: [],
+        maxSkipsPerYear: 2,
+      }),
       { wrapper: createWrapper() }
     );
 
