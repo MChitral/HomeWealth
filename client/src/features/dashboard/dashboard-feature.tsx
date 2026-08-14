@@ -212,7 +212,7 @@ export function DashboardFeature() {
               {showNoMortgage ? (
                 <div className="p-4 border rounded-md bg-muted/20">
                   <p className="text-sm text-muted-foreground mb-3">No mortgages found.</p>
-                  <Link href="/mortgages/new">
+                  <Link href="/mortgage">
                     <Button variant="outline" size="sm" className="w-full" data-testid="button-add-mortgage">
                       <Plus className="w-4 h-4 mr-2" /> Add Mortgage
                     </Button>
