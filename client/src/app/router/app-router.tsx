@@ -15,7 +15,6 @@ const EmergencyFundPage = lazy(() => import("@/pages/emergency-fund-page"));
 const HelocPage = lazy(() => import("@/pages/heloc-page"));
 const SmithManeuverPage = lazy(() => import("@/pages/smith-maneuver-page"));
 const ForecastingPage = lazy(() => import("@/pages/forecasting-page"));
-const NotificationPreferencesPage = lazy(() => import("@/pages/notification-preferences-page"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 export function AppRouter() {
@@ -27,15 +26,14 @@ export function AppRouter() {
         <Route path="/mortgages/:id/prepay" component={PrepaymentPage} />
         <Route path="/mortgages/:id/analytics" component={AnalyticsPage} />
         <Route path="/scenarios" component={ScenarioListPage} />
-        <Route path="/scenarios/:id" component={ScenarioEditorPage} />
         <Route path="/scenarios/new" component={ScenarioEditorPage} />
+        <Route path="/scenarios/:id" component={ScenarioEditorPage} />
         <Route path="/comparison" component={ComparisonPage} />
         <Route path="/cash-flow" component={CashFlowPage} />
         <Route path="/emergency-fund" component={EmergencyFundPage} />
         <Route path="/heloc" component={HelocPage} />
         <Route path="/smith-maneuver" component={SmithManeuverPage} />
         <Route path="/forecasting" component={ForecastingPage} />
-        <Route path="/notifications/preferences" component={NotificationPreferencesPage} />
         <Route component={NotFound} />
       </Switch>
     </Suspense>

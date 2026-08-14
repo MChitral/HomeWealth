@@ -165,11 +165,6 @@ export default function PrepaymentFeature({ isEmbedded = false }: PrepaymentFeat
           },
         }
       );
-    } else {
-      toast({
-        title: "Coming Soon",
-        description: "Update your term details to change regular payments.",
-      });
     }
   };
 
@@ -403,16 +398,28 @@ export default function PrepaymentFeature({ isEmbedded = false }: PrepaymentFeat
                     <Button variant="outline" onClick={() => setAmount("")}>
                       Clear
                     </Button>
-                    <Button
-                      size="lg"
-                      onClick={handleSave}
-                      className="bg-green-600"
-                    >
-                      {simulationType === "lump-sum"
-                        ? "Log This Prepayment"
-                        : "Update Payment Plan"}
-                    </Button>
+                    {simulationType === "lump-sum" ? (
+                      <Button
+                        size="lg"
+                        onClick={handleSave}
+                        className="bg-green-600"
+                        data-testid="button-log-prepayment"
+                      >
+                        Log This Prepayment
+                      </Button>
+                    ) : (
+                      <Button size="lg" asChild data-testid="button-apply-via-edit-term">
+                        <Link href="/mortgage">Apply via Edit Term</Link>
+                      </Button>
+                    )}
                   </div>
+
+                  {simulationType === "payment-increase" && (
+                    <p className="text-xs text-center text-muted-foreground">
+                      Payment increases are applied to your term. Use Edit Term on the Mortgage
+                      page to change your regular payment.
+                    </p>
+                  )}
 
                   <p className="text-xs text-center text-muted-foreground">
                     * Estimations based on current rate ({summaryStats.currentRate.toFixed(2)}%)

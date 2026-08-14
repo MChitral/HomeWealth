@@ -23,7 +23,6 @@ import { HelocService } from "./heloc.service";
 import { HelocCreditLimitService } from "./heloc-credit-limit.service";
 import { HelocInterestService } from "./heloc-interest.service";
 import { ReAdvanceableMortgageService } from "./re-advanceable-mortgage.service";
-import { InvestmentService } from "./investment.service";
 import { TaxCalculationService } from "./tax-calculation.service";
 import { SmithManeuverService } from "./smith-maneuver.service";
 import { RecastService } from "./recast.service";
@@ -60,7 +59,6 @@ export interface ApplicationServices {
   helocCreditLimit: HelocCreditLimitService;
   helocInterest: HelocInterestService;
   reAdvanceableMortgage: ReAdvanceableMortgageService;
-  investments: InvestmentService;
   taxCalculation: TaxCalculationService;
   smithManeuver: SmithManeuverService;
   recast: RecastService;
@@ -205,11 +203,6 @@ export function createServices(repositories: Repositories): ApplicationServices 
       repositories.helocAccounts,
       repositories.mortgagePayments
     ),
-    investments: new InvestmentService(
-      repositories.investments,
-      repositories.investmentTransactions,
-      repositories.investmentIncome
-    ),
     taxCalculation: taxCalculationService,
     smithManeuver: new SmithManeuverService(
       repositories.smithManeuver,
@@ -283,7 +276,6 @@ export * from "./heloc.service";
 export * from "./heloc-credit-limit.service";
 export * from "./heloc-interest.service";
 export * from "./re-advanceable-mortgage.service";
-export * from "./investment.service";
 export * from "./tax-calculation.service";
 export * from "./smith-maneuver.service";
 export * from "./recast.service";

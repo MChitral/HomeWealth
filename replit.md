@@ -38,9 +38,19 @@ Preferred communication style: Simple, everyday language.
 
 ### Data Storage
 - **Database**: PostgreSQL (Neon serverless)
+- **Connection**: `DATABASE_URL` env var (used by both `server/src/infrastructure/db/connection.ts` and `drizzle.config.ts`). Note: the `NEON_DATABASE_URL` secret is orphaned — no code reads it.
 - **Schema Location**: `shared/schema.ts` (shared between client and server)
-- **Migrations**: Drizzle Kit (`migrations/` folder)
+- **Migrations**: Drizzle Kit (`migrations/` folder), applied via `npm run db:push`
 - **Key Tables**: users, sessions, cash_flow, mortgages, mortgage_terms, mortgage_payments, scenarios, prepayment_events, refinancing_events, emergency_fund, prime_rate_history
+
+### Auth & Request Pattern
+- No real authentication yet: a single hardcoded dev user (`dev-user-001`) is auto-created by `ensureDevUserExists()` in `server/src/api/utils/auth.ts`.
+- `requireUser(req, res)` is a **callable, not middleware**. Correct usage inside a handler: `const user = requireUser(req, res); if (!user) return;`. Never place it in Express middleware position — it never calls `next()`, so the route hangs forever.
+
+### Intentionally Dormant / Removed (Aug 2026 audit)
+- **Notifications**: UI is hidden (no nav link, bell, or route) until the feature is built properly. Server-side machinery (queue, cron jobs, preferences API, `client/src/features/notifications/`) is intact but delivery is mocked and alerts are never persisted.
+- **Investments backend**: removed entirely (routes, service, repositories, DB tables) — it had zero client callers. Scenario-level "investment strategy" percentages are a separate, live concept.
+- **Known tech debt**: ~55 pre-existing TypeScript errors, concentrated in `server/src/infrastructure/jobs/*` (notification cron jobs) and `server/src/index.ts` logging. The app runs via tsx (no typecheck at runtime).
 
 ### Calculation Engine
 - Canadian mortgage calculations with semi-annual compounding

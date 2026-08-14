@@ -13,9 +13,6 @@ import { NotificationRepository } from "./notification.repository";
 import { NotificationPreferencesRepository } from "./notification-preferences.repository";
 import { HelocAccountRepository } from "./heloc-account.repository";
 import { HelocTransactionRepository } from "./heloc-transaction.repository";
-import { InvestmentRepository } from "./investment.repository";
-import { InvestmentTransactionRepository } from "./investment-transaction.repository";
-import { InvestmentIncomeRepository } from "./investment-income.repository";
 import { SmithManeuverRepository } from "./smith-maneuver.repository";
 import { RecastEventsRepository } from "./recast-events.repository";
 import { PaymentFrequencyChangeEventsRepository } from "./payment-frequency-change-events.repository";
@@ -43,9 +40,6 @@ export interface Repositories {
   notificationPreferences: NotificationPreferencesRepository;
   helocAccounts: HelocAccountRepository;
   helocTransactions: HelocTransactionRepository;
-  investments: InvestmentRepository;
-  investmentTransactions: InvestmentTransactionRepository;
-  investmentIncome: InvestmentIncomeRepository;
   smithManeuver: SmithManeuverRepository;
   recastEvents: RecastEventsRepository;
   paymentFrequencyChangeEvents: PaymentFrequencyChangeEventsRepository;
@@ -75,9 +69,6 @@ export function createRepositories(): Repositories {
     notificationPreferences: new NotificationPreferencesRepository(),
     helocAccounts: new HelocAccountRepository(),
     helocTransactions: new HelocTransactionRepository(),
-    investments: new InvestmentRepository(),
-    investmentTransactions: new InvestmentTransactionRepository(),
-    investmentIncome: new InvestmentIncomeRepository(),
     smithManeuver: new SmithManeuverRepository(),
     recastEvents: new RecastEventsRepository(),
     paymentFrequencyChangeEvents: new PaymentFrequencyChangeEventsRepository(),
@@ -109,9 +100,6 @@ export {
   NotificationPreferencesRepository,
   HelocAccountRepository,
   HelocTransactionRepository,
-  InvestmentRepository,
-  InvestmentTransactionRepository,
-  InvestmentIncomeRepository,
   SmithManeuverRepository,
   RecastEventsRepository,
   PaymentFrequencyChangeEventsRepository,

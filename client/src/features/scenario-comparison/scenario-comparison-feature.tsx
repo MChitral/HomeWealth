@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PageHeader } from "@/shared/ui/page-header";
+import { QueryErrorState } from "@/shared/components";
 import { usePageTitle } from "@/shared/hooks/use-page-title";
 import { useMortgageSelection } from "@/features/mortgage-tracking";
 import { useScenarioComparison } from "./hooks";
@@ -28,6 +29,18 @@ export function ScenarioComparisonFeature() {
 
   if (comparison.isLoading || mortgagesLoading) {
     return <ScenarioComparisonSkeleton />;
+  }
+
+  if (comparison.isError) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Scenario Comparison"
+          description="Compare different financial strategies side-by-side"
+        />
+        <QueryErrorState onRetry={() => comparison.refetch()} />
+      </div>
+    );
   }
 
   // Product Logic: Mortgage must exist before scenarios can be created

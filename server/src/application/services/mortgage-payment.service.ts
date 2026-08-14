@@ -66,6 +66,15 @@ export class MortgagePaymentService {
     return this.mortgagePayments.findByTermId(termId);
   }
 
+  async getByIdForUser(paymentId: string, userId: string): Promise<MortgagePayment | undefined> {
+    const payment = await this.mortgagePayments.findById(paymentId);
+    if (!payment) {
+      return undefined;
+    }
+    const authorized = await this.authorizeMortgage(payment.mortgageId, userId);
+    return authorized ? payment : undefined;
+  }
+
   private async getPreviousPayment(termId: string): Promise<MortgagePayment | undefined> {
     const payments = await this.mortgagePayments.findByTermId(termId);
     if (payments.length === 0) {

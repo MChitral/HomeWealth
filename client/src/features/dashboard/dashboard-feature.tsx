@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { Button } from "@/shared/ui/button";
 import { PageHeader } from "@/shared/ui/page-header";
+import { QueryErrorState } from "@/shared/components";
 import { usePageTitle } from "@/shared/hooks/use-page-title";
 
 import { useMortgageSelection } from "@/features/mortgage-tracking";
@@ -36,12 +37,21 @@ export function DashboardFeature() {
 
   const { selectedMortgageId, setSelectedMortgageId, mortgages, selectedMortgage } =
     useMortgageSelection();
-  const { scenarios, emergencyFund, cashFlow, isLoading } = useDashboardData();
+  const {
+    scenarios,
+    emergencyFund,
+    cashFlow,
+    isLoading,
+    isError: dashboardError,
+    refetchAll: refetchDashboard,
+  } = useDashboardData();
   const {
     mortgage: detailedMortgage,
     terms,
     payments,
     isLoading: mortgageDataLoading,
+    isError: mortgageDataError,
+    refetch: refetchMortgageData,
   } = useMortgageData(selectedMortgageId);
 
   const activeMortgage = detailedMortgage ?? selectedMortgage ?? null;
@@ -158,6 +168,20 @@ export function DashboardFeature() {
 
   if (isLoading || mortgageDataLoading) {
     return <DashboardSkeleton />;
+  }
+
+  if (dashboardError || mortgageDataError) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Dashboard" description="Mortgage health overview" />
+        <QueryErrorState
+          onRetry={() => {
+            refetchDashboard();
+            refetchMortgageData();
+          }}
+        />
+      </div>
+    );
   }
 
   const showNoMortgage = !mortgages || mortgages.length === 0;

@@ -7,7 +7,6 @@ import {
   Shield,
   CreditCard,
   TrendingUp,
-  Bell,
   LineChart,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
@@ -35,10 +34,6 @@ const navItems = [
   { title: "Forecasting", url: "/forecasting", icon: LineChart },
 ] as const;
 
-const settingsItems = [
-  { title: "Notifications", url: "/notifications/preferences", icon: Bell },
-] as const;
-
 export function AppSidebar() {
   const [location] = useLocation();
 
@@ -54,28 +49,6 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location === item.url}
-                    data-testid={`link-${item.title.toLowerCase().replace(/\s+/g, "-")}`}
-                    aria-label={item.title}
-                  >
-                    <Link href={item.url} aria-label={item.title}>
-                      <item.icon aria-hidden="true" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel>Settings</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {settingsItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild

@@ -1,5 +1,7 @@
 import { useToast } from "@/shared/hooks/use-toast";
 import { usePageTitle } from "@/shared/hooks/use-page-title";
+import { PageHeader } from "@/shared/ui/page-header";
+import { QueryErrorState } from "@/shared/components";
 import { MortgageLayout } from "./components/mortgage-layout";
 import { MortgageEmptyState } from "./components/mortgage-empty-state";
 import { MortgagePrimeBanner } from "./components/mortgage-prime-banner";
@@ -50,6 +52,8 @@ export default function MortgageFeature() {
     terms,
     // payments, // Unused
     isLoading,
+    isError,
+    refetchMortgageData,
     primeRateData,
     isPrimeRateLoading,
     refetchPrimeRate,
@@ -161,6 +165,13 @@ export default function MortgageFeature() {
     <MortgageEmptyState onOpenCreateMortgage={() => setIsCreateMortgageOpen(true)} />
   );
 
+  const errorState = (
+    <div className="space-y-6">
+      <PageHeader title="Mortgage Tracking" description="Track your mortgage details and payments" />
+      <QueryErrorState onRetry={() => refetchMortgageData()} />
+    </div>
+  );
+
   const primeBanner = mortgage ? (
     <MortgagePrimeBanner
       primeRate={currentPrimeRateValue}
@@ -171,9 +182,49 @@ export default function MortgageFeature() {
   ) : null;
 
   const handleExport = () => {
+    if (!rawPayments || rawPayments.length === 0) {
+      toast({
+        title: "Nothing to export",
+        description: "Log some payments first, then export them as CSV.",
+      });
+      return;
+    }
+    const headers = [
+      "Payment Date",
+      "Period",
+      "Regular Payment",
+      "Prepayment",
+      "Total Payment",
+      "Principal Paid",
+      "Interest Paid",
+      "Remaining Balance",
+      "Effective Rate (%)",
+    ];
+    const escapeCell = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+    const rows = rawPayments.map((p) => [
+      p.paymentDate,
+      p.paymentPeriodLabel ?? "",
+      p.regularPaymentAmount ?? "",
+      p.prepaymentAmount ?? "",
+      p.paymentAmount,
+      p.principalPaid,
+      p.interestPaid,
+      p.remainingBalance,
+      p.effectiveRate ?? "",
+    ]);
+    const csv = [headers, ...rows].map((row) => row.map(escapeCell).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `mortgage-payments-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
     toast({
-      title: "Export coming soon",
-      description: "CSV export will be available in a future update.",
+      title: "Export complete",
+      description: `Exported ${rawPayments.length} payments to CSV.`,
     });
   };
 
@@ -217,6 +268,8 @@ export default function MortgageFeature() {
         isLoading={isLoading}
         hasMortgage={mortgages.length > 0}
         emptyState={emptyState}
+        errorState={errorState}
+        isError={isError}
       >
         <MortgageContent
           mortgage={mortgage}

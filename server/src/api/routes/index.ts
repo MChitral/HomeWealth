@@ -7,7 +7,6 @@ import { registerMortgageRoutes } from "./mortgage.routes";
 import { registerScenarioRoutes } from "./scenario.routes";
 import { registerPrepaymentEventRoutes } from "./prepayment-event.routes";
 import { registerRefinancingEventRoutes } from "./refinancing-event.routes";
-import { registerSeedRoutes } from "./seed.routes";
 import { registerPrimeRateRoutes } from "./prime-rate.routes";
 import { createImpactRoutes } from "./impact.routes";
 import { createPrepaymentRoutes } from "./prepayment.routes";
@@ -16,7 +15,6 @@ import { createHealthRoutes } from "./health.routes";
 import { registerNotificationRoutes } from "./notification.routes";
 import { registerHelocRoutes } from "./heloc.routes";
 import { registerReAdvanceableMortgageRoutes } from "./re-advanceable-mortgage.routes";
-import { registerInvestmentRoutes } from "./investment.routes";
 import { registerTaxRoutes } from "./tax.routes";
 import { registerSmithManeuverRoutes } from "./smith-maneuver.routes";
 import { createRenewalRoutes } from "./renewal.routes";
@@ -26,7 +24,6 @@ import insuranceRoutes from "./insurance.routes";
 export function buildApiRouter(services: ApplicationServices, repositories: Repositories): Router {
   const router = Router();
 
-  registerSeedRoutes(router, repositories);
   registerCashFlowRoutes(router, services);
   registerEmergencyFundRoutes(router, services);
   registerMortgageRoutes(router, services);
@@ -37,7 +34,6 @@ export function buildApiRouter(services: ApplicationServices, repositories: Repo
   registerNotificationRoutes(router, services);
   registerHelocRoutes(router, services);
   registerReAdvanceableMortgageRoutes(router, services);
-  registerInvestmentRoutes(router, services);
   registerTaxRoutes(router, services);
   registerSmithManeuverRoutes(router, services);
   router.use("/impact", createImpactRoutes(services, repositories));

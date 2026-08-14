@@ -8,4 +8,6 @@ export type DashboardData = {
   emergencyFund: EmergencyFund | null | undefined;
   cashFlow: CashFlow | null | undefined;
   isLoading: boolean;
+  isError: boolean;
+  refetchAll: () => void;
 };

@@ -3,7 +3,7 @@ import type { CashFlow } from "@shared/schema";
 import { cashFlowApi, cashFlowQueryKeys } from "../api";
 
 export function useCashFlowData() {
-  const { data, isLoading } = useQuery<CashFlow | null>({
+  const { data, isLoading, isError, refetch } = useQuery<CashFlow | null>({
     queryKey: cashFlowQueryKeys.cashFlow(),
     queryFn: cashFlowApi.fetch,
   });
@@ -11,5 +11,7 @@ export function useCashFlowData() {
   return {
     cashFlow: data ?? null,
     isLoading,
+    isError,
+    refetch,
   };
 }

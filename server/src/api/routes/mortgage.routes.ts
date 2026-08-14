@@ -1214,14 +1214,22 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
   });
 
   // Payment Corrections
-  router.post("/mortgage-payments/:paymentId/correct", requireUser, async (req, res) => {
+  router.post("/mortgage-payments/:paymentId/correct", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
     try {
       const { paymentId } = req.params;
-      const userId = req.user!.id;
+      const userId = user.id;
       const { correctedAmount, reason } = req.body;
 
       if (!correctedAmount || !reason) {
         return sendError(res, 400, "Missing required fields: correctedAmount, reason");
+      }
+
+      // Verify the payment belongs to this user before mutating
+      const ownedPayment = await services.mortgagePayments.getByIdForUser(paymentId, userId);
+      if (!ownedPayment) {
+        return sendError(res, 404, "Payment not found");
       }
 
       const correction = await services.paymentCorrections.correctPayment({
@@ -1237,9 +1245,15 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
     }
   });
 
-  router.get("/mortgage-payments/:paymentId/corrections", requireUser, async (req, res) => {
+  router.get("/mortgage-payments/:paymentId/corrections", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
     try {
       const { paymentId } = req.params;
+      const ownedPayment = await services.mortgagePayments.getByIdForUser(paymentId, user.id);
+      if (!ownedPayment) {
+        return sendError(res, 404, "Payment not found");
+      }
       const corrections = await services.paymentCorrections.getCorrectionsByPaymentId(paymentId);
       res.json(corrections);
     } catch (error) {
@@ -1248,7 +1262,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
   });
 
   // GDS/TDS Ratio Calculator
-  router.post("/mortgages/debt-service-ratios", requireUser, async (req, res) => {
+  router.post("/mortgages/debt-service-ratios", async (req, res) => {
     try {
       const {
         mortgagePayment,
@@ -1297,7 +1311,7 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
   });
 
   // Stress Test Calculator (B-20 Guidelines)
-  router.post("/mortgages/stress-test", requireUser, async (req, res) => {
+  router.post("/mortgages/stress-test", async (req, res) => {
     try {
       const {
         mortgageAmount,
@@ -1368,10 +1382,12 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
   });
 
   // Mortgage Payoff
-  router.post("/mortgages/:mortgageId/payoff", requireUser, async (req, res) => {
+  router.post("/mortgages/:mortgageId/payoff", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
     try {
       const { mortgageId } = req.params;
-      const userId = req.user!.id;
+      const userId = user.id;
       const { payoffDate, finalPaymentAmount, remainingBalance, penaltyAmount, notes } = req.body;
 
       // Verify mortgage belongs to user
@@ -1403,10 +1419,12 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
     }
   });
 
-  router.get("/mortgages/:mortgageId/payoff/history", requireUser, async (req, res) => {
+  router.get("/mortgages/:mortgageId/payoff/history", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
     try {
       const { mortgageId } = req.params;
-      const userId = req.user!.id;
+      const userId = user.id;
 
       // Verify mortgage belongs to user
       const mortgage = await services.mortgages.getByIdForUser(mortgageId, userId);
@@ -1422,9 +1440,15 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
   });
 
   // Payment Amount Change Events
-  router.get("/mortgages/:mortgageId/payment-amount-changes", requireUser, async (req, res) => {
+  router.get("/mortgages/:mortgageId/payment-amount-changes", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
     try {
       const { mortgageId } = req.params;
+      const mortgage = await services.mortgages.getByIdForUser(mortgageId, user.id);
+      if (!mortgage) {
+        return sendError(res, 404, "Mortgage not found");
+      }
       const changes = await services.paymentAmountChange.getPaymentAmountChangeHistory(mortgageId);
       res.json(changes);
     } catch (error) {
@@ -1432,9 +1456,15 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
     }
   });
 
-  router.get("/mortgage-terms/:termId/payment-amount-changes", requireUser, async (req, res) => {
+  router.get("/mortgage-terms/:termId/payment-amount-changes", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
     try {
       const { termId } = req.params;
+      const term = await services.mortgageTerms.getByIdForUser(termId, user.id);
+      if (!term) {
+        return sendError(res, 404, "Term not found");
+      }
       const changes =
         await services.paymentAmountChange.getPaymentAmountChangeHistoryByTerm(termId);
       res.json(changes);

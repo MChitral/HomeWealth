@@ -53,7 +53,14 @@ export function useMortgageTrackingState() {
   const [searchAmount, setSearchAmount] = useState<string>("");
 
   // Core data hooks
-  const { mortgage, terms, payments, isLoading } = useMortgageData(selectedMortgageId);
+  const {
+    mortgage,
+    terms,
+    payments,
+    isLoading,
+    isError,
+    refetch: refetchMortgageData,
+  } = useMortgageData(selectedMortgageId);
   const { primeRate, setPrimeRate, primeRateData, isPrimeRateLoading, refetchPrimeRate } =
     usePrimeRate();
 
@@ -142,6 +149,8 @@ export function useMortgageTrackingState() {
     terms,
     payments,
     isLoading,
+    isError,
+    refetchMortgageData,
     rawPayments: payments, // Expose raw payments for skip tracking
 
     // Prime rate

@@ -3,7 +3,7 @@ import type { EmergencyFund } from "@shared/schema";
 import { emergencyFundApi, emergencyFundQueryKeys } from "../api";
 
 export function useEmergencyFundData() {
-  const { data, isLoading } = useQuery<EmergencyFund | null>({
+  const { data, isLoading, isError, refetch } = useQuery<EmergencyFund | null>({
     queryKey: emergencyFundQueryKeys.emergencyFund(),
     queryFn: emergencyFundApi.fetch,
   });
@@ -11,5 +11,7 @@ export function useEmergencyFundData() {
   return {
     emergencyFund: data ?? null,
     isLoading,
+    isError,
+    refetch,
   };
 }

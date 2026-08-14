@@ -21,7 +21,12 @@ export function useScenarioComparison() {
   const [timeHorizon, setTimeHorizon] = useState<TimeHorizon>("10");
 
   // Fetch scenarios with calculated projections
-  const { data: scenariosWithMetrics, isLoading } = useQuery<any[]>({
+  const {
+    data: scenariosWithMetrics,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery<any[]>({
     queryKey: ["/api/scenarios/with-projections"],
   });
 
@@ -152,10 +157,12 @@ export function useScenarioComparison() {
     chartData,
     timeHorizon,
     isLoading,
+    isError,
 
     // Actions
     setTimeHorizon,
     toggleScenario,
     getMetricForHorizon,
+    refetch,
   };
 }

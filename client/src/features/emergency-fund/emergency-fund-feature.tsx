@@ -2,6 +2,7 @@ import { Save } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { PageHeader } from "@/shared/ui/page-header";
+import { QueryErrorState } from "@/shared/components";
 import { usePageTitle } from "@/shared/hooks/use-page-title";
 import { useEmergencyFundData, useEmergencyFundCalculations, useEmergencyFundState } from "./hooks";
 import { useCashFlowData } from "@/features/cash-flow/hooks";
@@ -12,8 +13,18 @@ import {
 } from "./components";
 
 export default function EmergencyFundFeature() {
-  const { emergencyFund, isLoading: emergencyFundLoading } = useEmergencyFundData();
-  const { cashFlow, isLoading: cashFlowLoading } = useCashFlowData();
+  const {
+    emergencyFund,
+    isLoading: emergencyFundLoading,
+    isError: emergencyFundError,
+    refetch: refetchEmergencyFund,
+  } = useEmergencyFundData();
+  const {
+    cashFlow,
+    isLoading: cashFlowLoading,
+    isError: cashFlowError,
+    refetch: refetchCashFlow,
+  } = useCashFlowData();
 
   usePageTitle("Emergency Fund | Mortgage Strategy");
 
@@ -43,6 +54,7 @@ export default function EmergencyFundFeature() {
   });
 
   const isLoading = emergencyFundLoading || cashFlowLoading;
+  const isError = emergencyFundError || cashFlowError;
 
   if (isLoading) {
     return (
@@ -56,6 +68,23 @@ export default function EmergencyFundFeature() {
         </div>
         <Skeleton className="h-96 w-full" />
         <Skeleton className="h-80 w-full" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Emergency Fund Settings"
+          description="Set your emergency fund target (applies to all scenarios)"
+        />
+        <QueryErrorState
+          onRetry={() => {
+            refetchEmergencyFund();
+            refetchCashFlow();
+          }}
+        />
       </div>
     );
   }

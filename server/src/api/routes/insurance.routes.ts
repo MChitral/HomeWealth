@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { requireUser } from "@api/utils/auth";
 import { sendError } from "@server-shared/utils/api-response";
 import { InsuranceCalculatorService } from "@application/services/insurance-calculator.service";
 import { z } from "zod";
@@ -22,7 +21,7 @@ const calculateInsuranceSchema = z.object({
  * POST /api/insurance/calculate
  * Calculate mortgage default insurance premium
  */
-router.post("/calculate", requireUser, async (req, res) => {
+router.post("/calculate", async (req, res) => {
   try {
     // Validate request body
     const validationResult = calculateInsuranceSchema.safeParse(req.body);
@@ -61,7 +60,7 @@ router.post("/calculate", requireUser, async (req, res) => {
  * POST /api/insurance/compare
  * Compare premiums across all providers
  */
-router.post("/compare", requireUser, async (req, res) => {
+router.post("/compare", async (req, res) => {
   try {
     // Validate request body (same schema but provider is optional)
     const compareSchema = calculateInsuranceSchema.omit({ provider: true });
@@ -100,7 +99,7 @@ router.post("/compare", requireUser, async (req, res) => {
  * GET /api/insurance/rates/:provider
  * Get premium rate table for a specific provider
  */
-router.get("/rates/:provider", requireUser, async (req, res) => {
+router.get("/rates/:provider", async (req, res) => {
   try {
     const { provider } = req.params;
 

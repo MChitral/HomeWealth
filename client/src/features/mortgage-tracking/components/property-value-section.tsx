@@ -3,7 +3,7 @@ import { propertyValueApi } from "../api/property-value-api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
-import { Loader2, TrendingUp, TrendingDown, Minus, Plus } from "lucide-react";
+import { Loader2, TrendingUp, TrendingDown, Minus, Plus, AlertCircle } from "lucide-react";
 import { PropertyValueTrendChart } from "./property-value-trend-chart";
 import { PropertyValueUpdateDialog } from "./property-value-update-dialog";
 import { useState } from "react";
@@ -34,7 +34,12 @@ export function PropertyValueSection({
     enabled: !!mortgageId && (history?.length || 0) > 1,
   });
 
-  const { data: projection } = useQuery({
+  const {
+    data: projection,
+    isLoading: isLoadingProjection,
+    isError: isProjectionError,
+    refetch: refetchProjection,
+  } = useQuery({
     queryKey: ["property-value-projection", mortgageId],
     queryFn: () => propertyValueApi.getProjections(mortgageId, 12),
     enabled: !!mortgageId && (history?.length || 0) > 1,
@@ -124,7 +129,32 @@ export function PropertyValueSection({
           </div>
 
           {/* Projected Value */}
-          {projection && (
+          {isLoadingProjection && (history?.length || 0) > 1 && (
+            <div className="rounded-lg border p-4 bg-muted/50">
+              <p className="text-sm text-muted-foreground mb-1">Projected Value (12 months)</p>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-sm">Loading projection...</span>
+              </div>
+            </div>
+          )}
+
+          {isProjectionError && !isLoadingProjection && (
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              <span>Couldn&apos;t load projection.</span>
+              <button
+                type="button"
+                onClick={() => refetchProjection()}
+                className="underline hover:text-foreground"
+                data-testid="button-retry-projection"
+              >
+                Retry
+              </button>
+            </p>
+          )}
+
+          {projection && !isLoadingProjection && !isProjectionError && (
             <div className="rounded-lg border p-4 bg-muted/50">
               <p className="text-sm text-muted-foreground mb-1">Projected Value (12 months)</p>
               <p className="text-xl font-semibold">{formatCurrency(projection.projectedValue)}</p>
