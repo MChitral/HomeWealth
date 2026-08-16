@@ -23,6 +23,11 @@ import { PropertyValueHistoryRepository } from "./property-value-history.reposit
 import { PaymentCorrectionsRepository } from "./payment-corrections.repository";
 import { PaymentAmountChangeEventsRepository } from "./payment-amount-change-events.repository";
 import { MortgagePayoffRepository } from "./mortgage-payoff.repository";
+import { StagedImportsRepository } from "./staged-imports.repository";
+import { PrivilegeEventsRepository } from "./privilege-events.repository";
+import { FacilitySnapshotsRepository } from "./facility-snapshots.repository";
+import { LenderProjectionLocksRepository } from "./lender-projection-locks.repository";
+import { RulesSnapshotsRepository } from "./rules-snapshots.repository";
 
 export interface Repositories {
   users: UsersRepository;
@@ -50,6 +55,11 @@ export interface Repositories {
   paymentCorrections: PaymentCorrectionsRepository;
   paymentAmountChangeEvents: PaymentAmountChangeEventsRepository;
   mortgagePayoff: MortgagePayoffRepository;
+  stagedImports: StagedImportsRepository;
+  privilegeEvents: PrivilegeEventsRepository;
+  facilitySnapshots: FacilitySnapshotsRepository;
+  lenderProjectionLocks: LenderProjectionLocksRepository;
+  rulesSnapshots: RulesSnapshotsRepository;
 }
 
 export function createRepositories(): Repositories {
@@ -79,6 +89,11 @@ export function createRepositories(): Repositories {
     paymentCorrections: new PaymentCorrectionsRepository(),
     paymentAmountChangeEvents: new PaymentAmountChangeEventsRepository(),
     mortgagePayoff: new MortgagePayoffRepository(),
+    stagedImports: new StagedImportsRepository(),
+    privilegeEvents: new PrivilegeEventsRepository(),
+    facilitySnapshots: new FacilitySnapshotsRepository(),
+    lenderProjectionLocks: new LenderProjectionLocksRepository(),
+    rulesSnapshots: new RulesSnapshotsRepository(),
   };
 }
 
@@ -110,4 +125,9 @@ export {
   PaymentCorrectionsRepository,
   PaymentAmountChangeEventsRepository,
   MortgagePayoffRepository,
+  StagedImportsRepository,
+  PrivilegeEventsRepository,
+  FacilitySnapshotsRepository,
+  LenderProjectionLocksRepository,
+  RulesSnapshotsRepository,
 };

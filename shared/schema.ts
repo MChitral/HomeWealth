@@ -9,14 +9,24 @@ import {
   timestamp,
   jsonb,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import {
+  DOCUMENT_TYPES,
   INTEREST_ACCRUAL_BASES,
   PAYMENT_CALCULATION_SOURCES,
+  PRIVILEGE_TYPES,
+  SNAPSHOT_STATUSES,
+  STATEMENT_PERIOD_PATTERN,
+  STAGED_IMPORT_STATUSES,
+  type DocumentType,
   type InterestAccrualBasis,
   type PaymentCalculationSource,
+  type PrivilegeType,
+  type SnapshotStatus,
+  type StagedImportStatus,
 } from "./mortgage-ledger";
 
 // Session storage table for Replit Auth
@@ -452,6 +462,8 @@ export const mortgagePayments = pgTable("mortgage_payments", {
 
   // Payment skipping (Canadian lender feature)
   isSkipped: integer("is_skipped").notNull().default(0), // boolean as 0/1 - indicates payment was skipped
+  isMissed: integer("is_missed").notNull().default(0), // boolean as 0/1 - missed is not skip
+  statementPeriod: varchar("statement_period", { length: 7 }), // YYYY-MM for statement rows
   skippedInterestAccrued: decimal("skipped_interest_accrued", { precision: 10, scale: 2 })
     .notNull()
     .default("0.00"), // Interest accrued during skip
@@ -467,6 +479,9 @@ export const mortgagePayments = pgTable("mortgage_payments", {
     table.createdAt
   ),
   index("IDX_mortgage_payments_term_date").on(table.termId, table.paymentDate, table.createdAt),
+  uniqueIndex("UQ_mortgage_payments_statement_period")
+    .on(table.mortgageId, table.statementPeriod)
+    .where(sql`${table.calculationSource} = 'statement' AND ${table.statementPeriod} IS NOT NULL`),
 ]);
 
 export const insertMortgagePaymentSchema = createInsertSchema(mortgagePayments)
@@ -503,6 +518,24 @@ export const insertMortgagePaymentSchema = createInsertSchema(mortgagePayments)
       .transform((val) => (typeof val === "number" ? val.toFixed(2) : val))
       .optional()
       .default("0.00"),
+    isMissed: z
+      .union([z.boolean(), z.number()])
+      .transform((val) => (val === true || val === 1 ? 1 : 0))
+      .optional(),
+    statementPeriod: z
+      .string()
+      .regex(STATEMENT_PERIOD_PATTERN, "statementPeriod must be YYYY-MM")
+      .nullable()
+      .optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.isMissed === 1 && data.isSkipped === 1) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "A payment cannot be both missed and skipped",
+        path: ["isMissed"],
+      });
+    }
   });
 export type InsertMortgagePayment = z.infer<typeof insertMortgagePaymentSchema>;
 export type MortgagePayment = typeof mortgagePayments.$inferSelect;
@@ -1853,3 +1886,225 @@ export const insertMortgagePayoffSchema = createInsertSchema(mortgagePayoff)
 
 export type InsertMortgagePayoff = z.infer<typeof insertMortgagePayoffSchema>;
 export type MortgagePayoff = typeof mortgagePayoff.$inferSelect;
+
+const moneyAmount = z
+  .union([z.string(), z.number()])
+  .transform((val) => (typeof val === "number" ? val.toFixed(2) : val));
+
+const flag01 = z
+  .union([z.boolean(), z.number()])
+  .transform((val) => (val === true || val === 1 ? 1 : 0));
+
+const statementPeriod = z.string().regex(STATEMENT_PERIOD_PATTERN, "statementPeriod must be YYYY-MM");
+
+export const stagedImports = pgTable(
+  "staged_imports",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    userId: varchar("user_id")
+      .notNull()
+      .references(() => users.id),
+    mortgageId: varchar("mortgage_id")
+      .notNull()
+      .references(() => mortgages.id),
+    documentType: text("document_type").$type<DocumentType>().notNull(),
+    statementPeriod: varchar("statement_period", { length: 7 }).notNull(),
+    status: text("status").$type<StagedImportStatus>().notNull().default("staged"),
+    contentHash: varchar("content_hash", { length: 64 }).notNull(),
+    templateId: text("template_id").notNull(),
+    extractorVersion: text("extractor_version").notNull(),
+    facts: jsonb("facts").$type<Record<string, unknown>>().notNull(),
+    proofResults: jsonb("proof_results").$type<Record<string, unknown>>(),
+    paymentId: varchar("payment_id").references(() => mortgagePayments.id),
+    supersededById: varchar("superseded_by_id"),
+    expiresAt: timestamp("expires_at").notNull(),
+    confirmedAt: timestamp("confirmed_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("IDX_staged_imports_mortgage_status").on(table.mortgageId, table.status),
+    uniqueIndex("UQ_staged_imports_active_confirmed")
+      .on(table.userId, table.mortgageId, table.documentType, table.statementPeriod)
+      .where(sql`${table.status} = 'confirmed'`),
+  ]
+);
+
+export const insertStagedImportSchema = createInsertSchema(stagedImports)
+  .omit({ id: true, createdAt: true, confirmedAt: true })
+  .extend({
+    documentType: z.enum(DOCUMENT_TYPES),
+    statementPeriod,
+    status: z.enum(STAGED_IMPORT_STATUSES).optional().default("staged"),
+    contentHash: z.string().min(1),
+    facts: z.record(z.unknown()),
+    proofResults: z.record(z.unknown()).nullable().optional(),
+  });
+
+export type InsertStagedImport = z.infer<typeof insertStagedImportSchema>;
+export type StagedImport = typeof stagedImports.$inferSelect;
+
+export const privilegeEvents = pgTable(
+  "privilege_events",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    mortgageId: varchar("mortgage_id")
+      .notNull()
+      .references(() => mortgages.id),
+    stagedImportId: varchar("staged_import_id")
+      .notNull()
+      .references(() => stagedImports.id),
+    paymentId: varchar("payment_id").references(() => mortgagePayments.id),
+    privilegeType: text("privilege_type").$type<PrivilegeType>().notNull(),
+    eventDate: date("event_date").notNull(),
+    amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+    consumesLumpSumLimit: integer("consumes_lump_sum_limit").notNull().default(0),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("IDX_privilege_events_mortgage").on(table.mortgageId, table.eventDate)]
+);
+
+export const insertPrivilegeEventSchema = createInsertSchema(privilegeEvents)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    privilegeType: z.enum(PRIVILEGE_TYPES),
+    amount: moneyAmount,
+    consumesLumpSumLimit: flag01.optional().default(0),
+  });
+
+export type InsertPrivilegeEvent = z.infer<typeof insertPrivilegeEventSchema>;
+export type PrivilegeEvent = typeof privilegeEvents.$inferSelect;
+
+export const facilitySnapshots = pgTable(
+  "facility_snapshots",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    mortgageId: varchar("mortgage_id")
+      .notNull()
+      .references(() => mortgages.id),
+    stagedImportId: varchar("staged_import_id")
+      .notNull()
+      .references(() => stagedImports.id),
+    statementPeriod: varchar("statement_period", { length: 7 }).notNull(),
+    statementAsOf: date("statement_as_of").notNull(),
+    mortgageOutstanding: decimal("mortgage_outstanding", { precision: 12, scale: 2 }).notNull(),
+    helocLimit: decimal("heloc_limit", { precision: 12, scale: 2 }),
+    helocDrawn: decimal("heloc_drawn", { precision: 12, scale: 2 }).notNull().default("0.00"),
+    availableCredit: decimal("available_credit", { precision: 12, scale: 2 }).notNull(),
+    planTotalLimit: decimal("plan_total_limit", { precision: 12, scale: 2 }),
+    status: text("status").$type<SnapshotStatus>().notNull().default("active"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("UQ_facility_snapshots_active_period")
+      .on(table.mortgageId, table.statementPeriod)
+      .where(sql`${table.status} = 'active'`),
+  ]
+);
+
+export const insertFacilitySnapshotSchema = createInsertSchema(facilitySnapshots)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    statementPeriod,
+    mortgageOutstanding: moneyAmount,
+    helocLimit: moneyAmount.nullable().optional(),
+    helocDrawn: moneyAmount.optional().default("0.00"),
+    availableCredit: moneyAmount,
+    planTotalLimit: moneyAmount.nullable().optional(),
+    status: z.enum(SNAPSHOT_STATUSES).optional().default("active"),
+  });
+
+export type InsertFacilitySnapshot = z.infer<typeof insertFacilitySnapshotSchema>;
+export type FacilitySnapshot = typeof facilitySnapshots.$inferSelect;
+
+export const lenderProjectionLocks = pgTable(
+  "lender_projection_locks",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    mortgageId: varchar("mortgage_id")
+      .notNull()
+      .references(() => mortgages.id),
+    stagedImportId: varchar("staged_import_id")
+      .notNull()
+      .references(() => stagedImports.id),
+    statementPeriod: varchar("statement_period", { length: 7 }).notNull(),
+    interestToEndOfTerm: decimal("interest_to_end_of_term", { precision: 12, scale: 2 }).notNull(),
+    principalAndInterestToEndOfTerm: decimal("principal_and_interest_to_end_of_term", {
+      precision: 12,
+      scale: 2,
+    }),
+    triggeringAnnualRate: decimal("triggering_annual_rate", { precision: 6, scale: 3 }),
+    nextDueDate: date("next_due_date"),
+    rateReduction: decimal("rate_reduction", { precision: 6, scale: 3 }),
+    remainingTerm: text("remaining_term"),
+    remainingAmortization: text("remaining_amortization"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("IDX_lender_projection_locks_mortgage").on(table.mortgageId, table.statementPeriod)]
+);
+
+export const insertLenderProjectionLockSchema = createInsertSchema(lenderProjectionLocks)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    statementPeriod,
+    interestToEndOfTerm: moneyAmount,
+    principalAndInterestToEndOfTerm: moneyAmount.nullable().optional(),
+    triggeringAnnualRate: z
+      .union([z.string(), z.number(), z.null(), z.undefined()])
+      .transform((val) => (val == null ? null : typeof val === "number" ? val.toFixed(3) : val))
+      .optional(),
+  });
+
+export type InsertLenderProjectionLock = z.infer<typeof insertLenderProjectionLockSchema>;
+export type LenderProjectionLock = typeof lenderProjectionLocks.$inferSelect;
+
+export const rulesSnapshots = pgTable(
+  "rules_snapshots",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    mortgageId: varchar("mortgage_id")
+      .notNull()
+      .references(() => mortgages.id),
+    stagedImportId: varchar("staged_import_id")
+      .notNull()
+      .references(() => stagedImports.id),
+    statementPeriod: varchar("statement_period", { length: 7 }).notNull(),
+    statementAsOf: date("statement_as_of").notNull(),
+    interestAdjustmentDate: date("interest_adjustment_date"),
+    annualLumpSumLimitAmount: decimal("annual_lump_sum_limit_amount", { precision: 12, scale: 2 }),
+    annualLumpSumLimitPercent: integer("annual_lump_sum_limit_percent"),
+    skipAPaymentYtd: decimal("skip_a_payment_ytd", { precision: 12, scale: 2 }),
+    interestInArrears: decimal("interest_in_arrears", { precision: 12, scale: 2 }),
+    accruedInterest: decimal("accrued_interest", { precision: 12, scale: 2 }),
+    penaltyMethod: text("penalty_method"),
+    switchOutFee: decimal("switch_out_fee", { precision: 12, scale: 2 }),
+    dischargeFee: decimal("discharge_fee", { precision: 12, scale: 2 }),
+    loanProtectorPerThousand: decimal("loan_protector_per_thousand", { precision: 8, scale: 2 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("IDX_rules_snapshots_mortgage").on(table.mortgageId, table.statementPeriod)]
+);
+
+export const insertRulesSnapshotSchema = createInsertSchema(rulesSnapshots)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    statementPeriod,
+    annualLumpSumLimitAmount: moneyAmount.nullable().optional(),
+    skipAPaymentYtd: moneyAmount.nullable().optional(),
+    interestInArrears: moneyAmount.nullable().optional(),
+    accruedInterest: moneyAmount.nullable().optional(),
+    switchOutFee: moneyAmount.nullable().optional(),
+    dischargeFee: moneyAmount.nullable().optional(),
+  });
+
+export type InsertRulesSnapshot = z.infer<typeof insertRulesSnapshotSchema>;
+export type RulesSnapshot = typeof rulesSnapshots.$inferSelect;
