@@ -100,8 +100,22 @@ export class StatementIngestService {
     private readonly payments: MortgagePaymentsRepository,
     private readonly extract: typeof extractRbcDocument = extractRbcDocument,
     private readonly now: () => Date = () => new Date(),
-    private readonly logger = createIngestLogger()
+    private readonly logger = createIngestLogger(),
+    private apply?: {
+      confirm: (input: {
+        userId: string;
+        mortgageId: string;
+        stagedId: string;
+        supersede?: boolean;
+        treatAsDoubleUp?: boolean;
+        overrideOpeningBalance?: boolean;
+      }) => Promise<{ paymentId?: string; status: "confirmed" }>;
+    }
   ) {}
+
+  attachApply(apply: NonNullable<StatementIngestService["apply"]>): void {
+    this.apply = apply;
+  }
 
   async upload(input: {
     userId: string;
@@ -210,10 +224,16 @@ export class StatementIngestService {
     userId: string;
     mortgageId: string;
     stagedId: string;
-  }): Promise<never> {
+    supersede?: boolean;
+    treatAsDoubleUp?: boolean;
+    overrideOpeningBalance?: boolean;
+  }): Promise<{ paymentId?: string; status: "confirmed" }> {
     const row = await this.requireOwnedStaged(input);
     this.assertFresh(row);
-    throw new IngestRequestError(409, "Confirm apply is not available until statement apply ships");
+    if (!this.apply) {
+      throw new IngestRequestError(409, "Confirm apply is not available until statement apply ships");
+    }
+    return this.apply.confirm(input);
   }
 
   async countPayments(mortgageId: string): Promise<number> {

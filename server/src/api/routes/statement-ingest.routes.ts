@@ -89,11 +89,26 @@ export function registerStatementIngestRoutes(
     const user = requireUser(req, res);
     if (!user) return;
     try {
-      await services.statementIngest.confirm({
+      const result = await services.statementIngest.confirm({
         userId: user.id,
         mortgageId: req.params.id,
         stagedId: req.params.stagedId,
+        supersede: Boolean(req.body?.supersede),
+        treatAsDoubleUp: Boolean(req.body?.treatAsDoubleUp),
+        overrideOpeningBalance: Boolean(req.body?.overrideOpeningBalance),
       });
+      sendSuccess(res, result);
+    } catch (error) {
+      handleIngestError(res, error);
+    }
+  });
+
+  router.get("/mortgages/:id/statement-facts", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+    try {
+      const facts = await services.statementApply.getStatementFacts(req.params.id, user.id);
+      sendSuccess(res, facts);
     } catch (error) {
       handleIngestError(res, error);
     }
