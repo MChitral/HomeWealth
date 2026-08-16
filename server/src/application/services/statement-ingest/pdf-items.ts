@@ -45,8 +45,10 @@ export async function loadPositionedItems(bytes: Uint8Array): Promise<Positioned
     }
     const { items } = await withTimeout(extractTextItems(pdf), PARSE_TIMEOUT_MS);
     const positioned: PositionedItem[] = [];
-    for (const [pageIndex, pageItems] of items.entries()) {
-      for (const item of pageItems) {
+    for (let pageIndex = 0; pageIndex < items.length; pageIndex += 1) {
+      const pageItems = items[pageIndex] ?? [];
+      for (let itemIndex = 0; itemIndex < pageItems.length; itemIndex += 1) {
+        const item = pageItems[itemIndex];
         if (!item.str.trim()) continue;
         positioned.push({ ...item, page: pageIndex + 1 });
       }

@@ -1,5 +1,7 @@
 import type { PositionedItem } from "./pdf-items";
 
+export type { PositionedItem };
+
 const Y_BAND = 12;
 
 export function normalizeLabel(value: string): string {
