@@ -102,6 +102,42 @@ export const mortgageQueryKeys = {
   // Trigger rate status
   triggerStatus: (mortgageId: string | null) =>
     ["/api/mortgages", mortgageId, "trigger-status"] as const,
+  statementFacts: (mortgageId: string | null) =>
+    ["/api/mortgages", mortgageId, "statement-facts"] as const,
+};
+
+export type StatementPreview = {
+  stagedId: string;
+  mortgageId: string;
+  documentType: "homeline_monthly" | "cost_of_borrowing" | "annual_statement";
+  statementPeriod: string;
+  status: string;
+  facts: Record<string, unknown>;
+  suggestedPrivilege: { type: "double_up"; pending: true } | null;
+  proofs: { canConfirm: boolean; reasons: string[] };
+  confirmEnabled: boolean;
+  expiresAt: string;
+};
+
+export type StatementFactsResponse = {
+  facility: {
+    statementPeriod: string;
+    mortgageOutstanding: string;
+    helocDrawn: string;
+    availableCredit: string;
+    planTotalLimit: string | null;
+  } | null;
+  privilege: {
+    lumpSumUsed: string;
+    doubleUpCount: number;
+    pendingExtra: boolean;
+  };
+  projectionLock: {
+    statementPeriod: string;
+    interestToEndOfTerm: string;
+    triggeringAnnualRate: string | null;
+    nextDueDate: string | null;
+  } | null;
 };
 
 export type BulkCreatePaymentsResponse = {
@@ -155,6 +191,40 @@ export const mortgageApi = {
     apiRequest<{ success: boolean }>("DELETE", `/api/mortgage-payments/${paymentId}`),
   deleteMortgage: (mortgageId: string) =>
     apiRequest<{ success: boolean }>("DELETE", `/api/mortgages/${mortgageId}`),
+
+  fetchStatementFacts: (mortgageId: string) =>
+    apiRequest<StatementFactsResponse>("GET", `/api/mortgages/${mortgageId}/statement-facts`),
+  fetchStatementPreview: (mortgageId: string, stagedId: string) =>
+    apiRequest<StatementPreview>("GET", `/api/mortgages/${mortgageId}/statements/${stagedId}`),
+  rejectStatement: (mortgageId: string, stagedId: string) =>
+    apiRequest<{ status: "rejected" }>(
+      "POST",
+      `/api/mortgages/${mortgageId}/statements/${stagedId}/reject`
+    ),
+  confirmStatement: (
+    mortgageId: string,
+    stagedId: string,
+    payload?: { supersede?: boolean; treatAsDoubleUp?: boolean }
+  ) =>
+    apiRequest<{ status: "confirmed"; paymentId?: string }>(
+      "POST",
+      `/api/mortgages/${mortgageId}/statements/${stagedId}/confirm`,
+      payload ?? {}
+    ),
+  uploadStatement: async (mortgageId: string, file: File): Promise<StatementPreview> => {
+    const body = new FormData();
+    body.append("file", file);
+    const res = await fetch(`/api/mortgages/${mortgageId}/statements`, {
+      method: "POST",
+      body,
+      credentials: "include",
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`${res.status}: ${text}`);
+    }
+    return res.json();
+  },
 
   // Skip Payment
   skipPayment: (

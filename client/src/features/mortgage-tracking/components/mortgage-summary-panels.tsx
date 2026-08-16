@@ -60,7 +60,7 @@ export function MortgageSummaryPanels({
           </p>
           {(stats.totalSkippedInterest ?? 0) > 0 && (
             <p className="text-sm text-muted-foreground mt-1">
-              (Incl. ${stats.totalSkippedInterest.toLocaleString()} from skipped payments)
+              (Incl. ${(stats.totalSkippedInterest ?? 0).toLocaleString()} from skipped payments)
             </p>
           )}
         </CardContent>

@@ -49,7 +49,7 @@ export class StagedImportsRepository {
 
   async update(
     id: string,
-    payload: Partial<InsertStagedImport>
+    payload: Partial<Omit<StagedImportRecord, "id" | "createdAt">>
   ): Promise<StagedImportRecord | undefined> {
     const [updated] = await this.database
       .update(stagedImports)

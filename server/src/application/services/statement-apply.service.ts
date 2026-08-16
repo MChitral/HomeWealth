@@ -259,6 +259,7 @@ export class StatementApplyService {
       calculationSource: "statement" as const,
       isMissed: split.isMissed,
       isSkipped: 0,
+      skippedInterestAccrued: "0.00",
       statementPeriod: input.facts.statementPeriod,
     };
 

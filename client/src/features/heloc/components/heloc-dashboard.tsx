@@ -6,10 +6,13 @@ import { HelocAccountCard } from "./heloc-account-card";
 import { CreateHelocDialog } from "./create-heloc-dialog";
 import { EquityStrategyDashboard } from "./equity-strategy-dashboard";
 import { useState } from "react";
+import { SmithCta } from "@/features/mortgage-tracking/components/smith-cta";
+import { useSmithCtaRates } from "@/features/mortgage-tracking/hooks/use-smith-cta-rates";
 
 export function HelocDashboard() {
   const { data: accounts, isLoading } = useHelocAccounts();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const { helocEffectiveRate, mortgageEffectiveRate } = useSmithCtaRates();
 
   if (isLoading) {
     return (
@@ -77,8 +80,15 @@ export function HelocDashboard() {
             </div>
             <h3 className="text-lg font-semibold mb-2">No HELOC Accounts Linked</h3>
             <p className="text-muted-foreground max-w-md mb-6">
-              Add your Home Equity Line of Credit to visualize your available borrowing power and
-              track the &quot;Smith Manoeuvre&quot; potential.
+              Add your Home Equity Line of Credit to visualize your available borrowing power
+              <SmithCta
+                helocEffectiveRate={helocEffectiveRate}
+                mortgageEffectiveRate={mortgageEffectiveRate}
+              >
+                {" "}
+                and track the &quot;Smith Manoeuvre&quot; potential
+              </SmithCta>
+              .
             </p>
             <Button data-testid="button-add-first-heloc" onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
