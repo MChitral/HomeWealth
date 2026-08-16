@@ -1,6 +1,5 @@
 import type { Mortgage, MortgageTerm, MortgagePayment } from "@shared/schema";
 import {
-  calculateInterestPayment,
   calculatePrincipalPayment,
   calculateRemainingBalance,
   getEffectivePeriodicRate,
@@ -8,6 +7,11 @@ import {
   PaymentFrequency,
 } from "./mortgage";
 import { getTermEffectiveRate } from "./term-helpers";
+import {
+  calculateInterestForBasis,
+  type InterestAccrualBasis,
+  type InterestRateSegment,
+} from "./interest-accrual";
 
 interface PaymentValidationInput {
   mortgage: Mortgage;
@@ -18,6 +22,7 @@ interface PaymentValidationInput {
   prepaymentAmount: number;
   remainingAmortizationMonths?: number;
   effectiveRateOverride?: number; // Optional: use this rate instead of term's current rate (for historical/backfilled payments)
+  actual365RateSegments?: InterestRateSegment[];
 }
 
 export interface PaymentValidationResult {
@@ -50,6 +55,7 @@ export function validateMortgagePayment(input: PaymentValidationInput): PaymentV
   // effectiveRateOverride is expected to be a percentage (e.g., 5.49), convert to decimal
   const annualRate =
     effectiveRateOverride !== undefined ? effectiveRateOverride / 100 : getTermEffectiveRate(term);
+  const interestAccrualBasis = term.interestAccrualBasis as InterestAccrualBasis;
 
   const balanceBeforePayment = previousPayment
     ? Number(previousPayment.remainingBalance)
@@ -75,7 +81,15 @@ export function validateMortgagePayment(input: PaymentValidationInput): PaymentV
   // interest is only charged against the regular payment portion.
   const regularPortion = Math.max(0, paymentAmount - prepaymentAmount);
   const interestPayment =
-    regularPortion > 0 ? calculateInterestPayment(balanceBeforePayment, annualRate, frequency) : 0;
+    regularPortion > 0
+      ? calculateInterestForBasis({
+          balance: balanceBeforePayment,
+          basis: interestAccrualBasis,
+          annualRate,
+          frequency,
+          rateSegments: input.actual365RateSegments,
+        })
+      : 0;
   const principalPayment =
     regularPortion > 0 ? calculatePrincipalPayment(regularPortion, interestPayment) : 0;
   const totalPrincipalPayment = principalPayment + prepaymentAmount;
@@ -86,7 +100,10 @@ export function validateMortgagePayment(input: PaymentValidationInput): PaymentV
   );
 
   const periodicRate = getEffectivePeriodicRate(annualRate, frequency);
-  const interestOnlyPayment = balanceBeforePayment * periodicRate;
+  const interestOnlyPayment =
+    interestAccrualBasis === "actual-365"
+      ? interestPayment
+      : balanceBeforePayment * periodicRate;
   // A pure lump-sum prepayment is not a regular payment, so it can never
   // count as a trigger-rate hit.
   const triggerRateHit = regularPortion > 0 && regularPortion <= interestOnlyPayment;

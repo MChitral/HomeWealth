@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { db } from "@infrastructure/db/connection";
 import type { NeonDatabase } from "drizzle-orm/neon-serverless";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
@@ -26,11 +26,16 @@ export class MortgagePaymentsRepository {
     return this.database
       .select()
       .from(mortgagePayments)
-      .where(eq(mortgagePayments.mortgageId, mortgageId));
+      .where(eq(mortgagePayments.mortgageId, mortgageId))
+      .orderBy(asc(mortgagePayments.paymentDate), asc(mortgagePayments.createdAt));
   }
 
   async findByTermId(termId: string): Promise<MortgagePaymentRecord[]> {
-    return this.database.select().from(mortgagePayments).where(eq(mortgagePayments.termId, termId));
+    return this.database
+      .select()
+      .from(mortgagePayments)
+      .where(eq(mortgagePayments.termId, termId))
+      .orderBy(asc(mortgagePayments.paymentDate), asc(mortgagePayments.createdAt));
   }
 
   async create(payload: InsertMortgagePayment, tx?: Database): Promise<MortgagePaymentRecord> {
@@ -46,6 +51,20 @@ export class MortgagePaymentsRepository {
 
   async deleteByTermId(termId: string): Promise<void> {
     await this.database.delete(mortgagePayments).where(eq(mortgagePayments.termId, termId));
+  }
+
+  async update(
+    id: string,
+    payload: Partial<InsertMortgagePayment>,
+    tx?: Database
+  ): Promise<MortgagePaymentRecord | undefined> {
+    const db = tx || this.database;
+    const [updated] = await db
+      .update(mortgagePayments)
+      .set(payload)
+      .where(eq(mortgagePayments.id, id))
+      .returning();
+    return updated;
   }
 
   async delete(id: string): Promise<boolean> {

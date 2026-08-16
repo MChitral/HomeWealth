@@ -1,6 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
-import { SkipLimitTracker } from "./skip-limit-tracker";
-import type { MortgagePayment } from "@shared/schema";
 
 interface SummaryStats {
   totalPayments: number;
@@ -15,13 +13,11 @@ interface SummaryStats {
 interface MortgageSummaryPanelsProps {
   stats: SummaryStats;
   formatAmortization: (years: number) => string;
-  payments: MortgagePayment[];
 }
 
 export function MortgageSummaryPanels({
   stats,
   formatAmortization,
-  payments,
 }: MortgageSummaryPanelsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -84,9 +80,7 @@ export function MortgageSummaryPanels({
         </CardContent>
       </Card>
 
-      <div className="lg:col-span-2">
-        <SkipLimitTracker payments={payments} />
-      </div>
+      {/* Payment Skip Limit hidden for now */}
     </div>
   );
 }

@@ -35,10 +35,8 @@ import { FrequencyChangeHistory } from "./frequency-change-history";
 import { PortabilityDialog } from "./portability-dialog";
 import { PortabilityHistory } from "./portability-history";
 import { PropertyValueUpdateDialog } from "./property-value-update-dialog";
-import { PropertyValueSection } from "./property-value-section";
 import { formatAmortization } from "../utils/format";
 import { useState } from "react";
-import { SkipImpactCalculator } from "./skip-impact-calculator";
 import { MLISelectChecker } from "./mli-select-checker";
 import { InsuranceProviderComparison } from "./insurance-provider-comparison";
 import { StressTestCalculator } from "./stress-test-calculator";
@@ -390,18 +388,9 @@ export function MortgageContent({
               totalSkippedInterest: summaryStats.totalSkippedInterest,
             }}
             formatAmortization={formatAmortization}
-            payments={payments || []}
           />
 
-          {/* Skip Impact Calculator */}
-          {uiCurrentTerm && (
-            <SkipImpactCalculator
-              currentBalance={lastKnownBalance}
-              currentAmortizationMonths={lastKnownAmortizationMonths}
-              effectiveRate={currentEffectiveRate / 100} // Convert percentage to decimal
-              paymentFrequency={uiCurrentTerm.paymentFrequency}
-            />
-          )}
+          {/* Skip Payment Impact Calculator hidden for now */}
 
           <PaymentHistorySection
             filteredPayments={filteredPayments}
@@ -416,17 +405,13 @@ export function MortgageContent({
             onSearchAmountChange={onSearchAmountChange}
             formatAmortization={formatAmortization}
             deletePaymentMutation={deletePaymentMutation}
+            currentTerm={uiCurrentTerm}
+            currentEffectiveRate={currentEffectiveRate}
           />
 
           <EducationSidebar />
 
-          {/* Property Value Tracking */}
-          {mortgage && (
-            <PropertyValueSection
-              mortgageId={mortgage.id}
-              currentPropertyValue={Number(mortgage.propertyPrice)}
-            />
-          )}
+          {/* Property Value Tracking hidden for now */}
 
           {/* Insurance & Compliance Section */}
           {mortgage && isHighRatio && (

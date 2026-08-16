@@ -1,3 +1,8 @@
+import type {
+  InterestAccrualBasis,
+  PaymentCalculationSource,
+} from "@shared/mortgage-ledger";
+
 export type UiTerm = {
   id: string;
   mortgageId: string;
@@ -16,6 +21,7 @@ export type UiTerm = {
     | "weekly"
     | "accelerated-weekly";
   regularPaymentAmount: number;
+  interestAccrualBasis: InterestAccrualBasis;
 };
 
 export type UiPayment = {
@@ -37,6 +43,7 @@ export type UiPayment = {
   amortizationYears: number;
   termStartDate?: string;
   remainingAmortizationMonths: number;
+  calculationSource: PaymentCalculationSource;
   // Payment skipping fields
   isSkipped: boolean;
   skippedInterestAccrued: number;

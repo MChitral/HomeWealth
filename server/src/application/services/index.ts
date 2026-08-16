@@ -148,7 +148,8 @@ export function createServices(repositories: Repositories): ApplicationServices 
       repositories.mortgages,
       repositories.mortgageTerms,
       repositories.mortgagePayments,
-      helocCreditLimitService
+      helocCreditLimitService,
+      repositories.primeRateHistory
     ),
     scenarios: new ScenarioService(repositories.scenarios, repositories.prepaymentEvents),
     prepaymentEvents: new PrepaymentEventService(

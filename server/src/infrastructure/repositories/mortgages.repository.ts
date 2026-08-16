@@ -33,8 +33,13 @@ export class MortgagesRepository {
     return created;
   }
 
-  async update(id: string, payload: Partial<UpdateMortgage>): Promise<MortgageRecord | undefined> {
-    const [updated] = await this.database
+  async update(
+    id: string,
+    payload: Partial<UpdateMortgage>,
+    tx?: Database
+  ): Promise<MortgageRecord | undefined> {
+    const database = tx || this.database;
+    const [updated] = await database
       .update(mortgages)
       .set(payload)
       .where(eq(mortgages.id, id))

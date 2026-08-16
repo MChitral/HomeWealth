@@ -58,7 +58,12 @@ export function RenewalTab({
   });
 
   const createTermMutation = useMutation({
-    mutationFn: (data: any) => mortgageApi.createTerm(mortgageId, data),
+    mutationFn: (data: any) =>
+      mortgageApi.createTerm(mortgageId, {
+        ...data,
+        interestAccrualBasis:
+          currentTerm?.interestAccrualBasis ?? "canadian-semi-annual",
+      }),
     onSuccess: async (newTerm) => {
       queryClient.invalidateQueries({ queryKey: ["mortgage", mortgageId] });
       queryClient.invalidateQueries({ queryKey: ["renewal", mortgageId] });

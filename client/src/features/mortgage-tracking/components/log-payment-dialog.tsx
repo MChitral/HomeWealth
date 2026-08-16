@@ -59,7 +59,7 @@ export function LogPaymentDialog({
   onSubmit,
   isSubmitting,
   mortgageId: _mortgageId,
-  payments: _payments = [],
+  payments = [],
   onOpenSkipPayment: _onOpenSkipPayment,
   maxSkipsPerYear: _maxSkipsPerYear = 2,
 }: LogPaymentDialogProps) {
@@ -97,6 +97,15 @@ export function LogPaymentDialog({
   }, [paymentDate]);
   const [regularPaymentAmount, setRegularPaymentAmount] = useState("");
   const [prepaymentAmount, setPrepaymentAmount] = useState("0");
+  const latestPayment = useMemo(
+    () =>
+      payments.reduce<MortgagePayment | undefined>(
+        (latest, payment) =>
+          !latest || payment.paymentDate >= latest.paymentDate ? payment : latest,
+        undefined
+      ),
+    [payments]
+  );
 
   useEffect(() => {
     if (open && currentTerm) {
@@ -149,6 +158,9 @@ export function LogPaymentDialog({
       extraPrepaymentAmount: parseFloat(prepaymentAmount) || 0,
       frequency: currentTerm.paymentFrequency as PaymentFrequency,
       annualRate: annualRatePercent / 100,
+      interestAccrualBasis: currentTerm.interestAccrualBasis,
+      periodStartDate: latestPayment?.paymentDate ?? currentTerm.startDate,
+      periodEndDate: paymentDate,
     });
   }, [
     currentTerm,
@@ -157,6 +169,8 @@ export function LogPaymentDialog({
     regularPaymentAmount,
     prepaymentAmount,
     currentPrimeRate,
+    latestPayment,
+    paymentDate,
   ]);
 
   const handleSave = () => {
@@ -316,7 +330,13 @@ export function LogPaymentDialog({
 
           {paymentBreakdown ? (
             <div className="p-4 bg-muted rounded-md space-y-2">
-              <p className="text-sm font-medium">Calculated (semi-annual compounding)</p>
+              <p className="text-sm font-medium">
+                Calculated (
+                {currentTerm?.interestAccrualBasis === "actual-365"
+                  ? "Actual/365 estimate"
+                  : "semi-annual compounding"}
+                )
+              </p>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-muted-foreground">Principal (incl. prepayment)</p>
@@ -347,6 +367,12 @@ export function LogPaymentDialog({
                     Payment is below interest-only threshold. Lender may require a payment increase.
                   </AlertDescription>
                 </Alert>
+              )}
+              {currentTerm?.interestAccrualBasis === "actual-365" && (
+                <p className="text-xs text-muted-foreground">
+                  The saved split is authoritative and also applies any prime-rate changes within
+                  this payment period.
+                </p>
               )}
             </div>
           ) : (

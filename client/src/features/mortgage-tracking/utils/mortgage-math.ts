@@ -1,3 +1,5 @@
+import type { InterestAccrualBasis } from "@shared/mortgage-ledger";
+
 export type PaymentFrequency =
   | "monthly"
   | "semi-monthly"
@@ -73,6 +75,17 @@ export interface PaymentBreakdownInput {
   extraPrepaymentAmount?: number;
   frequency: PaymentFrequency;
   annualRate: number;
+  interestAccrualBasis?: InterestAccrualBasis;
+  periodStartDate?: string;
+  periodEndDate?: string;
+}
+
+function getActualDays(startDate?: string, endDate?: string): number | null {
+  if (!startDate || !endDate) return null;
+  const start = Date.parse(`${startDate}T00:00:00.000Z`);
+  const end = Date.parse(`${endDate}T00:00:00.000Z`);
+  const days = (end - start) / (24 * 60 * 60 * 1000);
+  return Number.isInteger(days) && days > 0 ? days : null;
 }
 
 export function calculatePaymentBreakdown({
@@ -82,6 +95,9 @@ export function calculatePaymentBreakdown({
   extraPrepaymentAmount = 0,
   frequency,
   annualRate,
+  interestAccrualBasis = "canadian-semi-annual",
+  periodStartDate,
+  periodEndDate,
 }: PaymentBreakdownInput): PaymentBreakdown {
   if (balance <= 0 || paymentAmount <= 0) {
     return {
@@ -94,7 +110,11 @@ export function calculatePaymentBreakdown({
   }
 
   const periodicRate = getEffectivePeriodicRate(annualRate, frequency);
-  const interestPortion = balance * periodicRate;
+  const actualDays = getActualDays(periodStartDate, periodEndDate);
+  const interestPortion =
+    interestAccrualBasis === "actual-365" && actualDays
+      ? balance * annualRate * (actualDays / 365)
+      : balance * periodicRate;
   const scheduledPrincipal = Math.max(paymentAmount - interestPortion - extraPrepaymentAmount, 0);
   const totalPrincipal = Math.min(balance, scheduledPrincipal + extraPrepaymentAmount);
   const remainingBalance = Math.max(0, balance - totalPrincipal);

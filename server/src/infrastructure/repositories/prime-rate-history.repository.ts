@@ -42,7 +42,17 @@ export class PrimeRateHistoryRepository {
           lte(primeRateHistory.effectiveDate, endDate)
         )
       )
-      .orderBy(desc(primeRateHistory.effectiveDate));
+      .orderBy(desc(primeRateHistory.effectiveDate), desc(primeRateHistory.createdAt));
+  }
+
+  async findEffectiveAtOrBefore(date: string): Promise<PrimeRateHistory | undefined> {
+    const [effectiveRate] = await this.db
+      .select()
+      .from(primeRateHistory)
+      .where(lte(primeRateHistory.effectiveDate, date))
+      .orderBy(desc(primeRateHistory.effectiveDate), desc(primeRateHistory.createdAt))
+      .limit(1);
+    return effectiveRate;
   }
 
   /**

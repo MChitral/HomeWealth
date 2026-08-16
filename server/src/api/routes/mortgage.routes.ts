@@ -6,6 +6,7 @@ import {
   mortgageTermCreateSchema,
   mortgageTermUpdateSchema,
   mortgagePaymentCreateSchema,
+  mortgagePaymentUpdateSchema,
 } from "@domain/models";
 import { requireUser } from "@api/utils/auth";
 import { sendError } from "@server-shared/utils/api-response";
@@ -1473,16 +1474,37 @@ export function registerMortgageRoutes(router: Router, services: ApplicationServ
     }
   });
 
+  router.patch("/mortgage-payments/:paymentId", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+
+    try {
+      const data = mortgagePaymentUpdateSchema.parse(req.body);
+      const updated = await services.mortgagePayments.update(req.params.paymentId, user.id, data);
+      if (!updated) {
+        sendError(res, 404, "Payment not found or not authorized");
+        return;
+      }
+      res.json(updated);
+    } catch (error) {
+      sendError(res, 400, "Invalid payment data", error);
+    }
+  });
+
   router.delete("/mortgage-payments/:paymentId", async (req, res) => {
     const user = requireUser(req, res);
     if (!user) return;
 
-    const deleted = await services.mortgagePayments.delete(req.params.paymentId, user.id);
-    if (!deleted) {
-      sendError(res, 404, "Payment not found or not authorized");
-      return;
+    try {
+      const deleted = await services.mortgagePayments.delete(req.params.paymentId, user.id);
+      if (!deleted) {
+        sendError(res, 404, "Payment not found or not authorized");
+        return;
+      }
+      res.json({ success: true });
+    } catch (error) {
+      sendError(res, 409, "Payment cannot be deleted", error);
     }
-    res.json({ success: true });
   });
 
   router.post("/mortgages/:mortgageId/terms/:termId/skip-payment", async (req, res) => {

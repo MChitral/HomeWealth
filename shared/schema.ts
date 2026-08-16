@@ -12,6 +12,12 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import {
+  INTEREST_ACCRUAL_BASES,
+  PAYMENT_CALCULATION_SOURCES,
+  type InterestAccrualBasis,
+  type PaymentCalculationSource,
+} from "./mortgage-ledger";
 
 // Session storage table for Replit Auth
 export const sessions = pgTable(
@@ -275,6 +281,10 @@ export const mortgageTerms = pgTable("mortgage_terms", {
 
   paymentFrequency: text("payment_frequency").notNull(), // monthly, biweekly, accelerated-biweekly, semi-monthly, weekly, accelerated-weekly
   regularPaymentAmount: decimal("regular_payment_amount", { precision: 10, scale: 2 }).notNull(),
+  interestAccrualBasis: text("interest_accrual_basis")
+    .$type<InterestAccrualBasis>()
+    .notNull()
+    .default("canadian-semi-annual"), // canadian-semi-annual | actual-365
 
   // Penalty calculation method
   penaltyCalculationMethod: text("penalty_calculation_method"), // "ird_posted_rate", "ird_discounted_rate", "ird_origination_comparison", "three_month_interest", "open_mortgage", "variable_rate"
@@ -304,6 +314,7 @@ const mortgageTermBaseSchema = createInsertSchema(mortgageTerms)
     regularPaymentAmount: z
       .union([z.string(), z.number()])
       .transform((val) => (typeof val === "number" ? val.toFixed(2) : val)),
+    interestAccrualBasis: z.enum(INTEREST_ACCRUAL_BASES).default("canadian-semi-annual"),
     variableRateCap: z
       .union([z.string(), z.number(), z.null(), z.undefined()])
       .transform((val) => (val == null ? null : typeof val === "number" ? val.toFixed(3) : val))
@@ -434,6 +445,10 @@ export const mortgagePayments = pgTable("mortgage_payments", {
 
   // Trigger rate tracking (VRM-Fixed Payment only)
   triggerRateHit: integer("trigger_rate_hit").notNull().default(0), // boolean as 0/1
+  calculationSource: text("calculation_source")
+    .$type<PaymentCalculationSource>()
+    .notNull()
+    .default("calculated"), // calculated | statement
 
   // Payment skipping (Canadian lender feature)
   isSkipped: integer("is_skipped").notNull().default(0), // boolean as 0/1 - indicates payment was skipped
@@ -445,7 +460,14 @@ export const mortgagePayments = pgTable("mortgage_payments", {
   remainingAmortizationMonths: integer("remaining_amortization_months").notNull(),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("IDX_mortgage_payments_mortgage_date").on(
+    table.mortgageId,
+    table.paymentDate,
+    table.createdAt
+  ),
+  index("IDX_mortgage_payments_term_date").on(table.termId, table.paymentDate, table.createdAt),
+]);
 
 export const insertMortgagePaymentSchema = createInsertSchema(mortgagePayments)
   .omit({ id: true, createdAt: true })
@@ -475,6 +497,7 @@ export const insertMortgagePaymentSchema = createInsertSchema(mortgagePayments)
     effectiveRate: z
       .union([z.string(), z.number()])
       .transform((val) => (typeof val === "number" ? val.toFixed(3) : val)),
+    calculationSource: z.enum(PAYMENT_CALCULATION_SOURCES).default("calculated"),
     skippedInterestAccrued: z
       .union([z.string(), z.number()])
       .transform((val) => (typeof val === "number" ? val.toFixed(2) : val))

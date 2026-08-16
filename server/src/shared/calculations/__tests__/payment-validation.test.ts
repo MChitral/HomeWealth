@@ -35,6 +35,44 @@ const mockTerm: MortgageTerm = {
 };
 
 describe("validateMortgagePayment", () => {
+  it("uses Actual/365 rate segments for an RBC variable-fixed payment", () => {
+    const result = validateMortgagePayment({
+      mortgage: {
+        ...mockMortgage,
+        originalAmount: "294399.00",
+        currentBalance: "294399.00",
+        startDate: "2025-01-02",
+      },
+      term: {
+        ...mockTerm,
+        termType: "variable-fixed",
+        fixedRate: null,
+        lockedSpread: "-0.900",
+        primeRate: "5.200",
+        interestAccrualBasis: "actual-365",
+      },
+      paymentAmount: 1500.69,
+      regularPaymentAmount: 1500.69,
+      prepaymentAmount: 0,
+      actual365RateSegments: [
+        {
+          startDate: "2025-01-02",
+          endDate: "2025-01-30",
+          annualRate: 0.0455,
+        },
+        {
+          startDate: "2025-01-30",
+          endDate: "2025-02-02",
+          annualRate: 0.043,
+        },
+      ],
+    });
+
+    assert.equal(result.expectedInterest, 1131.62);
+    assert.equal(result.expectedPrincipal, 369.07);
+    assert.equal(result.expectedBalance, 294029.93);
+  });
+
   it("calculates expected principal/interest split", () => {
     const result = validateMortgagePayment({
       mortgage: mockMortgage,

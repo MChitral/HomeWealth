@@ -73,9 +73,10 @@ export function useMortgageComputed({
         : paymentHistory[paymentHistory.length - 1]?.remainingBalance || 0,
       currentRate: currentEffectiveRate,
       currentPrimeRate: currentPrimeRateValue,
-      amortizationYears: mortgage
-        ? mortgage.amortizationYears
-        : paymentHistory[paymentHistory.length - 1]?.amortizationYears || 30,
+      amortizationYears:
+        paymentHistory[paymentHistory.length - 1]?.amortizationYears ??
+        mortgage?.amortizationYears ??
+        30,
       triggerHitCount: paymentHistory.filter((p) => p.triggerHit).length,
       totalSkippedInterest: (payments || []).reduce(
         (sum, p) => sum + Number(p.skippedInterestAccrued || 0),

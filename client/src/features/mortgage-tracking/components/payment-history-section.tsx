@@ -16,10 +16,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/shared/ui/alert-dialog";
-import { Trash2, SkipForward, Download, X, Search } from "lucide-react";
-import type { UiPayment } from "../types";
+import { Trash2, SkipForward, Download, X, Search, Pencil } from "lucide-react";
+import type { UiPayment, UiTerm } from "../types";
 import type { UseMutationResult } from "@tanstack/react-query";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/shared/ui/tooltip";
+import { EditPaymentDialog } from "./edit-payment-dialog";
 
 /**
  * Format payment period label as "MMM-YYYY" (e.g., "Feb-2025") from payment date
@@ -68,6 +69,8 @@ interface PaymentHistorySectionProps {
   onSearchAmountChange: (amount: string) => void;
   formatAmortization: (years: number) => string;
   deletePaymentMutation: UseMutationResult<{ success: boolean }, Error, string, unknown>;
+  currentTerm: UiTerm | null;
+  currentEffectiveRate: number;
 }
 
 export function PaymentHistorySection({
@@ -83,8 +86,11 @@ export function PaymentHistorySection({
   onSearchAmountChange,
   formatAmortization,
   deletePaymentMutation,
+  currentTerm,
+  currentEffectiveRate,
 }: PaymentHistorySectionProps) {
   const [paymentToDelete, setPaymentToDelete] = useState<{ id: string; date: string } | null>(null);
+  const [paymentToEdit, setPaymentToEdit] = useState<UiPayment | null>(null);
 
   const handleDeleteConfirm = () => {
     if (paymentToDelete) {
@@ -301,7 +307,7 @@ export function PaymentHistorySection({
                 <TableHead className="text-right">Skipped Interest</TableHead>
                 <TableHead className="text-right">Balance</TableHead>
                 <TableHead className="text-right">Amort.</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
+                <TableHead className="w-[80px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -327,6 +333,11 @@ export function PaymentHistorySection({
                         {payment.triggerHit && (
                           <Badge variant="destructive" className="text-xs">
                             Trigger
+                          </Badge>
+                        )}
+                        {payment.calculationSource === "statement" && (
+                          <Badge variant="secondary" className="text-xs">
+                            Bank
                           </Badge>
                         )}
                         {payment.isSkipped && (
@@ -410,16 +421,35 @@ export function PaymentHistorySection({
                       {formatAmortization(payment.amortizationYears)}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                        onClick={() => setPaymentToDelete({ id: payment.id, date: payment.date })}
-                        disabled={deletePaymentMutation.isPending}
-                        data-testid={`button-delete-payment-${payment.id}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {payment.calculationSource === "statement" ? (
+                        <span className="text-xs text-muted-foreground">Reconciled</span>
+                      ) : (
+                        <div className="flex items-center justify-end gap-1">
+                          {!payment.isSkipped && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              onClick={() => setPaymentToEdit(payment)}
+                              data-testid={`button-edit-payment-${payment.id}`}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                            onClick={() =>
+                              setPaymentToDelete({ id: payment.id, date: payment.date })
+                            }
+                            disabled={deletePaymentMutation.isPending}
+                            data-testid={`button-delete-payment-${payment.id}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
@@ -427,6 +457,14 @@ export function PaymentHistorySection({
             </TableBody>
           </Table>
         </div>
+
+        <EditPaymentDialog
+          open={!!paymentToEdit}
+          onOpenChange={(open) => !open && setPaymentToEdit(null)}
+          payment={paymentToEdit}
+          currentTerm={currentTerm}
+          currentEffectiveRate={currentEffectiveRate}
+        />
 
         <AlertDialog
           open={!!paymentToDelete}

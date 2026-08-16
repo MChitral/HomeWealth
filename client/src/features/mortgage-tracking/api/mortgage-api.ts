@@ -1,5 +1,6 @@
 import { apiRequest } from "@/shared/api/query-client";
 import type { Mortgage, MortgageTerm, MortgagePayment } from "@shared/schema";
+import type { InterestAccrualBasis } from "@shared/mortgage-ledger";
 
 export type CreateMortgagePayload = {
   propertyPrice: string;
@@ -30,9 +31,17 @@ export type CreateTermPayload = {
   fixedRate?: string;
   lockedSpread?: string;
   primeRate?: string;
+  interestAccrualBasis?: InterestAccrualBasis;
 };
 
 export type UpdateTermPayload = Partial<CreateTermPayload>;
+
+export type UpdatePaymentPayload = {
+  paymentDate?: string;
+  paymentPeriodLabel?: string | null;
+  regularPaymentAmount?: string;
+  prepaymentAmount?: string;
+};
 
 export type CreatePaymentPayload = {
   termId: string;
@@ -140,6 +149,8 @@ export const mortgageApi = {
     apiRequest<BulkCreatePaymentsResponse>("POST", `/api/mortgages/${mortgageId}/payments/bulk`, {
       payments,
     }),
+  updatePayment: (paymentId: string, payload: UpdatePaymentPayload) =>
+    apiRequest<MortgagePayment>("PATCH", `/api/mortgage-payments/${paymentId}`, payload),
   deletePayment: (paymentId: string) =>
     apiRequest<{ success: boolean }>("DELETE", `/api/mortgage-payments/${paymentId}`),
   deleteMortgage: (mortgageId: string) =>

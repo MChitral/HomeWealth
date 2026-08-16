@@ -12,6 +12,24 @@ const annualRate = 0.055;
 const amortizationMonths = 25 * 12;
 
 describe("mortgage-math payment helpers", () => {
+  it("previews an Actual/365 payment using calendar days", () => {
+    const breakdown = calculatePaymentBreakdown({
+      balance: 282105.53,
+      paymentAmount: 2500.69,
+      regularPaymentAmount: 1500.69,
+      extraPrepaymentAmount: 1000,
+      frequency: "monthly",
+      annualRate: 0.0355,
+      interestAccrualBasis: "actual-365",
+      periodStartDate: "2026-07-02",
+      periodEndDate: "2026-08-02",
+    });
+
+    assert.equal(breakdown.interest, 850.57);
+    assert.equal(breakdown.principal, 1650.12);
+    assert.equal(breakdown.remainingBalance, 280455.41);
+  });
+
   it("keeps accelerated payments in lockstep with the monthly schedule", () => {
     const monthly = calculatePayment(principal, annualRate, amortizationMonths, "monthly");
     const accelBiweekly = calculatePayment(

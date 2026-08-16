@@ -3,8 +3,9 @@ import {
   MortgagesRepository,
   MortgageTermsRepository,
   MortgagePaymentsRepository,
+  PrimeRateHistoryRepository,
 } from "@infrastructure/repositories";
-import type { MortgagePaymentCreateInput } from "@domain/models";
+import type { MortgagePaymentCreateInput, MortgagePaymentUpdateInput } from "@domain/models";
 import { validateMortgagePayment } from "@server-shared/calculations/payment-validation";
 import { getTermEffectiveRate } from "@server-shared/calculations/term-helpers";
 import { isWithinPrepaymentLimit } from "@server-shared/calculations/mortgage";
@@ -18,6 +19,7 @@ import {
 import type { PaymentFrequency } from "@server-shared/calculations/mortgage";
 import { adjustToBusinessDay } from "@server-shared/utils/business-days";
 import { HelocCreditLimitService } from "./heloc-credit-limit.service";
+import type { InterestRateSegment } from "@server-shared/calculations/interest-accrual";
 
 class PrepaymentLimitError extends Error {
   constructor(message: string) {
@@ -31,7 +33,8 @@ export class MortgagePaymentService {
     private readonly mortgages: MortgagesRepository,
     private readonly mortgageTerms: MortgageTermsRepository,
     private readonly mortgagePayments: MortgagePaymentsRepository,
-    private readonly helocCreditLimitService?: HelocCreditLimitService
+    private readonly helocCreditLimitService?: HelocCreditLimitService,
+    private readonly primeRateHistory?: PrimeRateHistoryRepository
   ) {}
 
   private async authorizeMortgage(mortgageId: string, userId: string) {
@@ -55,7 +58,9 @@ export class MortgagePaymentService {
     if (!authorized) {
       return undefined;
     }
-    return this.mortgagePayments.findByMortgageId(mortgageId);
+    return this.sortPaymentsChronologically(
+      await this.mortgagePayments.findByMortgageId(mortgageId)
+    );
   }
 
   async listByTerm(termId: string, userId: string): Promise<MortgagePayment[] | undefined> {
@@ -63,7 +68,7 @@ export class MortgagePaymentService {
     if (!term) {
       return undefined;
     }
-    return this.mortgagePayments.findByTermId(termId);
+    return this.sortPaymentsChronologically(await this.mortgagePayments.findByTermId(termId));
   }
 
   async getByIdForUser(paymentId: string, userId: string): Promise<MortgagePayment | undefined> {
@@ -75,20 +80,128 @@ export class MortgagePaymentService {
     return authorized ? payment : undefined;
   }
 
-  private async getPreviousPayment(termId: string): Promise<MortgagePayment | undefined> {
-    const payments = await this.mortgagePayments.findByTermId(termId);
+  private async getPreviousPayment(
+    termId: string,
+    paymentDate?: string
+  ): Promise<MortgagePayment | undefined> {
+    const payments = this.sortPaymentsChronologically(
+      await this.mortgagePayments.findByTermId(termId)
+    );
     if (payments.length === 0) {
       return undefined;
     }
-    return payments.sort(
-      (a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime()
-    )[0];
+
+    const latest = payments[payments.length - 1];
+    if (!paymentDate) {
+      return latest;
+    }
+    if (latest.paymentDate >= paymentDate) {
+      throw new Error(
+        "Payments must be logged chronologically after the latest existing payment"
+      );
+    }
+
+    return latest;
+  }
+
+  private sortPaymentsChronologically(payments: MortgagePayment[]): MortgagePayment[] {
+    return [...payments].sort((a, b) => {
+      const byDate = new Date(a.paymentDate).getTime() - new Date(b.paymentDate).getTime();
+      if (byDate !== 0) return byDate;
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    });
+  }
+
+  private getFinalPaymentDate(term: MortgageTerm, paymentDate: string): string {
+    if (term.interestAccrualBasis === "actual-365") {
+      return paymentDate;
+    }
+
+    const paymentDateObj = new Date(paymentDate);
+    const adjustedDate = adjustToBusinessDay(paymentDateObj);
+    return adjustedDate.toISOString().split("T")[0];
+  }
+
+  private async getActual365RateSegments(
+    mortgage: Mortgage,
+    term: MortgageTerm,
+    paymentDate: string,
+    previousPayment?: MortgagePayment,
+    effectiveRateOverride?: number
+  ): Promise<InterestRateSegment[] | undefined> {
+    if (term.interestAccrualBasis !== "actual-365") {
+      return undefined;
+    }
+
+    const startDate = previousPayment?.paymentDate ?? mortgage.startDate;
+    if (paymentDate <= startDate) {
+      throw new Error("Actual/365 payment date must be after the previous payment date");
+    }
+
+    const spreadPercent = Number(term.lockedSpread ?? 0);
+    const fallbackEffectiveRate =
+      effectiveRateOverride !== undefined
+        ? effectiveRateOverride
+        : getTermEffectiveRate(term) * 100;
+
+    if (!this.primeRateHistory) {
+      return [
+        {
+          startDate,
+          endDate: paymentDate,
+          annualRate: fallbackEffectiveRate / 100,
+        },
+      ];
+    }
+
+    const startingHistory = await this.primeRateHistory.findEffectiveAtOrBefore(startDate);
+    const startingPrimeRate = startingHistory
+      ? Number(startingHistory.primeRate)
+      : previousPayment?.primeRate
+        ? Number(previousPayment.primeRate)
+        : fallbackEffectiveRate - spreadPercent;
+    const history = await this.primeRateHistory.findByDateRange(startDate, paymentDate);
+    const changesByDate = new Map<string, number>();
+    for (const entry of history) {
+      if (
+        entry.effectiveDate > startDate &&
+        entry.effectiveDate < paymentDate &&
+        !changesByDate.has(entry.effectiveDate)
+      ) {
+        changesByDate.set(entry.effectiveDate, Number(entry.primeRate));
+      }
+    }
+
+    const changes = Array.from(changesByDate.entries()).sort(([left], [right]) =>
+      left.localeCompare(right)
+    );
+    const segments: InterestRateSegment[] = [];
+    let segmentStart = startDate;
+    let effectiveRate = (startingPrimeRate + spreadPercent) / 100;
+
+    for (const [effectiveDate, primeRate] of changes) {
+      segments.push({
+        startDate: segmentStart,
+        endDate: effectiveDate,
+        annualRate: effectiveRate,
+      });
+      segmentStart = effectiveDate;
+      effectiveRate = (primeRate + spreadPercent) / 100;
+    }
+    segments.push({
+      startDate: segmentStart,
+      endDate: paymentDate,
+      annualRate: effectiveRate,
+    });
+
+    return segments;
   }
 
   private async getYearToDatePrepayments(
     mortgageId: string,
     paymentDate: string,
-    mortgage: Mortgage
+    mortgage: Mortgage,
+    excludePaymentId?: string
   ): Promise<number> {
     const { getPrepaymentYear } = await import("@server-shared/calculations/prepayment-year");
     const payments = await this.mortgagePayments.findByMortgageId(mortgageId);
@@ -100,6 +213,9 @@ export class MortgagePaymentService {
 
     return payments
       .filter((payment) => {
+        if (excludePaymentId && payment.id === excludePaymentId) {
+          return false;
+        }
         const paymentYearForPayment = getPrepaymentYear(
           payment.paymentDate,
           mortgage.prepaymentLimitResetDate,
@@ -175,7 +291,7 @@ export class MortgagePaymentService {
     }
   }
 
-  private validateAndNormalizePayment(
+  private async validateAndNormalizePayment(
     mortgage: Mortgage,
     term: MortgageTerm,
     payload: Omit<MortgagePaymentCreateInput, "mortgageId">,
@@ -188,6 +304,13 @@ export class MortgagePaymentService {
     // Use effectiveRate from payload if provided (for historical/backfilled payments)
     // This allows validation to use historical rates instead of term's current rate
     const effectiveRateOverride = payload.effectiveRate ? Number(payload.effectiveRate) : undefined;
+    const actual365RateSegments = await this.getActual365RateSegments(
+      mortgage,
+      term,
+      payload.paymentDate,
+      previousPayment,
+      effectiveRateOverride
+    );
 
     const validation = validateMortgagePayment({
       mortgage,
@@ -198,6 +321,7 @@ export class MortgagePaymentService {
       prepaymentAmount,
       remainingAmortizationMonths: payload.remainingAmortizationMonths,
       effectiveRateOverride, // Pass historical rate if provided
+      actual365RateSegments,
     });
 
     return {
@@ -206,6 +330,7 @@ export class MortgagePaymentService {
       interestPaid: (paymentAmount - validation.expectedPrincipal).toFixed(2),
       remainingBalance: validation.expectedBalance.toFixed(2),
       triggerRateHit: validation.triggerRateHit ? 1 : 0,
+      calculationSource: "calculated" as const,
       remainingAmortizationMonths: validation.remainingAmortizationMonths,
       // Use effectiveRate from payload if provided (for historical/backfilled payments),
       // otherwise calculate from term's current rate
@@ -234,17 +359,10 @@ export class MortgagePaymentService {
     // Validate payment date
     this.validatePaymentDate(mortgage, term, payload.paymentDate);
 
-    // Adjust payment date to business day if it falls on weekend/holiday
-    const paymentDateObj = new Date(payload.paymentDate);
-    const adjustedDate = adjustToBusinessDay(paymentDateObj);
-    const adjustedPaymentDate = adjustedDate.toISOString().split("T")[0];
-    const finalPaymentDate =
-      adjustedDate.getTime() !== paymentDateObj.getTime()
-        ? adjustedPaymentDate
-        : payload.paymentDate;
+    const finalPaymentDate = this.getFinalPaymentDate(term, payload.paymentDate);
 
-    const previousPayment = await this.getPreviousPayment(payload.termId);
-    const normalizedPayload = this.validateAndNormalizePayment(
+    const previousPayment = await this.getPreviousPayment(payload.termId, finalPaymentDate);
+    const normalizedPayload = await this.validateAndNormalizePayment(
       mortgage,
       term,
       { ...payload, paymentDate: finalPaymentDate },
@@ -310,7 +428,7 @@ export class MortgagePaymentService {
     // This will be used as the previous payment for the first payment in the batch
     const latestExistingPayment =
       sortedPayments.length > 0
-        ? await this.getPreviousPayment(sortedPayments[0].termId)
+        ? await this.getPreviousPayment(sortedPayments[0].termId, sortedPayments[0].paymentDate)
         : undefined;
 
     // Validate all payments BEFORE creating any (fail fast)
@@ -335,21 +453,14 @@ export class MortgagePaymentService {
       // Validate payment date
       this.validatePaymentDate(mortgage, term, payload.paymentDate);
 
-      // Adjust payment date to business day if it falls on weekend/holiday
-      const paymentDateObj = new Date(payload.paymentDate);
-      const adjustedDate = adjustToBusinessDay(paymentDateObj);
-      const adjustedPaymentDate = adjustedDate.toISOString().split("T")[0];
-      const finalPaymentDate =
-        adjustedDate.getTime() !== paymentDateObj.getTime()
-          ? adjustedPaymentDate
-          : payload.paymentDate;
+      const finalPaymentDate = this.getFinalPaymentDate(term, payload.paymentDate);
 
       // Use previous payment from batch if available, otherwise from database
       // This ensures correct balance calculation for each payment in the batch
       const previousPayment = previousPaymentInBatch;
 
       // Validate and normalize payment (use adjusted date)
-      const normalized = this.validateAndNormalizePayment(
+      const normalized = await this.validateAndNormalizePayment(
         mortgage,
         term,
         { ...payload, paymentDate: finalPaymentDate },
@@ -373,6 +484,9 @@ export class MortgagePaymentService {
         primeRate: payload.primeRate || null,
         effectiveRate: normalized.effectiveRate,
         triggerRateHit: normalized.triggerRateHit,
+        calculationSource: normalized.calculationSource,
+        isSkipped: 0,
+        skippedInterestAccrued: "0.00",
         remainingAmortizationMonths: normalized.remainingAmortizationMonths,
         createdAt: new Date(),
       } as MortgagePayment;
@@ -437,7 +551,7 @@ export class MortgagePaymentService {
       // Update mortgage balance after all payments are created
       await this.mortgages.update(mortgageId, {
         currentBalance: lastBalance.toFixed(2),
-      });
+      }, tx);
 
       return {
         created: created.length,
@@ -470,11 +584,212 @@ export class MortgagePaymentService {
     if (!payment) {
       return false;
     }
-    const authorized = await this.authorizeMortgage(payment.mortgageId, userId);
-    if (!authorized) {
+    const mortgage = await this.authorizeMortgage(payment.mortgageId, userId);
+    if (!mortgage) {
       return false;
     }
-    return this.mortgagePayments.delete(paymentId);
+    if (payment.calculationSource === "statement") {
+      throw new Error("Bank-statement payments cannot be deleted");
+    }
+
+    const payments = this.sortPaymentsChronologically(
+      await this.mortgagePayments.findByMortgageId(payment.mortgageId)
+    );
+    const latest = payments[payments.length - 1];
+    if (!latest || latest.id !== paymentId) {
+      throw new Error("Only the latest payment can be deleted");
+    }
+
+    const previous = payments[payments.length - 2];
+    const deleted = await this.mortgagePayments.delete(paymentId);
+    if (!deleted) {
+      return false;
+    }
+
+    await this.mortgages.update(payment.mortgageId, {
+      currentBalance: previous?.remainingBalance ?? mortgage.originalAmount,
+    });
+    return true;
+  }
+
+  /**
+   * Edit a logged payment (prepayment, regular amount, date, or period label).
+   * Recalculates this payment and every later payment so balances stay consistent.
+   */
+  async update(
+    paymentId: string,
+    userId: string,
+    payload: MortgagePaymentUpdateInput
+  ): Promise<MortgagePayment | undefined> {
+    const existing = await this.getByIdForUser(paymentId, userId);
+    if (!existing) {
+      return undefined;
+    }
+    if (existing.isSkipped) {
+      throw new Error(
+        "Skipped payments cannot be edited. Delete the skip and log a payment instead."
+      );
+    }
+    if (existing.calculationSource === "statement") {
+      throw new Error("Bank-statement payments cannot be edited");
+    }
+
+    const mortgage = await this.mortgages.findById(existing.mortgageId);
+    if (!mortgage) {
+      return undefined;
+    }
+    const term = await this.mortgageTerms.findById(existing.termId);
+    if (!term) {
+      return undefined;
+    }
+
+    const nextRegular = payload.regularPaymentAmount ?? existing.regularPaymentAmount;
+    const nextPrepay = payload.prepaymentAmount ?? existing.prepaymentAmount;
+    const nextDate = payload.paymentDate ?? existing.paymentDate;
+    const nextLabel =
+      payload.paymentPeriodLabel !== undefined
+        ? payload.paymentPeriodLabel
+        : existing.paymentPeriodLabel;
+    const nextTotal = (Number(nextRegular) + Number(nextPrepay)).toFixed(2);
+
+    let finalPaymentDate = nextDate;
+    if (payload.paymentDate && payload.paymentDate !== existing.paymentDate) {
+      this.validatePaymentDate(mortgage, term, nextDate);
+      finalPaymentDate = this.getFinalPaymentDate(term, nextDate);
+    }
+
+    const yearToDate = await this.getYearToDatePrepayments(
+      existing.mortgageId,
+      finalPaymentDate,
+      mortgage,
+      existing.id
+    );
+    this.enforcePrepaymentLimit(mortgage, finalPaymentDate, Number(nextPrepay || 0), yearToDate);
+
+    const allPayments = await this.mortgagePayments.findByMortgageId(existing.mortgageId);
+    const originalSorted = this.sortPaymentsChronologically(allPayments);
+    if (originalSorted.length === 0) {
+      return undefined;
+    }
+    const oldIndex = originalSorted.findIndex((payment) => payment.id === paymentId);
+    if (oldIndex === -1) {
+      return undefined;
+    }
+    const chainStartBalance =
+      Number(originalSorted[0].remainingBalance) + Number(originalSorted[0].principalPaid);
+
+    const working = this.sortPaymentsChronologically(
+      allPayments.map((payment) =>
+        payment.id === paymentId
+          ? {
+              ...payment,
+              paymentDate: finalPaymentDate,
+              paymentPeriodLabel: nextLabel,
+              regularPaymentAmount: Number(nextRegular).toFixed(2),
+              prepaymentAmount: Number(nextPrepay).toFixed(2),
+              paymentAmount: nextTotal,
+            }
+          : payment
+      )
+    );
+    const newIndex = working.findIndex((payment) => payment.id === paymentId);
+    const startIndex = Math.min(oldIndex, newIndex);
+    if (working.slice(startIndex + 1).some((payment) => payment.calculationSource === "statement")) {
+      throw new Error("Payments before bank-statement entries cannot be edited");
+    }
+
+    let previous: MortgagePayment | undefined =
+      startIndex === 0
+        ? ({ remainingBalance: chainStartBalance.toFixed(2) } as MortgagePayment)
+        : working[startIndex - 1];
+
+    let lastBalance = mortgage.currentBalance;
+    for (const payment of working.slice(startIndex)) {
+      const paymentTerm = await this.mortgageTerms.findById(payment.termId);
+      if (!paymentTerm) {
+        throw new Error("Term not found for payment");
+      }
+
+      if (payment.isSkipped) {
+        const previousBalance = previous ? Number(previous.remainingBalance) : chainStartBalance;
+        const previousAmort = previous
+          ? Number(previous.remainingAmortizationMonths)
+          : Number(payment.remainingAmortizationMonths);
+        const skipCalculation = calculateSkippedPayment(
+          previousBalance,
+          Number(payment.effectiveRate) / 100,
+          paymentTerm.paymentFrequency as PaymentFrequency,
+          previousAmort
+        );
+        const updatedSkipped = await this.mortgagePayments.update(payment.id, {
+          remainingBalance: skipCalculation.newBalance.toFixed(2),
+          skippedInterestAccrued: skipCalculation.interestAccrued.toFixed(2),
+          remainingAmortizationMonths: skipCalculation.extendedAmortizationMonths,
+        });
+        previous = updatedSkipped ?? payment;
+        lastBalance = skipCalculation.newBalance.toFixed(2);
+        continue;
+      }
+
+      const normalized = await this.validateAndNormalizePayment(
+        mortgage,
+        paymentTerm,
+        {
+          termId: payment.termId,
+          paymentDate: payment.paymentDate,
+          paymentPeriodLabel: payment.paymentPeriodLabel,
+          regularPaymentAmount: payment.regularPaymentAmount,
+          prepaymentAmount: payment.prepaymentAmount,
+          paymentAmount: payment.paymentAmount,
+          principalPaid: payment.principalPaid,
+          interestPaid: payment.interestPaid,
+          remainingBalance: payment.remainingBalance,
+          primeRate: payment.primeRate,
+          effectiveRate: payment.effectiveRate,
+          triggerRateHit: payment.triggerRateHit,
+          calculationSource: payment.calculationSource,
+          isSkipped: payment.isSkipped,
+          skippedInterestAccrued: payment.skippedInterestAccrued,
+          remainingAmortizationMonths:
+            previous?.remainingAmortizationMonths ?? payment.remainingAmortizationMonths,
+        },
+        previous
+      );
+
+      const updatedPayment = await this.mortgagePayments.update(payment.id, {
+        paymentDate: payment.paymentDate,
+        paymentPeriodLabel: payment.paymentPeriodLabel,
+        regularPaymentAmount: normalized.regularPaymentAmount,
+        prepaymentAmount: normalized.prepaymentAmount,
+        paymentAmount: normalized.paymentAmount,
+        principalPaid: normalized.principalPaid,
+        interestPaid: normalized.interestPaid,
+        remainingBalance: normalized.remainingBalance,
+        effectiveRate: normalized.effectiveRate,
+        triggerRateHit: normalized.triggerRateHit,
+        remainingAmortizationMonths: normalized.remainingAmortizationMonths,
+      });
+      previous = updatedPayment ?? ({ ...payment, ...normalized } as MortgagePayment);
+      lastBalance = normalized.remainingBalance;
+    }
+
+    await this.mortgages.update(existing.mortgageId, {
+      currentBalance: lastBalance,
+    });
+
+    const prepaymentDelta = Number(nextPrepay || 0) - Number(existing.prepaymentAmount || 0);
+    if (prepaymentDelta !== 0 && this.helocCreditLimitService) {
+      try {
+        await this.helocCreditLimitService.recalculateCreditLimitOnPrepayment(
+          existing.mortgageId,
+          prepaymentDelta
+        );
+      } catch (error) {
+        console.error("Failed to recalculate HELOC credit limit:", error);
+      }
+    }
+
+    return this.mortgagePayments.findById(paymentId);
   }
 
   /**
@@ -508,6 +823,11 @@ export class MortgagePaymentService {
     const term = await this.mortgageTerms.findById(termId);
     if (!term || term.mortgageId !== mortgageId) {
       return undefined;
+    }
+    if (term.interestAccrualBasis === "actual-365") {
+      throw new Error(
+        "Actual/365 skipped payments require a lender statement before they can be recorded"
+      );
     }
 
     // Validate payment date
@@ -568,6 +888,7 @@ export class MortgagePaymentService {
       primeRate: term.primeRate,
       effectiveRate: (effectiveRate * 100).toFixed(3),
       triggerRateHit: 0,
+      calculationSource: "calculated",
       isSkipped: 1, // Mark as skipped
       skippedInterestAccrued: skipCalculation.interestAccrued.toFixed(2),
       remainingAmortizationMonths: skipCalculation.extendedAmortizationMonths,

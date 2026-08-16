@@ -92,6 +92,8 @@ export function useTermRenewalFormState({
         primeRate: formData.termType !== "fixed" ? formData.primeRate : undefined,
         paymentFrequency: formData.paymentFrequency,
         regularPaymentAmount: formData.paymentAmount,
+        interestAccrualBasis:
+          currentTerm?.interestAccrualBasis ?? "canadian-semi-annual",
       };
 
       if (!mortgage?.id) throw new Error("No mortgage selected");
