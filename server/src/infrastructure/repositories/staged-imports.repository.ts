@@ -15,19 +15,24 @@ type Database = NeonDatabase<typeof schema> | NodePgDatabase<typeof schema>;
 export class StagedImportsRepository {
   constructor(private readonly database: Database = db) {}
 
-  async findById(id: string): Promise<StagedImportRecord | undefined> {
-    const result = await this.database.select().from(stagedImports).where(eq(stagedImports.id, id));
+  async findById(id: string, tx?: Database): Promise<StagedImportRecord | undefined> {
+    const database = tx ?? this.database;
+    const result = await database.select().from(stagedImports).where(eq(stagedImports.id, id));
     return result[0];
   }
 
-  async findActiveByKey(input: {
-    userId: string;
-    mortgageId: string;
-    documentType: DocumentType;
-    statementPeriod: string;
-    status?: StagedImportStatus;
-  }): Promise<StagedImportRecord | undefined> {
-    const result = await this.database
+  async findActiveByKey(
+    input: {
+      userId: string;
+      mortgageId: string;
+      documentType: DocumentType;
+      statementPeriod: string;
+      status?: StagedImportStatus;
+    },
+    tx?: Database
+  ): Promise<StagedImportRecord | undefined> {
+    const database = tx ?? this.database;
+    const result = await database
       .select()
       .from(stagedImports)
       .where(
@@ -49,9 +54,11 @@ export class StagedImportsRepository {
 
   async update(
     id: string,
-    payload: Partial<Omit<StagedImportRecord, "id" | "createdAt">>
+    payload: Partial<Omit<StagedImportRecord, "id" | "createdAt">>,
+    tx?: Database
   ): Promise<StagedImportRecord | undefined> {
-    const [updated] = await this.database
+    const database = tx ?? this.database;
+    const [updated] = await database
       .update(stagedImports)
       .set(payload)
       .where(eq(stagedImports.id, id))

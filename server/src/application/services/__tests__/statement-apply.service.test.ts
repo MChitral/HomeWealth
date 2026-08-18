@@ -98,7 +98,11 @@ function createHarness() {
     } as never,
     {
       async findByMortgageId() {
-        return payments;
+        return [...payments].sort(
+          (left, right) =>
+            left.paymentDate.localeCompare(right.paymentDate) ||
+            left.createdAt.getTime() - right.createdAt.getTime()
+        );
       },
       async create(payload: MortgagePayment) {
         const created = { id: `pay-${payments.length + 1}`, createdAt: new Date(), ...payload };
@@ -141,6 +145,17 @@ function createHarness() {
       async retractByStagedImportId(stagedImportId: string) {
         for (const row of facilities) {
           if (row.stagedImportId === stagedImportId) row.status = "retracted";
+        }
+      },
+      async retractActiveByPeriod(mortgageId: string, statementPeriod: string) {
+        for (const row of facilities) {
+          if (
+            row.mortgageId === mortgageId &&
+            row.statementPeriod === statementPeriod &&
+            row.status === "active"
+          ) {
+            row.status = "retracted";
+          }
         }
       },
     } as never,
@@ -317,6 +332,49 @@ describe("StatementApplyService (U4)", () => {
         }),
       (error: unknown) => error instanceof IngestRequestError && error.status === 409
     );
+  });
+
+  it("replaces an orphan July snapshot without requiring supersede", async () => {
+    const { apply, facilities, addStaged } = createHarness();
+    facilities.push({
+      id: "fac-orphan",
+      mortgageId: "mortgage-1",
+      stagedImportId: "missing-staged",
+      statementPeriod: "2026-07",
+      statementAsOf: "2026-07-31",
+      mortgageOutstanding: "282105.53",
+      helocDrawn: "0.00",
+      availableCredit: "9989.35",
+      status: "active",
+    } as FacilitySnapshot);
+    const staged = addStaged({ facts: julyFacts });
+    const result = await apply.confirm({
+      userId: "dev-user-001",
+      mortgageId: "mortgage-1",
+      stagedId: staged.id,
+    });
+    assert.equal(result.status, "confirmed");
+    assert.equal(facilities.filter((row) => row.status === "active").length, 1);
+    assert.equal(facilities.find((row) => row.status === "active")?.stagedImportId, staged.id);
+  });
+
+  it("does not rewind currentBalance when a later payment already exists", async () => {
+    const { apply, mortgage, payments, addStaged } = createHarness();
+    payments.push({
+      ...junePayment(),
+      id: "pay-aug",
+      paymentDate: "2026-08-02",
+      paymentPeriodLabel: "2026-08",
+      remainingBalance: "280455.41",
+      statementPeriod: "2026-08",
+    });
+    const staged = addStaged({ facts: julyFacts });
+    await apply.confirm({
+      userId: "dev-user-001",
+      mortgageId: "mortgage-1",
+      stagedId: staged.id,
+    });
+    assert.equal(mortgage.currentBalance, "280455.41");
   });
 
   it("returns 410 for an expired staged row and writes nothing", async () => {

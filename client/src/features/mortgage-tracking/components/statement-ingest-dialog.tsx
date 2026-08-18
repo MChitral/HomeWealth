@@ -12,6 +12,19 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { mortgageApi, mortgageQueryKeys, type StatementPreview } from "../api/mortgage-api";
 
+function ingestErrorMessage(err: Error): string {
+  const jsonStart = err.message.indexOf("{");
+  if (jsonStart >= 0) {
+    try {
+      const parsed = JSON.parse(err.message.slice(jsonStart)) as { error?: string };
+      if (parsed.error) return parsed.error;
+    } catch {
+      // Fall through to the status-stripped message.
+    }
+  }
+  return err.message.replace(/^\d{3}:\s*/, "");
+}
+
 type StatementIngestDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -36,8 +49,7 @@ export function StatementIngestDialog({
       setSupersede(false);
     },
     onError: (err: Error) => {
-      setPreview(null);
-      setError(err.message);
+      setError(ingestErrorMessage(err));
     },
   });
 
@@ -62,8 +74,12 @@ export function StatementIngestDialog({
       onOpenChange(false);
     },
     onError: (err: Error) => {
-      setError(err.message);
-      if (err.message.includes("Re-upload requires explicit supersede")) {
+      const message = ingestErrorMessage(err);
+      setError(message);
+      if (
+        message.includes("Re-upload requires explicit supersede") ||
+        message.includes("already has a Homeline snapshot")
+      ) {
         setSupersede(true);
       }
     },
@@ -90,7 +106,11 @@ export function StatementIngestDialog({
             if (file) upload.mutate(file);
           }}
         />
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        {error && (
+          <p className="text-sm text-destructive break-words" data-testid="statement-ingest-error">
+            {error}
+          </p>
+        )}
         {preview && (
           <div className="space-y-2 text-sm" data-testid="statement-preview">
             <p>Type: {preview.documentType}</p>

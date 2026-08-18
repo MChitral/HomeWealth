@@ -68,9 +68,9 @@ export function useMortgageComputed({
       totalPaid: paymentHistory.reduce((sum, p) => sum + p.paymentAmount, 0),
       totalPrincipal: paymentHistory.reduce((sum, p) => sum + p.principal, 0),
       totalInterest: paymentHistory.reduce((sum, p) => sum + p.interest, 0),
-      currentBalance: mortgage
-        ? Number(mortgage.currentBalance)
-        : paymentHistory[paymentHistory.length - 1]?.remainingBalance || 0,
+      currentBalance:
+        paymentHistory[paymentHistory.length - 1]?.remainingBalance ??
+        Number(mortgage?.currentBalance || 0),
       currentRate: currentEffectiveRate,
       currentPrimeRate: currentPrimeRateValue,
       amortizationYears:

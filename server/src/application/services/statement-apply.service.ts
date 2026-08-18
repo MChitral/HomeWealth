@@ -22,6 +22,8 @@ import type {
 } from "@shared/statement-facts";
 import type { StagedImport } from "@shared/schema";
 
+type ApplyDb = typeof db;
+
 export type StatementFactsDto = {
   facility: {
     statementPeriod: string;
@@ -55,7 +57,7 @@ export class StatementApplyService {
     private readonly locks: LenderProjectionLocksRepository,
     private readonly runLocked: (
       mortgageId: string,
-      work: () => Promise<void>
+      work: (tx?: ApplyDb) => Promise<void>
     ) => Promise<void> = runWithMortgageLock
   ) {}
 
@@ -72,33 +74,36 @@ export class StatementApplyService {
       throw new IngestRequestError(404, "Mortgage not found");
     }
 
-    const staged = await this.stagedImports.findById(input.stagedId);
-    if (!staged || staged.mortgageId !== input.mortgageId || staged.userId !== input.userId) {
-      throw new IngestRequestError(404, "Staged import not found");
-    }
-    if (staged.expiresAt <= new Date()) {
-      throw new IngestRequestError(410, "Staged import has expired");
-    }
-    if (staged.status !== "staged") {
-      throw new IngestRequestError(409, "Staged import is no longer pending");
-    }
-    if (staged.documentType === "annual_statement") {
-      throw new IngestRequestError(409, "Annual confirm apply ships in a later slice");
-    }
-
-    const confirmed = await this.stagedImports.findActiveByKey({
-      userId: input.userId,
-      mortgageId: input.mortgageId,
-      documentType: staged.documentType,
-      statementPeriod: staged.statementPeriod,
-      status: "confirmed",
-    });
-    if (confirmed && !input.supersede) {
-      throw new IngestRequestError(409, "Re-upload requires explicit supersede");
-    }
-
     let paymentId: string | undefined;
-    await this.runLocked(input.mortgageId, async () => {
+    await this.runLocked(input.mortgageId, async (tx) => {
+      const staged = await this.stagedImports.findById(input.stagedId, tx);
+      if (!staged || staged.mortgageId !== input.mortgageId || staged.userId !== input.userId) {
+        throw new IngestRequestError(404, "Staged import not found");
+      }
+      if (staged.expiresAt <= new Date()) {
+        throw new IngestRequestError(410, "Staged import has expired");
+      }
+      if (staged.status !== "staged") {
+        throw new IngestRequestError(409, "Staged import is no longer pending");
+      }
+      if (staged.documentType === "annual_statement") {
+        throw new IngestRequestError(409, "Annual confirm apply ships in a later slice");
+      }
+
+      const confirmed = await this.stagedImports.findActiveByKey(
+        {
+          userId: input.userId,
+          mortgageId: input.mortgageId,
+          documentType: staged.documentType,
+          statementPeriod: staged.statementPeriod,
+          status: "confirmed",
+        },
+        tx
+      );
+      if (confirmed && !input.supersede) {
+        throw new IngestRequestError(409, "Re-upload requires explicit supersede");
+      }
+
       const facts = staged.facts as StatementFacts;
       if (facts.documentType === "homeline_monthly") {
         paymentId = await this.applyHomeline({
@@ -107,21 +112,30 @@ export class StatementApplyService {
           treatAsDoubleUp: Boolean(input.treatAsDoubleUp),
           overrideOpeningBalance: Boolean(input.overrideOpeningBalance),
           priorImport: confirmed,
+          tx,
         });
       } else if (facts.documentType === "cost_of_borrowing") {
-        await this.applyDisclosure({ staged, facts, priorImport: confirmed });
+        await this.applyDisclosure({ staged, facts, priorImport: confirmed, tx });
       }
 
-      await this.stagedImports.update(staged.id, {
-        status: "confirmed",
-        confirmedAt: new Date(),
-        paymentId,
-      });
+      await this.stagedImports.update(
+        staged.id,
+        {
+          status: "confirmed",
+          confirmedAt: new Date(),
+          paymentId,
+        },
+        tx
+      );
       if (confirmed) {
-        await this.stagedImports.update(confirmed.id, {
-          status: "superseded",
-          supersededById: staged.id,
-        });
+        await this.stagedImports.update(
+          confirmed.id,
+          {
+            status: "superseded",
+            supersededById: staged.id,
+          },
+          tx
+        );
       }
     });
 
@@ -178,6 +192,7 @@ export class StatementApplyService {
     treatAsDoubleUp: boolean;
     overrideOpeningBalance: boolean;
     priorImport?: StagedImport;
+    tx?: ApplyDb;
   }): Promise<string> {
     const terms = await this.terms.listForMortgage(input.staged.mortgageId, input.staged.userId);
     const term = terms?.[0];
@@ -185,7 +200,7 @@ export class StatementApplyService {
       throw new IngestRequestError(422, "Mortgage term is required before statement apply");
     }
 
-    const payments = await this.payments.findByMortgageId(input.staged.mortgageId);
+    const payments = await this.payments.findByMortgageId(input.staged.mortgageId, input.tx);
     const samePeriod = payments.find(
       (payment) => payment.statementPeriod === input.facts.statementPeriod
     );
@@ -264,48 +279,64 @@ export class StatementApplyService {
     };
 
     const saved = samePeriod
-      ? await this.payments.update(samePeriod.id, payload)
-      : await this.payments.create(payload);
+      ? await this.payments.update(samePeriod.id, payload, input.tx)
+      : await this.payments.create(payload, input.tx);
     if (!saved) {
       throw new IngestRequestError(500, "Failed to write statement payment");
     }
 
     if (input.priorImport) {
-      await this.facilities.retractByStagedImportId(input.priorImport.id);
-      await this.privileges.deleteByStagedImportId(input.priorImport.id);
+      await this.facilities.retractByStagedImportId(input.priorImport.id, input.tx);
+      await this.privileges.deleteByStagedImportId(input.priorImport.id, input.tx);
     }
+    await this.facilities.retractActiveByPeriod(
+      input.staged.mortgageId,
+      input.facts.statementPeriod,
+      input.tx
+    );
 
-    await this.facilities.create({
-      mortgageId: input.staged.mortgageId,
-      stagedImportId: input.staged.id,
-      statementPeriod: input.facts.statementPeriod,
-      statementAsOf: input.facts.statementAsOf,
-      mortgageOutstanding: input.facts.mortgageOutstanding,
-      helocDrawn: input.facts.helocDrawn,
-      availableCredit: input.facts.availableCredit,
-      helocLimit: input.facts.helocLimit,
-      planTotalLimit: input.facts.planTotalLimit,
-      status: "active",
-    });
-
-    if (input.treatAsDoubleUp && Number(split.prepaymentAmount) > 0) {
-      await this.privileges.create({
+    await this.facilities.create(
+      {
         mortgageId: input.staged.mortgageId,
         stagedImportId: input.staged.id,
-        paymentId: saved.id,
-        privilegeType: "double_up",
-        eventDate: saved.paymentDate,
-        amount: split.prepaymentAmount,
-        consumesLumpSumLimit: 0,
-      });
+        statementPeriod: input.facts.statementPeriod,
+        statementAsOf: input.facts.statementAsOf,
+        mortgageOutstanding: input.facts.mortgageOutstanding,
+        helocDrawn: input.facts.helocDrawn,
+        availableCredit: input.facts.availableCredit,
+        helocLimit: input.facts.helocLimit,
+        planTotalLimit: input.facts.planTotalLimit,
+        status: "active",
+      },
+      input.tx
+    );
+
+    if (input.treatAsDoubleUp && Number(split.prepaymentAmount) > 0) {
+      await this.privileges.create(
+        {
+          mortgageId: input.staged.mortgageId,
+          stagedImportId: input.staged.id,
+          paymentId: saved.id,
+          privilegeType: "double_up",
+          eventDate: saved.paymentDate,
+          amount: split.prepaymentAmount,
+          consumesLumpSumLimit: 0,
+        },
+        input.tx
+      );
     }
 
-    await this.mortgageRows.update(input.staged.mortgageId, {
-      currentBalance: input.facts.mortgageOutstanding,
-    });
+    await this.mortgageRows.update(
+      input.staged.mortgageId,
+      {
+        currentBalance: (await this.payments.findByMortgageId(input.staged.mortgageId, input.tx)).at(
+          -1
+        )?.remainingBalance ?? input.facts.mortgageOutstanding,
+      },
+      input.tx
+    );
 
-    const latest = (await this.payments.findByMortgageId(input.staged.mortgageId)).at(-1);
-    if (latest && toCents(latest.remainingBalance) !== toCents(input.facts.mortgageOutstanding)) {
+    if (toCents(saved.remainingBalance) !== toCents(input.facts.mortgageOutstanding)) {
       throw new IngestRequestError(422, "Post-apply balance proof failed");
     }
 
@@ -316,8 +347,9 @@ export class StatementApplyService {
     staged: StagedImport;
     facts: CostOfBorrowingFacts;
     priorImport?: StagedImport;
+    tx?: ApplyDb;
   }): Promise<void> {
-    const payments = await this.payments.findByMortgageId(input.staged.mortgageId);
+    const payments = await this.payments.findByMortgageId(input.staged.mortgageId, input.tx);
     const matching = payments.find(
       (payment) =>
         payment.statementPeriod === input.facts.statementPeriod ||
@@ -328,44 +360,50 @@ export class StatementApplyService {
     }
 
     if (input.priorImport) {
-      await this.privileges.deleteByStagedImportId(input.priorImport.id);
-      await this.locks.deleteByStagedImportId(input.priorImport.id);
+      await this.privileges.deleteByStagedImportId(input.priorImport.id, input.tx);
+      await this.locks.deleteByStagedImportId(input.priorImport.id, input.tx);
     }
 
-    await this.locks.create({
-      mortgageId: input.staged.mortgageId,
-      stagedImportId: input.staged.id,
-      statementPeriod: input.facts.statementPeriod,
-      interestToEndOfTerm: input.facts.interestToEndOfTerm,
-      principalAndInterestToEndOfTerm: input.facts.principalAndInterestToEndOfTerm,
-      triggeringAnnualRate: input.facts.triggeringAnnualRate,
-      nextDueDate: input.facts.nextDueDate,
-      rateReduction: input.facts.rateReduction,
-      remainingTerm: input.facts.remainingTerm,
-      remainingAmortization: input.facts.remainingAmortization,
-    });
-
-    if (input.facts.isDoubleUpChange && Number(matching.prepaymentAmount) > 0) {
-      await this.privileges.create({
+    await this.locks.create(
+      {
         mortgageId: input.staged.mortgageId,
         stagedImportId: input.staged.id,
-        paymentId: matching.id,
-        privilegeType: "double_up",
-        eventDate: matching.paymentDate,
-        amount: matching.prepaymentAmount,
-        consumesLumpSumLimit: 0,
-      });
+        statementPeriod: input.facts.statementPeriod,
+        interestToEndOfTerm: input.facts.interestToEndOfTerm,
+        principalAndInterestToEndOfTerm: input.facts.principalAndInterestToEndOfTerm,
+        triggeringAnnualRate: input.facts.triggeringAnnualRate,
+        nextDueDate: input.facts.nextDueDate,
+        rateReduction: input.facts.rateReduction,
+        remainingTerm: input.facts.remainingTerm,
+        remainingAmortization: input.facts.remainingAmortization,
+      },
+      input.tx
+    );
+
+    if (input.facts.isDoubleUpChange && Number(matching.prepaymentAmount) > 0) {
+      await this.privileges.create(
+        {
+          mortgageId: input.staged.mortgageId,
+          stagedImportId: input.staged.id,
+          paymentId: matching.id,
+          privilegeType: "double_up",
+          eventDate: matching.paymentDate,
+          amount: matching.prepaymentAmount,
+          consumesLumpSumLimit: 0,
+        },
+        input.tx
+      );
     }
   }
 }
 
 export async function runWithMortgageLock(
   mortgageId: string,
-  work: () => Promise<void>
+  work: (tx?: ApplyDb) => Promise<void>
 ): Promise<void> {
   await db.transaction(async (tx) => {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${mortgageId}))`);
-    await work();
+    await work(tx as ApplyDb);
   });
 }
 

@@ -24,13 +24,18 @@ export class LenderProjectionLocksRepository {
     return result[0];
   }
 
-  async create(payload: InsertLenderProjectionLock): Promise<LenderProjectionLockRecord> {
-    const [created] = await this.database.insert(lenderProjectionLocks).values(payload).returning();
+  async create(
+    payload: InsertLenderProjectionLock,
+    tx?: Database
+  ): Promise<LenderProjectionLockRecord> {
+    const database = tx ?? this.database;
+    const [created] = await database.insert(lenderProjectionLocks).values(payload).returning();
     return created;
   }
 
-  async deleteByStagedImportId(stagedImportId: string): Promise<void> {
-    await this.database
+  async deleteByStagedImportId(stagedImportId: string, tx?: Database): Promise<void> {
+    const database = tx ?? this.database;
+    await database
       .delete(lenderProjectionLocks)
       .where(eq(lenderProjectionLocks.stagedImportId, stagedImportId));
   }

@@ -22,8 +22,9 @@ export class MortgagePaymentsRepository {
     return result[0];
   }
 
-  async findByMortgageId(mortgageId: string): Promise<MortgagePaymentRecord[]> {
-    return this.database
+  async findByMortgageId(mortgageId: string, tx?: Database): Promise<MortgagePaymentRecord[]> {
+    const database = tx ?? this.database;
+    return database
       .select()
       .from(mortgagePayments)
       .where(eq(mortgagePayments.mortgageId, mortgageId))

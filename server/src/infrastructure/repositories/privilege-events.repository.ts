@@ -21,14 +21,14 @@ export class PrivilegeEventsRepository {
       .where(eq(privilegeEvents.mortgageId, mortgageId));
   }
 
-  async create(payload: InsertPrivilegeEvent): Promise<PrivilegeEventRecord> {
-    const [created] = await this.database.insert(privilegeEvents).values(payload).returning();
+  async create(payload: InsertPrivilegeEvent, tx?: Database): Promise<PrivilegeEventRecord> {
+    const database = tx ?? this.database;
+    const [created] = await database.insert(privilegeEvents).values(payload).returning();
     return created;
   }
 
-  async deleteByStagedImportId(stagedImportId: string): Promise<void> {
-    await this.database
-      .delete(privilegeEvents)
-      .where(eq(privilegeEvents.stagedImportId, stagedImportId));
+  async deleteByStagedImportId(stagedImportId: string, tx?: Database): Promise<void> {
+    const database = tx ?? this.database;
+    await database.delete(privilegeEvents).where(eq(privilegeEvents.stagedImportId, stagedImportId));
   }
 }

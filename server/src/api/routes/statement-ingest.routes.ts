@@ -19,7 +19,13 @@ function handleIngestError(res: Parameters<typeof sendError>[0], error: unknown)
     sendError(res, error.status, error.message);
     return;
   }
-  sendError(res, 400, "Failed to process statement", error);
+  const code = (error as { code?: string } | undefined)?.code;
+  const message = error instanceof Error ? error.message : String(error);
+  if (code === "23505" || message.includes("UQ_facility_snapshots_active_period")) {
+    sendError(res, 409, "This period already has a Homeline snapshot. Confirm again to replace it.");
+    return;
+  }
+  sendError(res, 400, "Failed to process statement");
 }
 
 export function registerStatementIngestRoutes(

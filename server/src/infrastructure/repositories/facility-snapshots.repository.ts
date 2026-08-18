@@ -24,13 +24,36 @@ export class FacilitySnapshotsRepository {
     return result[0];
   }
 
-  async create(payload: InsertFacilitySnapshot): Promise<FacilitySnapshotRecord> {
-    const [created] = await this.database.insert(facilitySnapshots).values(payload).returning();
+  async create(
+    payload: InsertFacilitySnapshot,
+    tx?: Database
+  ): Promise<FacilitySnapshotRecord> {
+    const database = tx ?? this.database;
+    const [created] = await database.insert(facilitySnapshots).values(payload).returning();
     return created;
   }
 
-  async retractByStagedImportId(stagedImportId: string): Promise<void> {
-    await this.database
+  async retractActiveByPeriod(
+    mortgageId: string,
+    statementPeriod: string,
+    tx?: Database
+  ): Promise<void> {
+    const database = tx ?? this.database;
+    await database
+      .update(facilitySnapshots)
+      .set({ status: "retracted" })
+      .where(
+        and(
+          eq(facilitySnapshots.mortgageId, mortgageId),
+          eq(facilitySnapshots.statementPeriod, statementPeriod),
+          eq(facilitySnapshots.status, "active")
+        )
+      );
+  }
+
+  async retractByStagedImportId(stagedImportId: string, tx?: Database): Promise<void> {
+    const database = tx ?? this.database;
+    await database
       .update(facilitySnapshots)
       .set({ status: "retracted" })
       .where(eq(facilitySnapshots.stagedImportId, stagedImportId));
