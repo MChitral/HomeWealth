@@ -1,4 +1,4 @@
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Upload } from "lucide-react";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Button } from "@/shared/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
@@ -43,6 +43,10 @@ import { StressTestCalculator } from "./stress-test-calculator";
 import { DebtServiceRatios } from "./debt-service-ratios";
 import { useQuery } from "@tanstack/react-query";
 import { insuranceApi } from "../api/insurance-api";
+import { mortgageApi, mortgageQueryKeys } from "../api/mortgage-api";
+import { StatementIngestDialog } from "./statement-ingest-dialog";
+import { HomelineFacilityPanel } from "./homeline-facility-panel";
+import { PrivilegeRoomPanel } from "./privilege-room-panel";
 
 interface MortgageContentProps {
   mortgage: Mortgage | null;
@@ -199,6 +203,7 @@ export function MortgageContent({
   const [isPortabilityOpen, setIsPortabilityOpen] = useState(false);
   const [isPropertyValueUpdateOpen, setIsPropertyValueUpdateOpen] = useState(false);
   const [isStressTestOpen, setIsStressTestOpen] = useState(false);
+  const [isStatementIngestOpen, setIsStatementIngestOpen] = useState(false);
 
   // Check if mortgage is high-ratio (down payment < 20%)
   const isHighRatio = mortgage
@@ -224,6 +229,12 @@ export function MortgageContent({
     enabled: !!mortgage && isHighRatio,
   });
 
+  const { data: statementFacts } = useQuery({
+    queryKey: mortgageQueryKeys.statementFacts(mortgage?.id ?? null),
+    queryFn: () => mortgageApi.fetchStatementFacts(mortgage!.id),
+    enabled: Boolean(mortgage?.id),
+  });
+
   if (!mortgage) {
     return null;
   }
@@ -241,6 +252,16 @@ export function MortgageContent({
       primeBanner={primeBanner}
       canCreateTerm={Boolean(uiCurrentTerm)}
       onOpenCreateMortgage={onOpenCreateMortgage}
+      actionsExtra={
+        <Button
+          variant="outline"
+          data-testid="button-upload-statement"
+          onClick={() => setIsStatementIngestOpen(true)}
+        >
+          <Upload className="h-4 w-4 mr-2" />
+          Upload statement
+        </Button>
+      }
     />
   );
 
@@ -293,6 +314,12 @@ export function MortgageContent({
         mortgageId={mortgage?.id}
         payments={payments}
         onOpenSkipPayment={() => setIsSkipPaymentOpen(true)}
+      />
+
+      <StatementIngestDialog
+        open={isStatementIngestOpen}
+        onOpenChange={setIsStatementIngestOpen}
+        mortgageId={mortgage.id}
       />
 
       {mortgage && payments && (
@@ -390,6 +417,11 @@ export function MortgageContent({
             formatAmortization={formatAmortization}
           />
 
+          <div className="grid gap-4 md:grid-cols-2">
+            <HomelineFacilityPanel facts={statementFacts} />
+            <PrivilegeRoomPanel facts={statementFacts} />
+          </div>
+
           {/* Skip Payment Impact Calculator hidden for now */}
 
           <PaymentHistorySection
@@ -407,6 +439,7 @@ export function MortgageContent({
             deletePaymentMutation={deletePaymentMutation}
             currentTerm={uiCurrentTerm}
             currentEffectiveRate={currentEffectiveRate}
+            doubleUpCount={statementFacts?.privilege.doubleUpCount ?? 0}
           />
 
           <EducationSidebar />

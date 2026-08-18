@@ -33,6 +33,8 @@ import { RenewalWorkflowService } from "./renewal-workflow.service";
 import { PaymentCorrectionsService } from "./payment-corrections.service";
 import { PaymentAmountChangeService } from "./payment-amount-change.service";
 import { MortgagePayoffService } from "./mortgage-payoff.service";
+import { StatementIngestService } from "./statement-ingest.service";
+import { StatementApplyService } from "./statement-apply.service";
 import type { NotificationPreferencesRepository } from "@infrastructure/repositories/notification-preferences.repository";
 
 export interface ApplicationServices {
@@ -71,6 +73,8 @@ export interface ApplicationServices {
   paymentCorrections: PaymentCorrectionsService;
   paymentAmountChange: PaymentAmountChangeService;
   mortgagePayoff: MortgagePayoffService;
+  statementIngest: StatementIngestService;
+  statementApply: StatementApplyService;
 }
 
 export function createServices(repositories: Repositories): ApplicationServices {
@@ -129,19 +133,38 @@ export function createServices(repositories: Repositories): ApplicationServices 
     repositories.helocAccounts
   );
 
+  const mortgageService = new MortgageService(
+    repositories.mortgages,
+    repositories.mortgageTerms,
+    repositories.mortgagePayments
+  );
+  const mortgageTermService = new MortgageTermService(
+    repositories.mortgages,
+    repositories.mortgageTerms,
+    repositories.mortgagePayments
+  );
+  const statementApply = new StatementApplyService(
+    mortgageService,
+    mortgageTermService,
+    repositories.mortgages,
+    repositories.mortgagePayments,
+    repositories.stagedImports,
+    repositories.facilitySnapshots,
+    repositories.privilegeEvents,
+    repositories.lenderProjectionLocks
+  );
+  const statementIngest = new StatementIngestService(
+    mortgageService,
+    repositories.stagedImports,
+    repositories.mortgagePayments
+  );
+  statementIngest.attachApply(statementApply);
+
   return {
     cashFlows: new CashFlowService(repositories.cashFlows),
     emergencyFunds: new EmergencyFundService(repositories.emergencyFunds),
-    mortgages: new MortgageService(
-      repositories.mortgages,
-      repositories.mortgageTerms,
-      repositories.mortgagePayments
-    ),
-    mortgageTerms: new MortgageTermService(
-      repositories.mortgages,
-      repositories.mortgageTerms,
-      repositories.mortgagePayments
-    ),
+    mortgages: mortgageService,
+    mortgageTerms: mortgageTermService,
     helocCreditLimit: helocCreditLimitService,
     helocInterest: new HelocInterestService(),
     mortgagePayments: new MortgagePaymentService(
@@ -253,6 +276,8 @@ export function createServices(repositories: Repositories): ApplicationServices 
       repositories.mortgages,
       repositories.mortgagePayments
     ),
+    statementApply,
+    statementIngest,
   };
 }
 
@@ -290,3 +315,5 @@ export * from "./renewal-workflow.service";
 export * from "./payment-corrections.service";
 export * from "./payment-amount-change.service";
 export * from "./mortgage-payoff.service";
+export * from "./statement-ingest.service";
+export * from "./statement-apply.service";

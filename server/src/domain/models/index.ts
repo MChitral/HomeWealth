@@ -9,3 +9,6 @@ export * from "./prepayment-event";
 export * from "./refinancing-event";
 export * from "./heloc-account";
 export * from "./heloc-transaction";
+export * from "./staged-import";
+export * from "./privilege-event";
+export * from "./facility-snapshot";

@@ -183,6 +183,30 @@ describe("MortgagePaymentService RBC ledger behavior", () => {
     assert.equal(mortgages.mortgage.currentBalance, "294029.93");
   });
 
+  it("forces calculated even when the payload asks for statement", async () => {
+    const created = await service.create("mortgage-rbc", "user-1", {
+      ...payload("2025-02-02"),
+      calculationSource: "statement",
+    } as never);
+
+    assert.equal(created?.calculationSource, "calculated");
+  });
+
+  it("refuses to edit a statement-sourced payment", async () => {
+    const created = await payments.create({
+      ...payload("2025-02-02"),
+      id: "statement-edit",
+      mortgageId: "mortgage-rbc",
+      calculationSource: "statement",
+      remainingBalance: "294029.93",
+    });
+
+    await assert.rejects(
+      () => service.update(created.id, "user-1", { prepaymentAmount: "100.00" }),
+      /Bank-statement payments cannot be edited/
+    );
+  });
+
   it("refuses to delete a statement-sourced payment", async () => {
     const created = await payments.create({
       ...payload("2025-02-02"),

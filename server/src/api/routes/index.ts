@@ -20,6 +20,7 @@ import { registerSmithManeuverRoutes } from "./smith-maneuver.routes";
 import { createRenewalRoutes } from "./renewal.routes";
 import { createPropertyValueRoutes } from "./property-value.routes";
 import insuranceRoutes from "./insurance.routes";
+import { registerStatementIngestRoutes } from "./statement-ingest.routes";
 
 export function buildApiRouter(services: ApplicationServices, repositories: Repositories): Router {
   const router = Router();
@@ -43,6 +44,7 @@ export function buildApiRouter(services: ApplicationServices, repositories: Repo
   router.use(createRenewalRoutes(services));
   router.use(createPropertyValueRoutes(services));
   router.use("/insurance", insuranceRoutes);
+  registerStatementIngestRoutes(router, services);
 
   return router;
 }

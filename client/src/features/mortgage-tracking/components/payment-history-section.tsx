@@ -71,6 +71,7 @@ interface PaymentHistorySectionProps {
   deletePaymentMutation: UseMutationResult<{ success: boolean }, Error, string, unknown>;
   currentTerm: UiTerm | null;
   currentEffectiveRate: number;
+  doubleUpCount?: number;
 }
 
 export function PaymentHistorySection({
@@ -88,6 +89,7 @@ export function PaymentHistorySection({
   deletePaymentMutation,
   currentTerm,
   currentEffectiveRate,
+  doubleUpCount = 0,
 }: PaymentHistorySectionProps) {
   const [paymentToDelete, setPaymentToDelete] = useState<{ id: string; date: string } | null>(null);
   const [paymentToEdit, setPaymentToEdit] = useState<UiPayment | null>(null);
@@ -340,6 +342,13 @@ export function PaymentHistorySection({
                             Bank
                           </Badge>
                         )}
+                        {doubleUpCount > 0 &&
+                          payment.calculationSource === "statement" &&
+                          payment.prepaymentAmount > 0 && (
+                            <Badge variant="outline" className="text-xs" data-testid="badge-double-up">
+                              Double-Up
+                            </Badge>
+                          )}
                         {payment.isSkipped && (
                           <TooltipProvider>
                             <Tooltip>

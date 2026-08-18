@@ -23,6 +23,8 @@ import { useMortgageSelection } from "@/features/mortgage-tracking";
 import type { SmithManeuverStrategy } from "@shared/schema";
 import { usePageTitle } from "@/shared/hooks/use-page-title";
 import { Badge } from "@/shared/ui/badge";
+import { SmithCta } from "@/features/mortgage-tracking/components/smith-cta";
+import { useSmithCtaRates } from "@/features/mortgage-tracking/hooks/use-smith-cta-rates";
 
 export function SmithManeuverFeature() {
   usePageTitle("Smith Maneuver | Mortgage Strategy");
@@ -39,6 +41,7 @@ export function SmithManeuverFeature() {
   const generateProjections = useGenerateProjections();
   const { data: helocAccounts = [] } = useHelocAccounts();
   const { mortgages = [] } = useMortgageSelection();
+  const { helocEffectiveRate, mortgageEffectiveRate } = useSmithCtaRates();
 
   const triggerProjections = (strategyId: string, years: number) => {
     const key = `${strategyId}-${years}`;
@@ -128,13 +131,18 @@ export function SmithManeuverFeature() {
           </p>
         </div>
         {!hasStrategies && (
-          <Button
-            onClick={handleCreateStrategy}
-            data-testid="button-create-first-strategy"
+          <SmithCta
+            helocEffectiveRate={helocEffectiveRate}
+            mortgageEffectiveRate={mortgageEffectiveRate}
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Create Strategy
-          </Button>
+            <Button
+              onClick={handleCreateStrategy}
+              data-testid="button-create-first-strategy"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create Strategy
+            </Button>
+          </SmithCta>
         )}
       </div>
 
@@ -154,13 +162,18 @@ export function SmithManeuverFeature() {
               your mortgage interest tax-deductible. Create a strategy to see projected
               tax savings, investment growth, and net benefit analysis.
             </p>
-            <Button
-              onClick={handleCreateStrategy}
-              data-testid="button-create-strategy-empty"
+            <SmithCta
+              helocEffectiveRate={helocEffectiveRate}
+              mortgageEffectiveRate={mortgageEffectiveRate}
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Create Your First Strategy
-            </Button>
+              <Button
+                onClick={handleCreateStrategy}
+                data-testid="button-create-strategy-empty"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create Your First Strategy
+              </Button>
+            </SmithCta>
           </CardContent>
         </Card>
       ) : (
